@@ -1,0 +1,71 @@
+import mongoose from 'mongoose';
+
+const transactionSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  accountId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    required: true
+  },
+  categoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: false
+  },
+  type: {
+    type: String,
+    enum: ['expense', 'income', 'transfer'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0.01
+  },
+  description: {
+    type: String,
+    default: ""
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+    required: true
+  },
+  note: {
+    type: String,
+    default: ""
+  },
+  tags: [{
+    type: String
+  }],
+  // Transactions planifiées
+  isScheduled: {
+    type: Boolean,
+    default: false
+  },
+  scheduledTransactionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ScheduledTransaction',
+    default: null
+  },
+  isPending: {
+    type: Boolean,
+    default: false
+  },
+  // Virement
+  toAccountId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+export default mongoose.model('Transaction', transactionSchema);

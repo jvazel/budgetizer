@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* === DARK MODE (Défaut) === */
+  --bg-base: #0d0d0d;
+  --bg-surface: #1a1a1a;
+  --bg-surface-2: #242424;
+  --bg-elevated: #2e2e2e;
+  --border: #333333;
+  --text-primary: #f5f5f5;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --accent: #4ade80;
+  --accent-dim: #166534;
+  --danger: #f87171;
+  --danger-dim: #7f1d1d;
+  --warning: #fbbf24;
+  --info: #60a5fa;
+  --purple: #a78bfa;
+}
+
+[data-theme="light"], .light {
+  /* === LIGHT MODE === */
+  --bg-base: #f5f5f5;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f0f0f0;
+  --bg-elevated: #ffffff;
+  --border: #e0e0e0;
+  --text-primary: #111111;
+  --text-secondary: #666666;
+  --text-muted: #888888;
+  --accent: #16a34a;
+  --accent-dim: #bbf7d0;
+  --danger: #ef4444;
+  --danger-dim: #fecaca;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --purple: #8b5cf6;
+}
+
+body {
+  @apply bg-base text-primary font-sans antialiased;
+}
+
+/* Utilities for hiding scrollbar but keeping functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
