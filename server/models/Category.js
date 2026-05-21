@@ -42,4 +42,7 @@ const categorySchema = new mongoose.Schema({
   }
 });
 
+// Indexes for query performance optimization
+categorySchema.index({ userId: 1, order: 1 });
+
 export default mongoose.model('Category', categorySchema);

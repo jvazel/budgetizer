@@ -43,7 +43,8 @@ export const getTransactions = async (req, res) => {
       }
     }
     if (search) {
-      query.description = { $regex: search, $options: 'i' };
+      const escapedSearch = search.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+      query.description = { $regex: escapedSearch, $options: 'i' };
     }
 
     const transactions = await Transaction.find(query)

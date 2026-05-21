@@ -61,12 +61,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware
+app.use(express.json());
+
 // Security Middleware
 app.use(helmet());
 app.use(mongoSanitize());
-
-// Middleware
-app.use(express.json());
 
 // Dynamic CORS Configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS

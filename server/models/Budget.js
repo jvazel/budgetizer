@@ -47,4 +47,7 @@ const budgetSchema = new mongoose.Schema({
   }
 });
 
+// Indexes for query performance optimization
+budgetSchema.index({ userId: 1 });
+
 export default mongoose.model('Budget', budgetSchema);

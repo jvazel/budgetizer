@@ -140,18 +140,19 @@ export const getDashboardSummary = async (req, res) => {
       accountBalances[acc._id.toString()] = acc.balance;
     });
 
-    const txsByDayIndex = {};
-    for (let i = 0; i <= 180; i++) {
-      txsByDayIndex[i] = [];
-    }
+    const formatDateKey = (date) => {
+      const d = new Date(date);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
 
+    // Group transactions by date key for constant time lookup: O(N)
+    const txsByDate = {};
     historyTxs.forEach(tx => {
-      const txDate = new Date(tx.date);
-      const diffTime = now.getTime() - txDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays >= 0 && diffDays <= 180) {
-        txsByDayIndex[diffDays].push(tx);
+      const dateKey = formatDateKey(tx.date);
+      if (!txsByDate[dateKey]) {
+        txsByDate[dateKey] = [];
       }
+      txsByDate[dateKey].push(tx);
     });
 
     const balanceHistory = [];
@@ -160,6 +161,8 @@ export const getDashboardSummary = async (req, res) => {
     for (let i = 0; i <= 180; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
+      const dateKey = formatDateKey(d);
+      
       const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
       const monthYearLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).substring(2)}`;
       
@@ -186,7 +189,7 @@ export const getDashboardSummary = async (req, res) => {
         total: parseFloat((totalAvailableVal + totalCreditVal).toFixed(2))
       });
 
-      const dayTxs = txsByDayIndex[i] || [];
+      const dayTxs = txsByDate[dateKey] || [];
       dayTxs.forEach(tx => {
         const accId = tx.accountId?.toString();
         const toAccId = tx.toAccountId?.toString();

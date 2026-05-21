@@ -5,9 +5,15 @@ import Budget from '../models/Budget.js';
 import Category from '../models/Category.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import bcrypt from 'bcryptjs';
+import { validationResult } from 'express-validator';
 
 // 1. Update Profile (Name & Email)
 export const updateProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { name, email } = req.body;
     const user = await User.findById(req.user.id);
@@ -41,6 +47,11 @@ export const updateProfile = async (req, res) => {
 
 // 2. Change Password
 export const updatePassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword) {

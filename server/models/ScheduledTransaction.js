@@ -87,4 +87,8 @@ const scheduledTransactionSchema = new mongoose.Schema({
   }
 });
 
+// Indexes for query performance optimization
+scheduledTransactionSchema.index({ userId: 1, nextDate: 1 });
+scheduledTransactionSchema.index({ isActive: 1, nextDate: 1 });
+
 export default mongoose.model('ScheduledTransaction', scheduledTransactionSchema);

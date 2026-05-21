@@ -68,4 +68,9 @@ const transactionSchema = new mongoose.Schema({
   }
 });
 
+// Indexes for query performance optimization
+transactionSchema.index({ userId: 1, date: -1 });
+transactionSchema.index({ userId: 1, accountId: 1 });
+transactionSchema.index({ userId: 1, toAccountId: 1 });
+
 export default mongoose.model('Transaction', transactionSchema);
