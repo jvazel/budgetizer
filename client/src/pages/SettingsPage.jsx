@@ -4,12 +4,16 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import { 
   User, Shield, Eye, Settings, FileText, Download, Upload, Trash2, 
-  X, AlertTriangle, ArrowLeft, Check, AlertCircle, FileSpreadsheet
+  X, AlertTriangle, ArrowLeft, Check, AlertCircle, FileSpreadsheet,
+  Smartphone, CheckCircle, Share, Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { usePwa } from '../context/PwaContext';
 
 const SettingsPage = () => {
   const { user, setUser, logout } = useContext(AuthContext);
+  const { isInstallable, isStandalone, isIOS, installApp } = usePwa();
+  const [showIOSModal, setShowIOSModal] = useState(false);
 
   // Forms states
   const [profileName, setProfileName] = useState(user?.name || '');
@@ -210,6 +214,18 @@ const SettingsPage = () => {
     }
   };
 
+  const handlePwaInstall = async () => {
+    if (isInstallable) {
+      const installed = await installApp();
+      if (installed) {
+        toast.success("Installation de l'application démarrée !");
+      }
+    } else if (isIOS) {
+      setShowIOSModal(true);
+    }
+  };
+
+
   return (
     <AppShell header={<h1 className="text-lg font-bold text-primary">Paramètres</h1>}>
       <div className="space-y-8 pb-24">
@@ -400,6 +416,41 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* PWA Installation Option */}
+        {(isInstallable || isIOS || isStandalone) && (
+          <div className="space-y-4">
+            <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1 flex items-center gap-1.5">
+              <Smartphone size={14} className="text-accent" /> Raccourci d'application
+            </h3>
+
+            <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
+              <div>
+                <h4 className="text-xs font-bold text-primary">Budgetizer sur votre appareil</h4>
+                <p className="text-[10px] text-muted">
+                  {isStandalone 
+                    ? "L'application est installée sur votre appareil et fonctionne de manière autonome." 
+                    : "Installez l'application pour y accéder directement depuis votre écran d'accueil."}
+                </p>
+              </div>
+
+              {isStandalone ? (
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-accent/10 border border-accent/20 text-accent">
+                  <CheckCircle size={16} />
+                  <span className="text-xs font-bold">Application installée</span>
+                </div>
+              ) : (
+                <button 
+                  onClick={handlePwaInstall}
+                  className="w-full bg-accent text-white py-3.5 rounded-2xl text-xs font-bold hover:scale-101 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accent/15"
+                >
+                  <Download size={14} />
+                  {isIOS ? "Installer sur iPhone (Safari)" : "Installer l'application"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 4. Import / Export CSV */}
         <div className="space-y-4">
@@ -637,6 +688,60 @@ const SettingsPage = () => {
                 Supprimer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* iOS Installation Instruction Modal */}
+      {showIOSModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowIOSModal(false)}>
+          <div className="bg-surface border border-border rounded-[32px] p-6 max-w-sm w-full space-y-4 shadow-2xl pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex justify-between items-start pb-2 border-b border-border/40">
+              <div>
+                <h3 className="text-sm font-extrabold text-primary flex items-center gap-2">
+                  <Smartphone className="text-accent" size={18} />
+                  Installer sur iPhone
+                </h3>
+                <p className="text-[10px] text-muted mt-0.5">Suivez ces étapes depuis Safari :</p>
+              </div>
+              <button 
+                onClick={() => setShowIOSModal(false)}
+                className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors"
+              >
+                <X size={16} className="text-secondary" />
+              </button>
+            </div>
+
+            {/* Steps List */}
+            <div className="space-y-3 py-2">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px] font-bold text-accent shrink-0">1</div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  Appuyez sur le bouton de partage <span className="inline-flex items-center justify-center p-0.5 bg-surface-2 rounded border border-border mx-0.5"><Share size={10} className="text-accent" /></span> dans Safari.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px] font-bold text-accent shrink-0">2</div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  Sélectionnez l'option <span className="font-semibold text-primary">"Sur l'écran d'accueil"</span> <span className="inline-flex items-center justify-center p-0.5 bg-surface-2 rounded border border-border mx-0.5"><Plus size={10} className="text-accent" /></span>.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px] font-bold text-accent shrink-0">3</div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  Cliquez sur <span className="font-semibold text-accent">"Ajouter"</span> dans le coin supérieur droit.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowIOSModal(false)}
+              className="w-full bg-surface-2 border border-border py-3 rounded-2xl text-xs font-bold text-primary hover:bg-border/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            >
+              <Check size={14} className="text-accent" />
+              J'ai compris
+            </button>
           </div>
         </div>
       )}

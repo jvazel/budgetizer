@@ -14,6 +14,7 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Transactions Planifiées & Abonnements** : Planification de transactions régulières ou d'abonnements mensuels/annuels, avec option d'auto-confirmation ou d'approbation manuelle.
 - **Visualisations & Graphiques** : Graphiques d'évolution du solde, répartition catégorielle et prévisions intelligentes de solde à 30 jours (via Recharts).
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
+- **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
 
 ---
 
@@ -23,15 +24,22 @@ L'application est construite sur une architecture découplée de type client-ser
 
 - **Frontend (Client)** :
   - **Framework** : [React](https://react.dev/) (propulsé par [Vite](https://vite.dev/))
+  - **PWA** : Configuration Progressive Web App via `@vite-pwa/plugin` avec Service Worker, gestion du cache et détection du mode hors ligne.
   - **Styles & Animations** : [Tailwind CSS](https://tailwindcss.com/) et [Framer Motion](https://www.framer.com/motion/) pour des transitions fluides et un design sombre premium.
   - **Graphiques** : [Recharts](https://recharts.org/) pour les visualisations interactives.
   - **Routage** : [React Router DOM v7](https://reactrouter.com/) pour la navigation.
 
 - **Backend (Serveur)** :
   - **Runtime & Framework** : [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
-  - **Base de Données** : [MongoDB](https://www.mongodb.com/) via l'ORM [Mongoose](https://mongoosejs.com/)
-  - **Sécurité** : Authentification par jeton [JWT](https://jwt.io/) stocké dans le `localStorage` et hachage des mots de passe avec `bcryptjs`.
-  - **Automatisation** : Script de traitement en arrière-plan (`scheduledProcessor`) s'exécutant au démarrage et toutes les heures pour traiter les transactions planifiées échues.
+  - **Base de Données** : [MongoDB](https://www.mongodb.com/) via l'ORM [Mongoose](https://mongoosejs.com/) avec gestion de pool de connexions optimisée.
+  - **Sécurité & Protection** : 
+    - En-têtes HTTP de sécurité via `helmet`.
+    - Protection contre les injections NoSQL avec `express-mongo-sanitize`.
+    - Limitation du débit de requêtes (rate limiting) par adresse IP via `express-rate-limit`.
+    - Gestion dynamique des origines autorisées (CORS whitelist).
+    - Validation stricte des variables d'environnement critiques et arrêt propre en cas d'erreurs globales (`SIGTERM`, `SIGINT`).
+  - **Automatisation** : Script de traitement en arrière-plan (`scheduledProcessor`) pour traiter les transactions planifiées échues, configurable par instance pour éviter les exécutions en double en production.
+  - **Gestion de Processus** : Configuré pour s'exécuter sous **PM2** en mode cluster/fork séparé pour la scalabilité et la haute disponibilité.
 
 ---
 
@@ -55,12 +63,21 @@ npm run install-all
 *(Cette commande lance séquentiellement `npm install` dans les sous-dossiers `server` et `client`)*.
 
 ### 3. Configuration de l'environnement (`.env`)
-Créez un fichier `.env` dans le dossier `/server` (il est ignoré par Git) et configurez les variables suivantes :
+Créez un fichier `.env` dans le dossier `/server` (il est ignoré par Git) et configurez les variables suivantes. Voici les options disponibles pour le développement et la production :
 
 ```env
+# Paramètres de base
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/budgetizer
 JWT_SECRET=votre_secret_jwt_ultra_securise
+
+# Paramètres de production et sécurité (Optionnels)
+NODE_ENV=production
+ALLOWED_ORIGINS=https://votre-domaine.com,https://www.votre-domaine.com # Origines CORS autorisées
+RATE_LIMIT_MAX_REQUESTS=100 # Nombre max de requêtes par IP/15min
+MONGODB_MAX_POOL_SIZE=10 # Taille max du pool de connexion MongoDB
+RUN_SCHEDULED_JOBS=true # true pour exécuter les tâches planifiées sur cette instance, false sinon
+SCHEDULED_JOB_INTERVAL_MS=3600000 # Fréquence du planificateur de tâches (1 heure par défaut)
 ```
 
 Pour le client (optionnel), si vous devez modifier l'URL de l'API (par défaut `http://localhost:5000/api`), vous pouvez créer un fichier `.env` ou `.env.local` dans le dossier `/client` :
@@ -69,16 +86,35 @@ VITE_API_URL=http://localhost:5000/api
 ```
 
 ### 4. Lancement en mode Développement
-Pour lancer simultanément le serveur de développement Frontend (Vite) et le Backend (Node) :
+Pour lancer simultanément le serveur de développement Frontend (Vite) et le Backend (Node) avec rechargement automatique :
 ```bash
 npm run dev
 ```
-- Le serveur Frontend sera accessible sur : `http://localhost:5173`
+- Le serveur Frontend sera accessible sur : `http://localhost:5173` (ou l'adresse locale fournie par Vite)
 - Le serveur Backend écoutera sur : `http://localhost:5000`
 
 Vous pouvez également démarrer les parties indépendamment :
 - Côté Backend uniquement : `npm run dev:backend`
 - Côté Frontend uniquement : `npm run dev:frontend`
+
+### 5. Lancement en Production avec PM2
+Pour le déploiement en production, nous utilisons **PM2** pour gérer l'exécution du backend et séparer le trafic de l'API REST de l'exécution des tâches planifiées d'arrière-plan. Cela évite d'exécuter plusieurs planificateurs concurrents lorsque le serveur d'API est mis en cluster.
+
+Le fichier `server/ecosystem.config.json` définit deux applications :
+1. **budgetizer-api** : L'API d'Express démarrée en mode `cluster` sur toutes les instances CPU disponibles (avec `RUN_SCHEDULED_JOBS=false`).
+2. **budgetizer-worker** : Une instance unique (`instances: 1`) démarrée en mode `fork` dédiée exclusivement au traitement en arrière-plan des transactions planifiées (`RUN_SCHEDULED_JOBS=true`).
+
+Pour lancer l'application avec PM2 :
+```bash
+cd server
+pm2 start ecosystem.config.json
+```
+
+Commandes PM2 utiles :
+- Voir les logs consolidés : `pm2 logs`
+- Surveiller les ressources : `pm2 monit`
+- Arrêter les processus : `pm2 stop ecosystem.config.json`
+- Redémarrer proprement : `pm2 reload ecosystem.config.json`
 
 ---
 
@@ -87,15 +123,17 @@ Vous pouvez également démarrer les parties indépendamment :
 ```text
 budgetizer/
 ├── client/                 # Application Frontend React
+│   ├── public/             # Fichiers statiques et icônes PWA
 │   ├── src/
 │   │   ├── assets/         # Images, logos, ressources statiques
-│   │   ├── components/     # Composants réutilisables (accounts, budgets, UI, etc.)
-│   │   ├── context/        # Contexte React d'authentification (AuthContext)
+│   │   ├── components/     # Composants (accounts, budgets, UI dont bannières d'installation PWA)
+│   │   ├── context/        # Contextes React (AuthContext, PwaContext pour l'installation)
 │   │   ├── hooks/          # Hooks personnalisés (useAccounts, useTransactions, etc.)
-│   │   ├── pages/          # Écrans principaux (Home, Budgets, Scheduled, etc.)
+│   │   ├── pages/          # Écrans principaux (Home, Budgets, Settings avec bascule PWA, etc.)
 │   │   ├── services/       # Service de communication API (Axios)
-│   │   ├── App.jsx         # Composant racine et routage
-│   │   └── main.jsx        # Point d'entrée React
+│   │   ├── App.jsx         # Composant racine, routage et toast hors ligne
+│   │   └── main.jsx        # Point d'entrée React et enregistrement PWA
+│   ├── vite.config.js      # Configuration de Vite avec le plugin VitePWA
 │   └── package.json
 │
 ├── server/                 # API REST Backend Express
@@ -104,7 +142,8 @@ budgetizer/
 │   ├── models/             # Modèles Mongoose de base de données
 │   ├── routes/             # Définition des routes d'API Express
 │   ├── utils/              # Fonctions utilitaires & planificateur automatique
-│   ├── index.js            # Point d'entrée de l'application Express
+│   ├── ecosystem.config.json # Configuration PM2 (cluster API + worker unique)
+│   ├── index.js            # Point d'entrée de l'application Express (sécurisé avec Helmet, Rate Limiter)
 │   └── package.json
 │
 ├── docs/                   # Documentations détaillées (fonctionnelle & technique)

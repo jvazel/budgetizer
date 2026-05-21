@@ -202,6 +202,67 @@ Le client sépare la logique de gestion d'état et d'appel réseau des composant
 - `useAccounts.js` : CRUD sur les comptes.
 - `useTransactions.js` : Recherche, filtres, import/export et ajout de transactions.
 - `useBudgets.js` : Suivi et définition des enveloppes de budget.
-- `useScheduled.js` : Gestion des transactions planifiées.
+- `useScheduled.js` : Gérant les transactions planifiées.
 - `useDashboard.js` : Agrégation des données de la page d'accueil.
 - `useMonthlySummaries.js` : Historique des soldes par mois passés.
+
+### 5.3 Intégration PWA & Gestion de l'Installation
+Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `client/vite.config.js` :
+- **Service Worker** : Enregistré automatiquement au point d'entrée (`main.jsx`). Il gère le pré-mise en cache (precaching) des actifs statiques (HTML, JS, CSS, images, icônes) pour un démarrage instantané et un fonctionnement en mode hors connexion partiel.
+- **Cycle de Vie** : Défini en mode `autoUpdate` pour appliquer immédiatement les nouvelles versions de l'application.
+- **PwaContext (`PwaContext.jsx`)** :
+  - Intercepte l'événement `beforeinstallprompt` du navigateur pour stocker l'objet d'installation différé.
+  - Détecte si l'application s'exécute en mode autonome (PWA installée sur l'appareil) ou via un navigateur standard.
+  - Détecte spécifiquement iOS pour fournir des instructions d'installation personnalisées adaptées à Safari.
+  - Expose la méthode `installApp()` qui déclenche l'installation native.
+- **OfflineStatus (`OfflineStatus.jsx`)** :
+  - Surveille les événements de connexion globaux `window.addEventListener('online')` et `window.addEventListener('offline')`.
+  - Affiche un bandeau d'alerte animé avec `framer-motion` indiquant le passage hors ligne ou le rétablissement de la connexion.
+
+---
+
+## 6. Sécurité, Robustesse et Architecture Production (Backend)
+
+Pour préparer le déploiement en production, le backend a fait l'objet d'une phase de durcissement (security hardening) et de modularisation.
+
+### 6.1 Sécurité Applicative (Middlewares)
+- **Helmet (`helmet`)** : Sécurise l'API en définissant divers en-têtes HTTP (X-Content-Type-Options, X-Frame-Options, CSP, HSTS, etc.) protégeant contre le clickjacking et autres vulnérabilités courantes.
+- **Rate Limiting (`express-rate-limit`)** : Protège contre les attaques de force brute et de déni de service (DoS). Il limite chaque adresse IP à un nombre de requêtes configurable via la variable `RATE_LIMIT_MAX_REQUESTS` (100 par défaut) sur une fenêtre glissante de 15 minutes.
+- **MongoDB Sanitization (`express-mongo-sanitize`)** : Élimine les caractères réservés (comme `$` ou `.`) des requêtes HTTP (`req.body`, `req.params`, `req.headers` et `req.query`) afin de prévenir les injections de requêtes NoSQL.
+  - *Note technique* : Express v5 ayant rendu le dictionnaire `req.query` en lecture seule, un middleware d'adaptation redéfinit cette propriété comme modifiable avant d'invoquer le désinfecteur.
+- **Origines CORS Dynamiques** : Au lieu d'autoriser toutes les requêtes (`*`), CORS vérifie chaque origine entrante par rapport à une liste blanche déclarée dans la variable d'environnement `ALLOWED_ORIGINS`. En mode développement, les requêtes issues de localhost sont automatiquement admises.
+
+### 6.2 Gestion des Connexions et Arrêt Propre (Graceful Shutdown)
+- **Pool de Connexion MongoDB** : Utilisation de l'option Mongoose `maxPoolSize` (configurable via `MONGODB_MAX_POOL_SIZE`, défaut 10) pour limiter et réguler la consommation de ressources de base de données.
+- **Arrêt Net** : L'API capture les signaux système `SIGTERM` et `SIGINT` (émis par Docker, PM2 ou le système d'exploitation). À la réception de ces signaux :
+  1. Le serveur HTTP cesse d'accepter de nouvelles requêtes.
+  2. Les connexions en cours sont finalisées (timeout de sécurité de 10s).
+  3. La connexion Mongoose à MongoDB est fermée proprement.
+  4. Le processus se termine avec le code `0` pour éviter de corrompre des données ou de laisser des ports réseau orphelins.
+
+### 6.3 Déploiement Multi-Processus avec PM2
+Dans un environnement de production hautement disponible, le trafic API est distribué sur plusieurs cœurs CPU via le mode `cluster` de PM2. Cependant, lancer plusieurs instances d'API exécutant un planificateur interne (`scheduledProcessor`) provoquerait des exécutions concurrentes en double de transactions planifiées, corrompant les données de solde.
+
+Pour résoudre ce problème, Budgetizer utilise la topologie décrite dans [ecosystem.config.json](file:///c:/Projects/budgetizer/server/ecosystem.config.json) :
+
+```text
+                  [ Load Balancer (Nginx/PM2 Cluster) ]
+                                   │
+                 ┌─────────────────┴─────────────────┐
+                 ▼                                   ▼
+        [ budgetizer-api #1 ]               [ budgetizer-api #2 ]
+        (instances: "max")                  (instances: "max")
+       RUN_SCHEDULED_JOBS=false            RUN_SCHEDULED_JOBS=false
+                 │                                   │
+                 └─────────────────┬─────────────────┘
+                                   ▼
+                            [ MongoDB DB ]
+                                   ▲
+                                   │
+                        [ budgetizer-worker ]
+                           (instances: 1)
+                        RUN_SCHEDULED_JOBS=true
+```
+
+- **budgetizer-api** : S'exécute en mode `cluster` sur `max` instances. La variable `RUN_SCHEDULED_JOBS` y est positionnée à `false` ; ces instances répondent aux requêtes HTTP de l'API mais n'exécutent pas de boucle de planification.
+- **budgetizer-worker** : S'exécute en instance unique (`instances: 1`) en mode `fork`. La variable `RUN_SCHEDULED_JOBS` est positionnée à `true` ; cette instance se consacre exclusivement aux calculs planifiés et à la récurrence sans accepter de trafic web public.

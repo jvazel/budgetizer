@@ -8,6 +8,7 @@ import MenuSheet from '../components/layout/MenuSheet';
 import AppShell from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
+import InstallPromptBanner from '../components/ui/InstallPromptBanner';
 import { Bell, Settings, AlertTriangle, TrendingUp, MoreVertical, Wallet, CreditCard, Sliders, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LabelList, PieChart, Pie, Cell } from 'recharts';
@@ -125,6 +126,7 @@ const Home = () => {
 
   return (
     <AppShell header={header}>
+      <InstallPromptBanner />
       {/* Sommaire Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
         <div className="flex justify-center items-center mb-4 relative">

@@ -1,7 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import OfflineStatus from './components/ui/OfflineStatus';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { PwaProvider } from './context/PwaContext';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -59,6 +61,7 @@ const AppContent = () => {
   return (
     <>
       <Toaster position="top-center" />
+      <OfflineStatus />
       <Routes>
         <Route 
           path="/login" 
@@ -165,7 +168,9 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <PwaProvider>
+          <AppContent />
+        </PwaProvider>
       </AuthProvider>
     </BrowserRouter>
   );

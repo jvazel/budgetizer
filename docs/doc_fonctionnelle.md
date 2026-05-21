@@ -139,3 +139,21 @@ La page **Statistiques (Charts)** propose des visualisations interactives basée
 Pour garantir la réappropriation et la sauvegarde de ses données, l'utilisateur a accès aux outils d'import/export :
 - **Export CSV / JSON** : Téléchargement d'un fichier contenant toutes les transactions enregistrées avec leurs métadonnées (date, compte, montant, type, catégorie, tags, note).
 - **Import de fichier** : Possibilité de charger un fichier d'historique de transactions pour alimenter rapidement l'application lors du premier démarrage ou après une réinitialisation.
+
+---
+
+## 11. Support de Progressive Web App (PWA) & Mode Hors Ligne
+
+Budgetizer est pleinement compatible PWA, ce qui permet de l'utiliser comme une application native sur tous les types d'appareils.
+
+### 11.1 Installation de l'Application
+L'application propose des mécanismes d'installation adaptés à chaque plateforme :
+- **Bannière d'installation dynamique** : Sur les navigateurs compatibles (Chrome, Edge sur PC/Android), un bandeau personnalisé s'affiche au bas de l'écran (sur la page d'accueil ou les paramètres) pour installer l'application d'un simple clic.
+- **Support iOS (Safari)** : Pour les utilisateurs d'iPhone/iPad, la bannière d'installation fournit des instructions visuelles explicites guidant l'utilisateur pour ajouter l'application à l'écran d'accueil via le bouton d'action de Safari ("Sur votre iPhone/iPad : appuyez sur le bouton de partage, puis sur 'Sur l'écran d'accueil'").
+- **Indicateurs dans les Paramètres** : Une section dédiée dans l'onglet **Paramètres** affiche l'état d'installation de l'application et permet de déclencher l'installation si elle n'est pas encore installée.
+
+### 11.2 Détection de Connexion & Notification Hors Ligne
+Afin de préserver l'expérience utilisateur lors des coupures de réseau :
+- **Toast de Statut Réseau** : Une notification visuelle glisse depuis le haut de l'écran en cas de perte de connexion réseau ("Mode hors ligne").
+- **Mode Dégradé** : L'utilisateur est informé que les données affichées sont temporairement limitées à celles mises en cache par le navigateur.
+- **Rétablissement de Connexion** : Dès que le réseau est de nouveau disponible, un toast vert s'affiche ("Connexion rétablie - Synchronisation réussie") et le client recharge automatiquement les données fraîches depuis l'API.
