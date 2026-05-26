@@ -336,6 +336,11 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
                 className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
               />
             </div>
@@ -357,6 +362,11 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  onClick={(e) => {
+                    try {
+                      e.target.showPicker();
+                    } catch (err) {}
+                  }}
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 />
               </div>

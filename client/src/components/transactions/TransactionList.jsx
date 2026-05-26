@@ -32,18 +32,49 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
               <div key={tx._id} className="bg-surface-2 p-4 rounded-2xl flex items-center gap-4">
                 <div 
                   className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0"
-                  style={{ backgroundColor: `${tx.categoryId?.color || '#888'}20` }}
+                  style={{ 
+                    backgroundColor: tx.type === 'transfer' 
+                      ? '#3b82f620' 
+                      : `${tx.categoryId?.color || '#888'}20` 
+                  }}
                 >
-                  {tx.categoryId?.icon || '💸'}
+                  {tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <p className="text-primary font-medium truncate">
-                    {tx.categoryId?.name || (tx.type === 'transfer' ? 'Virement' : 'Inconnu')}
+                  <p className="text-primary font-semibold text-sm break-words whitespace-normal leading-snug">
+                    {tx.type === 'transfer' 
+                      ? (tx.description || tx.note || 'Virement') 
+                      : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
+                    }
                   </p>
-                  <p className="text-xs text-muted truncate">
-                    {tx.accountId?.name} {tx.note && <span className="text-secondary opacity-70 ml-1">- {tx.note}</span>}
-                  </p>
+                  
+                  {tx.type === 'transfer' ? (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                        {tx.accountId?.name || 'Inconnu'}
+                      </span>
+                      <span className="text-muted text-[10px]">➔</span>
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
+                        {tx.toAccountId?.name || 'Inconnu'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      {tx.categoryId?.name && (
+                        <span className="text-[11px] text-secondary font-medium">
+                          {tx.categoryId.name}
+                        </span>
+                      )}
+                      {tx.categoryId?.name && <span className="text-muted text-[10px]">•</span>}
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                        {tx.accountId?.name || 'Inconnu'}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-right">
@@ -63,7 +94,7 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                     </button>
                   )}
                   <button 
-                    onClick={() => onDelete(tx._id)}
+                    onClick={() => onDelete(tx)}
                     className="text-danger hover:bg-danger/10 p-2 rounded-xl transition-colors"
                     title="Supprimer la transaction"
                   >

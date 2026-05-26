@@ -227,7 +227,7 @@ Pour préparer le déploiement en production, le backend a fait l'objet d'une ph
 
 ### 6.1 Sécurité Applicative (Middlewares)
 - **Helmet (`helmet`)** : Sécurise l'API en définissant divers en-têtes HTTP (X-Content-Type-Options, X-Frame-Options, CSP, HSTS, etc.) protégeant contre le clickjacking et autres vulnérabilités courantes.
-- **Rate Limiting (`express-rate-limit`)** : Protège contre les attaques de force brute et de déni de service (DoS). Il limite chaque adresse IP à un nombre de requêtes configurable via la variable `RATE_LIMIT_MAX_REQUESTS` (100 par défaut) sur une fenêtre glissante de 15 minutes.
+- **Rate Limiting (`express-rate-limit`)** : Protège contre les attaques de force brute et de déni de service (DoS). Il limite chaque adresse IP à un nombre de requêtes configurable via la variable `RATE_LIMIT_MAX_REQUESTS` (80 par défaut) sur une fenêtre glissante de 1 minute.
 - **MongoDB Sanitization (`express-mongo-sanitize`)** : Élimine les caractères réservés (comme `$` ou `.`) des requêtes HTTP (`req.body`, `req.params`, `req.headers` et `req.query`) afin de prévenir les injections de requêtes NoSQL.
   - *Note technique* : Express v5 ayant rendu le dictionnaire `req.query` en lecture seule, un middleware d'adaptation redéfinit cette propriété comme modifiable avant d'invoquer le désinfecteur.
 - **Origines CORS Dynamiques** : Au lieu d'autoriser toutes les requêtes (`*`), CORS vérifie chaque origine entrante par rapport à une liste blanche déclarée dans la variable d'environnement `ALLOWED_ORIGINS`. En mode développement, les requêtes issues de localhost sont automatiquement admises.

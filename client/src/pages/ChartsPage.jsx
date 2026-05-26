@@ -8,14 +8,8 @@ import { PieChart, Clock, TrendingUp } from 'lucide-react';
 const ChartsPage = () => {
   const [activeTab, setActiveTab] = useState('category'); // category, future, forecast
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <h1 className="text-lg font-bold text-primary">Analyses & Graphiques</h1>
-    </div>
-  );
-
   return (
-    <AppShell header={header}>
+    <AppShell title="Analyses & Graphiques" backTo="/">
       
       {/* Tab bar header */}
       <div className="flex bg-surface-2 p-1.5 rounded-2xl mb-6">

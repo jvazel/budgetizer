@@ -21,9 +21,13 @@ const BottomSheet = ({ isOpen, onClose, children }) => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+            onClick={onClose}
+            className="fixed bottom-0 left-0 right-0 z-50 flex justify-center"
           >
-            <div className="bg-surface-2 w-full max-w-md rounded-t-3xl overflow-hidden shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]">
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-2 w-full max-w-md rounded-t-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
               {/* Drag handle */}
               <div 
                 className="w-full flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"

@@ -4,7 +4,6 @@ import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
 import { useBudgets } from '../hooks/useBudgets';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
-import MenuSheet from '../components/layout/MenuSheet';
 import AppShell from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
@@ -58,24 +57,31 @@ const Home = () => {
   const { budgets = [], loading: budgetsLoading } = useBudgets(currentMonthStr);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSommaireMenuOpen, setIsSommaireMenuOpen] = useState(false);
   const [isTopCategoriesMenuOpen, setIsTopCategoriesMenuOpen] = useState(false);
   const [isBudgetsMenuOpen, setIsBudgetsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
+  const [chartDuration, setChartDuration] = useState('3M');
 
   const formatCurrency = (amount, currencyCode = 'EUR') => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currencyCode }).format(amount);
   };
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <h1 className="text-lg font-bold text-primary">Bonjour, {user?.name.split(' ')[0]} 👋</h1>
-      <div className="flex gap-4 text-muted">
-        <button className="hover:text-primary transition-colors"><Bell size={24} /></button>
-        <button onClick={() => setIsMenuOpen(true)} className="hover:text-primary transition-colors"><Settings size={24} /></button>
-      </div>
-    </div>
+  const budgetAlerts = db?.budgetAlerts || [];
+
+  const title = `Bonjour, ${user?.name ? user.name.split(' ')[0] : ''} 👋`;
+  const actions = (
+    <button 
+      onClick={() => setIsNotificationsOpen(true)}
+      className="hover:text-primary transition-colors p-1 relative animate-none"
+      id="notification-bell-btn"
+    >
+      <Bell size={20} />
+      {budgetAlerts.length > 0 && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full ring-2 ring-base animate-pulse" />
+      )}
+    </button>
   );
 
   const handleOpenAdd = () => {
@@ -90,7 +96,7 @@ const Home = () => {
 
   if (loading) {
     return (
-      <AppShell header={header}>
+      <AppShell title={title} actions={actions}>
         {/* Skeleton Loaders */}
         <section className="mb-8 mt-4 text-center space-y-2 animate-pulse">
           <div className="h-4 bg-surface-2 w-24 mx-auto rounded-full" />
@@ -114,8 +120,7 @@ const Home = () => {
     lastMonth = { income: 0, expenses: 0, net: 0 }, 
     last7DaysExpenses = [], 
     balanceHistory = [], 
-    expensesByCategory = [], 
-    budgetAlerts = [] 
+    expensesByCategory = [] 
   } = db || {};
 
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
@@ -125,7 +130,7 @@ const Home = () => {
   const lastMonthLabel = capitalize(lastMonthDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
 
   return (
-    <AppShell header={header}>
+    <AppShell title={title} actions={actions}>
       <InstallPromptBanner />
       {/* Sommaire Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
@@ -292,10 +297,22 @@ const Home = () => {
 
       {/* Solde Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Solde</h3>
-          <div className="absolute right-0">
-            <MoreVertical className="text-secondary cursor-pointer hover:text-primary transition-colors" size={18} />
+        <div className="flex justify-between items-center mb-4 px-1">
+          <h3 className="text-sm font-bold text-primary">Solde</h3>
+          <div className="flex bg-surface p-0.5 rounded-xl border border-border/40 text-[10px] font-bold">
+            {['1M', '3M', '6M'].map((d) => (
+              <button
+                key={d}
+                onClick={() => setChartDuration(d)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  chartDuration === d 
+                    ? 'bg-accent text-white shadow-sm' 
+                    : 'text-muted hover:text-primary'
+                }`}
+              >
+                {d}
+              </button>
+            ))}
           </div>
         </div>
         
@@ -310,12 +327,18 @@ const Home = () => {
             <span className="font-bold text-danger">{formatCurrency(totalCredit, user?.currency?.code)}</span>
           </div>
         </div>
-
+        
         {/* Chart */}
         <div className="h-44 w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={balanceHistory} 
+              data={
+                chartDuration === '1M'
+                  ? balanceHistory.slice(-30)
+                  : chartDuration === '6M'
+                  ? balanceHistory.slice(-180)
+                  : balanceHistory.slice(-90)
+              } 
               margin={{ top: 10, right: 5, left: -25, bottom: 5 }}
             >
               <defs>
@@ -325,11 +348,11 @@ const Home = () => {
                 </linearGradient>
               </defs>
               <XAxis 
-                dataKey="monthYear" 
+                dataKey={chartDuration === '6M' ? 'monthYear' : 'date'} 
                 tickLine={false} 
                 axisLine={false} 
                 tick={{ fill: 'var(--text-secondary)', fontSize: 9 }}
-                interval={30}
+                interval={chartDuration === '1M' ? 6 : 29}
               />
               <YAxis 
                 tickLine={false} 
@@ -477,11 +500,6 @@ const Home = () => {
         }}
       />
 
-      <MenuSheet 
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        onLogout={logout}
-      />
 
       <BottomSheet 
         isOpen={isSommaireMenuOpen} 
@@ -603,6 +621,54 @@ const Home = () => {
                 <p className="text-xs text-muted font-normal mt-0.5">Configurer vos budgets et limites mensuelles</p>
               </div>
             </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Notifications Drawer */}
+      <BottomSheet 
+        isOpen={isNotificationsOpen} 
+        onClose={() => setIsNotificationsOpen(false)}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-md font-bold text-primary">Notifications</h2>
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-3">
+            {budgetAlerts.length === 0 ? (
+              <div className="text-center py-10 text-muted space-y-2">
+                <Bell size={32} className="mx-auto text-muted/60" />
+                <p className="text-sm font-semibold">Aucune nouvelle notification</p>
+                <p className="text-[10px] text-muted/80">Tout est sous contrôle dans vos budgets !</p>
+              </div>
+            ) : (
+              budgetAlerts.map(alert => (
+                <div 
+                  key={alert.id}
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    navigate('/budgets');
+                  }}
+                  className="bg-danger/10 border border-danger/20 p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-danger/15 transition-colors"
+                >
+                  <AlertTriangle className="text-danger shrink-0" size={24} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-1">
+                      <p className="text-xs font-bold text-primary truncate">Budget {alert.name} dépassé !</p>
+                      <span className="text-[10px] font-bold text-danger shrink-0">
+                        {Math.round(alert.percentage)}%
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">
+                      Vous avez dépensé {formatCurrency(alert.spent, user?.currency?.code)} sur {formatCurrency(alert.amount, user?.currency?.code)} alloués ce mois-ci.
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </BottomSheet>

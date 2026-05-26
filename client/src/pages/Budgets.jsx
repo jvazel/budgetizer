@@ -122,14 +122,10 @@ const Budgets = () => {
     </div>
   );
 
-  const header = (
-    <h1 className="text-lg font-bold text-primary">Budgets</h1>
-  );
-
   const showSkeleton = loading && budgets.length === 0;
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Budgets">
       <section className="pb-24">
         {/* Weekly Budgets Section */}
         <div className="mb-6">

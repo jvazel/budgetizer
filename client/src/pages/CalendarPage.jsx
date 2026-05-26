@@ -5,6 +5,7 @@ import TransactionFormSheet from '../components/transactions/TransactionFormShee
 import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarRange } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -12,6 +13,8 @@ const CalendarPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [txToDelete, setTxToDelete] = useState(null);
 
   const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
@@ -54,15 +57,13 @@ const CalendarPage = () => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
-  const deleteTransaction = async (id) => {
-    if (window.confirm('Supprimer cette transaction ?')) {
-      try {
-        await api.delete(`/transactions/${id}`);
-        toast.success('Transaction supprimée');
-        window.dispatchEvent(new CustomEvent('transaction-changed'));
-      } catch (e) {
-        toast.error('Erreur lors de la suppression');
-      }
+  const deleteTransaction = async (tx) => {
+    try {
+      await api.delete(`/transactions/${tx._id}`);
+      toast.success('Transaction supprimée');
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    } catch (e) {
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -74,20 +75,19 @@ const CalendarPage = () => {
            d.getFullYear() === selectedDate.getFullYear();
   });
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <button onClick={prevMonth} className="p-2 text-muted hover:text-primary transition-colors">
-        <ChevronLeft size={24} />
+  const actions = (
+    <>
+      <button onClick={prevMonth} className="p-1 text-muted hover:text-primary transition-colors">
+        <ChevronLeft size={20} />
       </button>
-      <h1 className="text-lg font-bold text-primary capitalize">{formatMonth(currentDate)}</h1>
-      <button onClick={nextMonth} className="p-2 text-muted hover:text-primary transition-colors">
-        <ChevronRight size={24} />
+      <button onClick={nextMonth} className="p-1 text-muted hover:text-primary transition-colors">
+        <ChevronRight size={20} />
       </button>
-    </div>
+    </>
   );
 
   return (
-    <AppShell header={header}>
+    <AppShell title={formatMonth(currentDate)} actions={actions}>
       
       {/* Calendar Grid */}
       <section className="mb-6 mt-2">
@@ -162,7 +162,10 @@ const CalendarPage = () => {
 
                     {!isPlanned && (
                       <button 
-                        onClick={() => deleteTransaction(tx._id)}
+                        onClick={() => {
+                          setTxToDelete(tx);
+                          setConfirmDeleteOpen(true);
+                        }}
                         className="hidden group-hover:flex ml-2 text-danger hover:bg-danger/10 p-2 rounded-xl transition-colors shrink-0"
                       >
                         <Trash2 size={16} />
@@ -192,6 +195,33 @@ const CalendarPage = () => {
         onSuccess={fetchCalendarData}
       />
 
+      <ConfirmModal
+        isOpen={confirmDeleteOpen}
+        onClose={() => {
+          setConfirmDeleteOpen(false);
+          setTxToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (txToDelete) {
+            await deleteTransaction(txToDelete);
+          }
+          setConfirmDeleteOpen(false);
+          setTxToDelete(null);
+        }}
+        title="Supprimer la transaction ?"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        type="danger"
+      >
+        {txToDelete && (
+          <p className="text-xs text-secondary leading-relaxed">
+            Êtes-vous sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name || (txToDelete.type === 'transfer' ? 'Virement' : 'Transaction')}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{formatCurrency(txToDelete.amount)}</span> ?
+            <br />
+            <br />
+            Cette action est irréversible et réajustera le solde de votre compte.
+          </p>
+        )}
+      </ConfirmModal>
     </AppShell>
   );
 };

@@ -69,20 +69,17 @@ const ScheduledPage = () => {
     }
   };
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <h1 className="text-lg font-bold text-primary">Transactions planifiées</h1>
-      <button 
-        onClick={handleOpenAdd}
-        className="p-2 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
-      >
-        <Plus size={20} />
-      </button>
-    </div>
+  const actions = (
+    <button 
+      onClick={handleOpenAdd}
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+    >
+      <Plus size={16} />
+    </button>
   );
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Planifications" actions={actions}>
       
       {/* 1. Pending confirmations section */}
       {pending.length > 0 && (

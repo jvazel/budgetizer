@@ -153,7 +153,12 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent"
+              onClick={(e) => {
+                try {
+                  e.target.showPicker();
+                } catch (err) {}
+              }}
+              className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full"
               required
             />
           </div>

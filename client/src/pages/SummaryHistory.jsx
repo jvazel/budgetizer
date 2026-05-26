@@ -1,13 +1,10 @@
 import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import AppShell from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
 
 const SummaryHistory = () => {
-  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { summaries, availableYears, loading, error, refreshHistory } = useMonthlySummaries(selectedYear);
@@ -23,19 +20,6 @@ const SummaryHistory = () => {
     ];
     return `${months[monthIndex]} ${year}`;
   };
-
-  const header = (
-    <div className="w-full flex items-center gap-3">
-      <button 
-        onClick={() => navigate('/')} 
-        className="hover:text-primary transition-colors"
-        id="back-to-home-btn"
-      >
-        <ArrowLeft size={20} />
-      </button>
-      <h1 className="text-lg font-bold text-primary">Historique du Sommaire</h1>
-    </div>
-  );
 
   const MonthGauge = ({ income, expenses }) => {
     const total = income + expenses;
@@ -72,7 +56,7 @@ const SummaryHistory = () => {
   };
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Historique" backTo="/">
       {/* Year Filter List */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
         {availableYears.map(year => (

@@ -227,7 +227,7 @@ const SettingsPage = () => {
 
 
   return (
-    <AppShell header={<h1 className="text-lg font-bold text-primary">Paramètres</h1>}>
+    <AppShell title="Paramètres" backTo="/">
       <div className="space-y-8 pb-24">
         
         {/* Profile Card Summary */}

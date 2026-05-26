@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import AppShell from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
-import { Plus, CreditCard, ChevronRight, HelpCircle, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, CreditCard, HelpCircle, Edit, Trash2 } from 'lucide-react';
 
 const SubscriptionsPage = () => {
-  const navigate = useNavigate();
   const { 
     scheduled, 
     loading, 
@@ -67,25 +65,17 @@ const SubscriptionsPage = () => {
 
   const totalAnnualCost = totalMonthlyCost * 12;
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <div className="flex items-center gap-2">
-        <button onClick={() => navigate(-1)} className="p-1 hover:bg-surface-2 rounded-full text-secondary">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-lg font-bold text-primary">Mes Abonnements</h1>
-      </div>
-      <button 
-        onClick={handleOpenAdd}
-        className="p-2 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
-      >
-        <Plus size={20} />
-      </button>
-    </div>
+  const actions = (
+    <button 
+      onClick={handleOpenAdd}
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+    >
+      <Plus size={16} />
+    </button>
   );
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Abonnements" backTo="/scheduled" actions={actions}>
       
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
@@ -133,47 +123,45 @@ const SubscriptionsPage = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {activeSubscriptions.map(sub => {
-              const frequencyText = `Mensuel`; // Simplification or actual text
-              return (
-                <div key={sub._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between group relative">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 shadow-sm"
-                      style={{ backgroundColor: `${sub.categoryId?.color || '#888'}20` }}
-                    >
-                      {sub.categoryId?.icon || '💳'}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-primary truncate">{sub.description}</h4>
-                      <p className="text-xs text-muted truncate">
-                        Prochain : {new Date(sub.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                      </p>
-                    </div>
+            {activeSubscriptions.map(sub => (
+              <div key={sub._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between group relative">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 shadow-sm"
+                    style={{ backgroundColor: `${sub.categoryId?.color || '#888'}20` }}
+                  >
+                    {sub.categoryId?.icon || '💳'}
                   </div>
-
-                  <div className="flex items-center gap-3 text-right">
-                    <span className="font-mono font-bold text-primary">
-                      -{formatCurrency(sub.amount)}
-                    </span>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button 
-                        onClick={() => handleOpenEdit(sub)}
-                        className="p-1 text-muted hover:text-accent transition-colors"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(sub._id)}
-                        className="p-1 text-muted hover:text-danger transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-primary truncate">{sub.description}</h4>
+                    <p className="text-xs text-muted truncate">
+                      Prochain : {new Date(sub.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="flex items-center gap-3 text-right">
+                  <span className="font-mono font-bold text-primary">
+                    -{formatCurrency(sub.amount)}
+                  </span>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button 
+                      onClick={() => handleOpenEdit(sub)}
+                      className="p-1 text-muted hover:text-accent transition-colors"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(sub._id)}
+                      className="p-1 text-muted hover:text-danger transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

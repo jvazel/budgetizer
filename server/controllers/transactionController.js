@@ -44,7 +44,31 @@ export const getTransactions = async (req, res) => {
     }
     if (search) {
       const escapedSearch = search.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
-      query.description = { $regex: escapedSearch, $options: 'i' };
+      const searchRegex = { $regex: escapedSearch, $options: 'i' };
+
+      // Find matching accounts and categories to allow searching by their names
+      const [matchingAccounts, matchingCategories] = await Promise.all([
+        Account.find({ userId: req.user.id, name: searchRegex }),
+        Category.find({ userId: req.user.id, name: searchRegex })
+      ]);
+
+      const accountIds = matchingAccounts.map(a => a._id);
+      const categoryIds = matchingCategories.map(c => c._id);
+
+      query.$or = [
+        { description: searchRegex },
+        { note: searchRegex },
+        { accountId: { $in: accountIds } },
+        { toAccountId: { $in: accountIds } },
+        { categoryId: { $in: categoryIds } },
+        { tags: searchRegex }
+      ];
+
+      // Also support searching by numeric amount if search query is a number
+      const searchNum = parseFloat(search);
+      if (!isNaN(searchNum)) {
+        query.$or.push({ amount: searchNum });
+      }
     }
 
     const transactions = await Transaction.find(query)

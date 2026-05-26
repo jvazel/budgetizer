@@ -3,26 +3,15 @@ import AppShell from '../components/layout/AppShell';
 import CategoryList from '../components/categories/CategoryList';
 import CategoryFormSheet from '../components/categories/CategoryFormSheet';
 import { useCategories } from '../hooks/useCategories';
-import { Plus, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 const Categories = () => {
-  const navigate = useNavigate();
   const { categoriesTree, loading, addCategory, updateCategory, deleteCategory } = useCategories();
   const [activeTab, setActiveTab] = useState('expense');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [addingToParentId, setAddingToParentId] = useState(null);
-
-  const header = (
-    <div className="w-full flex items-center gap-4">
-      <button onClick={() => navigate(-1)} className="text-muted hover:text-primary transition-colors p-2 -ml-2">
-        <ArrowLeft size={24} />
-      </button>
-      <h1 className="text-lg font-bold text-primary">Catégories</h1>
-    </div>
-  );
 
   const handleAddRoot = () => {
     setEditingCategory(null);
@@ -43,7 +32,7 @@ const Categories = () => {
   };
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Catégories" backTo="/">
       {/* Tabs */}
       <div className="flex bg-surface-2 p-1 rounded-2xl mb-6">
         <button

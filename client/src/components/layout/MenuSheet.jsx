@@ -1,95 +1,138 @@
 import React from 'react';
-import { X, FolderTree, Repeat, CreditCard, LogOut, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { X, FolderTree, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MenuSheet = ({ isOpen, onClose, onLogout }) => {
   const navigate = useNavigate();
-
-  if (!isOpen) return null;
+  const location = useLocation();
 
   const menuItems = [
     { 
-      label: 'Mon Profil & Paramètres', 
-      icon: Settings, 
-      color: 'text-amber-400 bg-amber-500/10',
-      action: () => { navigate('/settings'); onClose(); }
+      label: 'Tableau de bord', 
+      icon: CalendarDays, 
+      color: 'text-accent bg-accent/10',
+      path: '/'
     },
     { 
       label: 'Gérer les catégories', 
       icon: FolderTree, 
-      color: 'text-accent bg-accent/10',
-      action: () => { navigate('/categories'); onClose(); }
+      color: 'text-purple-400 bg-purple-500/10',
+      path: '/categories'
     },
     { 
       label: 'Gérer les budgets', 
       icon: CreditCard, 
       color: 'text-pink-400 bg-pink-500/10',
-      action: () => { navigate('/budgets'); onClose(); }
+      path: '/budgets'
     },
     { 
       label: 'Transactions planifiées', 
       icon: Repeat, 
-      color: 'text-purple-400 bg-purple-500/10',
-      action: () => { navigate('/scheduled'); onClose(); }
+      color: 'text-blue-400 bg-blue-500/10',
+      path: '/scheduled'
     },
     { 
       label: 'Mes abonnements', 
       icon: CreditCard, 
-      color: 'text-blue-400 bg-blue-500/10',
-      action: () => { navigate('/subscriptions'); onClose(); }
+      color: 'text-amber-400 bg-amber-500/10',
+      path: '/subscriptions'
+    },
+    { 
+      label: 'Analyses & Graphiques', 
+      icon: BarChart2, 
+      color: 'text-indigo-400 bg-indigo-500/10',
+      path: '/charts'
+    },
+    { 
+      label: 'Mon Profil & Paramètres', 
+      icon: Settings, 
+      color: 'text-secondary bg-surface-2',
+      path: '/settings'
     },
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col justify-end">
-      {/* Tap outside to close */}
-      <div className="flex-1" onClick={onClose} />
-      
-      <div className="bg-surface rounded-t-[32px] w-full max-w-md mx-auto p-6 shadow-2xl border-t border-border space-y-6">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center pb-2 border-b border-border/40">
-          <h2 className="text-md font-bold text-primary">Réglages & Options</h2>
-          <button onClick={onClose} className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors">
-            <X size={20} className="text-secondary" />
-          </button>
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex justify-start">
+          {/* Backdrop with blur */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Menu list */}
-        <div className="space-y-3">
-          {menuItems.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={idx}
-                onClick={item.action}
-                className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
+          {/* Sidebar Drawer */}
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 26, stiffness: 220 }}
+            className="bg-surface border-r border-border/40 w-full max-w-[280px] h-full shadow-2xl z-10 flex flex-col p-6 relative pointer-events-auto"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-border/40 mb-6">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💳</span>
+                <span className="font-bold text-primary font-mono tracking-tight text-md">Budgetizer</span>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="p-1.5 rounded-full hover:bg-border/20 text-secondary hover:text-primary transition-colors"
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.color}`}>
-                  <Icon size={20} />
-                </div>
-                <span>{item.label}</span>
+                <X size={18} />
               </button>
-            );
-          })}
+            </div>
+
+            {/* Menu List */}
+            <div className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
+              {menuItems.map((item, idx) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      navigate(item.path);
+                      onClose();
+                    }}
+                    className={`w-full p-3.5 rounded-xl border flex items-center gap-3.5 transition-all text-left font-bold text-xs ${
+                      isActive 
+                        ? 'bg-accent/15 border-accent/30 text-accent' 
+                        : 'bg-surface-2/40 border-border/10 text-primary hover:bg-surface-2/80'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? 'bg-accent/20 text-accent' : item.color}`}>
+                      <Icon size={16} />
+                    </div>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Logout Option */}
+            <div className="pt-4 border-t border-border/40 mt-6">
+              <button
+                onClick={() => {
+                  onLogout();
+                  onClose();
+                }}
+                className="w-full p-3.5 rounded-xl bg-danger/10 border border-danger/20 flex items-center gap-3.5 hover:bg-danger/20 transition-all text-left font-bold text-danger text-xs active:scale-95"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-danger/20 text-danger shrink-0">
+                  <LogOut size={16} />
+                </div>
+                <span>Se déconnecter</span>
+              </button>
+            </div>
+          </motion.div>
         </div>
-
-        {/* Logout Option */}
-        <button
-          onClick={() => {
-            onLogout();
-            onClose();
-          }}
-          className="w-full p-4 rounded-2xl bg-danger/10 border border-danger/20 flex items-center gap-4 hover:bg-danger/20 transition-colors text-left font-bold text-danger"
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-danger/20 text-danger">
-            <LogOut size={20} />
-          </div>
-          <span>Se déconnecter</span>
-        </button>
-
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 

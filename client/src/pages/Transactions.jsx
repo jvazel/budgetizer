@@ -6,6 +6,7 @@ import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
 import { Filter, Search, X, RotateCcw, Calendar } from 'lucide-react';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 const Transactions = () => {
   // Navigation / Visibility states
@@ -13,6 +14,8 @@ const Transactions = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [txToDelete, setTxToDelete] = useState(null);
 
   // Filter state values
   const [search, setSearch] = useState('');
@@ -48,34 +51,31 @@ const Transactions = () => {
     setShowSearch(false);
   };
 
-  const header = (
-    <div className="w-full flex justify-between items-center">
-      <h1 className="text-lg font-bold text-primary">Transactions</h1>
-      <div className="flex gap-4 text-muted">
-        <button 
-          onClick={() => {
-            setShowSearch(!showSearch);
-            if (showFilters) setShowFilters(false);
-          }} 
-          className={`hover:text-primary transition-colors p-1 rounded-lg ${showSearch ? 'text-accent' : ''}`}
-        >
-          <Search size={22} />
-        </button>
-        <button 
-          onClick={() => {
-            setShowFilters(!showFilters);
-            if (showSearch) setShowSearch(false);
-          }} 
-          className={`hover:text-primary transition-colors p-1 rounded-lg ${showFilters ? 'text-accent' : ''}`}
-        >
-          <Filter size={22} />
-        </button>
-      </div>
-    </div>
+  const actions = (
+    <>
+      <button 
+        onClick={() => {
+          setShowSearch(!showSearch);
+          if (showFilters) setShowFilters(false);
+        }} 
+        className={`hover:text-primary transition-colors p-1 rounded-lg ${showSearch ? 'text-accent' : ''}`}
+      >
+        <Search size={20} />
+      </button>
+      <button 
+        onClick={() => {
+          setShowFilters(!showFilters);
+          if (showSearch) setShowSearch(false);
+        }} 
+        className={`hover:text-primary transition-colors p-1 rounded-lg ${showFilters ? 'text-accent' : ''}`}
+      >
+        <Filter size={20} />
+      </button>
+    </>
   );
 
   return (
-    <AppShell header={header}>
+    <AppShell title="Transactions" actions={actions}>
       <div className="mt-4 space-y-4">
         
         {/* Dynamic sliding Search Bar */}
@@ -84,7 +84,7 @@ const Transactions = () => {
             <Search size={18} className="text-muted flex-shrink-0" />
             <input 
               type="text"
-              placeholder="Rechercher par description..."
+              placeholder="Rechercher (libellé, note, compte, catégorie...)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 bg-transparent text-sm text-primary focus:outline-none placeholder-muted"
@@ -172,7 +172,7 @@ const Transactions = () => {
                 </div>
               )}
 
-              {/* Start Date */}
+               {/* Start Date */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
                   <Calendar size={10} /> Du
@@ -181,6 +181,11 @@ const Transactions = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  onClick={(e) => {
+                    try {
+                      e.target.showPicker();
+                    } catch (err) {}
+                  }}
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 />
               </div>
@@ -194,6 +199,11 @@ const Transactions = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  onClick={(e) => {
+                    try {
+                      e.target.showPicker();
+                    } catch (err) {}
+                  }}
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 />
               </div>
@@ -218,10 +228,9 @@ const Transactions = () => {
             ) : (
               <TransactionList 
                 transactions={transactions} 
-                onDelete={async (id) => {
-                  if (window.confirm('Supprimer cette transaction ?')) {
-                    await deleteTransaction(id);
-                  }
+                onDelete={(tx) => {
+                  setTxToDelete(tx);
+                  setConfirmDeleteOpen(true);
                 }} 
                 onEdit={(tx) => {
                   setSelectedTransaction(tx);
@@ -242,6 +251,34 @@ const Transactions = () => {
         }}
         transactionToEdit={selectedTransaction}
       />
+
+      <ConfirmModal
+        isOpen={confirmDeleteOpen}
+        onClose={() => {
+          setConfirmDeleteOpen(false);
+          setTxToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (txToDelete) {
+            await deleteTransaction(txToDelete._id);
+          }
+          setConfirmDeleteOpen(false);
+          setTxToDelete(null);
+        }}
+        title="Supprimer la transaction ?"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        type="danger"
+      >
+        {txToDelete && (
+          <p className="text-xs text-secondary leading-relaxed">
+            Êtes-vous sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name || (txToDelete.type === 'transfer' ? 'Virement' : 'Transaction')}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(txToDelete.amount)}</span> ?
+            <br />
+            <br />
+            Cette action est irréversible et réajustera le solde de votre compte.
+          </p>
+        )}
+      </ConfirmModal>
     </AppShell>
   );
 };
