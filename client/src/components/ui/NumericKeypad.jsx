@@ -83,7 +83,7 @@ const evaluateExpression = (expr) => {
   return String(roundedResult);
 };
 
-const NumericKeypad = ({ value, onChange, onSubmit, onToggleSign }) => {
+const NumericKeypad = ({ value, onChange, onSubmit }) => {
   const displayValue = String(value || '');
 
   // An expression exists if there's any operator after the first character
@@ -122,8 +122,7 @@ const NumericKeypad = ({ value, onChange, onSubmit, onToggleSign }) => {
       if (!currentNumberPart.includes('.')) {
         onChange(displayValue + (currentNumberPart === '' ? '0.' : '.'));
       }
-    } else if (key === '+/-') {
-      if (onToggleSign) onToggleSign();
+
     } else if (key === 'check') {
       if (hasOperator) {
         const result = evaluateExpression(displayValue);
@@ -190,11 +189,10 @@ const NumericKeypad = ({ value, onChange, onSubmit, onToggleSign }) => {
       <button type="button" onClick={() => handlePress('+')} className={opBtnClass}>+</button>
 
       {/* Row 5 */}
-      <button type="button" onClick={() => handlePress('+/-')} className={`${opBtnClass} text-xl`}>+/-</button>
       <button 
         type="button" 
         onClick={() => handlePress('check')} 
-        className={`col-span-3 h-14 flex items-center justify-center rounded-2xl transition-all shadow-md text-white active:scale-95 ${
+        className={`col-span-4 h-14 flex items-center justify-center rounded-2xl transition-all shadow-md text-white active:scale-95 ${
           hasOperator 
             ? 'bg-purple hover:bg-purple/80 shadow-purple/20' 
             : 'bg-accent hover:bg-accent-dim shadow-accent/20'

@@ -181,7 +181,6 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
             value={amount} 
             onChange={setAmount} 
             onSubmit={handleSubmit}
-            onToggleSign={() => handleTypeChange(type === 'expense' ? 'income' : 'expense')}
           />
         </div>
 
