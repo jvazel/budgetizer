@@ -4,6 +4,7 @@ import Transaction from '../models/Transaction.js';
 import Budget from '../models/Budget.js';
 import Category from '../models/Category.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
+import SavedFilter from '../models/SavedFilter.js';
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
 
@@ -137,6 +138,7 @@ export const deleteMyAccount = async (req, res) => {
     await Budget.deleteMany({ userId });
     await Category.deleteMany({ userId });
     await Account.deleteMany({ userId });
+    await SavedFilter.deleteMany({ userId });
     await User.findByIdAndDelete(userId);
 
     res.json({ message: 'Compte et données supprimés en cascade avec succès' });
@@ -155,6 +157,7 @@ export const clearMyData = async (req, res) => {
     await Budget.deleteMany({ userId });
     await Category.deleteMany({ userId });
     await Account.deleteMany({ userId });
+    await SavedFilter.deleteMany({ userId });
 
     res.json({ message: 'Toutes les données financières ont été effacées avec succès' });
   } catch (error) {

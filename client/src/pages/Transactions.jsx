@@ -4,7 +4,9 @@ import TransactionList from '../components/transactions/TransactionList';
 import { useTransactions } from '../hooks/useTransactions';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
-import { Filter, Search, X, RotateCcw, Calendar } from 'lucide-react';
+import { useSavedFilters } from '../hooks/useSavedFilters';
+import toast from 'react-hot-toast';
+import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2 } from 'lucide-react';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 
@@ -25,6 +27,12 @@ const Transactions = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Saved Filters states
+  const { savedFilters, addSavedFilter, updateSavedFilter, deleteSavedFilter } = useSavedFilters();
+  const [activeSavedFilterId, setActiveSavedFilterId] = useState(null);
+  const [isSavingFilter, setIsSavingFilter] = useState(false);
+  const [newFilterName, setNewFilterName] = useState('');
+
   // Build reactive filters object
   const activeFilters = {};
   if (search) activeFilters.search = search;
@@ -39,6 +47,17 @@ const Transactions = () => {
   const { accounts } = useAccounts();
   const { categories } = useCategories();
 
+  // Load a saved filter
+  const handleLoadFilter = (sf) => {
+    setActiveSavedFilterId(sf._id);
+    setSearch(sf.filters.search || '');
+    setAccountId(sf.filters.accountId || '');
+    setCategoryId(sf.filters.categoryId || '');
+    setType(sf.filters.type || '');
+    setStartDate(sf.filters.startDate || '');
+    setEndDate(sf.filters.endDate || '');
+  };
+
   // Reset all filters helper
   const handleResetFilters = () => {
     setSearch('');
@@ -47,8 +66,54 @@ const Transactions = () => {
     setType('');
     setStartDate('');
     setEndDate('');
+    setActiveSavedFilterId(null);
+    setNewFilterName('');
+    setIsSavingFilter(false);
     setShowFilters(false);
     setShowSearch(false);
+  };
+
+  // Save new filter handler
+  const handleSaveFilterSubmit = async (e) => {
+    e.preventDefault();
+    if (!newFilterName.trim()) return;
+    try {
+      const saved = await addSavedFilter(newFilterName.trim(), activeFilters);
+      setActiveSavedFilterId(saved._id);
+      setIsSavingFilter(false);
+      setNewFilterName('');
+      toast.success('Filtre enregistré');
+    } catch (err) {
+      toast.error("Erreur lors de l'enregistrement");
+    }
+  };
+
+  // Update existing filter handler
+  const handleUpdateFilter = async () => {
+    if (!activeSavedFilterId) return;
+    const filterToUpdate = savedFilters.find(f => f._id === activeSavedFilterId);
+    if (!filterToUpdate) return;
+    try {
+      await updateSavedFilter(activeSavedFilterId, filterToUpdate.name, activeFilters);
+      toast.success('Filtre mis à jour');
+    } catch (err) {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  // Delete saved filter handler
+  const handleDeleteFilter = async (sf) => {
+    if (window.confirm(`Supprimer le filtre enregistré "${sf.name}" ?`)) {
+      try {
+        await deleteSavedFilter(sf._id);
+        if (activeSavedFilterId === sf._id) {
+          setActiveSavedFilterId(null);
+        }
+        toast.success('Filtre supprimé');
+      } catch (err) {
+        toast.error('Erreur lors de la suppression');
+      }
+    }
   };
 
   const actions = (
@@ -118,6 +183,55 @@ const Transactions = () => {
               </button>
             </div>
 
+            {/* Saved Filters Dropdown */}
+            {savedFilters.length > 0 && (
+              <div className="space-y-1 pb-1">
+                <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
+                  <Bookmark size={10} className="text-accent" /> Charger un filtre enregistré
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={activeSavedFilterId || ''}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      if (id === '') {
+                        handleResetFilters();
+                        setShowFilters(true); // Keep filters open
+                      } else {
+                        const sf = savedFilters.find(f => f._id === id);
+                        if (sf) handleLoadFilter(sf);
+                      }
+                    }}
+                    className="flex-1 bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                  >
+                    <option value="">-- Choisir un filtre --</option>
+                    {[...savedFilters]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(sf => (
+                        <option key={sf._id} value={sf._id}>
+                          {sf.name}
+                        </option>
+                      ))
+                    }
+                  </select>
+                  
+                  {activeSavedFilterId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sf = savedFilters.find(f => f._id === activeSavedFilterId);
+                        if (sf) handleDeleteFilter(sf);
+                      }}
+                      className="px-3 py-2 rounded-xl bg-surface border border-border/40 text-muted hover:text-danger hover:border-danger/35 transition-colors focus:outline-none flex items-center justify-center shadow-sm"
+                      title="Supprimer ce filtre"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Selection Grid */}
             <div className="grid grid-cols-2 gap-3">
               {/* Filter by Type */}
@@ -125,7 +239,10 @@ const Transactions = () => {
                 <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
                 <select
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  onChange={(e) => {
+                    setType(e.target.value);
+                    setCategoryId('');
+                  }}
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 >
                   <option value="">Tous les types</option>
@@ -174,14 +291,23 @@ const Transactions = () => {
 
                {/* Start Date */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
+                <label 
+                  htmlFor="startDateFilter"
+                  className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
+                >
                   <Calendar size={10} /> Du
                 </label>
                 <input
+                  id="startDateFilter"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   onClick={(e) => {
+                    try {
+                      e.target.showPicker();
+                    } catch (err) {}
+                  }}
+                  onFocus={(e) => {
                     try {
                       e.target.showPicker();
                     } catch (err) {}
@@ -192,10 +318,14 @@ const Transactions = () => {
 
               {/* End Date */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
+                <label 
+                  htmlFor="endDateFilter"
+                  className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
+                >
                   <Calendar size={10} /> Au
                 </label>
                 <input
+                  id="endDateFilter"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
@@ -204,9 +334,76 @@ const Transactions = () => {
                       e.target.showPicker();
                     } catch (err) {}
                   }}
+                  onFocus={(e) => {
+                    try {
+                      e.target.showPicker();
+                    } catch (err) {}
+                  }}
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 />
               </div>
+            </div>
+
+            {/* Save / Update Filter action */}
+            <div className="pt-2 border-t border-border/20 flex flex-col gap-2">
+              {!isSavingFilter ? (
+                <div className="flex gap-2 justify-end text-xs">
+                  {activeSavedFilterId && (
+                    <button
+                      type="button"
+                      onClick={handleUpdateFilter}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-primary transition-colors font-bold"
+                    >
+                      <RotateCcw size={13} className="text-purple" />
+                      Mettre à jour "{savedFilters.find(f => f._id === activeSavedFilterId)?.name}"
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSavingFilter(true);
+                      setNewFilterName(activeSavedFilterId ? `${savedFilters.find(f => f._id === activeSavedFilterId)?.name} (copie)` : '');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-accent font-bold transition-colors"
+                  >
+                    <Save size={13} />
+                    {activeSavedFilterId ? 'Enregistrer sous...' : 'Enregistrer ce filtre'}
+                  </button>
+                </div>
+              ) : (
+                <form 
+                  onSubmit={handleSaveFilterSubmit} 
+                  className="flex items-center gap-2 bg-surface p-2 rounded-xl border border-border/40 animate-fadeIn"
+                >
+                  <input
+                    type="text"
+                    placeholder="Nom du filtre (ex: Courses de Mai)"
+                    value={newFilterName}
+                    onChange={e => setNewFilterName(e.target.value)}
+                    className="flex-1 bg-transparent text-xs text-primary focus:outline-none placeholder-muted px-2 font-semibold"
+                    required
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="p-1.5 rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors"
+                    title="Enregistrer"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSavingFilter(false);
+                      setNewFilterName('');
+                    }}
+                    className="p-1.5 rounded-lg bg-surface-2 hover:bg-border/40 text-secondary transition-colors"
+                    title="Annuler"
+                  >
+                    <X size={14} />
+                  </button>
+                </form>
+              )}
             </div>
 
           </div>
@@ -284,3 +481,4 @@ const Transactions = () => {
 };
 
 export default Transactions;
+
