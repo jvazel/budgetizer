@@ -75,8 +75,8 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
           >
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-border/40 mb-6">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">💳</span>
+              <div className="flex items-center gap-2.5">
+                <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-7 h-7 rounded-lg object-contain shrink-0" />
                 <span className="font-bold text-primary font-mono tracking-tight text-md">Budgetizer</span>
               </div>
               <button 
