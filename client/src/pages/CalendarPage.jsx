@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AppShell from '../components/layout/AppShell';
 import MiniCalendar from '../components/calendar/MiniCalendar';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
-import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarRange } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, CalendarRange } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -179,13 +179,6 @@ const CalendarPage = () => {
         </div>
       </section>
 
-      {/* Float Action Button */}
-      <button 
-        onClick={() => setIsFormOpen(true)}
-        className="fixed bottom-[88px] right-6 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform z-20"
-      >
-        <Plus size={28} />
-      </button>
 
       {/* Local form Sheet with selected date default */}
       <TransactionFormSheet 
