@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getMe } from '../controllers/authController.js';
+import { registerUser, loginUser, getMe, forgotPassword, resetPassword } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { body } from 'express-validator';
 
@@ -25,5 +25,21 @@ router.post(
 );
 
 router.get('/me', protect, getMe);
+
+router.post(
+  '/forgot-password',
+  [
+    body('email', 'Please include a valid email').isEmail()
+  ],
+  forgotPassword
+);
+
+router.post(
+  '/reset-password/:token',
+  [
+    body('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+  ],
+  resetPassword
+);
 
 export default router;

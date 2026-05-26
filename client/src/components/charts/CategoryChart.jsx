@@ -1,22 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronRight, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X } from 'lucide-react';
+import { ChevronRight, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BottomSheet from '../ui/BottomSheet';
 
 const CategoryChart = () => {
   const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
   const [type, setType] = useState('expense'); // expense, income
-  const [compare, setCompare] = useState(true);
+  const [compareMode, setCompareMode] = useState('previous'); // previous, 3m, 6m, none
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ total: 0, categories: [] });
   
   // Drill-down states
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Detail Bottom Sheet states
+  const [detailSheet, setDetailSheet] = useState({ isOpen: false, category: null });
+  const [categoryTransactions, setCategoryTransactions] = useState([]);
+  const [categoryTransactionsLoading, setCategoryTransactionsLoading] = useState(false);
   
   // Transaction list bottom sheet states
   const [transactionListSheet, setTransactionListSheet] = useState({ isOpen: false, subcatName: null, txs: [] });
+
+  const getCompareValue = (cat) => {
+    if (compareMode === 'previous') return cat.changeVsPreviousPeriod || 0;
+    if (compareMode === '3m') return cat.changeVs3MAvg || 0;
+    if (compareMode === '6m') return cat.changeVs6MAvg || 0;
+    return 0;
+  };
+
+  const handleOpenDetailSheet = async (cat) => {
+    setDetailSheet({ isOpen: true, category: cat });
+    setCategoryTransactions([]);
+    try {
+      setCategoryTransactionsLoading(true);
+      const { startDate, endDate } = getDates(period);
+      const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}`);
+      const filtered = res.data.filter(
+        tx => (tx.categoryId?._id === cat.categoryId || tx.categoryId?.name === cat.name) && tx.type === type
+      );
+      setCategoryTransactions(filtered);
+    } catch (err) {
+      toast.error('Impossible de charger les transactions');
+    } finally {
+      setCategoryTransactionsLoading(false);
+    }
+  };
 
   const getDates = (p) => {
     const end = new Date();
@@ -146,16 +177,26 @@ const CategoryChart = () => {
             </button>
           </div>
 
-          <button
-            onClick={() => setCompare(!compare)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border ${
-              compare 
-                ? 'bg-accent/10 border-accent/20 text-accent' 
-                : 'bg-surface border-border/40 text-secondary'
-            }`}
-          >
-            {compare ? 'Vs période préc. actif' : 'Pas de comparaison'}
-          </button>
+          <div className="flex bg-surface border border-border/40 p-0.5 rounded-xl text-[10px] font-bold">
+            {[
+              { id: 'previous', label: 'Vs préc.' },
+              { id: '3m', label: 'Vs moy. 3M' },
+              { id: '6m', label: 'Vs moy. 6M' },
+              { id: 'none', label: 'Aucune' }
+            ].map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setCompareMode(m.id)}
+                className={`px-2 py-1 rounded-lg transition-all ${
+                  compareMode === m.id 
+                    ? 'bg-accent text-white shadow-sm' 
+                    : 'text-muted hover:text-primary'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -257,10 +298,10 @@ const CategoryChart = () => {
           /* Main Categories List */
           <div className="space-y-2">
             {data.categories.map((cat, idx) => (
-              <button
+              <div 
                 key={idx}
-                onClick={() => cat.subcategories?.length > 0 && setSelectedCategory(cat)}
-                className="w-full bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between hover:bg-surface-2/70 active:scale-99 transition-all text-left"
+                onClick={() => cat.subcategories?.length > 0 ? setSelectedCategory(cat) : handleOpenDetailSheet(cat)}
+                className="w-full bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between hover:bg-surface-2/70 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div 
@@ -275,32 +316,44 @@ const CategoryChart = () => {
                   </div>
                 </div>
 
-                <div className="text-right flex items-center gap-4">
-                  <div>
+                <div className="text-right flex items-center gap-3">
+                  <div className="flex flex-col items-end">
                     <span className="font-mono text-sm font-bold text-primary block">{formatCurrency(cat.amount)}</span>
                     
-                    {compare && (
+                    {compareMode !== 'none' && (
                       <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                        cat.changeVsPreviousPeriod > 0 
+                        getCompareValue(cat) > 0 
                           ? (type === 'expense' ? 'text-danger' : 'text-accent') 
-                          : cat.changeVsPreviousPeriod < 0 
+                          : getCompareValue(cat) < 0 
                           ? (type === 'expense' ? 'text-accent' : 'text-danger') 
                           : 'text-muted'
                       }`}>
-                        {cat.changeVsPreviousPeriod > 0 ? (
+                        {getCompareValue(cat) > 0 ? (
                           <ArrowUpRight size={10} />
-                        ) : cat.changeVsPreviousPeriod < 0 ? (
+                        ) : getCompareValue(cat) < 0 ? (
                           <ArrowDownRight size={10} />
                         ) : (
                           <Minus size={10} />
                         )}
-                        {cat.changeVsPreviousPeriod === 100 ? 'Nouveau' : `${Math.abs(cat.changeVsPreviousPeriod)}%`}
+                        {getCompareValue(cat) === 100 && compareMode === 'previous' ? 'Nouveau' : `${Math.abs(getCompareValue(cat))}%`}
                       </span>
                     )}
                   </div>
-                  {cat.subcategories?.length > 0 && <ChevronRight size={16} className="text-muted" />}
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenDetailSheet(cat);
+                    }}
+                    className="p-1.5 rounded-lg bg-surface hover:bg-border/30 transition-colors text-accent flex items-center justify-center"
+                    title="Voir les tendances"
+                  >
+                    <TrendingUp size={14} />
+                  </button>
+
+                  {cat.subcategories?.length > 0 && <ChevronRight size={16} className="text-muted shrink-0" />}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
@@ -350,6 +403,209 @@ const CategoryChart = () => {
           </div>
         </div>
       )}
+
+      {/* Category Details & Trends Bottom Sheet */}
+      <BottomSheet
+        isOpen={detailSheet.isOpen}
+        onClose={() => {
+          setDetailSheet({ isOpen: false, category: null });
+          setCategoryTransactions([]);
+        }}
+      >
+        {detailSheet.category && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/40">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-sm"
+                  style={{ backgroundColor: `${detailSheet.category.color || '#4ade80'}20` }}
+                >
+                  {detailSheet.category.icon || '📁'}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-primary">{detailSheet.category.name}</h2>
+                  <p className="text-xs text-muted">
+                    {detailSheet.category.percentage}% des {type === 'expense' ? 'dépenses' : 'revenus'} du mois
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="font-mono text-lg font-black text-primary">
+                  {formatCurrency(detailSheet.category.amount)}
+                </span>
+              </div>
+            </div>
+
+            {/* Averages & Trends Card */}
+            {type === 'expense' && (
+              <div className="bg-surface-2 p-5 rounded-2xl border border-border/40 space-y-4">
+                <h3 className="text-xs font-bold text-secondary uppercase tracking-wider">
+                  Dépenses moyennes & tendances
+                </h3>
+
+                {/* Trend Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 3M Trend */}
+                  <div className="bg-surface p-3 rounded-xl border border-border/40 space-y-1">
+                    <span className="text-[10px] text-muted font-bold uppercase block">Moyenne 3 mois</span>
+                    <p className="font-mono text-sm font-bold text-primary">
+                      {formatCurrency(detailSheet.category.movingAvg3M || 0)}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {detailSheet.category.changeVs3MAvg > 0 ? (
+                        <span className="text-[10px] font-bold bg-danger/10 text-danger px-2 py-0.5 rounded-lg flex items-center gap-0.5">
+                          <ArrowUpRight size={10} /> +{detailSheet.category.changeVs3MAvg}%
+                        </span>
+                      ) : detailSheet.category.changeVs3MAvg < 0 ? (
+                        <span className="text-[10px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-lg flex items-center gap-0.5">
+                          <ArrowDownRight size={10} /> {detailSheet.category.changeVs3MAvg}%
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-border/20 text-muted px-2 py-0.5 rounded-lg">
+                          Stable
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 6M Trend */}
+                  <div className="bg-surface p-3 rounded-xl border border-border/40 space-y-1">
+                    <span className="text-[10px] text-muted font-bold uppercase block">Moyenne 6 mois</span>
+                    <p className="font-mono text-sm font-bold text-primary">
+                      {formatCurrency(detailSheet.category.movingAvg6M || 0)}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {detailSheet.category.changeVs6MAvg > 0 ? (
+                        <span className="text-[10px] font-bold bg-danger/10 text-danger px-2 py-0.5 rounded-lg flex items-center gap-0.5">
+                          <ArrowUpRight size={10} /> +{detailSheet.category.changeVs6MAvg}%
+                        </span>
+                      ) : detailSheet.category.changeVs6MAvg < 0 ? (
+                        <span className="text-[10px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-lg flex items-center gap-0.5">
+                          <ArrowDownRight size={10} /> {detailSheet.category.changeVs6MAvg}%
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-border/20 text-muted px-2 py-0.5 rounded-lg">
+                          Stable
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Level Comparison Bars */}
+                <div className="space-y-3 pt-2 border-t border-border/25">
+                  <span className="text-[10px] text-muted font-bold uppercase">Comparaison visuelle</span>
+                  
+                  <div className="space-y-2">
+                    {/* Ce mois */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-bold text-secondary">
+                        <span>Ce mois-ci</span>
+                        <span className="font-mono">{formatCurrency(detailSheet.category.amount)}</span>
+                      </div>
+                      <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min(100, (detailSheet.category.amount / Math.max(detailSheet.category.amount, detailSheet.category.movingAvg3M || 1, detailSheet.category.movingAvg6M || 1)) * 100)}%`,
+                            backgroundColor: detailSheet.category.color || '#4ade80'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Moyenne 3M */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-muted">
+                        <span>Moyenne 3 mois</span>
+                        <span className="font-mono">{formatCurrency(detailSheet.category.movingAvg3M || 0)}</span>
+                      </div>
+                      <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-border/45 transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min(100, ((detailSheet.category.movingAvg3M || 0) / Math.max(detailSheet.category.amount, detailSheet.category.movingAvg3M || 1, detailSheet.category.movingAvg6M || 1)) * 100)}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Moyenne 6M */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-muted">
+                        <span>Moyenne 6 mois</span>
+                        <span className="font-mono">{formatCurrency(detailSheet.category.movingAvg6M || 0)}</span>
+                      </div>
+                      <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-border/45 transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min(100, ((detailSheet.category.movingAvg6M || 0) / Math.max(detailSheet.category.amount, detailSheet.category.movingAvg3M || 1, detailSheet.category.movingAvg6M || 1)) * 100)}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content list: Subcategories (if any) or Transactions (if none) */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-secondary uppercase tracking-wider">
+                {detailSheet.category.subcategories?.length > 0 ? 'Sous-catégories' : 'Transactions du mois'}
+              </h3>
+
+              {detailSheet.category.subcategories?.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
+                  {detailSheet.category.subcategories.map((sub, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSubcategoryClick(sub.name)}
+                      className="w-full bg-surface-2 p-3.5 rounded-xl border border-border/40 flex items-center justify-between hover:bg-surface-2/80 active:scale-[0.98] transition-all text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{sub.icon || '📁'}</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-primary">{sub.name}</h4>
+                          <p className="text-[10px] text-muted">{sub.percentage}% de la catégorie</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-primary">{formatCurrency(sub.amount)}</span>
+                        <ChevronRight size={14} className="text-muted" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
+                  {categoryTransactionsLoading ? (
+                    <div className="text-center py-4 text-xs text-muted">Chargement des transactions...</div>
+                  ) : categoryTransactions.length === 0 ? (
+                    <p className="text-center text-xs text-muted py-4">Aucune transaction ce mois-ci.</p>
+                  ) : (
+                    categoryTransactions.map(tx => (
+                      <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/40 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-primary">{tx.note || tx.description || 'Sans note'}</p>
+                          <p className="text-[10px] text-muted flex items-center gap-1">
+                            <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <span className="font-mono text-xs font-bold text-primary">
+                          {formatCurrency(tx.amount)}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </BottomSheet>
 
     </div>
   );

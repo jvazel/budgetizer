@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema({
     language: { type: String, default: 'fr' },
     firstDayOfWeek: { type: Number, default: 1 }
   },
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpire: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

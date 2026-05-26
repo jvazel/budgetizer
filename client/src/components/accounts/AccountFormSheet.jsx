@@ -122,7 +122,8 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
             <button
               type="button"
               onClick={async () => {
-                if (window.confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
+                const confirmMsg = "Êtes-vous sûr de vouloir supprimer ce compte ?\n\nATTENTION : Cette action supprimera définitivement toutes les transactions (dépenses, recettes, virements) et transactions planifiées qui lui sont associées. Cette action est irréversible.";
+                if (window.confirm(confirmMsg)) {
                   try {
                     await onDelete(initialData._id);
                     toast.success('Compte supprimé');

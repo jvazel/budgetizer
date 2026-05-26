@@ -1,4 +1,6 @@
 import Account from '../models/Account.js';
+import Transaction from '../models/Transaction.js';
+import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import { validationResult } from 'express-validator';
 
 // @desc    Get all accounts for a user
@@ -86,7 +88,21 @@ export const deleteAccount = async (req, res) => {
 
     await Account.findByIdAndDelete(req.params.id);
     
-    // TODO: Step 4 - Delete associated transactions
+    // Delete associated transactions (including transfers)
+    await Transaction.deleteMany({
+      $or: [
+        { accountId: req.params.id },
+        { toAccountId: req.params.id }
+      ]
+    });
+
+    // Delete associated scheduled transactions
+    await ScheduledTransaction.deleteMany({
+      $or: [
+        { accountId: req.params.id },
+        { toAccountId: req.params.id }
+      ]
+    });
 
     res.json({ message: 'Account removed' });
   } catch (error) {

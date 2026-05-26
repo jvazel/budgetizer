@@ -147,6 +147,81 @@ export const getChartsByCategory = async (req, res) => {
       }
     });
 
+    // Calculate moving averages over last 3 and 6 completed months
+    const end3M = new Date(start);
+    end3M.setUTCDate(0); // Last day of previous month
+    end3M.setUTCHours(23, 59, 59, 999);
+
+    const start3M = new Date(start);
+    start3M.setUTCMonth(start3M.getUTCMonth() - 3);
+    start3M.setUTCDate(1);
+    start3M.setUTCHours(0, 0, 0, 0);
+
+    const start6M = new Date(start);
+    start6M.setUTCMonth(start6M.getUTCMonth() - 6);
+    start6M.setUTCDate(1);
+    start6M.setUTCHours(0, 0, 0, 0);
+
+    const txs3M = await Transaction.find({
+      userId: req.user.id,
+      type,
+      isPending: { $ne: true },
+      date: { $gte: start3M, $lte: end3M }
+    });
+
+    const txs6M = await Transaction.find({
+      userId: req.user.id,
+      type,
+      isPending: { $ne: true },
+      date: { $gte: start6M, $lte: end3M }
+    });
+
+    const sum3M = {};
+    const sum6M = {};
+
+    txs3M.forEach(tx => {
+      if (!tx.categoryId) return;
+      const cat = categoryMap[tx.categoryId.toString()];
+      if (!cat) return;
+      const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+      sum3M[mainCatId] = (sum3M[mainCatId] || 0) + tx.amount;
+    });
+
+    txs6M.forEach(tx => {
+      if (!tx.categoryId) return;
+      const cat = categoryMap[tx.categoryId.toString()];
+      if (!cat) return;
+      const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+      sum6M[mainCatId] = (sum6M[mainCatId] || 0) + tx.amount;
+    });
+
+    categoriesList.forEach(cat => {
+      const total3M = sum3M[cat.categoryId] || 0;
+      const total6M = sum6M[cat.categoryId] || 0;
+
+      const movingAvg3M = parseFloat((total3M / 3).toFixed(2));
+      const movingAvg6M = parseFloat((total6M / 6).toFixed(2));
+
+      let changeVs3MAvg = 0;
+      if (movingAvg3M > 0) {
+        changeVs3MAvg = parseFloat((((cat.amount - movingAvg3M) / movingAvg3M) * 100).toFixed(1));
+      } else {
+        changeVs3MAvg = cat.amount > 0 ? 100 : 0;
+      }
+
+      let changeVs6MAvg = 0;
+      if (movingAvg6M > 0) {
+        changeVs6MAvg = parseFloat((((cat.amount - movingAvg6M) / movingAvg6M) * 100).toFixed(1));
+      } else {
+        changeVs6MAvg = cat.amount > 0 ? 100 : 0;
+      }
+
+      cat.movingAvg3M = movingAvg3M;
+      cat.movingAvg6M = movingAvg6M;
+      cat.changeVs3MAvg = changeVs3MAvg;
+      cat.changeVs6MAvg = changeVs6MAvg;
+    });
+
     res.json({
       total: parseFloat(totalAmount.toFixed(2)),
       categories: categoriesList

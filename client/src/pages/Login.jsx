@@ -61,7 +61,16 @@ const Login = () => {
             required
           />
 
-          <div className="pt-4">
+          <div className="text-right px-1">
+            <Link 
+              to="/forgot-password" 
+              className="text-xs font-bold text-accent hover:text-accent/80 transition-colors"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+
+          <div className="pt-2">
             <Button type="submit" fullWidth>
               Se connecter
             </Button>
