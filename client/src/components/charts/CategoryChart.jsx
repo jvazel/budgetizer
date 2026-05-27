@@ -9,6 +9,7 @@ const CategoryChart = () => {
   const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
   const [type, setType] = useState('expense'); // expense, income
   const [compareMode, setCompareMode] = useState('previous'); // previous, 3m, 6m, none
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ total: 0, categories: [] });
@@ -50,6 +51,22 @@ const CategoryChart = () => {
   };
 
   const getDates = (p) => {
+    if (/^\d{4}-\d{2}$/.test(p)) {
+      const [year, month] = p.split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0); // last day of that month
+      const formatLocal = (d) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+      return {
+        startDate: formatLocal(startDate),
+        endDate: formatLocal(endDate)
+      };
+    }
+
     const end = new Date();
     const start = new Date();
     if (p === 'month') {
@@ -66,6 +83,47 @@ const CategoryChart = () => {
       startDate: start.toISOString().split('T')[0],
       endDate: end.toISOString().split('T')[0]
     };
+  };
+
+  const formatPeriodLabel = (p) => {
+    if (p === 'month') return 'Ce mois';
+    if (p === '3months') return '3 mois';
+    if (p === '6months') return '6 mois';
+    if (p === 'year') return 'Cette année';
+    if (/^\d{4}-\d{2}$/.test(p)) {
+      const [year, month] = p.split('-').map(Number);
+      const date = new Date(year, month - 1, 1);
+      const formatted = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }
+    return p;
+  };
+
+  const getPeriodText = (p) => {
+    if (p === 'month') return 'ce mois-ci';
+    if (p === '3months') return 'ces 3 derniers mois';
+    if (p === '6months') return 'ces 6 derniers mois';
+    if (p === 'year') return 'cette année';
+    if (/^\d{4}-\d{2}$/.test(p)) {
+      const [year, month] = p.split('-').map(Number);
+      const date = new Date(year, month - 1, 1);
+      const monthName = date.toLocaleDateString('fr-FR', { month: 'long' });
+      return `en ${monthName} ${year}`;
+    }
+    return '';
+  };
+
+  const generateRecentMonths = () => {
+    const months = [];
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      months.push({ key, label: capitalizedLabel });
+    }
+    return months;
   };
 
   const fetchCategoryData = async () => {
@@ -134,18 +192,18 @@ const CategoryChart = () => {
     <div className="space-y-6 pb-24">
       {/* 1. Selectors */}
       <div className="space-y-4">
-        {/* Period selection chips */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+        {/* Period selection chips in grid layout */}
+        <div className="grid grid-cols-6 gap-2">
           {[
-            { id: 'month', label: 'Ce mois' },
-            { id: '3months', label: '3 mois' },
-            { id: '6months', label: '6 mois' },
-            { id: 'year', label: 'Cette année' }
+            { id: 'month', label: 'Ce mois', span: 'col-span-2' },
+            { id: '3months', label: '3 mois', span: 'col-span-2' },
+            { id: '6months', label: '6 mois', span: 'col-span-2' },
+            { id: 'year', label: 'Cette année', span: 'col-span-3' }
           ].map(p => (
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all ${
+              className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${p.span} ${
                 period === p.id 
                   ? 'bg-accent text-white shadow-sm' 
                   : 'bg-surface-2 text-secondary hover:text-primary'
@@ -154,6 +212,20 @@ const CategoryChart = () => {
               {p.label}
             </button>
           ))}
+
+          {/* Custom Month Picker Chip */}
+          <button
+            type="button"
+            onClick={() => setIsMonthSheetOpen(true)}
+            className={`col-span-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
+              /^\d{4}-\d{2}$/.test(period)
+                ? 'bg-accent text-white shadow-sm' 
+                : 'bg-surface-2 text-secondary hover:text-primary'
+            }`}
+          >
+            <Calendar size={12} />
+            {/^\d{4}-\d{2}$/.test(period) ? formatPeriodLabel(period) : 'Autre mois'}
+          </button>
         </div>
 
         {/* Toggle expense/income & comparison */}
@@ -404,6 +476,41 @@ const CategoryChart = () => {
         </div>
       )}
 
+      {/* Custom Month Picker Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthSheetOpen}
+        onClose={() => setIsMonthSheetOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="pb-2 border-b border-border/40">
+            <h3 className="text-sm font-extrabold text-primary">Choisir un mois</h3>
+            <p className="text-xs text-muted">Sélectionnez un mois spécifique à analyser</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto no-scrollbar py-1">
+            {generateRecentMonths().map((m) => {
+              const isActive = period === m.key;
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => {
+                    setPeriod(m.key);
+                    setIsMonthSheetOpen(false);
+                  }}
+                  className={`p-3 rounded-xl text-xs font-bold text-center transition-all ${
+                    isActive
+                      ? 'bg-accent text-white shadow-sm'
+                      : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </BottomSheet>
+
       {/* Category Details & Trends Bottom Sheet */}
       <BottomSheet
         isOpen={detailSheet.isOpen}
@@ -501,7 +608,7 @@ const CategoryChart = () => {
                     {/* Ce mois */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] font-bold text-secondary">
-                        <span>Ce mois-ci</span>
+                        <span>{formatPeriodLabel(period)}</span>
                         <span className="font-mono">{formatCurrency(detailSheet.category.amount)}</span>
                       </div>
                       <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
@@ -554,7 +661,7 @@ const CategoryChart = () => {
             {/* Content list: Subcategories (if any) or Transactions (if none) */}
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-secondary uppercase tracking-wider">
-                {detailSheet.category.subcategories?.length > 0 ? 'Sous-catégories' : 'Transactions du mois'}
+                {detailSheet.category.subcategories?.length > 0 ? 'Sous-catégories' : `Transactions ${getPeriodText(period)}`}
               </h3>
 
               {detailSheet.category.subcategories?.length > 0 ? (
@@ -584,7 +691,7 @@ const CategoryChart = () => {
                   {categoryTransactionsLoading ? (
                     <div className="text-center py-4 text-xs text-muted">Chargement des transactions...</div>
                   ) : categoryTransactions.length === 0 ? (
-                    <p className="text-center text-xs text-muted py-4">Aucune transaction ce mois-ci.</p>
+                    <p className="text-center text-xs text-muted py-4">Aucune transaction {getPeriodText(period)}.</p>
                   ) : (
                     categoryTransactions.map(tx => (
                       <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/40 flex items-center justify-between">
