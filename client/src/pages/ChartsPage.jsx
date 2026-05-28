@@ -5,15 +5,19 @@ import FutureChart from '../components/charts/FutureChart';
 import ForecastChart from '../components/charts/ForecastChart';
 import NetWorthChart from '../components/charts/NetWorthChart';
 import BudgetActualChart from '../components/charts/BudgetActualChart';
+import CashFlowChart from '../components/charts/CashFlowChart';
+import RankingChart from '../components/charts/RankingChart';
 import BottomSheet from '../components/ui/BottomSheet';
-import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown } from 'lucide-react';
+import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award } from 'lucide-react';
 
 const ChartsPage = () => {
-  const [activeTab, setActiveTab] = useState('category'); // category, networth, future, forecast, budgetactual
+  const [activeTab, setActiveTab] = useState('category'); // category, cashflow, ranking, networth, future, forecast, budgetactual
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   const tabNames = {
     category: 'Catégories',
+    cashflow: 'Cash Flow',
+    ranking: 'Classement Dépenses',
     networth: 'Richesse Nette',
     budgetactual: 'Budget vs Réel',
     future: 'Trésorerie',
@@ -35,6 +39,8 @@ const ChartsPage = () => {
       
       {/* Dynamic Tab view */}
       {activeTab === 'category' && <CategoryChart />}
+      {activeTab === 'cashflow' && <CashFlowChart />}
+      {activeTab === 'ranking' && <RankingChart />}
       {activeTab === 'networth' && <NetWorthChart />}
       {activeTab === 'budgetactual' && <BudgetActualChart />}
       {activeTab === 'future' && <FutureChart />}
@@ -53,6 +59,8 @@ const ChartsPage = () => {
           <div className="space-y-3">
             {[
               { key: 'category', label: 'Répartition par Catégories', desc: 'Détail de vos dépenses mensuelles par catégorie.', icon: PieChart, color: 'text-purple-400 bg-purple-500/10' },
+              { key: 'cashflow', label: 'Comparatif Revenus & Dépenses (Cash Flow)', desc: 'Vérifiez si vous vivez au-dessus de vos moyens mensuellement.', icon: ArrowUpDown, color: 'text-emerald-400 bg-emerald-500/10' },
+              { key: 'ranking', label: 'Classement des Dépenses', desc: 'Identifiez vos habitudes et commerçants les plus fréquents.', icon: Award, color: 'text-amber-400 bg-amber-500/10' },
               { key: 'networth', label: 'Évolution Richesse Nette', desc: 'Suivi de vos actifs nets de vos passifs/dettes.', icon: LineChart, color: 'text-sky-400 bg-sky-500/10' },
               { key: 'budgetactual', label: 'Budget vs Dépenses Réelles', desc: 'Comparatif visuel de vos limites et du réel.', icon: Sliders, color: 'text-pink-400 bg-pink-500/10' },
               { key: 'future', label: 'Prévisions de Trésorerie', desc: 'Projection de votre solde futur à court terme.', icon: Clock, color: 'text-blue-400 bg-blue-500/10' },

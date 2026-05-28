@@ -4,7 +4,9 @@ import {
   getChartsByCategory,
   getFutureCharts,
   getForecastCharts,
-  getNetWorthHistory
+  getNetWorthHistory,
+  getCashFlowHistory,
+  getExpenseRanking
 } from '../controllers/chartController.js';
 
 const router = express.Router();
@@ -15,5 +17,7 @@ router.get('/by-category', getChartsByCategory);
 router.get('/future', getFutureCharts);
 router.get('/forecast', getForecastCharts);
 router.get('/net-worth', getNetWorthHistory);
+router.get('/cash-flow', getCashFlowHistory);
+router.get('/ranking', getExpenseRanking);
 
 export default router;

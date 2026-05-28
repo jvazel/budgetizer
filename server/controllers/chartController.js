@@ -662,3 +662,218 @@ export const getNetWorthHistory = async (req, res) => {
     res.status(500).json({ message: 'Server Error during net worth calculation' });
   }
 };
+
+// 5. Get cash flow historical evolution (month-by-month income vs expenses)
+export const getCashFlowHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { months = 12, accountId } = req.query;
+    const monthsCount = parseInt(months) || 12;
+    const now = new Date();
+    
+    // Start of the first month in the range
+    const startDate = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const query = {
+      userId,
+      isPending: { $ne: true },
+      date: { $gte: startDate, $lte: now }
+    };
+
+    if (accountId) {
+      query.accountId = accountId;
+    }
+
+    const transactions = await Transaction.find(query);
+
+    const buckets = {};
+    for (let i = 0; i < monthsCount; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1 + i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      buckets[key] = { month: key, income: 0, expenses: 0, net: 0 };
+    }
+
+    transactions.forEach(tx => {
+      const d = new Date(tx.date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (buckets[key]) {
+        if (tx.type === 'income') {
+          buckets[key].income += tx.amount;
+        } else if (tx.type === 'expense') {
+          buckets[key].expenses += tx.amount;
+        }
+      }
+    });
+
+    const history = Object.values(buckets).map(b => {
+      b.income = parseFloat(b.income.toFixed(2));
+      b.expenses = parseFloat(b.expenses.toFixed(2));
+      b.net = parseFloat((b.income - b.expenses).toFixed(2));
+      return b;
+    });
+
+    // Compute summary metrics
+    const totalIncome = history.reduce((sum, h) => sum + h.income, 0);
+    const totalExpenses = history.reduce((sum, h) => sum + h.expenses, 0);
+    const netSavings = totalIncome - totalExpenses;
+    
+    const avgIncome = totalIncome / monthsCount;
+    const avgExpenses = totalExpenses / monthsCount;
+    const avgNet = netSavings / monthsCount;
+
+    const positiveMonths = history.filter(h => h.net > 0).length;
+    const negativeMonths = history.filter(h => h.net < 0).length;
+    
+    // Savings rate
+    const savingsRate = totalIncome > 0 ? parseFloat(((netSavings / totalIncome) * 100).toFixed(1)) : 0;
+
+    // Status message based on cash flow health
+    let status = 'healthy'; // healthy, tight, warning
+    let message = 'Votre situation est saine. Vos revenus couvrent largement vos dépenses.';
+
+    if (netSavings < 0) {
+      status = 'warning';
+      message = 'Attention : Vous vivez au-dessus de vos moyens sur cette période. Vos dépenses dépassent vos revenus.';
+    } else if (savingsRate < 10) {
+      status = 'tight';
+      message = 'Situation équilibrée mais serrée. Votre taux d\'épargne est inférieur à 10%. Soyez vigilant.';
+    } else if (negativeMonths > positiveMonths) {
+      status = 'tight';
+      message = 'Attention : Vous avez plus de mois en déficit qu\'en excédent, bien que le cumul soit positif. Stabilisez votre budget.';
+    }
+
+    res.json({
+      history,
+      metrics: {
+        totalIncome: parseFloat(totalIncome.toFixed(2)),
+        totalExpenses: parseFloat(totalExpenses.toFixed(2)),
+        netSavings: parseFloat(netSavings.toFixed(2)),
+        avgIncome: parseFloat(avgIncome.toFixed(2)),
+        avgExpenses: parseFloat(avgExpenses.toFixed(2)),
+        avgNet: parseFloat(avgNet.toFixed(2)),
+        positiveMonths,
+        negativeMonths,
+        savingsRate,
+        status,
+        message
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error during cash flow history calculation' });
+  }
+};
+
+// 6. Get expense ranking (by category or description/merchant)
+export const getExpenseRanking = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { startDate, endDate, groupBy = 'category', limit = 10 } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+    // Find all expense transactions in period
+    const transactions = await Transaction.find({
+      userId,
+      type: 'expense',
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    }).populate('categoryId', 'name icon color parentId');
+
+    const groups = {};
+
+    transactions.forEach(tx => {
+      let key = '';
+      let name = '';
+      let icon = '💸';
+      let color = '#888888';
+
+      if (groupBy === 'category') {
+        if (tx.categoryId) {
+          key = tx.categoryId._id.toString();
+          name = tx.categoryId.name;
+          icon = tx.categoryId.icon || '📁';
+          color = tx.categoryId.color || '#10b981';
+        } else {
+          key = 'uncategorized';
+          name = 'Non catégorisé';
+        }
+      } else { // groupBy === 'description' (Merchant)
+        const cleanedDesc = tx.description ? tx.description.trim().replace(/\s+/g, ' ') : '';
+        if (cleanedDesc) {
+          name = cleanedDesc.charAt(0).toUpperCase() + cleanedDesc.slice(1);
+          key = name.toLowerCase();
+          icon = '🏪';
+          if (tx.categoryId) {
+            color = tx.categoryId.color || '#3b82f6';
+          }
+        } else {
+          key = 'no_description';
+          name = tx.categoryId ? tx.categoryId.name : 'Dépense générale';
+          icon = tx.categoryId ? tx.categoryId.icon : '💸';
+          if (tx.categoryId) {
+            color = tx.categoryId.color;
+          }
+        }
+      }
+
+      if (!groups[key]) {
+        groups[key] = {
+          id: key,
+          name,
+          icon,
+          color,
+          amount: 0,
+          count: 0
+        };
+      }
+
+      groups[key].amount += tx.amount;
+      groups[key].count += 1;
+    });
+
+    const ranking = Object.values(groups).map(g => {
+      const avgAmount = g.amount / g.count;
+      const projectedAnnual = (g.amount / diffDays) * 365;
+
+      return {
+        id: g.id,
+        name: g.name,
+        icon: g.icon,
+        color: g.color,
+        amount: parseFloat(g.amount.toFixed(2)),
+        count: g.count,
+        avgAmount: parseFloat(avgAmount.toFixed(2)),
+        projectedAnnual: parseFloat(projectedAnnual.toFixed(2))
+      };
+    });
+
+    // Default sorting by amount descending (can be re-sorted by frequency in frontend)
+    ranking.sort((a, b) => b.amount - a.amount);
+
+    const limitedRanking = ranking.slice(0, parseInt(limit));
+
+    res.json({
+      ranking: limitedRanking,
+      diffDays,
+      totalExpenses: transactions.reduce((sum, tx) => sum + tx.amount, 0)
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error calculating expense ranking' });
+  }
+};
+

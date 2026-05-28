@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { useAccounts } from '../../hooks/useAccounts';
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
+import { AlertCircle, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Wallet, Scale, Activity } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const CashFlowChart = () => {
+  const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({ history: [], metrics: {} });
+
+  const { accounts } = useAccounts();
+
+  const fetchCashFlowData = async () => {
+    try {
+      setLoading(true);
+      const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
+      const res = await api.get(`/charts/cash-flow?months=${horizon}${accountParam}`);
+      setData(res.data);
+    } catch (err) {
+      toast.error('Erreur lors du chargement des données de Cash Flow');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCashFlowData();
+  }, [horizon, selectedAccountId]);
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+  };
+
+  const formatMonthLabel = (monthStr) => {
+    if (!monthStr) return '';
+    const [year, month] = monthStr.split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    const label = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  };
+
+  const { history = [], metrics = {} } = data;
+
+  // Prepare status banner styling
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case 'warning':
+        return {
+          bg: 'bg-red-500/10 border-red-500/30 text-red-200',
+          icon: AlertTriangle,
+          iconColor: 'text-red-400',
+          title: 'Déficit de Trésorerie',
+          badge: 'bg-red-500/20 text-red-300 border border-red-500/30'
+        };
+      case 'tight':
+        return {
+          bg: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
+          icon: AlertCircle,
+          iconColor: 'text-amber-400',
+          title: 'Flux de Trésorerie Serré',
+          badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+        };
+      case 'healthy':
+      default:
+        return {
+          bg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200',
+          icon: CheckCircle2,
+          iconColor: 'text-emerald-400',
+          title: 'Budget Excédentaire',
+          badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+        };
+    }
+  };
+
+  const statusStyle = getStatusStyles(metrics.status);
+  const StatusIcon = statusStyle.icon;
+
+  return (
+    <div className="space-y-6 pb-24">
+      {/* 1. Filters (Horizon + Account Selector) */}
+      <div className="flex gap-4 items-center justify-between">
+        {/* Horizon selector */}
+        <div className="flex gap-1 bg-surface-2 p-1 rounded-xl">
+          {[6, 12, 24].map(m => (
+            <button
+              key={m}
+              onClick={() => setHorizon(m)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                horizon === m ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+              }`}
+            >
+              {m} mois
+            </button>
+          ))}
+        </div>
+
+        {/* Account selector */}
+        <select
+          value={selectedAccountId}
+          onChange={(e) => setSelectedAccountId(e.target.value)}
+          className="bg-surface-2 border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+        >
+          <option value="">Tous les comptes</option>
+          {accounts.map(a => (
+            <option key={a._id} value={a._id}>{a.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 2. Dynamic Diagnostic Banner */}
+      {!loading && metrics.message && (
+        <div className={`p-4 rounded-2xl border flex items-start gap-3.5 transition-all shadow-sm ${statusStyle.bg}`}>
+          <StatusIcon size={20} className={`${statusStyle.iconColor} shrink-0 mt-0.5`} />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-primary">{statusStyle.title}</h4>
+              <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${statusStyle.badge}`}>
+                {metrics.savingsRate > 0 ? `Taux d'épargne : +${metrics.savingsRate}%` : `Taux d'épargne : ${metrics.savingsRate}%`}
+              </span>
+            </div>
+            <p className="text-[10.5px] leading-relaxed text-secondary">{metrics.message}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Key Metrics Cards Grid */}
+      <div className="grid grid-cols-3 gap-3.5">
+        {/* Card 1: Total Savings / Rate */}
+        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="w-7 h-7 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+              <Wallet size={14} />
+            </div>
+            <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Épargne Nette</p>
+            <h4 className={`text-sm font-extrabold mt-0.5 leading-tight ${metrics.netSavings >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {loading ? '...' : formatCurrency(metrics.netSavings)}
+            </h4>
+          </div>
+          <p className="text-[9px] text-muted font-bold mt-2">
+            {!loading && (metrics.savingsRate >= 0 ? `+${metrics.savingsRate}% des revenus` : `${metrics.savingsRate}% des revenus`)}
+          </p>
+        </div>
+
+        {/* Card 2: Averages */}
+        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="w-7 h-7 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <Scale size={14} />
+            </div>
+            <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Moyenne / Mois</p>
+            <h4 className="text-sm font-extrabold mt-0.5 leading-tight text-primary">
+              {loading ? '...' : formatCurrency(metrics.avgNet)}
+            </h4>
+          </div>
+          <div className="text-[8px] text-muted font-bold mt-2 space-y-0.5">
+            <div>Rev: {loading ? '...' : formatCurrency(metrics.avgIncome)}</div>
+            <div>Dép: {loading ? '...' : formatCurrency(metrics.avgExpenses)}</div>
+          </div>
+        </div>
+
+        {/* Card 3: Monthly Breakdown */}
+        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="w-7 h-7 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+              <Activity size={14} />
+            </div>
+            <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Mois Positifs</p>
+            <h4 className="text-sm font-extrabold mt-0.5 leading-tight text-primary">
+              {loading ? '...' : `${metrics.positiveMonths} / ${horizon}`}
+            </h4>
+          </div>
+          <p className="text-[9px] text-muted font-bold mt-2">
+            {!loading && `${metrics.negativeMonths} mois déficitaires`}
+          </p>
+        </div>
+      </div>
+
+      {/* 4. Chart Card */}
+      <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+        <div>
+          <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase">Graphique Mensuel</h3>
+          <p className="text-[10px] text-muted">Comparaison directe entre vos gains (vert) et vos dépenses (rouge). La ligne violette montre l'épargne nette.</p>
+        </div>
+
+        <div className="w-full h-64 flex items-center justify-center">
+          {loading ? (
+            <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+          ) : history.length === 0 ? (
+            <div className="text-center text-muted text-xs flex flex-col items-center gap-1.5 py-10">
+              <AlertTriangle size={24} className="text-muted/60" />
+              <span>Aucune donnée disponible pour cette période.</span>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={history}
+                margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
+              >
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={formatMonthLabel}
+                  tick={{ fontSize: 9, fill: '#888', fontWeight: 'bold' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={(val) => `${val} €`}
+                  tick={{ fontSize: 9, fill: '#888' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  labelFormatter={(lbl) => {
+                    const [year, month] = lbl.split('-');
+                    const date = new Date(year, parseInt(month) - 1, 1);
+                    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                  }}
+                  formatter={(val, name) => {
+                    if (name === 'income') return [formatCurrency(val), 'Revenus'];
+                    if (name === 'expenses') return [formatCurrency(val), 'Dépenses'];
+                    if (name === 'net') return [formatCurrency(val), 'Solde Net'];
+                    return [formatCurrency(val), name];
+                  }}
+                  contentStyle={{
+                    borderRadius: '16px',
+                    background: 'rgba(30, 41, 59, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                  }}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="circle"
+                  iconSize={6}
+                  wrapperStyle={{ fontSize: '9.5px', fontWeight: 'bold', paddingBottom: '10px' }}
+                  formatter={(value) => {
+                    if (value === 'income') return 'Revenus';
+                    if (value === 'expenses') return 'Dépenses';
+                    if (value === 'net') return 'Épargne Nette (Cash Flow)';
+                    return value;
+                  }}
+                />
+
+                {/* Grid line at 0 net */}
+                <ReferenceLine y={0} stroke="rgba(255, 255, 255, 0.15)" strokeDasharray="3 3" />
+
+                {/* Bars for Income & Expenses side-by-side */}
+                <Bar
+                  dataKey="income"
+                  fill="#10b981"
+                  fillOpacity={0.8}
+                  radius={[4, 4, 0, 0]}
+                  barSize={10}
+                />
+                <Bar
+                  dataKey="expenses"
+                  fill="#ef4444"
+                  fillOpacity={0.8}
+                  radius={[4, 4, 0, 0]}
+                  barSize={10}
+                />
+
+                {/* Line overlay for Net Cash Flow */}
+                <Line
+                  type="monotone"
+                  dataKey="net"
+                  stroke="#a855f7"
+                  strokeWidth={2.5}
+                  dot={{ r: 3, strokeWidth: 1.5, fill: '#1e293b' }}
+                  activeDot={{ r: 5 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* 5. Analysis Advice Card */}
+      {!loading && (
+        <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-3.5">
+          <div className="flex items-center gap-2">
+            <Scale size={16} className="text-accent" />
+            <h3 className="text-xs font-extrabold text-primary tracking-wider uppercase">Comment interpréter ce graphique ?</h3>
+          </div>
+          <div className="text-[10.5px] leading-relaxed text-secondary space-y-2">
+            <p>
+              Pour avoir des finances saines, les barres de <strong>Revenus (vertes)</strong> doivent idéalement être plus hautes que les barres de <strong>Dépenses (rouges)</strong>, maintenant la ligne <strong>violette (Solde Net)</strong> au-dessus de zéro.
+            </p>
+            <p>
+              Si la ligne descend en dessous de zéro, cela indique un <strong>déficit</strong> pour ce mois (vous vivez au-dessus de vos moyens en puisant dans vos économies ou par le crédit).
+            </p>
+            <p className="text-muted">
+              💡 <em>Règle des 50/30/20 :</em> Essayez de viser un taux d'épargne (au moins 10% à 20% des revenus) pour vous constituer un apport de précaution ou réaliser vos objectifs d'épargne.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CashFlowChart;
