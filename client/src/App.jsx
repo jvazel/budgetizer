@@ -19,6 +19,7 @@ import SubscriptionsPage from './pages/SubscriptionsPage';
 import ChartsPage from './pages/ChartsPage';
 import SettingsPage from './pages/SettingsPage';
 import SummaryHistory from './pages/SummaryHistory';
+import AiInsights from './pages/AiInsights';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -174,6 +175,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <SummaryHistory />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/ai-insights" 
+          element={
+            <ProtectedRoute>
+              <AiInsights />
             </ProtectedRoute>
           } 
         />

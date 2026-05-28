@@ -24,7 +24,8 @@ const userSchema = new mongoose.Schema({
     theme: { type: String, enum: ['dark', 'light', 'system'], default: 'dark' },
     dateFormat: { type: String, default: 'DD/MM/YYYY' },
     language: { type: String, default: 'fr' },
-    firstDayOfWeek: { type: Number, default: 1 }
+    firstDayOfWeek: { type: Number, default: 1 },
+    anomalyThreshold: { type: Number, default: 30 }
   },
   resetPasswordToken: {
     type: String,

@@ -84,7 +84,7 @@ export const updatePassword = async (req, res) => {
 // 3. Update Preferences (Currency, theme, dateformat, etc)
 export const updatePreferences = async (req, res) => {
   try {
-    const { currency, theme, dateFormat, language, firstDayOfWeek } = req.body;
+    const { currency, theme, dateFormat, language, firstDayOfWeek, anomalyThreshold } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -103,12 +103,14 @@ export const updatePreferences = async (req, res) => {
       if (dateFormat) user.preferences.dateFormat = dateFormat;
       if (language) user.preferences.language = language;
       if (firstDayOfWeek !== undefined) user.preferences.firstDayOfWeek = firstDayOfWeek;
+      if (anomalyThreshold !== undefined) user.preferences.anomalyThreshold = anomalyThreshold;
     } else {
       user.preferences = {
         theme: theme || 'dark',
         dateFormat: dateFormat || 'DD/MM/YYYY',
         language: language || 'fr',
-        firstDayOfWeek: firstDayOfWeek !== undefined ? firstDayOfWeek : 1
+        firstDayOfWeek: firstDayOfWeek !== undefined ? firstDayOfWeek : 1,
+        anomalyThreshold: anomalyThreshold !== undefined ? anomalyThreshold : 30
       };
     }
 

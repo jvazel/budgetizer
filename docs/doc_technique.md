@@ -46,6 +46,7 @@ Représente les informations de compte et les préférences d'affichage.
   - `dateFormat` (String, default: 'DD/MM/YYYY').
   - `language` (String, default: 'fr').
   - `firstDayOfWeek` (Number, default: 1 - Lundi).
+  - `anomalyThreshold` (Number, default: 30) : Seuil de détection d'anomalies en pourcentage.
 - `createdAt` (Date, default: Date.now).
 
 ### 2.2 Modèle `Account` (Comptes)
@@ -166,6 +167,9 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `GET /api/charts/category` : Répartition catégorielle sur une période.
 - `GET /api/charts/forecast` : Calcul de la projection de solde à 30 jours.
 
+### 3.8 IA & Insights (`/api/insights`)
+- `GET /` : Retourne la liste des anomalies détectées (selon le seuil spécifié) et le top 3 des suggestions de réductions budgétaires avec alertes d'abonnements.
+
 ---
 
 ## 4. Algorithmes et Processus Clés
@@ -185,7 +189,15 @@ Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la b
      $$\text{nextDate} = \text{nextDate} + (\text{every} \times \text{unit})$$
    - **Vérification des limites** :
      - Si le compteur `timesExecuted` atteint `numberOfTimes` ou si `nextDate` dépasse `endDate`, la planification est marquée `isActive = false`.
-   - **Validation** : Validation de la session (`commitTransaction()`).
+    - `Validation` : Validation de la session (`commitTransaction()`).
+
+### 4.2 Détection d'Anomalies et Prévisions d'Insights (`insightController.js`)
+Cet algorithme est invoqué à la demande lors du rendu de la page « Conseils » :
+1. **Identification des mois complets historiques** : Détermine les 3 derniers mois complets relatifs à la date du jour (ex: si nous sommes en mai, les mois historiques sont février, mars et avril).
+2. **Calcul de l'âge d'activité** : Vérifie l'ancienneté de l'utilisateur par rapport à sa première transaction. Si celle-ci remonte à moins de 2 mois, l'analyse est ignorée (historique insuffisant).
+3. **Moyennes catégorielles historiques** : Agrège les dépenses historiques de l'utilisateur par catégorie et par mois. Si une catégorie n'est présente que sur un seul mois de la période historique, elle est exclue. La moyenne mensuelle de dépense de chaque catégorie valide est calculée sur le nombre de mois d'activité historique du compte (2 ou 3).
+4. **Calcul de dérive du mois en cours** : Calcule le total des dépenses du mois en cours pour chaque catégorie et compare cette somme avec la moyenne historique. Si le ratio dépasse $$1 + \text{threshold}$$, une anomalie est générée et classée par gravité (orange pour +30-60%, rouge pour >= +60%).
+5. **Calcul de suggestions et détection d'abonnements** : Identifie les 3 catégories où les dépenses cumulées historiques sont les plus élevées. Projette l'économie annuelle pour des diminutions de budget de 10%, 20% et 30%. Analyse si ces catégories contiennent des planifications d'abonnements actives ou passées pour générer un message d'alerte spécifique.
 
 ---
 
@@ -218,6 +230,16 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
 - **OfflineStatus (`OfflineStatus.jsx`)** :
   - Surveille les événements de connexion globaux `window.addEventListener('online')` et `window.addEventListener('offline')`.
   - Affiche un bandeau d'alerte animé avec `framer-motion` indiquant le passage hors ligne ou le rétablissement de la connexion.
+
+### 5.4 Expérience Utilisateur & Design System Premium
+- **Tiroir de Navigation (`MenuSheet.jsx`)** : Un menu coulissant moderne est déployé de manière fluide grâce à `framer-motion` (physique de ressort). Il utilise un fond flouté (`backdrop-blur-md`) et deux halos de lumière diffuse (`blur-[60px] bg-accent/5` et `bg-purple/5`) placés de manière asymétrique pour créer un effet de profondeur et de relief. Les liens de menu disposent de micro-animations de translation latérale au survol et d'indicateurs d'état actif.
+- **Liste Optimisée des Transactions (`TransactionList.jsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles :
+  - Sur mobile, le nom du compte bancaire se décale sous le libellé de catégorie (empilement flex-col) afin de libérer la largeur maximale.
+  - Les libellés longs sont tronqués proprement (`truncate`) avec affichage d'un attribut de texte au survol (`title`) pour l'accessibilité.
+  - Réduction des rembourrages internes (`p-3 sm:p-4`) et de la taille de police pour maximiser le contenu utile.
+- **Branding Systémique** : Suppression des logos et icônes génériques de portefeuille. Le logo de l'application (`/pwa-192x192.png`) a été standardisé sur les écrans suivants :
+  - `Splash.jsx` (Écran de chargement initial).
+  - Écrans d'authentification (`Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`).
 
 ---
 

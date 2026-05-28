@@ -28,6 +28,7 @@ const SettingsPage = () => {
   const [theme, setTheme] = useState(user?.preferences?.theme || 'dark');
   const [dateFormat, setDateFormat] = useState(user?.preferences?.dateFormat || 'DD/MM/YYYY');
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(user?.preferences?.firstDayOfWeek !== undefined ? user.preferences.firstDayOfWeek : 1);
+  const [anomalyThreshold, setAnomalyThreshold] = useState(user?.preferences?.anomalyThreshold || 30);
 
   // CSV Import States
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -79,7 +80,8 @@ const SettingsPage = () => {
         },
         theme: prefUpdates.theme || theme,
         dateFormat: prefUpdates.dateFormat || dateFormat,
-        firstDayOfWeek: prefUpdates.firstDayOfWeek !== undefined ? prefUpdates.firstDayOfWeek : firstDayOfWeek
+        firstDayOfWeek: prefUpdates.firstDayOfWeek !== undefined ? prefUpdates.firstDayOfWeek : firstDayOfWeek,
+        anomalyThreshold: prefUpdates.anomalyThreshold !== undefined ? prefUpdates.anomalyThreshold : anomalyThreshold
       };
 
       const res = await api.put('/users/preferences', payload);
@@ -384,6 +386,30 @@ const SettingsPage = () => {
               >
                 <option value={1}>Lundi</option>
                 <option value={0}>Dimanche</option>
+              </select>
+            </div>
+
+            <hr className="border-border/30" />
+
+            {/* AI Anomaly Sensitivity */}
+            <div className="flex justify-between items-center gap-4">
+              <div>
+                <h4 className="text-xs font-bold text-primary">Sensibilité d'anomalie (IA)</h4>
+                <p className="text-[10px] text-muted">Seuil de dépassement par défaut pour vos alertes.</p>
+              </div>
+              <select
+                value={anomalyThreshold}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setAnomalyThreshold(val);
+                  handleSavePreferences({ anomalyThreshold: val });
+                }}
+                className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              >
+                <option value={30}>+30% (Sensible)</option>
+                <option value={40}>+40%</option>
+                <option value={50}>+50%</option>
+                <option value={60}>+60% (Modéré)</option>
               </select>
             </div>
 

@@ -13,6 +13,7 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Enveloppes Budgétaires** : Définition de budgets par catégorie avec alertes de dépassement (seuil par défaut à 80%) et option de report de solde d'un mois sur l'autre (rollover).
 - **Transactions Planifiées & Abonnements** : Planification de transactions régulières ou d'abonnements mensuels/annuels, avec option d'auto-confirmation ou d'approbation manuelle.
 - **Visualisations & Graphiques** : Graphiques d'évolution du solde, répartition catégorielle et prévisions intelligentes de solde à 30 jours (via Recharts).
+- **Conseils & IA (Insights)** : Détection automatique des anomalies de dépenses par catégorie (alertes orange/rouges) comparées à la moyenne des 3 derniers mois avec seuil de sensibilité configurable et persistant. Suggestions de réductions budgétaires interactives et audit d'abonnements.
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
 

@@ -29,9 +29,9 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
           
           <div className="space-y-3">
             {txs.map(tx => (
-              <div key={tx._id} className="bg-surface-2 p-4 rounded-2xl flex items-center gap-4">
+              <div key={tx._id} className="bg-surface-2 p-3 sm:p-4 rounded-2xl flex items-center gap-3 sm:gap-4 hover:bg-surface-2/80 transition-colors">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl shrink-0"
                   style={{ 
                     backgroundColor: tx.type === 'transfer' 
                       ? '#3b82f620' 
@@ -42,7 +42,14 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <p className="text-primary font-semibold text-sm break-words whitespace-normal leading-snug">
+                  <p 
+                    className="text-primary font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug" 
+                    title={
+                      tx.type === 'transfer' 
+                        ? (tx.description || tx.note || 'Virement') 
+                        : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
+                    }
+                  >
                     {tx.type === 'transfer' 
                       ? (tx.description || tx.note || 'Virement') 
                       : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
@@ -50,55 +57,54 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                   </p>
                   
                   {tx.type === 'transfer' ? (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
-                        {tx.accountId?.name || 'Inconnu'}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-secondary">
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                        <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                       </span>
-                      <span className="text-muted text-[10px]">➔</span>
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
-                        {tx.toAccountId?.name || 'Inconnu'}
+                      <span className="text-muted text-[10px] shrink-0">➔</span>
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
+                        <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
                       </span>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <div className="flex flex-col mt-1 gap-1">
                       {tx.categoryId?.name && (
-                        <span className="text-[11px] text-secondary font-medium">
+                        <span className="text-[10px] text-secondary/80 font-medium truncate">
                           {tx.categoryId.name}
                         </span>
                       )}
-                      {tx.categoryId?.name && <span className="text-muted text-[10px]">•</span>}
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
-                        {tx.accountId?.name || 'Inconnu'}
+                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate w-fit max-w-full">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                        <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                       </span>
                     </div>
                   )}
                 </div>
                 
-                <div className="text-right">
-                  <p className={`font-mono font-bold ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
+                <div className="text-right shrink-0 ml-auto pl-1">
+                  <p className={`font-mono font-bold text-xs sm:text-sm ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
                     {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount)}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0 ml-2">
+                <div className="flex items-center gap-0.5 shrink-0 ml-1 sm:ml-2 border-l border-border/20 pl-1.5 sm:pl-2">
                   {onEdit && (
                     <button 
                       onClick={() => onEdit(tx)}
-                      className="text-secondary hover:text-amber-400 hover:bg-amber-400/10 p-2 rounded-xl transition-colors"
+                      className="text-secondary hover:text-amber-400 hover:bg-amber-400/10 p-1.5 rounded-xl transition-colors"
                       title="Modifier la transaction"
                     >
-                      <Pencil size={16} />
+                      <Pencil size={15} />
                     </button>
                   )}
                   <button 
                     onClick={() => onDelete(tx)}
-                    className="text-danger hover:bg-danger/10 p-2 rounded-xl transition-colors"
+                    className="text-danger hover:bg-danger/10 p-1.5 rounded-xl transition-colors"
                     title="Supprimer la transaction"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>

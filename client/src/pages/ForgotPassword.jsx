@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Wallet } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -29,8 +29,8 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-base flex flex-col p-6 max-w-md mx-auto">
       <div className="flex-1 flex flex-col justify-center">
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center">
-            <Wallet size={32} className="text-white" />
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(74,222,128,0.15)] bg-surface border border-border/30">
+            <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
           </div>
         </div>
 

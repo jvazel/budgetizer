@@ -17,7 +17,8 @@ Budgetizer est conçue pour aider les utilisateurs à reprendre le contrôle de 
 
 ### 2.1 Inscription & Connexion
 L'accès à l'application est sécurisé et nécessite un compte utilisateur.
-- **Formulaire d'inscription** : Demande le nom complet, l'adresse e-mail et un mot de passe sécurisé. À la création du compte, des préférences par défaut (thème sombre, devise EUR €, langue française) sont appliquées.
+- **Branding & Logo** : Pour assurer une identité visuelle homogène, le logo officiel de l'application (`/pwa-192x192.png`) est affiché sur l'écran d'accueil de chargement (Splash Screen) et sur l'ensemble des pages d'authentification (Connexion, Inscription, Récupération et Réinitialisation de mot de passe) à la place des icônes génériques de portefeuille.
+- **Formulaire d'inscription** : Demande le nom complet, l'adresse e-mail et un mot de passe sécurisé. À la création du compte, des préférences par défaut (thème sombre, devise EUR €, langue française, seuil d'anomalie à 30%) sont appliquées.
 - **Formulaire de connexion** : Permet de s'identifier pour obtenir un jeton de session JWT.
 
 ### 2.2 Préférences de l'Utilisateur
@@ -26,6 +27,7 @@ Depuis la page **Paramètres**, l'utilisateur peut personnaliser :
 - **Le Thème** : Mode sombre (recommandé pour le style premium), mode clair ou alignement sur le système.
 - **Le Format de date** : Format d'affichage dans les listes et rapports.
 - **Le Premier jour de la semaine** : Lundi (valeur par défaut) ou Dimanche.
+- **Le Seuil d'anomalie** : Seuil de sensibilité (par défaut +30%) pour la détection de dépenses anormales dans l'onglet Conseils. Cette préférence est sauvegardée de manière persistante sur son profil.
 
 ---
 
@@ -40,6 +42,7 @@ Le tableau de bord est la page d'accueil principale après connexion. Il regroup
   - La couleur personnalisée associée.
   - Un indicateur visuel du type de compte (carte, coffre-fort, etc.).
 - **Formulaire d'ajout rapide (Action Sheet)** : Un bouton d'action flottant central permet d'ouvrir instantanément un panneau de saisie rapide (Bottom Sheet) pour ajouter une transaction (Dépense, Revenu ou Virement interne) sans quitter l'écran d'accueil.
+- **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules (Accueil, Transactions, Catégories, Budgets, Échéances, Abonnements, Statistiques, Conseils, Paramètres) et intègre des effets de halo lumineux (glow flares) et des flous (backdrop-blur) pour un design premium sombre et immersif.
 - **Aperçu des Transactions Récentes** : Liste chronologique des dernières transactions saisies ou confirmées.
 - **Mini-Calendrier** : Vue compacte affichant les transactions et les échéances planifiées à venir pour la semaine en cours.
 
@@ -77,8 +80,11 @@ Pour analyser finement la répartition des flux d'argent, chaque transaction (ho
 
 ---
 
-## 6. Saisie de Transactions & Pavé Numérique
+## 6. Saisie & Historique des Transactions
 
+Cette section regroupe la création rapide de transactions et la consultation de l'historique complet.
+
+### 6.1 Saisie de Transactions & Pavé Numérique
 La saisie est simplifiée au maximum grâce à une interface de type "Bottom Sheet" glissante, dotée d'un **pavé numérique virtuel** optimisé :
 - **Sélection du type** : Dépense (Rouge), Revenu (Vert) ou Virement (Bleu).
 - **Saisie du Montant** : Saisie à l'aide d'un pavé numérique visuel personnalisé évitant l'ouverture du clavier natif du téléphone, ce qui accélère la saisie d'un montant avec décimales.
@@ -86,6 +92,12 @@ La saisie est simplifiée au maximum grâce à une interface de type "Bottom She
   - Pour une dépense/revenu : le compte source ou destinataire.
   - Pour un virement : le compte de départ (`From`) et le compte d'arrivée (`To`).
 - **Métadonnées** : Date de la transaction, catégorie (automatiquement filtrée selon le type de flux), note textuelle facultative et tags (ex: `#vacances`, `#cadeau`).
+
+### 6.2 Liste Complète des Transactions
+Accessible via l'option "Transactions" du menu de navigation :
+- **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates ou recherche de mots-clés dans la description ou les notes.
+- **Gestion** : Possibilité de modifier ou supprimer directement chaque transaction.
+- **Ergonomie Mobile** : Afin d'éviter la troncature des libellés et d'assurer une lecture fluide sur petits écrans, l'étiquette du compte bancaire (badge coloré) est empilée verticalement sous la catégorie, libérant de l'espace horizontal pour l'intitulé et le montant. Une infobulle (title html) s'affiche au survol/toucher pour lire le libellé complet si besoin.
 
 ---
 
@@ -157,3 +169,24 @@ Afin de préserver l'expérience utilisateur lors des coupures de réseau :
 - **Toast de Statut Réseau** : Une notification visuelle glisse depuis le haut de l'écran en cas de perte de connexion réseau ("Mode hors ligne").
 - **Mode Dégradé** : L'utilisateur est informé que les données affichées sont temporairement limitées à celles mises en cache par le navigateur.
 - **Rétablissement de Connexion** : Dès que le réseau est de nouveau disponible, un toast vert s'affiche ("Connexion rétablie - Synchronisation réussie") et le client recharge automatiquement les données fraîches depuis l'API.
+
+---
+
+## 12. IA & Conseils Personnalisés (Insights)
+
+La fonctionnalité **Conseils** (IA & Insights) offre des analyses intelligentes sur le comportement de dépenses pour aider l'utilisateur à économiser.
+
+### 12.1 Détection d'anomalies de dépenses
+- **Logique de calcul** : L'application compare les dépenses du mois en cours avec la moyenne mensuelle par catégorie calculée sur les 3 derniers mois complets.
+- **Seuil de déclenchement** : Une alerte est générée si les dépenses du mois en cours dépassent la moyenne historique de plus d'un certain seuil (par défaut +30%, configurable par l'utilisateur).
+- **Fiabilité des données** : Pour éviter les faux positifs, l'algorithme ignore les catégories qui n'ont pas au moins 2 mois d'activité historique dans la période de calcul. De même, les comptes ayant moins de 2 mois d'activité totale sont informés que l'historique est insuffisant.
+- **Niveau de sévérité visuel** :
+  - **Dépassement de +30% à +60%** : Alerte de couleur Orange (sensibilité modérée).
+  - **Dépassement de +60% et plus** : Alerte de couleur Rouge (dérive critique).
+
+### 12.2 Suggestions de réduction de dépenses
+- **Postes majeurs** : L'algorithme isole le Top 3 des catégories où les dépenses ont été les plus importantes au cours des 3 derniers mois complets.
+- **Simulations interactives** : Pour chaque catégorie majeure, l'utilisateur peut simuler des baisses de budget de 10%, 20%, et 30% en cliquant sur des chips interactifs. L'interface affiche instantanément l'économie annuelle projetée :
+  $$\text{Économie annuelle} = (\text{Dépense moyenne mensuelle} \times \text{Pourcentage de baisse}) \times 12$$
+- **Audit d'abonnements** : Si la catégorie analysée contient des transactions issues d'abonnements (actifs ou historiques), une notification d'aide spécifique s'affiche ("Pensez à auditer vos abonnements dans cette catégorie pour économiser facilement").
+
