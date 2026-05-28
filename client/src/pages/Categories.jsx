@@ -4,6 +4,7 @@ import CategoryList from '../components/categories/CategoryList';
 import CategoryFormSheet from '../components/categories/CategoryFormSheet';
 import { useCategories } from '../hooks/useCategories';
 import { Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Categories = () => {
   const { categoriesTree, loading, addCategory, updateCategory, deleteCategory } = useCategories();
@@ -65,7 +66,14 @@ const Categories = () => {
           categories={activeTab === 'expense' ? categoriesTree.expense : categoriesTree.income} 
           onEdit={handleEdit}
           onDelete={async (cat) => {
-            await deleteCategory(cat._id);
+            if (window.confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${cat.name}" ?`)) {
+              try {
+                await deleteCategory(cat._id);
+                toast.success('Catégorie supprimée');
+              } catch (err) {
+                toast.error(err.response?.data?.message || 'Erreur lors de la suppression');
+              }
+            }
           }}
           onAddSub={handleAddSub}
         />

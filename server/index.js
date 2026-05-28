@@ -18,6 +18,7 @@ import chartRoutes from './routes/chartRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import savedFilterRoutes from './routes/savedFilterRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
+import savingsGoalRoutes from './routes/savingsGoalRoutes.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 
 dotenv.config({ override: true });
@@ -126,6 +127,7 @@ app.use('/api/charts', chartRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/saved-filters', savedFilterRoutes);
 app.use('/api/insights', insightRoutes);
+app.use('/api/savings-goals', savingsGoalRoutes);
 
 // Error Handler to log and format error responses
 app.use((err, req, res, next) => {

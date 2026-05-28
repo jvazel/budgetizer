@@ -33,7 +33,7 @@ const AppShell = ({ children, title, actions, backTo }) => {
               <Menu size={24} />
             </button>
           )}
-          {title && <h1 className="text-sm font-bold text-primary truncate capitalize leading-tight">{title}</h1>}
+          {title && <h1 className="text-sm font-bold text-primary truncate leading-tight">{title}</h1>}
         </div>
 
         {actions && (

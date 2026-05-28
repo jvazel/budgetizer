@@ -62,6 +62,11 @@ const transactionSchema = new mongoose.Schema({
     ref: 'Account',
     default: null
   },
+  savingsGoalId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SavingsGoal',
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -72,5 +77,6 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ userId: 1, date: -1 });
 transactionSchema.index({ userId: 1, accountId: 1 });
 transactionSchema.index({ userId: 1, toAccountId: 1 });
+transactionSchema.index({ userId: 1, savingsGoalId: 1 });
 
 export default mongoose.model('Transaction', transactionSchema);

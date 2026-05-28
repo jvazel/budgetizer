@@ -2,6 +2,7 @@ import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import Category from '../models/Category.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
+import SavingsGoal from '../models/SavingsGoal.js';
 import mongoose from 'mongoose';
 
 // Utility function to update account balance
@@ -15,6 +16,22 @@ const updateAccountBalance = async (accountId, amount, type, session = null) => 
     account.balance += amount;
   }
   await account.save({ session });
+};
+
+// Utility function to update savings goal progress
+const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false, session = null) => {
+  const goal = await SavingsGoal.findById(goalId).session(session);
+  if (!goal) return;
+
+  let delta = 0;
+  if (type === 'expense') {
+    delta = isRevert ? -amount : amount;
+  } else if (type === 'income') {
+    delta = isRevert ? amount : -amount;
+  }
+
+  goal.currentAmount += delta;
+  await goal.save({ session });
 };
 
 // @desc    Get user transactions with pagination & filters
@@ -101,7 +118,7 @@ export const createTransaction = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { accountId, categoryId, type, amount, description, date, note, toAccountId } = req.body;
+    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId } = req.body;
 
     const transaction = new Transaction({
       userId: req.user.id,
@@ -112,7 +129,8 @@ export const createTransaction = async (req, res) => {
       description,
       date,
       note,
-      toAccountId
+      toAccountId,
+      savingsGoalId
     });
 
     await transaction.save({ session });
@@ -124,6 +142,9 @@ export const createTransaction = async (req, res) => {
       await updateAccountBalance(toAccountId, amount, 'income', session); // To account
     } else {
       await updateAccountBalance(accountId, amount, type, session);
+      if (savingsGoalId) {
+        await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session);
+      }
     }
 
     await session.commitTransaction();
@@ -132,7 +153,8 @@ export const createTransaction = async (req, res) => {
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')
       .populate('accountId', 'name color icon')
-      .populate('toAccountId', 'name color icon');
+      .populate('toAccountId', 'name color icon')
+      .populate('savingsGoalId', 'name icon color');
       
     res.status(201).json(populatedTx);
   } catch (error) {
@@ -167,6 +189,9 @@ export const deleteTransaction = async (req, res) => {
       // If it was an expense, adding it back means 'income' type operation on balance
       const revertType = transaction.type === 'expense' ? 'income' : 'expense';
       await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session);
+      }
     }
 
     await Transaction.findByIdAndDelete(req.params.id, { session });
@@ -472,7 +497,7 @@ export const updateTransaction = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { accountId, categoryId, type, amount, description, date, note, toAccountId } = req.body;
+    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId } = req.body;
     const transaction = await Transaction.findById(req.params.id).session(session);
 
     if (!transaction) return res.status(404).json({ message: 'Transaction non trouvée' });
@@ -487,6 +512,9 @@ export const updateTransaction = async (req, res) => {
     } else {
       const revertType = transaction.type === 'expense' ? 'income' : 'expense';
       await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session);
+      }
     }
 
     // 2. Assign new fields
@@ -498,6 +526,9 @@ export const updateTransaction = async (req, res) => {
     transaction.date = date || transaction.date;
     transaction.note = note !== undefined ? note : transaction.note;
     transaction.toAccountId = toAccountId !== undefined ? toAccountId : transaction.toAccountId;
+    if (req.body.hasOwnProperty('savingsGoalId')) {
+      transaction.savingsGoalId = savingsGoalId;
+    }
 
     await transaction.save({ session });
 
@@ -508,6 +539,9 @@ export const updateTransaction = async (req, res) => {
       await updateAccountBalance(transaction.toAccountId, transaction.amount, 'income', session);
     } else {
       await updateAccountBalance(transaction.accountId, transaction.amount, transaction.type, session);
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session);
+      }
     }
 
     await session.commitTransaction();
@@ -515,7 +549,8 @@ export const updateTransaction = async (req, res) => {
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')
       .populate('accountId', 'name color icon')
-      .populate('toAccountId', 'name color icon');
+      .populate('toAccountId', 'name color icon')
+      .populate('savingsGoalId', 'name icon color');
 
     res.json(populatedTx);
   } catch (error) {

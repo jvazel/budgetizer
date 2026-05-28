@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Banknote, Plus, TrendingUp, Calendar } from 'lucide-react';
+import { Home, Banknote, Plus, BarChart2, Calendar } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const BottomTabBar = ({ onPlusClick }) => {
@@ -10,7 +10,7 @@ const BottomTabBar = ({ onPlusClick }) => {
     { path: '/', icon: Home, label: 'Accueil' },
     { path: '/transactions', icon: Banknote, label: 'Transactions' },
     // Plus button is handled separately
-    { path: '/charts', icon: TrendingUp, label: 'Analyses' },
+    { path: '/charts', icon: BarChart2, label: 'Analyses' },
     { path: '/calendar', icon: Calendar, label: 'Calendrier' },
   ];
 
