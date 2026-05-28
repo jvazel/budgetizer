@@ -32,8 +32,18 @@ const Categories = () => {
     setIsFormOpen(true);
   };
 
+  const actions = (
+    <button 
+      onClick={handleAddRoot}
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+      title="Ajouter une catégorie"
+    >
+      <Plus size={16} />
+    </button>
+  );
+
   return (
-    <AppShell title="Catégories" backTo="/">
+    <AppShell title="Catégories" backTo="/" actions={actions}>
       {/* Tabs */}
       <div className="flex bg-surface-2 p-1 rounded-2xl mb-6">
         <button
@@ -78,14 +88,6 @@ const Categories = () => {
           onAddSub={handleAddSub}
         />
       )}
-
-      {/* Floating Action Button for Root Category */}
-      <button 
-        onClick={handleAddRoot}
-        className="fixed bottom-[88px] right-6 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform z-40"
-      >
-        <Plus size={28} />
-      </button>
 
       <CategoryFormSheet
         isOpen={isFormOpen}

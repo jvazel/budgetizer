@@ -5,6 +5,7 @@ import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }) => {
   const [amount, setAmount] = useState('');
@@ -87,14 +88,19 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-          <span>{goal.icon}</span>
-          <span>{isDeposit ? 'Ajouter de l\'épargne' : 'Retirer de l\'épargne'}</span>
-        </h2>
-        <p className="text-xs text-secondary mt-1">
-          Objectif : <strong className="text-primary">{goal.name}</strong>
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-primary flex items-center gap-2">
+            <span>{goal.icon}</span>
+            <span>{isDeposit ? 'Ajouter de l\'épargne' : 'Retirer de l\'épargne'}</span>
+          </h2>
+          <p className="text-xs text-secondary mt-1">
+            Objectif : <strong className="text-primary">{goal.name}</strong>
+          </p>
+        </div>
+        <button type="button" onClick={onClose} className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors shrink-0">
+          <X size={20} className="text-secondary" />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

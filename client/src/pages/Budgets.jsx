@@ -124,8 +124,18 @@ const Budgets = () => {
 
   const showSkeleton = loading && budgets.length === 0;
 
+  const actions = (
+    <button 
+      onClick={handleOpenAdd}
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+      title="Créer un budget"
+    >
+      <Plus size={16} />
+    </button>
+  );
+
   return (
-    <AppShell title="Budgets">
+    <AppShell title="Budgets" actions={actions}>
       <section className="pb-24">
         {/* Weekly Budgets Section */}
         <div className="mb-6">
@@ -202,14 +212,6 @@ const Budgets = () => {
           )}
         </div>
       </section>
-
-      {/* Floating Action Button for Budget */}
-      <button 
-        onClick={handleOpenAdd}
-        className="fixed bottom-[88px] right-6 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:brightness-110 active:scale-95 transition-all z-20"
-      >
-        <Plus size={28} />
-      </button>
 
       <BudgetFormSheet 
         isOpen={isFormOpen}

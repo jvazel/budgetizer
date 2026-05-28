@@ -5,6 +5,7 @@ import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transactionToEdit }) => {
   const [type, setType] = useState('expense');
@@ -86,6 +87,16 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className="flex flex-col h-full space-y-6">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-bold text-primary">
+            {transactionToEdit ? 'Modifier la transaction' : 'Nouvelle transaction'}
+          </h2>
+          <button type="button" onClick={onClose} className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors">
+            <X size={20} className="text-secondary" />
+          </button>
+        </div>
         
         {/* Type Selector */}
         <div className="flex bg-surface p-1 rounded-2xl mx-auto w-full max-w-sm shadow-sm">

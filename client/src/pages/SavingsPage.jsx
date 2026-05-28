@@ -58,8 +58,18 @@ const SavingsPage = () => {
 
   const showSkeleton = loading && savingsGoals.length === 0;
 
+  const actions = (
+    <button 
+      onClick={handleOpenAdd}
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+      title="Ajouter un objectif d'épargne"
+    >
+      <Plus size={16} />
+    </button>
+  );
+
   return (
-    <AppShell title="Objectifs d'épargne" backTo="/">
+    <AppShell title="Objectifs d'épargne" backTo="/" actions={actions}>
       <div className="pb-24 px-1">
         
         {error && (
@@ -140,15 +150,6 @@ const SavingsPage = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Action Button (FAB) */}
-      <button
-        onClick={handleOpenAdd}
-        className="fixed bottom-[88px] right-6 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:brightness-110 active:scale-95 transition-all z-20"
-        title="Ajouter un objectif d'épargne"
-      >
-        <Plus size={28} />
-      </button>
 
       {/* Form Sheet (Create/Edit Goal) */}
       <SavingsGoalFormSheet

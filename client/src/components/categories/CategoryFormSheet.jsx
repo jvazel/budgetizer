@@ -3,6 +3,7 @@ import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null, initialType = 'expense', initialParentId = null }) => {
   const [name, setName] = useState('');
@@ -67,10 +68,13 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-primary">
           {initialData ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
         </h2>
+        <button type="button" onClick={onClose} className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors">
+          <X size={20} className="text-secondary" />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
