@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronRight, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 
@@ -10,6 +10,7 @@ const CategoryChart = () => {
   const [type, setType] = useState('expense'); // expense, income
   const [compareMode, setCompareMode] = useState('previous'); // previous, 3m, 6m, none
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
+  const [isCompareSheetOpen, setIsCompareSheetOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ total: 0, categories: [] });
@@ -30,6 +31,51 @@ const CategoryChart = () => {
     if (compareMode === '3m') return cat.changeVs3MAvg || 0;
     if (compareMode === '6m') return cat.changeVs6MAvg || 0;
     return 0;
+  };
+
+  const getCompareDiff = (cat) => {
+    if (compareMode === 'previous') {
+      const prevAmount = cat.prevAmount || 0;
+      return cat.amount - prevAmount;
+    }
+    if (compareMode === '3m') {
+      const avg = cat.movingAvg3M || 0;
+      return cat.amount - avg;
+    }
+    if (compareMode === '6m') {
+      const avg = cat.movingAvg6M || 0;
+      return cat.amount - avg;
+    }
+    return 0;
+  };
+
+  const formatCompareText = (cat) => {
+    const pct = getCompareValue(cat);
+    const diff = getCompareDiff(cat);
+    
+    if (compareMode === 'previous' && pct === 100 && (cat.prevAmount || 0) === 0) {
+      return 'Nouveau';
+    }
+    if (compareMode === '3m' && pct === 100 && (cat.movingAvg3M || 0) === 0) {
+      return 'Nouveau';
+    }
+    if (compareMode === '6m' && pct === 100 && (cat.movingAvg6M || 0) === 0) {
+      return 'Nouveau';
+    }
+
+    const formattedDiff = formatCurrency(Math.abs(diff));
+    const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+    return `${sign}${formattedDiff} (${pct > 0 ? '+' : ''}${pct}%)`;
+  };
+
+  const getCompareColorClass = (cat) => {
+    const diff = getCompareDiff(cat);
+    if (diff === 0) return 'text-muted';
+    if (type === 'expense') {
+      return diff > 0 ? 'text-danger' : 'text-accent';
+    } else {
+      return diff > 0 ? 'text-accent' : 'text-danger';
+    }
   };
 
   const handleOpenDetailSheet = async (cat) => {
@@ -113,17 +159,100 @@ const CategoryChart = () => {
     return '';
   };
 
-  const generateRecentMonths = () => {
-    const months = [];
+  const isMonthly = () => period === 'month' || /^\d{4}-\d{2}$/.test(period);
+
+  const isCurrentMonth = () => {
+    if (period === 'month') return true;
+    const currentD = new Date();
+    const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+    return period === currentKey;
+  };
+
+  const handlePrevMonth = () => {
+    let year, month;
+    if (period === 'month') {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    } else if (/^\d{4}-\d{2}$/.test(period)) {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    } else {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    }
+
+    month--;
+    if (month < 1) {
+      month = 12;
+      year--;
+    }
+    const newPeriod = `${year}-${String(month).padStart(2, '0')}`;
+    setPeriod(newPeriod);
+  };
+
+  const handleNextMonth = () => {
+    if (isCurrentMonth()) return;
+    let year, month;
+    if (period === 'month') {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    } else if (/^\d{4}-\d{2}$/.test(period)) {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    } else {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    }
+
+    month++;
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+    const newPeriod = `${year}-${String(month).padStart(2, '0')}`;
+    const currentD = new Date();
+    const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+    if (newPeriod === currentKey) {
+      setPeriod('month');
+    } else {
+      setPeriod(newPeriod);
+    }
+  };
+
+  const formatDateRange = ({ startDate, endDate }) => {
+    const parse = (str) => {
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+    const start = parse(startDate);
+    const end = parse(endDate);
+    
+    const format = (d) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${format(start)} au ${format(end)}`;
+  };
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
     const current = new Date();
     for (let i = 0; i < 18; i++) {
       const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const year = d.getFullYear().toString();
+      const key = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
       const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
-      months.push({ key, label: capitalizedLabel });
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ key, label: capitalizedLabel });
     }
-    return months;
+    return groups;
   };
 
   const fetchCategoryData = async () => {
@@ -192,83 +321,135 @@ const CategoryChart = () => {
     <div className="space-y-6 pb-24">
       {/* 1. Selectors */}
       <div className="space-y-4">
-        {/* Period selection chips in grid layout */}
-        <div className="grid grid-cols-6 gap-2">
-          {[
-            { id: 'month', label: 'Ce mois', span: 'col-span-2' },
-            { id: '3months', label: '3 mois', span: 'col-span-2' },
-            { id: '6months', label: '6 mois', span: 'col-span-2' },
-            { id: 'year', label: 'Cette année', span: 'col-span-3' }
-          ].map(p => (
-            <button
-              key={p.id}
-              onClick={() => setPeriod(p.id)}
-              className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${p.span} ${
-                period === p.id 
-                  ? 'bg-accent text-white shadow-sm' 
-                  : 'bg-surface-2 text-secondary hover:text-primary'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-
-          {/* Custom Month Picker Chip */}
+        {/* Toggle between Monthly and Cumulative views */}
+        <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-full">
           <button
             type="button"
-            onClick={() => setIsMonthSheetOpen(true)}
-            className={`col-span-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
-              /^\d{4}-\d{2}$/.test(period)
-                ? 'bg-accent text-white shadow-sm' 
-                : 'bg-surface-2 text-secondary hover:text-primary'
+            onClick={() => {
+              if (!isMonthly()) {
+                setPeriod('month');
+              }
+            }}
+            className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
+              isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
             }`}
           >
-            <Calendar size={12} />
-            {/^\d{4}-\d{2}$/.test(period) ? formatPeriodLabel(period) : 'Autre mois'}
+            Vue mensuelle
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (isMonthly()) {
+                setPeriod('3months');
+              }
+            }}
+            className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
+              !isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+            }`}
+          >
+            Analyses cumulées
+          </button>
+        </div>
+
+        {/* Period navigation or choices */}
+        {isMonthly() ? (
+          <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-xl border border-border/40">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+              title="Mois précédent"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setIsMonthSheetOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+            >
+              <Calendar size={14} className="text-accent" />
+              <span>{formatPeriodLabel(period)}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              disabled={isCurrentMonth()}
+              className={`p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+                isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
+              }`}
+              title="Mois suivant"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: '3months', label: '3 mois' },
+              { id: '6months', label: '6 mois' },
+              { id: 'year', label: 'Cette année' }
+            ].map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPeriod(p.id)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                  period === p.id 
+                    ? 'bg-accent text-white shadow-sm' 
+                    : 'bg-surface-2 text-secondary hover:text-primary'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Exact date range helper text */}
+        <div className="text-[10px] text-muted text-center font-medium opacity-85">
+          Période du {formatDateRange(getDates(period))}
         </div>
 
         {/* Toggle expense/income & comparison */}
         <div className="flex justify-between items-center gap-4">
           <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-48">
             <button
+              type="button"
               onClick={() => setType('expense')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
-                type === 'expense' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+                type === 'expense' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
               }`}
             >
               Dépenses
             </button>
             <button
+              type="button"
               onClick={() => setType('income')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
-                type === 'income' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+                type === 'income' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
               }`}
             >
               Revenus
             </button>
           </div>
 
-          <div className="flex bg-surface border border-border/40 p-0.5 rounded-xl text-[10px] font-bold">
-            {[
-              { id: 'previous', label: 'Vs préc.' },
-              { id: '3m', label: 'Vs moy. 3M' },
-              { id: '6m', label: 'Vs moy. 6M' },
-              { id: 'none', label: 'Aucune' }
-            ].map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setCompareMode(m.id)}
-                className={`px-2 py-1 rounded-lg transition-all ${
-                  compareMode === m.id 
-                    ? 'bg-accent text-white shadow-sm' 
-                    : 'text-muted hover:text-primary'
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
+          {/* Trigger button for comparison selection bottom sheet */}
+          <button
+            type="button"
+            onClick={() => setIsCompareSheetOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-border/40 hover:bg-surface-2/80 active:scale-98 transition-all text-xs font-bold text-secondary"
+          >
+            <TrendingUp size={12} className="text-accent" />
+            <span>
+              {compareMode === 'previous' && 'Vs préc.'}
+              {compareMode === '3m' && 'Vs moy. 3M'}
+              {compareMode === '6m' && 'Vs moy. 6M'}
+              {compareMode === 'none' && 'Sans comp.'}
+            </span>
+            <span className="text-[10px] opacity-60">▼</span>
+          </button>
         </div>
       </div>
 
@@ -393,21 +574,15 @@ const CategoryChart = () => {
                     <span className="font-mono text-sm font-bold text-primary block">{formatCurrency(cat.amount)}</span>
                     
                     {compareMode !== 'none' && (
-                      <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                        getCompareValue(cat) > 0 
-                          ? (type === 'expense' ? 'text-danger' : 'text-accent') 
-                          : getCompareValue(cat) < 0 
-                          ? (type === 'expense' ? 'text-accent' : 'text-danger') 
-                          : 'text-muted'
-                      }`}>
-                        {getCompareValue(cat) > 0 ? (
+                      <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${getCompareColorClass(cat)}`}>
+                        {getCompareDiff(cat) > 0 ? (
                           <ArrowUpRight size={10} />
-                        ) : getCompareValue(cat) < 0 ? (
+                        ) : getCompareDiff(cat) < 0 ? (
                           <ArrowDownRight size={10} />
                         ) : (
                           <Minus size={10} />
                         )}
-                        {getCompareValue(cat) === 100 && compareMode === 'previous' ? 'Nouveau' : `${Math.abs(getCompareValue(cat))}%`}
+                        {formatCompareText(cat)}
                       </span>
                     )}
                   </div>
@@ -487,23 +662,82 @@ const CategoryChart = () => {
             <p className="text-xs text-muted">Sélectionnez un mois spécifique à analyser</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto no-scrollbar py-1">
-            {generateRecentMonths().map((m) => {
-              const isActive = period === m.key;
+          <div className="space-y-4 max-h-80 overflow-y-auto no-scrollbar py-1">
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, months]) => {
+              const currentD = new Date();
+              const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+              
+              return (
+                <div key={year} className="space-y-2">
+                  <div className="text-[10px] font-black text-secondary/80 px-1 border-l-2 border-accent pl-2 mt-3 uppercase tracking-wider">{year}</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {months.map((m) => {
+                      const isActive = period === m.key || (m.key === currentKey && period === 'month');
+                      return (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => {
+                            if (m.key === currentKey) {
+                              setPeriod('month');
+                            } else {
+                              setPeriod(m.key);
+                            }
+                            setIsMonthSheetOpen(false);
+                          }}
+                          className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                            isActive
+                              ? 'bg-accent text-white shadow-sm'
+                              : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Comparison Selector Bottom Sheet */}
+      <BottomSheet
+        isOpen={isCompareSheetOpen}
+        onClose={() => setIsCompareSheetOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="pb-2 border-b border-border/40">
+            <h3 className="text-sm font-extrabold text-primary">Comparer les catégories</h3>
+            <p className="text-xs text-muted">Choisissez une période de référence pour analyser l'évolution de vos dépenses et revenus</p>
+          </div>
+
+          <div className="space-y-2">
+            {[
+              { id: 'previous', label: 'Période précédente', desc: 'Compare avec la même durée juste avant celle choisie' },
+              { id: '3m', label: 'Moyenne sur 3 mois', desc: 'Compare avec la moyenne mensuelle des 3 derniers mois' },
+              { id: '6m', label: 'Moyenne sur 6 mois', desc: 'Compare avec la moyenne mensuelle des 6 derniers mois' },
+              { id: 'none', label: 'Aucune comparaison', desc: 'Affiche uniquement les montants réels' }
+            ].map((m) => {
+              const isActive = compareMode === m.id;
               return (
                 <button
-                  key={m.key}
+                  key={m.id}
+                  type="button"
                   onClick={() => {
-                    setPeriod(m.key);
-                    setIsMonthSheetOpen(false);
+                    setCompareMode(m.id);
+                    setIsCompareSheetOpen(false);
                   }}
-                  className={`p-3 rounded-xl text-xs font-bold text-center transition-all ${
+                  className={`w-full p-4 rounded-2xl border text-left flex flex-col transition-all ${
                     isActive
-                      ? 'bg-accent text-white shadow-sm'
-                      : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                      ? 'bg-accent/10 border-accent text-primary shadow-sm'
+                      : 'bg-surface-2 border-border/40 text-secondary hover:bg-surface-2/80 hover:text-primary'
                   }`}
                 >
-                  {m.label}
+                  <span className="text-xs font-bold">{m.label}</span>
+                  <span className="text-[10px] text-muted font-normal mt-0.5">{m.desc}</span>
                 </button>
               );
             })}

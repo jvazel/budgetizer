@@ -140,6 +140,7 @@ export const getChartsByCategory = async (req, res) => {
     // Assign variation percentage to categories list
     categoriesList.forEach(cat => {
       const prevAmount = prevGrouped[cat.categoryId] || 0;
+      cat.prevAmount = prevAmount;
       if (prevAmount > 0) {
         cat.changeVsPreviousPeriod = parseFloat((((cat.amount - prevAmount) / prevAmount) * 100).toFixed(1));
       } else {
