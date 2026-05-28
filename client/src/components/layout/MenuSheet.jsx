@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FolderTree, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target } from 'lucide-react';
+import { X, FolderTree, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target, Wallet } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,6 +19,12 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       icon: Banknote, 
       color: 'text-emerald-400 bg-emerald-500/10',
       path: '/transactions'
+    },
+    { 
+      label: 'Comptes', 
+      icon: Wallet, 
+      color: 'text-sky-400 bg-sky-500/10',
+      path: '/accounts'
     },
     { 
       label: 'Gérer les catégories', 

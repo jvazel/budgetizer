@@ -8,7 +8,10 @@ import AppShell from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
-import { Bell, Settings, AlertTriangle, TrendingUp, MoreVertical, Wallet, CreditCard, Sliders, Download } from 'lucide-react';
+import { 
+  Bell, Settings, AlertTriangle, TrendingUp, MoreVertical, Wallet, 
+  CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LabelList, PieChart, Pie, Cell } from 'recharts';
 
@@ -46,6 +49,67 @@ const MiniGauge = ({ income, expenses }) => {
   );
 };
 
+const NotificationIcon = ({ type, name, size = 20 }) => {
+  if (name && name.length <= 2) {
+    return <span className="text-base select-none" style={{ fontSize: `${size}px`, lineHeight: 1 }}>{name}</span>;
+  }
+
+  const iconProps = { size, className: "shrink-0" };
+  
+  switch (name) {
+    case 'AlertTriangle':
+      return <AlertTriangle {...iconProps} />;
+    case 'Clock':
+      return <Clock {...iconProps} />;
+    case 'Calendar':
+      return <Calendar {...iconProps} />;
+    case 'Wallet':
+      return <Wallet {...iconProps} />;
+    case 'Sparkles':
+      return <Sparkles {...iconProps} />;
+    case 'TrendingUp':
+      return <TrendingUp {...iconProps} />;
+    case 'CreditCard':
+      return <CreditCard {...iconProps} />;
+    case 'Target':
+      return <Target {...iconProps} />;
+    case 'AlertCircle':
+      return <AlertCircle {...iconProps} />;
+    default:
+      switch (type) {
+        case 'budget':
+          return <AlertTriangle {...iconProps} />;
+        case 'scheduled':
+          return <Clock {...iconProps} />;
+        case 'savings':
+          return <Target {...iconProps} />;
+        case 'balance':
+          return <Wallet {...iconProps} />;
+        case 'insight':
+          return <Sparkles {...iconProps} />;
+        default:
+          return <Bell {...iconProps} />;
+      }
+  }
+};
+
+const getNotificationColors = (color) => {
+  switch (color) {
+    case 'danger':
+      return 'bg-danger/10 border-danger/20 text-danger hover:bg-danger/15';
+    case 'warning':
+      return 'bg-warning/10 border-warning/20 text-warning hover:bg-warning/15';
+    case 'success':
+      return 'bg-accent/10 border-accent/20 text-accent hover:bg-accent/15';
+    case 'info':
+      return 'bg-info/10 border-info/20 text-info hover:bg-info/15';
+    case 'accent':
+      return 'bg-purple/10 border-purple/20 text-purple hover:bg-purple/15';
+    default:
+      return 'bg-surface-2 border-border/40 text-primary hover:bg-surface-2/80';
+  }
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
@@ -61,6 +125,7 @@ const Home = () => {
   const [isTopCategoriesMenuOpen, setIsTopCategoriesMenuOpen] = useState(false);
   const [isBudgetsMenuOpen, setIsBudgetsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isAccountsMenuOpen, setIsAccountsMenuOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [chartDuration, setChartDuration] = useState('3M');
 
@@ -69,7 +134,8 @@ const Home = () => {
   };
 
   const budgetAlerts = db?.budgetAlerts || [];
-
+  const notifications = db?.notifications || [];
+  
   const title = `Bonjour, ${user?.name ? user.name.split(' ')[0] : ''} 👋`;
   const actions = (
     <button 
@@ -78,8 +144,10 @@ const Home = () => {
       id="notification-bell-btn"
     >
       <Bell size={20} />
-      {budgetAlerts.length > 0 && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full ring-2 ring-base animate-pulse" />
+      {notifications.length > 0 && (
+        <span className="absolute -top-1 -right-1.5 px-1 min-w-[16px] h-4 text-[8px] flex items-center justify-center font-extrabold text-white bg-danger rounded-full ring-2 ring-base">
+          {notifications.length}
+        </span>
       )}
     </button>
   );
@@ -205,7 +273,12 @@ const Home = () => {
         <div className="flex justify-center items-center mb-4 relative">
           <h3 className="text-sm font-bold text-primary text-center">Comptes</h3>
           <div className="absolute right-0">
-            <MoreVertical className="text-secondary cursor-pointer hover:text-primary transition-colors" size={18} />
+            <MoreVertical 
+              onClick={() => setIsAccountsMenuOpen(true)}
+              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+              size={18} 
+              id="accounts-more-btn"
+            />
           </div>
         </div>
         
@@ -625,6 +698,38 @@ const Home = () => {
         </div>
       </BottomSheet>
 
+      <BottomSheet 
+        isOpen={isAccountsMenuOpen} 
+        onClose={() => setIsAccountsMenuOpen(false)}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-md font-bold text-primary">Options des Comptes</h2>
+          </div>
+
+          {/* Menu list */}
+          <div className="space-y-3">
+            {/* View accounts action */}
+            <button
+              onClick={() => {
+                setIsAccountsMenuOpen(false);
+                navigate('/accounts');
+              }}
+              className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-accent bg-accent/10">
+                <Wallet size={20} />
+              </div>
+              <div className="flex-1">
+                <span>Afficher les comptes</span>
+                <p className="text-xs text-muted font-normal mt-0.5">Visualiser, modifier et gérer vos comptes bancaires</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
       {/* Notifications Drawer */}
       <BottomSheet 
         isOpen={isNotificationsOpen} 
@@ -634,37 +739,59 @@ const Home = () => {
           {/* Header */}
           <div className="flex justify-between items-center pb-2 border-b border-border/40">
             <h2 className="text-md font-bold text-primary">Notifications</h2>
+            {notifications.length > 0 && (
+              <span className="text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-bold">
+                {notifications.length} alerte{notifications.length > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
 
           {/* Notifications List */}
-          <div className="space-y-3">
-            {budgetAlerts.length === 0 ? (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar">
+            {notifications.length === 0 ? (
               <div className="text-center py-10 text-muted space-y-2">
                 <Bell size={32} className="mx-auto text-muted/60" />
-                <p className="text-sm font-semibold">Aucune nouvelle notification</p>
-                <p className="text-[10px] text-muted/80">Tout est sous contrôle dans vos budgets !</p>
+                <p className="text-sm font-semibold text-primary">Aucune nouvelle notification</p>
+                <p className="text-[10px] text-muted/80 leading-relaxed">
+                  Tout est sous contrôle ! Vos budgets, comptes et objectifs d'épargne sont au vert.
+                </p>
               </div>
             ) : (
-              budgetAlerts.map(alert => (
+              notifications.map(notif => (
                 <div 
-                  key={alert.id}
+                  key={notif.id}
                   onClick={() => {
-                    setIsNotificationsOpen(false);
-                    navigate('/budgets');
+                    if (notif.action?.path) {
+                      setIsNotificationsOpen(false);
+                      navigate(notif.action.path);
+                    }
                   }}
-                  className="bg-danger/10 border border-danger/20 p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-danger/15 transition-colors"
+                  className={`border p-4 rounded-2xl flex items-start gap-3 transition-colors ${
+                    notif.action?.path ? 'cursor-pointer' : ''
+                  } ${getNotificationColors(notif.color)}`}
                 >
-                  <AlertTriangle className="text-danger shrink-0" size={24} />
+                  <div className="shrink-0 mt-0.5">
+                    <NotificationIcon type={notif.type} name={notif.icon} size={20} />
+                  </div>
+                  
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-1">
-                      <p className="text-xs font-bold text-primary truncate">Budget {alert.name} dépassé !</p>
-                      <span className="text-[10px] font-bold text-danger shrink-0">
-                        {Math.round(alert.percentage)}%
-                      </span>
+                    <div className="flex justify-between items-start gap-2">
+                      <p className="text-xs font-bold text-primary leading-tight">{notif.title}</p>
+                      {notif.percentage !== undefined && (
+                        <span className="text-[10px] font-extrabold shrink-0 opacity-90">
+                          {Math.round(notif.percentage)}%
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">
-                      Vous avez dépensé {formatCurrency(alert.spent, user?.currency?.code)} sur {formatCurrency(alert.amount, user?.currency?.code)} alloués ce mois-ci.
+                    <p className="text-[10px] text-secondary mt-1 leading-relaxed">
+                      {notif.message}
                     </p>
+                    
+                    {notif.action && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold mt-2 underline tracking-wide uppercase opacity-90">
+                        {notif.action.label} &rarr;
+                      </span>
+                    )}
                   </div>
                 </div>
               ))

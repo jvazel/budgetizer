@@ -21,6 +21,7 @@ import SettingsPage from './pages/SettingsPage';
 import SummaryHistory from './pages/SummaryHistory';
 import AiInsights from './pages/AiInsights';
 import SavingsPage from './pages/SavingsPage';
+import AccountsPage from './pages/AccountsPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -176,6 +177,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/accounts" 
+          element={
+            <ProtectedRoute>
+              <AccountsPage />
             </ProtectedRoute>
           } 
         />

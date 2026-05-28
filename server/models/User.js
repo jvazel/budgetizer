@@ -25,7 +25,13 @@ const userSchema = new mongoose.Schema({
     dateFormat: { type: String, default: 'DD/MM/YYYY' },
     language: { type: String, default: 'fr' },
     firstDayOfWeek: { type: Number, default: 1 },
-    anomalyThreshold: { type: Number, default: 30 }
+    anomalyThreshold: { type: Number, default: 30 },
+    lowBalanceThreshold: { type: Number, default: 100 },
+    enableBudgetAlerts: { type: Boolean, default: true },
+    enableScheduledAlerts: { type: Boolean, default: true },
+    enableSavingsAlerts: { type: Boolean, default: true },
+    enableLowBalanceAlerts: { type: Boolean, default: true },
+    enableAiInsightsAlerts: { type: Boolean, default: true }
   },
   resetPasswordToken: {
     type: String,

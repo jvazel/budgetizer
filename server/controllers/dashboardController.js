@@ -1,6 +1,8 @@
 import Account from '../models/Account.js';
 import Transaction from '../models/Transaction.js';
 import Budget from '../models/Budget.js';
+import SavingsGoal from '../models/SavingsGoal.js';
+import ScheduledTransaction from '../models/ScheduledTransaction.js';
 
 export const getDashboardSummary = async (req, res) => {
   try {
@@ -241,10 +243,21 @@ export const getDashboardSummary = async (req, res) => {
       }))
       .slice(0, 5); // Top 5
 
-    // 9. Budget Alerts
-    const budgets = await Budget.find({ userId }).populate('categoryId', 'name icon');
+    // 9. Notifications Aggregation
+    const prefs = req.user.preferences || {};
+    const enableBudgetAlerts = prefs.enableBudgetAlerts !== false;
+    const enableScheduledAlerts = prefs.enableScheduledAlerts !== false;
+    const enableSavingsAlerts = prefs.enableSavingsAlerts !== false;
+    const enableLowBalanceAlerts = prefs.enableLowBalanceAlerts !== false;
+    const enableAiInsightsAlerts = prefs.enableAiInsightsAlerts !== false;
+    const lowBalanceThreshold = prefs.lowBalanceThreshold !== undefined ? prefs.lowBalanceThreshold : 100;
+    const anomalyThreshold = prefs.anomalyThreshold !== undefined ? prefs.anomalyThreshold : 30;
+
+    const notifications = [];
     const budgetAlerts = [];
-    
+
+    // a. Budgets
+    const budgets = await Budget.find({ userId }).populate('categoryId', 'name icon');
     budgets.forEach(budget => {
       const spent = currentMonthTxs
         .filter(t => t.type === 'expense' && t.categoryId && t.categoryId._id.toString() === budget.categoryId._id.toString())
@@ -253,7 +266,7 @@ export const getDashboardSummary = async (req, res) => {
       const percentage = (spent / budget.amount) * 100;
       
       if (percentage >= budget.alertAt) {
-        budgetAlerts.push({
+        const alertItem = {
           id: budget._id,
           name: budget.name,
           categoryName: budget.categoryId?.name,
@@ -261,9 +274,175 @@ export const getDashboardSummary = async (req, res) => {
           percentage: percentage,
           spent: spent,
           amount: budget.amount
-        });
+        };
+        budgetAlerts.push(alertItem);
+
+        if (enableBudgetAlerts) {
+          notifications.push({
+            id: `budget-${budget._id}-${percentage >= 100 ? 'exceeded' : 'warning'}`,
+            type: 'budget',
+            title: percentage >= 100 ? `Budget ${budget.name} dépassé !` : `Budget ${budget.name} presque atteint`,
+            message: `Vous avez dépensé ${spent.toFixed(2)} € sur les ${budget.amount.toFixed(2)} € alloués (${Math.round(percentage)}%).`,
+            icon: budget.categoryId?.icon || 'AlertTriangle',
+            color: percentage >= 100 ? 'danger' : 'warning',
+            percentage: percentage,
+            action: { label: 'Gérer les budgets', path: '/budgets' }
+          });
+        }
       }
     });
+
+    // b. Scheduled & Pending Transactions
+    if (enableScheduledAlerts) {
+      // Find pending transactions awaiting user validation
+      const pendingTxs = await Transaction.find({ userId, isPending: true }).populate('categoryId', 'name icon');
+      pendingTxs.forEach(tx => {
+        notifications.push({
+          id: `pending-${tx._id}`,
+          type: 'scheduled',
+          title: 'Transaction en attente',
+          message: `La transaction planifiée '${tx.description}' (${tx.amount.toFixed(2)} €) attend votre confirmation.`,
+          icon: tx.categoryId?.icon || 'Clock',
+          color: 'info',
+          action: { label: 'Valider', path: '/scheduled' }
+        });
+      });
+
+      // Find upcoming transactions in the next 3 days
+      const futureLimit = new Date();
+      futureLimit.setDate(now.getDate() + 3);
+      const upcomingSchedules = await ScheduledTransaction.find({
+        userId,
+        isActive: true,
+        nextDate: { $gte: now, $lte: futureLimit }
+      }).populate('categoryId', 'name icon');
+
+      upcomingSchedules.forEach(st => {
+        notifications.push({
+          id: `upcoming-${st._id}-${st.nextDate.getTime()}`,
+          type: 'scheduled',
+          title: st.isSubscription ? 'Abonnement à venir' : 'Prélèvement à venir',
+          message: `La planification '${st.description}' (${st.amount.toFixed(2)} €) est prévue pour le ${new Date(st.nextDate).toLocaleDateString('fr-FR')}.`,
+          icon: st.categoryId?.icon || 'Calendar',
+          color: 'info',
+          action: { label: 'Voir l\'agenda', path: '/scheduled' }
+        });
+      });
+    }
+
+    // c. Savings Goals
+    if (enableSavingsAlerts) {
+      const savingsGoals = await SavingsGoal.find({ userId });
+      const weekFromNow = new Date();
+      weekFromNow.setDate(now.getDate() + 7);
+
+      savingsGoals.forEach(goal => {
+        const percentage = (goal.currentAmount / goal.targetAmount) * 100;
+        if (goal.currentAmount >= goal.targetAmount) {
+          notifications.push({
+            id: `savings-completed-${goal._id}`,
+            type: 'savings',
+            title: 'Objectif atteint ! 🎉',
+            message: `Félicitations ! Votre objectif d'épargne '${goal.name}' est entièrement financé (${goal.targetAmount.toFixed(2)} €).`,
+            icon: goal.icon || '💰',
+            color: 'success',
+            percentage: percentage,
+            action: { label: 'Voir l\'épargne', path: '/savings' }
+          });
+        } else if (goal.targetDate && goal.targetDate > now && goal.targetDate <= weekFromNow) {
+          const diff = goal.targetAmount - goal.currentAmount;
+          notifications.push({
+            id: `savings-deadline-${goal._id}`,
+            type: 'savings',
+            title: 'Échéance d\'épargne proche',
+            message: `L'échéance de l'objectif '${goal.name}' est le ${new Date(goal.targetDate).toLocaleDateString('fr-FR')}. Il vous manque encore ${diff.toFixed(2)} € (${Math.round(percentage)}% complété).`,
+            icon: goal.icon || '💰',
+            color: 'warning',
+            percentage: percentage,
+            action: { label: 'Épargner', path: '/savings' }
+          });
+        }
+      });
+    }
+
+    // d. Low Balances
+    if (enableLowBalanceAlerts) {
+      accounts.forEach(acc => {
+        if (acc.includeInTotal !== false && acc.type !== 'credit' && acc.type !== 'investment') {
+          if (acc.balance < lowBalanceThreshold) {
+            notifications.push({
+              id: `balance-low-${acc._id}`,
+              type: 'balance',
+              title: `Solde bas sur ${acc.name}`,
+              message: `Le solde de votre compte '${acc.name}' est de ${acc.balance.toFixed(2)} € (seuil: ${lowBalanceThreshold.toFixed(2)} €).`,
+              icon: acc.icon || 'Wallet',
+              color: 'danger',
+              action: { label: 'Gérer les comptes', path: '/' }
+            });
+          }
+        }
+      });
+    }
+
+    // e. AI Insights / Spending Anomalies
+    if (enableAiInsightsAlerts) {
+      const oldestTx = await Transaction.findOne({ userId }).sort({ date: 1 });
+      if (oldestTx) {
+        const oldestDate = new Date(oldestTx.date);
+        
+        // 3 previous months
+        const months = [];
+        for (let i = 1; i <= 3; i++) {
+          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+          if (end >= oldestDate) {
+            months.push({ start, end });
+          }
+        }
+
+        if (months.length >= 2) {
+          const startOfHistory = months[months.length - 1].start;
+          const endOfHistory = months[0].end;
+          
+          const historyExpenses = await Transaction.find({
+            userId,
+            type: 'expense',
+            date: { $gte: startOfHistory, $lte: endOfHistory },
+            isPending: { $ne: true }
+          });
+
+          const categoryTotals = {};
+          historyExpenses.forEach(tx => {
+            if (tx.categoryId) {
+              const catId = tx.categoryId._id.toString();
+              categoryTotals[catId] = (categoryTotals[catId] || 0) + tx.amount;
+            }
+          });
+
+          const thresholdPercent = anomalyThreshold / 100;
+          const numHistoryMonths = months.length;
+
+          for (const [catId, currentData] of Object.entries(categoryMap)) {
+            const historyTotal = categoryTotals[catId] || 0;
+            const historyAverage = historyTotal / numHistoryMonths;
+            const currentAmount = currentData.amount;
+
+            if (historyAverage > 0 && currentAmount > historyAverage * (1 + thresholdPercent)) {
+              const diffPercent = ((currentAmount - historyAverage) / historyAverage) * 100;
+              notifications.push({
+                id: `anomaly-${catId}`,
+                type: 'insight',
+                title: `Dépenses élevées en ${currentData.name}`,
+                message: `Vos dépenses en '${currentData.name}' (${currentAmount.toFixed(2)} €) dépassent de ${Math.round(diffPercent)}% votre moyenne habituelle.`,
+                icon: currentData.icon || 'Sparkles',
+                color: diffPercent >= 60 ? 'danger' : 'warning',
+                action: { label: 'Voir l\'analyse', path: '/charts' }
+              });
+            }
+          }
+        }
+      }
+    }
 
     // 10. Compile final payload
     res.json({
@@ -288,7 +467,8 @@ export const getDashboardSummary = async (req, res) => {
       balanceHistory,
       expensesByCategory,
       recentTransactions: currentMonthTxs.slice(0, 5),
-      budgetAlerts
+      budgetAlerts,
+      notifications
     });
 
   } catch (error) {

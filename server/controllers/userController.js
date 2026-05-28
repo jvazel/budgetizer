@@ -84,7 +84,20 @@ export const updatePassword = async (req, res) => {
 // 3. Update Preferences (Currency, theme, dateformat, etc)
 export const updatePreferences = async (req, res) => {
   try {
-    const { currency, theme, dateFormat, language, firstDayOfWeek, anomalyThreshold } = req.body;
+    const { 
+      currency, 
+      theme, 
+      dateFormat, 
+      language, 
+      firstDayOfWeek, 
+      anomalyThreshold,
+      lowBalanceThreshold,
+      enableBudgetAlerts,
+      enableScheduledAlerts,
+      enableSavingsAlerts,
+      enableLowBalanceAlerts,
+      enableAiInsightsAlerts
+    } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -104,13 +117,25 @@ export const updatePreferences = async (req, res) => {
       if (language) user.preferences.language = language;
       if (firstDayOfWeek !== undefined) user.preferences.firstDayOfWeek = firstDayOfWeek;
       if (anomalyThreshold !== undefined) user.preferences.anomalyThreshold = anomalyThreshold;
+      if (lowBalanceThreshold !== undefined) user.preferences.lowBalanceThreshold = lowBalanceThreshold;
+      if (enableBudgetAlerts !== undefined) user.preferences.enableBudgetAlerts = enableBudgetAlerts;
+      if (enableScheduledAlerts !== undefined) user.preferences.enableScheduledAlerts = enableScheduledAlerts;
+      if (enableSavingsAlerts !== undefined) user.preferences.enableSavingsAlerts = enableSavingsAlerts;
+      if (enableLowBalanceAlerts !== undefined) user.preferences.enableLowBalanceAlerts = enableLowBalanceAlerts;
+      if (enableAiInsightsAlerts !== undefined) user.preferences.enableAiInsightsAlerts = enableAiInsightsAlerts;
     } else {
       user.preferences = {
         theme: theme || 'dark',
         dateFormat: dateFormat || 'DD/MM/YYYY',
         language: language || 'fr',
         firstDayOfWeek: firstDayOfWeek !== undefined ? firstDayOfWeek : 1,
-        anomalyThreshold: anomalyThreshold !== undefined ? anomalyThreshold : 30
+        anomalyThreshold: anomalyThreshold !== undefined ? anomalyThreshold : 30,
+        lowBalanceThreshold: lowBalanceThreshold !== undefined ? lowBalanceThreshold : 100,
+        enableBudgetAlerts: enableBudgetAlerts !== undefined ? enableBudgetAlerts : true,
+        enableScheduledAlerts: enableScheduledAlerts !== undefined ? enableScheduledAlerts : true,
+        enableSavingsAlerts: enableSavingsAlerts !== undefined ? enableSavingsAlerts : true,
+        enableLowBalanceAlerts: enableLowBalanceAlerts !== undefined ? enableLowBalanceAlerts : true,
+        enableAiInsightsAlerts: enableAiInsightsAlerts !== undefined ? enableAiInsightsAlerts : true
       };
     }
 

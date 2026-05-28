@@ -5,7 +5,7 @@ import api from '../services/api';
 import { 
   User, Shield, Eye, Settings, FileText, Download, Upload, Trash2, 
   X, AlertTriangle, ArrowLeft, Check, AlertCircle, FileSpreadsheet,
-  Smartphone, CheckCircle, Share, Plus
+  Smartphone, CheckCircle, Share, Plus, Bell
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePwa } from '../context/PwaContext';
@@ -29,6 +29,12 @@ const SettingsPage = () => {
   const [dateFormat, setDateFormat] = useState(user?.preferences?.dateFormat || 'DD/MM/YYYY');
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(user?.preferences?.firstDayOfWeek !== undefined ? user.preferences.firstDayOfWeek : 1);
   const [anomalyThreshold, setAnomalyThreshold] = useState(user?.preferences?.anomalyThreshold || 30);
+  const [lowBalanceThreshold, setLowBalanceThreshold] = useState(user?.preferences?.lowBalanceThreshold !== undefined ? user.preferences.lowBalanceThreshold : 100);
+  const [enableBudgetAlerts, setEnableBudgetAlerts] = useState(user?.preferences?.enableBudgetAlerts !== undefined ? user.preferences.enableBudgetAlerts : true);
+  const [enableScheduledAlerts, setEnableScheduledAlerts] = useState(user?.preferences?.enableScheduledAlerts !== undefined ? user.preferences.enableScheduledAlerts : true);
+  const [enableSavingsAlerts, setEnableSavingsAlerts] = useState(user?.preferences?.enableSavingsAlerts !== undefined ? user.preferences.enableSavingsAlerts : true);
+  const [enableLowBalanceAlerts, setEnableLowBalanceAlerts] = useState(user?.preferences?.enableLowBalanceAlerts !== undefined ? user.preferences.enableLowBalanceAlerts : true);
+  const [enableAiInsightsAlerts, setEnableAiInsightsAlerts] = useState(user?.preferences?.enableAiInsightsAlerts !== undefined ? user.preferences.enableAiInsightsAlerts : true);
 
   // CSV Import States
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -81,7 +87,13 @@ const SettingsPage = () => {
         theme: prefUpdates.theme || theme,
         dateFormat: prefUpdates.dateFormat || dateFormat,
         firstDayOfWeek: prefUpdates.firstDayOfWeek !== undefined ? prefUpdates.firstDayOfWeek : firstDayOfWeek,
-        anomalyThreshold: prefUpdates.anomalyThreshold !== undefined ? prefUpdates.anomalyThreshold : anomalyThreshold
+        anomalyThreshold: prefUpdates.anomalyThreshold !== undefined ? prefUpdates.anomalyThreshold : anomalyThreshold,
+        lowBalanceThreshold: prefUpdates.lowBalanceThreshold !== undefined ? prefUpdates.lowBalanceThreshold : lowBalanceThreshold,
+        enableBudgetAlerts: prefUpdates.enableBudgetAlerts !== undefined ? prefUpdates.enableBudgetAlerts : enableBudgetAlerts,
+        enableScheduledAlerts: prefUpdates.enableScheduledAlerts !== undefined ? prefUpdates.enableScheduledAlerts : enableScheduledAlerts,
+        enableSavingsAlerts: prefUpdates.enableSavingsAlerts !== undefined ? prefUpdates.enableSavingsAlerts : enableSavingsAlerts,
+        enableLowBalanceAlerts: prefUpdates.enableLowBalanceAlerts !== undefined ? prefUpdates.enableLowBalanceAlerts : enableLowBalanceAlerts,
+        enableAiInsightsAlerts: prefUpdates.enableAiInsightsAlerts !== undefined ? prefUpdates.enableAiInsightsAlerts : enableAiInsightsAlerts
       };
 
       const res = await api.put('/users/preferences', payload);
@@ -411,6 +423,153 @@ const SettingsPage = () => {
                 <option value={50}>+50%</option>
                 <option value={60}>+60% (Modéré)</option>
               </select>
+            </div>
+
+            <hr className="border-border/30" />
+
+            {/* Notifications settings */}
+            <div className="space-y-4 pt-1">
+              <h4 className="text-xs font-extrabold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                <Bell size={14} /> Alertes & Notifications
+              </h4>
+              
+              <div className="space-y-3 pl-1">
+                {/* Low Balance Threshold */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Seuil de solde bas</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Seuil en dessous duquel une alerte de solde est générée.</p>
+                  </div>
+                  <div className="flex items-center gap-1 bg-surface border border-border/40 rounded-xl px-2.5 py-1.5">
+                    <input
+                      type="number"
+                      value={lowBalanceThreshold}
+                      onChange={(e) => {
+                        const val = Math.max(0, Number(e.target.value));
+                        setLowBalanceThreshold(val);
+                      }}
+                      onBlur={() => handleSavePreferences({ lowBalanceThreshold })}
+                      className="bg-transparent text-xs font-bold text-primary w-14 text-right focus:outline-none"
+                    />
+                    <span className="text-[10px] text-muted font-bold">{currencySymbol}</span>
+                  </div>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* Enable Budget Alerts */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Alertes Budgets</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Alerte lorsque les budgets mensuels sont presque épuisés.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={enableBudgetAlerts} 
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setEnableBudgetAlerts(val);
+                        handleSavePreferences({ enableBudgetAlerts: val });
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
+                  </label>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* Enable Scheduled Alerts */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Transactions Planifiées</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Notifications pour les prélèvements et abonnements à venir.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={enableScheduledAlerts} 
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setEnableScheduledAlerts(val);
+                        handleSavePreferences({ enableScheduledAlerts: val });
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
+                  </label>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* Enable Savings Alerts */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Objectifs d'Épargne</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Suivi et félicitations pour vos objectifs d'épargne.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={enableSavingsAlerts} 
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setEnableSavingsAlerts(val);
+                        handleSavePreferences({ enableSavingsAlerts: val });
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
+                  </label>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* Enable Low Balance Alerts */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Soldes de Comptes</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Alertes lorsque vos comptes passent sous le seuil configuré.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={enableLowBalanceAlerts} 
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setEnableLowBalanceAlerts(val);
+                        handleSavePreferences({ enableLowBalanceAlerts: val });
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
+                  </label>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* Enable AI Insights Alerts */}
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-xs text-primary font-medium">Analyses & IA Insights</span>
+                    <p className="text-[9px] text-muted font-normal mt-0.5">Recommandations intelligentes et alertes de dépenses anormales.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={enableAiInsightsAlerts} 
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setEnableAiInsightsAlerts(val);
+                        handleSavePreferences({ enableAiInsightsAlerts: val });
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <hr className="border-border/30" />

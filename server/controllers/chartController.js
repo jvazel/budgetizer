@@ -550,3 +550,114 @@ export const getForecastCharts = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+// 4. Get net worth historical evolution
+export const getNetWorthHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const days = parseInt(req.query.days) || 180;
+    const now = new Date();
+    
+    const startDate = new Date();
+    startDate.setDate(now.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const accounts = await Account.find({ userId });
+    
+    // Get transactions in range to reverse balances
+    const transactions = await Transaction.find({
+      userId,
+      date: { $gte: startDate, $lte: now }
+    }).sort({ date: -1 });
+
+    const runningBalances = {};
+    accounts.forEach(acc => {
+      runningBalances[acc._id.toString()] = acc.balance;
+    });
+
+    const formatDateKey = (date) => {
+      const d = new Date(date);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    // Group transactions by date key
+    const txsByDate = {};
+    transactions.forEach(tx => {
+      const dateKey = formatDateKey(tx.date);
+      if (!txsByDate[dateKey]) {
+        txsByDate[dateKey] = [];
+      }
+      txsByDate[dateKey].push(tx);
+    });
+
+    const history = [];
+
+    for (let i = 0; i <= days; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const dateKey = formatDateKey(d);
+
+      const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      
+      const balancesByType = {
+        checking: 0,
+        savings: 0,
+        cash: 0,
+        credit: 0,
+        investment: 0
+      };
+
+      accounts.forEach(acc => {
+        const bal = runningBalances[acc._id.toString()] || 0;
+        if (acc.includeInTotal !== false) {
+          balancesByType[acc.type] += bal;
+        }
+      });
+
+      const totalVal = Object.values(balancesByType).reduce((sum, val) => sum + val, 0);
+
+      history.push({
+        dayIndex: i,
+        date: dayLabel,
+        rawDate: d,
+        checking: parseFloat(balancesByType.checking.toFixed(2)),
+        savings: parseFloat(balancesByType.savings.toFixed(2)),
+        cash: parseFloat(balancesByType.cash.toFixed(2)),
+        credit: parseFloat(balancesByType.credit.toFixed(2)),
+        investment: parseFloat(balancesByType.investment.toFixed(2)),
+        netWorth: parseFloat(totalVal.toFixed(2))
+      });
+
+      // Reverse transactions for the next day backwards
+      const dayTxs = txsByDate[dateKey] || [];
+      dayTxs.forEach(tx => {
+        const accId = tx.accountId?.toString();
+        const toAccId = tx.toAccountId?.toString();
+
+        if (tx.type === 'expense') {
+          if (accId && runningBalances[accId] !== undefined) {
+            runningBalances[accId] += tx.amount;
+          }
+        } else if (tx.type === 'income') {
+          if (accId && runningBalances[accId] !== undefined) {
+            runningBalances[accId] -= tx.amount;
+          }
+        } else if (tx.type === 'transfer') {
+          if (accId && runningBalances[accId] !== undefined) {
+            runningBalances[accId] += tx.amount;
+          }
+          if (toAccId && runningBalances[toAccId] !== undefined) {
+            runningBalances[toAccId] -= tx.amount;
+          }
+        }
+      });
+    }
+
+    history.reverse();
+    res.json(history);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error during net worth calculation' });
+  }
+};
