@@ -49,28 +49,28 @@ const CashFlowChart = () => {
     switch (status) {
       case 'warning':
         return {
-          bg: 'bg-red-500/10 border-red-500/30 text-red-200',
+          bg: 'bg-danger/10 border-danger/25 text-red-200',
           icon: AlertTriangle,
-          iconColor: 'text-red-400',
+          iconColor: 'text-danger',
           title: 'Déficit de Trésorerie',
-          badge: 'bg-red-500/20 text-red-300 border border-red-500/30'
+          badge: 'bg-danger/20 text-danger border border-danger/30'
         };
       case 'tight':
         return {
-          bg: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
+          bg: 'bg-warning/10 border-warning/25 text-amber-200',
           icon: AlertCircle,
-          iconColor: 'text-amber-400',
+          iconColor: 'text-warning',
           title: 'Flux de Trésorerie Serré',
-          badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+          badge: 'bg-warning/20 text-warning border border-warning/30'
         };
       case 'healthy':
       default:
         return {
-          bg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200',
+          bg: 'bg-accent/10 border-accent/20 text-emerald-200',
           icon: CheckCircle2,
-          iconColor: 'text-emerald-400',
+          iconColor: 'text-accent',
           title: 'Budget Excédentaire',
-          badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+          badge: 'bg-accent/20 text-accent border border-accent/30'
         };
     }
   };
