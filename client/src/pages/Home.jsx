@@ -9,8 +9,9 @@ import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
 import { 
-  Bell, Settings, AlertTriangle, TrendingUp, MoreVertical, Wallet, 
-  CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle
+  Bell, AlertTriangle, TrendingUp, MoreVertical, Wallet, 
+  CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle,
+  BarChart2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LabelList, PieChart, Pie, Cell } from 'recharts';
@@ -112,7 +113,7 @@ const getNotificationColors = (color) => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const { addAccount, updateAccount, deleteAccount } = useAccounts();
   const { data: db, loading, refreshDashboard } = useDashboard();
   
@@ -126,6 +127,7 @@ const Home = () => {
   const [isBudgetsMenuOpen, setIsBudgetsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountsMenuOpen, setIsAccountsMenuOpen] = useState(false);
+  const [isLast7DaysMenuOpen, setIsLast7DaysMenuOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [chartDuration, setChartDuration] = useState('3M');
 
@@ -329,7 +331,12 @@ const Home = () => {
         <div className="flex justify-center items-center mb-4 relative">
           <h3 className="text-sm font-bold text-primary text-center">Dépenses - 7 derniers jours</h3>
           <div className="absolute right-0">
-            <MoreVertical className="text-secondary cursor-pointer hover:text-primary transition-colors" size={18} />
+            <MoreVertical 
+              onClick={() => setIsLast7DaysMenuOpen(true)}
+              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+              size={18} 
+              id="last7days-more-btn"
+            />
           </div>
         </div>
         
@@ -724,6 +731,38 @@ const Home = () => {
               <div className="flex-1">
                 <span>Afficher les comptes</span>
                 <p className="text-xs text-muted font-normal mt-0.5">Visualiser, modifier et gérer vos comptes bancaires</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet 
+        isOpen={isLast7DaysMenuOpen} 
+        onClose={() => setIsLast7DaysMenuOpen(false)}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-md font-bold text-primary">Options des Dépenses</h2>
+          </div>
+
+          {/* Menu list */}
+          <div className="space-y-3">
+            {/* Custom Histogram Action */}
+            <button
+              onClick={() => {
+                setIsLast7DaysMenuOpen(false);
+                navigate('/charts', { state: { tab: 'histogram' } });
+              }}
+              className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-accent bg-accent/10">
+                <BarChart2 size={20} />
+              </div>
+              <div className="flex-1">
+                <span>Afficher l'histogramme personnalisé</span>
+                <p className="text-xs text-muted font-normal mt-0.5">Analyser vos recettes et dépenses sur une période choisie</p>
               </div>
             </button>
           </div>

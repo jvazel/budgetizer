@@ -23,6 +23,7 @@ import AiInsights from './pages/AiInsights';
 import SavingsPage from './pages/SavingsPage';
 import AccountsPage from './pages/AccountsPage';
 import TransfersPage from './pages/TransfersPage';
+import ReportsPage from './pages/ReportsPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -210,6 +211,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <AiInsights />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute>
+              <ReportsPage />
             </ProtectedRoute>
           } 
         />

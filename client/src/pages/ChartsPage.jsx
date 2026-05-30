@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import CategoryChart from '../components/charts/CategoryChart';
 import FutureChart from '../components/charts/FutureChart';
@@ -12,8 +13,16 @@ import BottomSheet from '../components/ui/BottomSheet';
 import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2 } from 'lucide-react';
 
 const ChartsPage = () => {
-  const [activeTab, setActiveTab] = useState('category'); // category, cashflow, ranking, networth, future, forecast, budgetactual
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'category'); // category, cashflow, ranking, networth, future, forecast, budgetactual
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
 
   const tabNames = {
     category: 'Catégories',
