@@ -877,3 +877,156 @@ export const getExpenseRanking = async (req, res) => {
   }
 };
 
+// 7. Get custom Cash Flow histogram data
+export const getHistogramData = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { startDate, endDate, accountId, groupBy } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+    // Auto determine grouping if not provided
+    let activeGroupBy = groupBy;
+    if (!activeGroupBy) {
+      if (diffDays <= 31) {
+        activeGroupBy = 'day';
+      } else if (diffDays <= 180) {
+        activeGroupBy = 'week';
+      } else {
+        activeGroupBy = 'month';
+      }
+    }
+
+    // Query transactions in range
+    const query = {
+      userId,
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    };
+
+    if (accountId) {
+      query.$or = [
+        { accountId: accountId },
+        { toAccountId: accountId }
+      ];
+    }
+
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+
+    // Initialize buckets
+    const buckets = {};
+
+    // Generate all keys based on the groupBy to ensure no gaps in the chart
+    if (activeGroupBy === 'day') {
+      const temp = new Date(start);
+      while (temp <= end) {
+        const key = temp.toISOString().split('T')[0];
+        const dayLabel = temp.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        buckets[key] = { key, label: dayLabel, income: 0, expenses: 0, net: 0, rawDate: new Date(temp) };
+        temp.setDate(temp.getDate() + 1);
+      }
+    } else if (activeGroupBy === 'week') {
+      // Group by week starting date
+      const temp = new Date(start);
+      const day = temp.getDay();
+      const diff = temp.getDate() - day + (day === 0 ? -6 : 1);
+      const weekStart = new Date(temp.setDate(diff));
+      weekStart.setUTCHours(0, 0, 0, 0);
+
+      while (weekStart <= end) {
+        const key = weekStart.toISOString().split('T')[0];
+        const label = `Sem. du ${weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+        buckets[key] = { key, label, income: 0, expenses: 0, net: 0, rawDate: new Date(weekStart) };
+        weekStart.setDate(weekStart.getDate() + 7);
+      }
+    } else { // activeGroupBy === 'month'
+      const temp = new Date(start);
+      temp.setDate(1); // align to first of month
+      while (temp <= end) {
+        const key = `${temp.getFullYear()}-${String(temp.getMonth() + 1).padStart(2, '0')}`;
+        const label = temp.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+        buckets[key] = { key, label: label.charAt(0).toUpperCase() + label.slice(1), income: 0, expenses: 0, net: 0, rawDate: new Date(temp) };
+        temp.setMonth(temp.getMonth() + 1);
+      }
+    }
+
+    // Helper to find the matching bucket key
+    const getBucketKey = (date) => {
+      const d = new Date(date);
+      if (activeGroupBy === 'day') {
+        return d.toISOString().split('T')[0];
+      } else if (activeGroupBy === 'week') {
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(d.setDate(diff));
+        mon.setUTCHours(0, 0, 0, 0);
+        return mon.toISOString().split('T')[0];
+      } else { // month
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      }
+    };
+
+    transactions.forEach(tx => {
+      const key = getBucketKey(tx.date);
+      if (buckets[key]) {
+        if (accountId) {
+          const isFrom = tx.accountId.toString() === accountId;
+          const isTo = tx.toAccountId && tx.toAccountId.toString() === accountId;
+
+          if (tx.type === 'income') {
+            if (isFrom) buckets[key].income += tx.amount;
+          } else if (tx.type === 'expense') {
+            if (isFrom) buckets[key].expenses += tx.amount;
+          } else if (tx.type === 'transfer') {
+            if (isFrom) buckets[key].expenses += tx.amount;
+            if (isTo) buckets[key].income += tx.amount;
+          }
+        } else {
+          if (tx.type === 'income') {
+            buckets[key].income += tx.amount;
+          } else if (tx.type === 'expense') {
+            buckets[key].expenses += tx.amount;
+          }
+        }
+      }
+    });
+
+    const history = Object.values(buckets).map(b => {
+      b.income = parseFloat(b.income.toFixed(2));
+      b.expenses = parseFloat(b.expenses.toFixed(2));
+      b.net = parseFloat((b.income - b.expenses).toFixed(2));
+      return b;
+    });
+
+    const totalIncome = history.reduce((sum, h) => sum + h.income, 0);
+    const totalExpenses = history.reduce((sum, h) => sum + h.expenses, 0);
+    const netSavings = totalIncome - totalExpenses;
+    const savingsRate = totalIncome > 0 ? parseFloat(((netSavings / totalIncome) * 100).toFixed(1)) : 0;
+
+    res.json({
+      history,
+      groupBy: activeGroupBy,
+      metrics: {
+        totalIncome: parseFloat(totalIncome.toFixed(2)),
+        totalExpenses: parseFloat(totalExpenses.toFixed(2)),
+        netSavings: parseFloat(netSavings.toFixed(2)),
+        savingsRate
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error calculating histogram data' });
+  }
+};
+

@@ -6,7 +6,8 @@ import {
   getForecastCharts,
   getNetWorthHistory,
   getCashFlowHistory,
-  getExpenseRanking
+  getExpenseRanking,
+  getHistogramData
 } from '../controllers/chartController.js';
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.get('/forecast', getForecastCharts);
 router.get('/net-worth', getNetWorthHistory);
 router.get('/cash-flow', getCashFlowHistory);
 router.get('/ranking', getExpenseRanking);
+router.get('/histogram', getHistogramData);
 
 export default router;

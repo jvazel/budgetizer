@@ -22,6 +22,7 @@ import SummaryHistory from './pages/SummaryHistory';
 import AiInsights from './pages/AiInsights';
 import SavingsPage from './pages/SavingsPage';
 import AccountsPage from './pages/AccountsPage';
+import TransfersPage from './pages/TransfersPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -185,6 +186,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <AccountsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/transfers" 
+          element={
+            <ProtectedRoute>
+              <TransfersPage />
             </ProtectedRoute>
           } 
         />

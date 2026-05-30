@@ -83,7 +83,39 @@ const evaluateExpression = (expr) => {
   return String(roundedResult);
 };
 
-const NumericKeypad = ({ value, onChange, onSubmit }) => {
+const KeypadButton = ({ value, onClick, className, children }) => {
+  const lastTouchTime = React.useRef(0);
+
+  const handleTouchStart = (e) => {
+    e.preventDefault(); // Prevents touch delay, ghost clicks, and layout shifts due to keyboard dismissal
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+    lastTouchTime.current = Date.now();
+    onClick(value);
+  };
+
+  const handleCustomClick = (e) => {
+    // Prevent double execution on mobile emulators or hybrid browsers
+    if (Date.now() - lastTouchTime.current < 500) {
+      return;
+    }
+    onClick(value);
+  };
+
+  return (
+    <button
+      type="button"
+      onTouchStart={handleTouchStart}
+      onClick={handleCustomClick}
+      className={`${className} cursor-pointer select-none touch-manipulation`}
+    >
+      {children || value}
+    </button>
+  );
+};
+
+const NumericKeypad = ({ value, onChange, onSubmit, showSubmit = true }) => {
   const displayValue = String(value || '');
 
   // An expression exists if there's any operator after the first character
@@ -165,41 +197,43 @@ const NumericKeypad = ({ value, onChange, onSubmit }) => {
   return (
     <div className="grid grid-cols-4 gap-2 w-full max-w-sm mx-auto">
       {/* Row 1 */}
-      <button type="button" onClick={() => handlePress('7')} className={numBtnClass}>7</button>
-      <button type="button" onClick={() => handlePress('8')} className={numBtnClass}>8</button>
-      <button type="button" onClick={() => handlePress('9')} className={numBtnClass}>9</button>
-      <button type="button" onClick={() => handlePress('/')} className={opBtnClass}>÷</button>
+      <KeypadButton value="7" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="8" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="9" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="/" onClick={handlePress} className={opBtnClass}>÷</KeypadButton>
 
       {/* Row 2 */}
-      <button type="button" onClick={() => handlePress('4')} className={numBtnClass}>4</button>
-      <button type="button" onClick={() => handlePress('5')} className={numBtnClass}>5</button>
-      <button type="button" onClick={() => handlePress('6')} className={numBtnClass}>6</button>
-      <button type="button" onClick={() => handlePress('*')} className={opBtnClass}>×</button>
+      <KeypadButton value="4" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="5" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="6" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="*" onClick={handlePress} className={opBtnClass}>×</KeypadButton>
 
       {/* Row 3 */}
-      <button type="button" onClick={() => handlePress('1')} className={numBtnClass}>1</button>
-      <button type="button" onClick={() => handlePress('2')} className={numBtnClass}>2</button>
-      <button type="button" onClick={() => handlePress('3')} className={numBtnClass}>3</button>
-      <button type="button" onClick={() => handlePress('-')} className={opBtnClass}>-</button>
+      <KeypadButton value="1" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="2" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="3" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="-" onClick={handlePress} className={opBtnClass}>-</KeypadButton>
 
       {/* Row 4 */}
-      <button type="button" onClick={() => handlePress(',')} className={numBtnClass}>,</button>
-      <button type="button" onClick={() => handlePress('0')} className={numBtnClass}>0</button>
-      <button type="button" onClick={() => handlePress('del')} className={delBtnClass}><Delete size={26} /></button>
-      <button type="button" onClick={() => handlePress('+')} className={opBtnClass}>+</button>
+      <KeypadButton value="," onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="0" onClick={handlePress} className={numBtnClass} />
+      <KeypadButton value="del" onClick={handlePress} className={delBtnClass}><Delete size={26} /></KeypadButton>
+      <KeypadButton value="+" onClick={handlePress} className={opBtnClass}>+</KeypadButton>
 
       {/* Row 5 */}
-      <button 
-        type="button" 
-        onClick={() => handlePress('check')} 
-        className={`col-span-4 h-14 flex items-center justify-center rounded-2xl transition-all shadow-md text-white active:scale-95 ${
-          hasOperator 
-            ? 'bg-purple hover:bg-purple/80 shadow-purple/20' 
-            : 'bg-accent hover:bg-accent-dim shadow-accent/20'
-        }`}
-      >
-        {hasOperator ? <Equal size={26} /> : <Check size={26} />}
-      </button>
+      {showSubmit && (
+        <KeypadButton
+          value="check"
+          onClick={handlePress}
+          className={`col-span-4 h-14 flex items-center justify-center rounded-2xl transition-all shadow-md text-white active:scale-95 ${
+            hasOperator 
+              ? 'bg-purple hover:bg-purple/80 shadow-purple/20' 
+              : 'bg-accent hover:bg-accent-dim shadow-accent/20'
+          }`}
+        >
+          {hasOperator ? <Equal size={26} /> : <Check size={26} />}
+        </KeypadButton>
+      )}
     </div>
   );
 };
