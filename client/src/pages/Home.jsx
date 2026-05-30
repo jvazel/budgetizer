@@ -610,31 +610,20 @@ const Home = () => {
               </div>
             </button>
 
-            {/* Future option 1 placeholder */}
+            {/* Export action */}
             <button
-              disabled
-              className="w-full p-4 rounded-2xl bg-surface-2/40 border border-border/20 flex items-center gap-4 text-left font-bold text-muted cursor-not-allowed opacity-60"
+              onClick={() => {
+                setIsSommaireMenuOpen(false);
+                navigate('/reports');
+              }}
+              className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-muted bg-muted/10">
-                <Sliders size={20} />
-              </div>
-              <div className="flex-1">
-                <span>Ajuster les objectifs</span>
-                <p className="text-xs text-muted/60 font-normal mt-0.5">Bientôt disponible</p>
-              </div>
-            </button>
-
-            {/* Future option 2 placeholder */}
-            <button
-              disabled
-              className="w-full p-4 rounded-2xl bg-surface-2/40 border border-border/20 flex items-center gap-4 text-left font-bold text-muted cursor-not-allowed opacity-60"
-            >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-muted bg-muted/10">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-accent bg-accent/10">
                 <Download size={20} />
               </div>
               <div className="flex-1">
                 <span>Exporter les rapports</span>
-                <p className="text-xs text-muted/60 font-normal mt-0.5">Bientôt disponible</p>
+                <p className="text-xs text-muted font-normal mt-0.5">Générer et télécharger un rapport d'activité PDF</p>
               </div>
             </button>
           </div>
