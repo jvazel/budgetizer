@@ -84,21 +84,9 @@ const evaluateExpression = (expr) => {
 };
 
 const KeypadButton = ({ value, onClick, className, children }) => {
-  const lastTouchTime = React.useRef(0);
-
-  const handleTouchStart = (e) => {
-    e.preventDefault(); // Prevents touch delay, ghost clicks, and layout shifts due to keyboard dismissal
+  const handleClick = (e) => {
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
       document.activeElement.blur();
-    }
-    lastTouchTime.current = Date.now();
-    onClick(value);
-  };
-
-  const handleCustomClick = (e) => {
-    // Prevent double execution on mobile emulators or hybrid browsers
-    if (Date.now() - lastTouchTime.current < 500) {
-      return;
     }
     onClick(value);
   };
@@ -106,8 +94,7 @@ const KeypadButton = ({ value, onClick, className, children }) => {
   return (
     <button
       type="button"
-      onTouchStart={handleTouchStart}
-      onClick={handleCustomClick}
+      onClick={handleClick}
       className={`${className} cursor-pointer select-none touch-manipulation`}
     >
       {children || value}
