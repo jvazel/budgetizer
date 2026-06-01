@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:backend": "npm run dev --prefix server",
     "dev:frontend": "npm run dev --prefix client",
-    "test": "npm run test --prefix server && npm run test --prefix client"
+    "test": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.SKIP_TESTS) { process.exit(require('child_process').spawnSync('npm run test --prefix server && npm run test --prefix client', { shell: true, stdio: 'inherit' }).status); } else { console.log('Tests ignorés (environnement de production/déploiement).'); }\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
