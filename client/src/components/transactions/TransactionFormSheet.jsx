@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
-import NumericKeypad from '../ui/NumericKeypad';
+import AmountInput from '../ui/AmountInput';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -115,17 +115,19 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         </div>
 
         {/* Amount Display */}
-        <div className="flex flex-col items-center justify-center py-4">
-          <span className={`font-mono text-5xl font-bold tracking-tight ${type === 'expense' ? 'text-danger' : 'text-accent'}`}>
-            {type === 'expense' ? '-' : '+'}{amount || '0'} €
-          </span>
-        </div>
+        <AmountInput 
+          value={amount}
+          onChange={setAmount}
+          type={type}
+          autoFocus={isOpen}
+        />
 
         {/* Account and Category Selectors */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col">
-            <label className="text-xs text-secondary font-medium mb-1">Compte</label>
+            <label htmlFor="accountId-select" className="text-xs text-secondary font-medium mb-1">Compte</label>
             <select 
+              id="accountId-select"
               value={accountId}
               onChange={e => setAccountId(e.target.value)}
               className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none"
@@ -137,8 +139,9 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
           </div>
           
           <div className="flex flex-col">
-             <label className="text-xs text-secondary font-medium mb-1">Catégorie</label>
+             <label htmlFor="categoryId-select" className="text-xs text-secondary font-medium mb-1">Catégorie</label>
              <select 
+              id="categoryId-select"
               value={categoryId}
               onChange={e => setCategoryId(e.target.value)}
               className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none"
@@ -159,8 +162,9 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         {/* Date and Note Inputs */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col">
-            <label className="text-xs text-secondary font-medium mb-1">Date</label>
+            <label htmlFor="date-input" className="text-xs text-secondary font-medium mb-1">Date</label>
             <input
+              id="date-input"
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
@@ -175,8 +179,9 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
           </div>
 
           <div className="flex flex-col">
-            <label className="text-xs text-secondary font-medium mb-1">Note (optionnel)</label>
+            <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1">Note (optionnel)</label>
             <input
+              id="note-input"
               type="text"
               value={note}
               onChange={e => setNote(e.target.value)}
@@ -186,13 +191,19 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
           </div>
         </div>
 
-        {/* Keypad */}
+        {/* Action Button */}
         <div className="mt-auto pt-4">
-          <NumericKeypad 
-            value={amount} 
-            onChange={setAmount} 
-            onSubmit={handleSubmit}
-          />
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
+              type === 'expense' 
+                ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
+                : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+            }`}
+          >
+            {transactionToEdit ? 'Enregistrer les modifications' : 'Ajouter la transaction'}
+          </button>
         </div>
 
       </div>

@@ -63,6 +63,7 @@ const InstallPromptBanner = () => {
               {/* Close Button */}
               <button
                 onClick={handleDismiss}
+                aria-label="Fermer"
                 className="absolute top-4 right-4 p-1.5 rounded-full bg-base/50 text-muted hover:text-primary transition-colors border border-border/20 z-10"
               >
                 <X size={14} />

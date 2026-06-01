@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
-import NumericKeypad from '../ui/NumericKeypad';
+import AmountInput from '../ui/AmountInput';
 import { X, Calendar, Repeat, ShieldCheck, CreditCard, ChevronRight, Check } from 'lucide-react';
 
 const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSubscription = false }) => {
@@ -135,27 +135,14 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             ))}
           </div>
 
-          {/* Amount Display */}
-          <div className="text-center space-y-1">
-            <p className="text-xs text-muted font-bold tracking-wider uppercase">Montant</p>
-            <div className="font-mono text-4xl font-extrabold tracking-tight text-accent flex items-center justify-center gap-1">
-              <span>{amount || '0'}</span>
-              <span className="text-2xl text-muted font-medium">€</span>
-            </div>
-          </div>
-
-          {/* Custom keypad */}
-          <div className="bg-surface-2/40 p-4 rounded-3xl border border-border/40">
-            <NumericKeypad 
-              value={amount} 
-              onChange={setAmount} 
-              onToggleSign={() => {
-                setType(prev => {
-                  const newType = prev === 'expense' ? 'income' : 'expense';
-                  setCategoryId('');
-                  return newType;
-                });
-              }} 
+          {/* Amount Input */}
+          <div className="bg-surface-2/40 p-4 rounded-3xl border border-border/40 space-y-1.5 text-center">
+            <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Montant de la planification</p>
+            <AmountInput 
+              value={amount}
+              onChange={setAmount}
+              type={type}
+              autoFocus={isOpen}
             />
           </div>
 
@@ -164,8 +151,9 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             
             {/* Description */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-secondary">Nom / Description</label>
+              <label htmlFor="description-input" className="text-xs font-bold text-secondary">Nom / Description</label>
               <input 
+                id="description-input"
                 type="text"
                 placeholder="ex: Loyer, Netflix, Gym..."
                 value={description}
@@ -176,8 +164,9 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
 
             {/* Account Selector */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-secondary">Compte bancaire</label>
+              <label htmlFor="accountId-select" className="text-xs font-bold text-secondary">Compte bancaire</label>
               <select
+                id="accountId-select"
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
                 className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
@@ -191,8 +180,9 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             {/* To Account Selector (Only for Transfers) */}
             {type === 'transfer' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-secondary">Vers le compte</label>
+                <label htmlFor="toAccountId-select" className="text-xs font-bold text-secondary">Vers le compte</label>
                 <select
+                  id="toAccountId-select"
                   value={toAccountId}
                   onChange={(e) => setToAccountId(e.target.value)}
                   className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"

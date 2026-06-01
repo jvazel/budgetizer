@@ -287,4 +287,47 @@ Pour résoudre ce problème, Budgetizer utilise la topologie décrite dans [ecos
 ```
 
 - **budgetizer-api** : S'exécute en mode `cluster` sur `max` instances. La variable `RUN_SCHEDULED_JOBS` y est positionnée à `false` ; ces instances répondent aux requêtes HTTP de l'API mais n'exécutent pas de boucle de planification.
-- **budgetizer-worker** : S'exécute en instance unique (`instances: 1`) en mode `fork`. La variable `RUN_SCHEDULED_JOBS` est positionnée à `true` ; cette instance se consacre exclusivement aux calculs planifiés et à la récurrence sans accepter de trafic web public.
+- **budgetizer-worker** : S'exécute en instance unique (`instances: 1`) en mode `fork`. La variable `RUN_SCHEDULED_JOBS` is positionnée à `true` ; cette instance se consacre exclusivement aux calculs planifiés et à la récurrence sans accepter de trafic web public.
+
+---
+
+## 7. Architecture et Exécution des Tests
+
+Afin de sécuriser le code existant et de prévenir toute régression lors des futurs développements, Budgetizer intègre une suite de tests automatisés couvrant à la fois le client et le serveur.
+
+### 7.1 Framework de Tests : Vitest
+**Vitest** est utilisé comme exécuteur de tests unique pour le frontend et le backend en raison de sa rapidité, de sa compatibilité native avec les modules ES (ESM) et de son intégration immédiate avec Vite.
+
+### 7.2 Configuration Client (Frontend)
+- **Environnement** : `jsdom` (simule un navigateur dans Node.js).
+- **Bibliothèques** : `@testing-library/react` et `@testing-library/jest-dom` pour le rendu des composants React et les assertions DOM.
+- **Fichiers de configuration** :
+  - [client/vitest.config.js](file:///c:/Projects/budgetizer/client/vitest.config.js) : Déclare l'environnement `jsdom` et charge le fichier de setup.
+  - [client/vitest.setup.js](file:///c:/Projects/budgetizer/client/vitest.setup.js) : Importe les utilitaires d'assertion `@testing-library/jest-dom`.
+- **Fichiers de tests** : Localisés dans des dossiers `__tests__` à proximité des composants ciblés (ex: [AmountInput.test.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/__tests__/AmountInput.test.jsx)).
+
+### 7.3 Configuration Serveur (Backend)
+- **Environnement** : `node` (exécution standard).
+- **Stratégie de Mocking** : Les tests du serveur s'exécutent de façon isolée sans base de données physique en mockant :
+  - Les modèles Mongoose (`Account`, `Transaction`, `ScheduledTransaction`, `User`, `Category`).
+  - Les utilitaires de chiffrement et de signature (`bcryptjs`, `jsonwebtoken`).
+- **Fichiers de configuration** :
+  - [server/vitest.config.js](file:///c:/Projects/budgetizer/server/vitest.config.js) : Configuration simple pour l'environnement Node.
+
+### 7.4 Commandes d'Exécution
+Les scripts npm sont centralisés pour simplifier le travail des développeurs :
+- **Lancer tous les tests (Frontend et Backend)** depuis la racine :
+  ```bash
+  npm run test
+  ```
+- **Lancer les tests du serveur en mode interactif** :
+  ```bash
+  npm run test:watch --prefix server
+  ```
+- **Lancer les tests du client en mode interactif** :
+  ```bash
+  npm run test:watch --prefix client
+  ```
+
+Pour obtenir le détail exhaustif de chaque cas de test (entrées, traitements attendus, assertions), veuillez vous référer à la [Documentation des Tests](file:///c:/Projects/budgetizer/docs/doc_tests.md).
+

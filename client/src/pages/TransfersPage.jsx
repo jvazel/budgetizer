@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import AppShell from '../components/layout/AppShell';
-import NumericKeypad from '../components/ui/NumericKeypad';
+import AmountInput from '../components/ui/AmountInput';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions } from '../hooks/useTransactions';
 import { AuthContext } from '../context/AuthContext';
@@ -143,8 +143,9 @@ const TransfersPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative">
                 {/* Source Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source)</span>
+                  <label htmlFor="fromAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source)</label>
                   <select
+                    id="fromAccountId-select"
                     value={fromAccountId}
                     onChange={(e) => setFromAccountId(e.target.value)}
                     className="bg-transparent text-sm font-bold text-primary focus:outline-none w-full"
@@ -169,8 +170,9 @@ const TransfersPage = () => {
                 
                 {/* Destination Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination)</span>
+                  <label htmlFor="toAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination)</label>
                   <select
+                    id="toAccountId-select"
                     value={toAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
                     className="bg-transparent text-sm font-bold text-primary focus:outline-none w-full"
@@ -189,22 +191,14 @@ const TransfersPage = () => {
                 </div>
               </div>
 
-              {/* Amount display */}
-              <div className="py-4 text-center">
-                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">Montant à transférer</span>
-                <div className="font-mono text-4xl font-extrabold tracking-tight text-accent flex items-center justify-center gap-1">
-                  <span>{amount || '0'}</span>
-                  <span className="text-2xl text-muted font-medium">€</span>
-                </div>
-              </div>
-
-              {/* Keypad */}
-              <div className="p-3 bg-surface rounded-2xl border border-border/20">
-                <NumericKeypad
+              {/* Amount Input */}
+              <div className="p-5 bg-surface rounded-2xl border border-border/20 text-center">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-2">Montant à transférer</span>
+                <AmountInput 
                   value={amount}
                   onChange={setAmount}
-                  onSubmit={handleTransfer}
-                  showSubmit={false}
+                  type="transfer"
+                  autoFocus={true}
                 />
               </div>
 

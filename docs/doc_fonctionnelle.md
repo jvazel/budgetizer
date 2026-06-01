@@ -84,10 +84,10 @@ Pour analyser finement la répartition des flux d'argent, chaque transaction (ho
 
 Cette section regroupe la création rapide de transactions et la consultation de l'historique complet.
 
-### 6.1 Saisie de Transactions & Pavé Numérique
-La saisie est simplifiée au maximum grâce à une interface de type "Bottom Sheet" glissante, dotée d'un **pavé numérique virtuel** optimisé :
+### 6.1 Saisie de Transactions & Clavier Mobile Natif
+La saisie est simplifiée au maximum grâce à une interface de type "Bottom Sheet" glissante, dotée d'une zone de saisie de montant optimisée pour mobile :
 - **Sélection du type** : Dépense (Rouge), Revenu (Vert) ou Virement (Bleu).
-- **Saisie du Montant** : Saisie à l'aide d'un pavé numérique visuel personnalisé évitant l'ouverture du clavier natif du téléphone, ce qui accélère la saisie d'un montant avec décimales.
+- **Saisie du Montant** : Saisie à l'aide d'un champ texte dédié configuré avec `inputMode="decimal"`. Sur mobile, cela déclenche automatiquement le clavier numérique décimal natif du téléphone. Le champ formate automatiquement l'entrée (conversion de la virgule `,` en point `.`, limitation stricte à deux chiffres après la virgule, suppression des zéros initiaux) pour une saisie rapide et robuste.
 - **Sélection des Comptes** :
   - Pour une dépense/revenu : le compte source ou destinataire.
   - Pour un virement : le compte de départ (`From`) et le compte d'arrivée (`To`).
