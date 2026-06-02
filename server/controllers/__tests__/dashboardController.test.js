@@ -15,7 +15,8 @@ vi.mock('../../models/Account.js', () => ({
 vi.mock('../../models/Transaction.js', () => ({
   default: {
     find: vi.fn(),
-    findOne: vi.fn()
+    findOne: vi.fn(),
+    aggregate: vi.fn()
   }
 }));
 
@@ -52,6 +53,7 @@ describe('Dashboard Controller', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Transaction.aggregate.mockResolvedValue([]);
 
     req = {
       user: {
@@ -191,6 +193,36 @@ describe('Dashboard Controller', () => {
       const budgetAlert = response.notifications.find(n => n.type === 'budget');
       expect(budgetAlert).toBeDefined();
       expect(budgetAlert.title).toContain('dépassé');
+    });
+
+    it('should handle budgets with null/undefined categoryId safely', async () => {
+      const mockAccounts = [
+        { _id: 'acc1', name: 'Compte Courant', balance: 500, type: 'checking', includeInTotal: true, toObject: function() { return this; } }
+      ];
+
+      const mockBudgets = [
+        { _id: 'b1', name: 'Alimentation', amount: 100, alertAt: 80, categoryId: null }
+      ];
+
+      Account.find.mockResolvedValue(mockAccounts);
+      Transaction.findOne.mockImplementation(() => ({
+        sort: vi.fn().mockResolvedValue({ date: new Date('2026-01-01') })
+      }));
+
+      Transaction.find.mockImplementation((query) => {
+        if (query.isPending === true) return mockChain([]);
+        return mockChain([]);
+      });
+
+      Budget.find.mockReturnValue(mockChain(mockBudgets));
+      SavingsGoal.find.mockResolvedValue([]);
+      ScheduledTransaction.find.mockReturnValue(mockChain([]));
+
+      await getDashboardSummary(req, res);
+
+      expect(res.json).toHaveBeenCalled();
+      const response = res.json.mock.calls[0][0];
+      expect(response.budgetAlerts).toEqual([]);
     });
   });
 

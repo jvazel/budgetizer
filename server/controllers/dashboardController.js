@@ -3,6 +3,7 @@ import Transaction from '../models/Transaction.js';
 import Budget from '../models/Budget.js';
 import SavingsGoal from '../models/SavingsGoal.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
+import mongoose from 'mongoose';
 
 export const getDashboardSummary = async (req, res) => {
   try {
@@ -19,19 +20,44 @@ export const getDashboardSummary = async (req, res) => {
 
     // 1. Fetch Accounts & Total Balance & Last Transaction Date
     const rawAccounts = await Account.find({ userId });
-    const accounts = await Promise.all(rawAccounts.map(async (account) => {
-      const lastTx = await Transaction.findOne({
-        userId,
-        $or: [
-          { accountId: account._id },
-          { toAccountId: account._id }
-        ]
-      }).sort({ date: -1 });
+
+    const lastTxs = await Transaction.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId } },
+      {
+        $project: {
+          date: 1,
+          accounts: {
+            $filter: {
+              input: ["$accountId", "$toAccountId"],
+              as: "acc",
+              cond: { $ne: ["$$acc", null] }
+            }
+          }
+        }
+      },
+      { $unwind: "$accounts" },
+      {
+        $group: {
+          _id: "$accounts",
+          lastTransactionDate: { $max: "$date" }
+        }
+      }
+    ]);
+
+    const lastTxMap = {};
+    lastTxs.forEach(t => {
+      if (t._id) {
+        lastTxMap[t._id.toString()] = t.lastTransactionDate;
+      }
+    });
+
+    const accounts = rawAccounts.map(account => {
+      const accId = account._id.toString();
       return {
         ...account.toObject(),
-        lastTransactionDate: lastTx ? lastTx.date : null
+        lastTransactionDate: lastTxMap[accId] || null
       };
-    }));
+    });
     const totalBalance = rawAccounts.reduce((acc, account) => acc + account.balance, 0);
     const totalAvailable = rawAccounts.filter(acc => acc.type !== 'credit').reduce((sum, acc) => sum + acc.balance, 0);
     const totalCredit = rawAccounts.filter(acc => acc.type === 'credit').reduce((sum, acc) => sum + acc.balance, 0);
@@ -260,7 +286,7 @@ export const getDashboardSummary = async (req, res) => {
     const budgets = await Budget.find({ userId }).populate('categoryId', 'name icon');
     budgets.forEach(budget => {
       const spent = currentMonthTxs
-        .filter(t => t.type === 'expense' && t.categoryId && t.categoryId._id.toString() === budget.categoryId._id.toString())
+        .filter(t => t.type === 'expense' && t.categoryId && budget.categoryId && t.categoryId._id.toString() === budget.categoryId._id.toString())
         .reduce((sum, t) => sum + t.amount, 0);
         
       const percentage = (spent / budget.amount) * 100;

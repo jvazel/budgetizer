@@ -105,29 +105,30 @@ export const getMonthlyReport = async (req, res) => {
     const savingsGoals = await SavingsGoal.find({ userId });
     let completedGoalName = null;
 
+    const completedGoals = savingsGoals.filter(goal => goal.currentAmount >= goal.targetAmount);
+    let allGoalTransfers = [];
+    if (completedGoals.length > 0) {
+      allGoalTransfers = await Transaction.find({
+        userId,
+        savingsGoalId: { $in: completedGoals.map(g => g._id) },
+        type: 'transfer',
+        date: { $gte: startOfM },
+        isPending: { $ne: true }
+      });
+    }
+
     for (const goal of savingsGoals) {
       // Si l'objectif est actuellement complété
       if (goal.currentAmount >= goal.targetAmount) {
-        // Calculer les transferts effectués vers cet objectif depuis le début de M
-        const transfersFromM = await Transaction.find({
-          userId,
-          savingsGoalId: goal._id,
-          type: 'transfer',
-          date: { $gte: startOfM },
-          isPending: { $ne: true }
-        });
-        
-        // Calculer les transferts effectués APRÈS la fin de M
-        const transfersAfterM = await Transaction.find({
-          userId,
-          savingsGoalId: goal._id,
-          type: 'transfer',
-          date: { $gt: endOfM },
-          isPending: { $ne: true }
-        });
+        // Filtrer les transferts pour cet objectif
+        const goalTransfers = allGoalTransfers.filter(
+          tx => tx.savingsGoalId && tx.savingsGoalId.toString() === goal._id.toString()
+        );
 
-        const sumFromM = transfersFromM.reduce((sum, tx) => sum + tx.amount, 0);
-        const sumAfterM = transfersAfterM.reduce((sum, tx) => sum + tx.amount, 0);
+        const sumFromM = goalTransfers.reduce((sum, tx) => sum + tx.amount, 0);
+        const sumAfterM = goalTransfers
+          .filter(tx => tx.date > endOfM)
+          .reduce((sum, tx) => sum + tx.amount, 0);
 
         // Montant à la fin du mois M-1 : Solde actuel - tous les transferts depuis M
         const amountAtEndOfPrev = goal.currentAmount - sumFromM - sumAfterM;
@@ -145,21 +146,24 @@ export const getMonthlyReport = async (req, res) => {
     const subs = await ScheduledTransaction.find({ userId, isSubscription: true });
     let subChangeText = '';
 
-    for (const sub of subs) {
-      // Trouver les transactions réelles liées à cet abonnement en M et M-1
-      const txM = await Transaction.findOne({
+    let subTransactions = [];
+    if (subs.length > 0) {
+      subTransactions = await Transaction.find({
         userId,
-        scheduledTransactionId: sub._id,
-        date: { $gte: startOfM, $lte: endOfM },
+        scheduledTransactionId: { $in: subs.map(s => s._id) },
+        date: { $gte: startOfPrev, $lte: endOfM },
         isPending: { $ne: true }
       });
+    }
 
-      const txPrev = await Transaction.findOne({
-        userId,
-        scheduledTransactionId: sub._id,
-        date: { $gte: startOfPrev, $lte: endOfPrev },
-        isPending: { $ne: true }
-      });
+    for (const sub of subs) {
+      const subTxs = subTransactions.filter(
+        tx => tx.scheduledTransactionId && tx.scheduledTransactionId.toString() === sub._id.toString()
+      );
+
+      // Trouver les transactions réelles liées à cet abonnement en M et M-1
+      const txM = subTxs.find(tx => tx.date >= startOfM && tx.date <= endOfM);
+      const txPrev = subTxs.find(tx => tx.date >= startOfPrev && tx.date <= endOfPrev);
 
       if (txM && txPrev) {
         const diff = txM.amount - txPrev.amount;

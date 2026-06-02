@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
-export const useAccounts = () => {
+export const useAccounts = (fetchOnMount = true) => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +20,10 @@ export const useAccounts = () => {
   }, []);
 
   useEffect(() => {
-    fetchAccounts();
+    if (fetchOnMount) {
+      fetchAccounts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchAccounts]);
 
   const totalBalance = accounts

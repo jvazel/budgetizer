@@ -1,9 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { ChevronLeft, ChevronRight, AlertTriangle, ShieldCheck, CheckCircle2, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+
+const formatMonthQuery = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+};
+
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
+const getMonthLabel = (date) => {
+  const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
 
 const BudgetActualChart = () => {
   const [month, setMonth] = useState(new Date());
@@ -15,12 +30,6 @@ const BudgetActualChart = () => {
   const [budgetTransactions, setBudgetTransactions] = useState([]);
   const [txLoading, setTxLoading] = useState(false);
   const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
-
-  const formatMonthQuery = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
-  };
 
   const fetchBudgets = async () => {
     try {
@@ -46,31 +55,32 @@ const BudgetActualChart = () => {
     setMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  const getMonthLabel = (date) => {
-    const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  };
-
   // Calculations
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.amount, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
-  const exceededCount = budgets.filter(b => b.spent > b.amount).length;
-  const underControlCount = budgets.length - exceededCount;
+  const { totalBudgeted, totalSpent, exceededCount, underControlCount } = useMemo(() => {
+    const sumBudgeted = budgets.reduce((sum, b) => sum + b.amount, 0);
+    const sumSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
+    const exceeded = budgets.filter(b => b.spent > b.amount).length;
+    const underControl = budgets.length - exceeded;
+    return {
+      totalBudgeted: sumBudgeted,
+      totalSpent: sumSpent,
+      exceededCount: exceeded,
+      underControlCount: underControl
+    };
+  }, [budgets]);
 
   // Prepare data for Recharts
-  const chartData = budgets.map(b => ({
-    name: b.name || b.categoryId?.name || 'Sans nom',
-    budget: parseFloat(b.amount.toFixed(2)),
-    real: parseFloat(b.spent.toFixed(2)),
-    percentage: b.percentage,
-    exceeded: b.spent > b.amount,
-    categoryId: b.categoryId?._id,
-    categoryIcon: b.categoryId?.icon
-  }));
+  const chartData = useMemo(() => {
+    return budgets.map(b => ({
+      name: b.name || b.categoryId?.name || 'Sans nom',
+      budget: parseFloat(b.amount.toFixed(2)),
+      real: parseFloat(b.spent.toFixed(2)),
+      percentage: b.percentage,
+      exceeded: b.spent > b.amount,
+      categoryId: b.categoryId?._id,
+      categoryIcon: b.categoryId?.icon
+    }));
+  }, [budgets]);
 
   const handleBarClick = async (clickedData) => {
     if (!clickedData || !clickedData.categoryId) return;

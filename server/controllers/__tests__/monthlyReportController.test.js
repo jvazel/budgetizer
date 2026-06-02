@@ -221,7 +221,7 @@ describe('Monthly Report Controller', () => {
           }
           // Transfers during M (and from M onwards)
           return createMockQuery([
-            { type: 'transfer', amount: 300, date: new Date(Date.UTC(2026, 4, 2)) }
+            { type: 'transfer', amount: 300, date: new Date(Date.UTC(2026, 4, 2)), savingsGoalId: 'goal_japon' }
           ]);
         }
         if (query.date && query.date.$gte) {

@@ -61,6 +61,7 @@ vi.mock('../../models/Transaction.js', () => {
   MockTransaction.findById = vi.fn();
   MockTransaction.findByIdAndDelete = vi.fn();
   MockTransaction.countDocuments = vi.fn();
+  MockTransaction.insertMany = vi.fn();
 
   return { default: MockTransaction };
 });
@@ -352,8 +353,9 @@ describe('Transaction Controller', () => {
       };
 
       // Resolve existing account and category as null to test creation
-      Account.findOne.mockReturnValue(mockChain(null));
-      Category.findOne.mockReturnValue(mockChain(null));
+      Account.find.mockReturnValue(mockChain([]));
+      Category.find.mockReturnValue(mockChain([]));
+      Transaction.insertMany.mockResolvedValue([]);
 
       await importTransactions(req, res);
 

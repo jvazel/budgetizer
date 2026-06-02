@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
@@ -115,7 +115,7 @@ const getNotificationColors = (color) => {
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { addAccount, updateAccount, deleteAccount } = useAccounts();
+  const { addAccount, updateAccount, deleteAccount } = useAccounts(false);
   const { data: db, loading, refreshDashboard } = useDashboard();
   
   const today = new Date();
@@ -133,6 +133,28 @@ const Home = () => {
   const [isSavingsMenuOpen, setIsSavingsMenuOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [chartDuration, setChartDuration] = useState('3M');
+
+  const { 
+    totalAvailable = 0, 
+    totalCredit = 0, 
+    accounts = [], 
+    month = { income: 0, expenses: 0, net: 0 }, 
+    lastMonth = { income: 0, expenses: 0, net: 0 }, 
+    last7DaysExpenses = [], 
+    balanceHistory = [], 
+    expensesByCategory = [] 
+  } = db || {};
+
+  const filteredBalanceHistory = useMemo(() => {
+    if (!balanceHistory) return [];
+    if (chartDuration === '1M') {
+      return balanceHistory.slice(-30);
+    } else if (chartDuration === '6M') {
+      return balanceHistory.slice(-180);
+    } else {
+      return balanceHistory.slice(-90);
+    }
+  }, [balanceHistory, chartDuration]);
 
   const formatCurrency = (amount, currencyCode = 'EUR') => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currencyCode }).format(amount);
@@ -184,17 +206,6 @@ const Home = () => {
       </AppShell>
     );
   }
-
-  const { 
-    totalAvailable = 0, 
-    totalCredit = 0, 
-    accounts = [], 
-    month = { income: 0, expenses: 0, net: 0 }, 
-    lastMonth = { income: 0, expenses: 0, net: 0 }, 
-    last7DaysExpenses = [], 
-    balanceHistory = [], 
-    expensesByCategory = [] 
-  } = db || {};
 
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
   const currentMonthLabel = capitalize(new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
@@ -415,13 +426,7 @@ const Home = () => {
         <div className="h-44 w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={
-                chartDuration === '1M'
-                  ? balanceHistory.slice(-30)
-                  : chartDuration === '6M'
-                  ? balanceHistory.slice(-180)
-                  : balanceHistory.slice(-90)
-              } 
+              data={filteredBalanceHistory} 
               margin={{ top: 10, right: 5, left: -25, bottom: 5 }}
             >
               <defs>

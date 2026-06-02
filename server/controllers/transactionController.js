@@ -480,6 +480,18 @@ export const importTransactions = async (req, res) => {
     let failedCount = 0;
     const errors = [];
 
+    // Cache all existing accounts and categories to avoid redundant findOne queries
+    const existingAccounts = await Account.find({ userId: req.user.id }).session(session);
+    const existingCategories = await Category.find({ userId: req.user.id }).session(session);
+
+    const accountsMap = new Map();
+    existingAccounts.forEach(acc => accountsMap.set(acc.name.toLowerCase().trim(), acc));
+
+    const categoriesMap = new Map();
+    existingCategories.forEach(cat => categoriesMap.set(`${cat.name.toLowerCase().trim()}_${cat.type}`, cat));
+
+    const transactionsToInsert = [];
+
     // Skip headers
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVRow(lines[i]);
@@ -514,10 +526,8 @@ export const importTransactions = async (req, res) => {
       }
 
       // 1. Resolve Account
-      let account = await Account.findOne({
-        userId: req.user.id,
-        name: { $regex: new RegExp(`^${accountName.trim()}$`, 'i') }
-      }).session(session);
+      const accKey = accountName.trim().toLowerCase();
+      let account = accountsMap.get(accKey);
 
       if (!account) {
         account = new Account({
@@ -529,16 +539,14 @@ export const importTransactions = async (req, res) => {
           icon: '💳'
         });
         await account.save({ session });
+        accountsMap.set(accKey, account);
       }
 
       // 2. Resolve Category
       let category = null;
       if (type !== 'transfer') {
-        category = await Category.findOne({
-          userId: req.user.id,
-          name: { $regex: new RegExp(`^${categoryName.trim()}$`, 'i') },
-          type
-        }).session(session);
+        const catKey = `${categoryName.trim().toLowerCase()}_${type}`;
+        category = categoriesMap.get(catKey);
 
         if (!category) {
           category = new Category({
@@ -549,11 +557,12 @@ export const importTransactions = async (req, res) => {
             type
           });
           await category.save({ session });
+          categoriesMap.set(catKey, category);
         }
       }
 
-      // Create transaction
-      const transaction = new Transaction({
+      // Prepare transaction
+      transactionsToInsert.push({
         userId: req.user.id,
         accountId: account._id,
         categoryId: category ? category._id : undefined,
@@ -564,11 +573,24 @@ export const importTransactions = async (req, res) => {
         isPending: false
       });
 
-      await transaction.save({ session });
-
-      // Update account balance
-      await updateAccountBalance(account._id, amount, type, session);
+      // Update account balance in memory
+      if (type === 'expense') {
+        account.balance -= amount;
+      } else if (type === 'income') {
+        account.balance += amount;
+      }
       importedCount++;
+    }
+
+    // Insert all transactions in a single batch insert
+    if (transactionsToInsert.length > 0) {
+      await Transaction.insertMany(transactionsToInsert, { session });
+    }
+
+    // Save all modified accounts in the session
+    const modifiedAccounts = Array.from(accountsMap.values()).filter(acc => typeof acc.isModified === 'function' ? acc.isModified('balance') : true);
+    for (const acc of modifiedAccounts) {
+      await acc.save({ session });
     }
 
     await session.commitTransaction();
