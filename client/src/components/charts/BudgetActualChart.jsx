@@ -207,7 +207,7 @@ const BudgetActualChart = () => {
                 />
                 
                 {/* Budget Limit Bar */}
-                <Bar dataKey="budget" name="budget" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth={1} radius={[0, 4, 4, 0]} barSize={12} />
+                <Bar dataKey="budget" name="budget" fill="var(--bg-budget-guide)" stroke="var(--border)" strokeWidth={1} radius={[0, 4, 4, 0]} barSize={12} />
                 
                 {/* Spent Bar */}
                 <Bar 
