@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { protect } from '../authMiddleware.js';
+import { protect, clearAuthCache } from '../authMiddleware.js';
 import User from '../../models/User.js';
 import jwt from 'jsonwebtoken';
 
@@ -20,6 +20,7 @@ describe('Auth Middleware', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAuthCache();
     process.env.JWT_SECRET = 'testsecret';
 
     req = {
@@ -87,4 +88,35 @@ describe('Auth Middleware', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'Not authorized, user not found' });
     expect(next).not.toHaveBeenCalled();
   });
+
+  it('should use cached user on consecutive calls within TTL and not query the database', async () => {
+    req.headers.authorization = 'Bearer validtoken123';
+    jwt.verify.mockReturnValue({ id: 'user_123' });
+
+    const mockUser = { _id: 'user_123', name: 'John Doe' };
+    const selectSpy = vi.fn().mockResolvedValue(mockUser);
+    User.findById.mockReturnValue({
+      select: selectSpy
+    });
+
+    // First call: Should query database
+    await protect(req, res, next);
+    expect(User.findById).toHaveBeenCalledTimes(1);
+    expect(req.user).toBe(mockUser);
+    expect(next).toHaveBeenCalledTimes(1);
+
+    // Reset mocks call counts for clean assertions (but keep the verification/mock implementations)
+    vi.clearAllMocks();
+    jwt.verify.mockReturnValue({ id: 'user_123' });
+    User.findById.mockReturnValue({
+      select: selectSpy
+    });
+
+    // Second call: Should use cache and NOT query the database
+    await protect(req, res, next);
+    expect(User.findById).not.toHaveBeenCalled();
+    expect(req.user).toBe(mockUser);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
 });
+

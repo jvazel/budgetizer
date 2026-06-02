@@ -18,37 +18,80 @@ export const getDashboardSummary = async (req, res) => {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
-    // 1. Fetch Accounts & Total Balance & Last Transaction Date
-    const rawAccounts = await Account.find({ userId });
+    // Dates for 7 days ago
+    const startOf7DaysAgo = new Date(now);
+    startOf7DaysAgo.setDate(now.getDate() - 6);
+    startOf7DaysAgo.setHours(0, 0, 0, 0);
 
-    const lastTxs = await Transaction.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId } },
-      {
-        $project: {
-          date: 1,
-          accounts: {
-            $filter: {
-              input: ["$accountId", "$toAccountId"],
-              as: "acc",
-              cond: { $ne: ["$$acc", null] }
-            }
-          }
-        }
-      },
-      { $unwind: "$accounts" },
-      {
-        $group: {
-          _id: "$accounts",
-          lastTransactionDate: { $max: "$date" }
-        }
-      }
+    // Dates for 180 days history
+    const startOfHistory = new Date(now);
+    startOfHistory.setDate(now.getDate() - 180);
+    startOfHistory.setHours(0, 0, 0, 0);
+
+    // Future limit for upcoming scheduled transactions (3 days)
+    const futureLimit = new Date();
+    futureLimit.setDate(now.getDate() + 3);
+
+    // 2. Fetch all collections in parallel to eliminate waterfall latency
+    const [
+      rawAccounts,
+      currentMonthTxs,
+      lastMonthTxs,
+      last7DaysTxs,
+      historyTxs,
+      budgets,
+      pendingTxs,
+      upcomingSchedules,
+      savingsGoals,
+      oldestTx
+    ] = await Promise.all([
+      Account.find({ userId }),
+      Transaction.find({
+        userId,
+        date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth }
+      }).populate('categoryId', 'name icon color type').sort({ date: -1 }),
+      Transaction.find({
+        userId,
+        date: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+      }).select('type amount'),
+      Transaction.find({
+        userId,
+        type: 'expense',
+        date: { $gte: startOf7DaysAgo, $lte: now }
+      }).select('date amount'),
+      Transaction.find({
+        userId,
+        date: { $gte: startOfHistory, $lte: now }
+      }).select('accountId toAccountId type amount date').sort({ date: -1 }),
+      Budget.find({ userId }).populate('categoryId', 'name icon'),
+      Transaction.find({ userId, isPending: true }).populate('categoryId', 'name icon'),
+      ScheduledTransaction.find({
+        userId,
+        isActive: true,
+        nextDate: { $gte: now, $lte: futureLimit }
+      }).populate('categoryId', 'name icon'),
+      SavingsGoal.find({ userId }),
+      Transaction.findOne({ userId }).sort({ date: 1 })
     ]);
 
+    // 3. Fetch latest transaction date per account in parallel using index-backed query (O(log N))
+    const lastTxDates = await Promise.all(rawAccounts.map(async (acc) => {
+      const lastTx = await Transaction.findOne({
+        userId,
+        $or: [
+          { accountId: acc._id },
+          { toAccountId: acc._id }
+        ]
+      }).sort({ date: -1 }).select('date');
+      return {
+        accountId: acc._id.toString(),
+        lastTransactionDate: lastTx ? lastTx.date : null
+      };
+    }));
+
     const lastTxMap = {};
-    lastTxs.forEach(t => {
-      if (t._id) {
-        lastTxMap[t._id.toString()] = t.lastTransactionDate;
-      }
+    lastTxDates.forEach(item => {
+      lastTxMap[item.accountId] = item.lastTransactionDate;
     });
 
     const accounts = rawAccounts.map(account => {
@@ -58,21 +101,10 @@ export const getDashboardSummary = async (req, res) => {
         lastTransactionDate: lastTxMap[accId] || null
       };
     });
+
     const totalBalance = rawAccounts.reduce((acc, account) => acc + account.balance, 0);
     const totalAvailable = rawAccounts.filter(acc => acc.type !== 'credit').reduce((sum, acc) => sum + acc.balance, 0);
     const totalCredit = rawAccounts.filter(acc => acc.type === 'credit').reduce((sum, acc) => sum + acc.balance, 0);
-
-    // 2. Transactions for Current Month
-    const currentMonthTxs = await Transaction.find({
-      userId,
-      date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth }
-    }).populate('categoryId', 'name icon color type').sort({ date: -1 });
-
-    // 3. Transactions for Last Month (for comparison)
-    const lastMonthTxs = await Transaction.find({
-      userId,
-      date: { $gte: startOfLastMonth, $lte: endOfLastMonth }
-    }).select('type amount');
 
     // 4. Calculate Income/Expenses for Current Month
     let currentIncome = 0;
@@ -100,7 +132,6 @@ export const getDashboardSummary = async (req, res) => {
     const expenseChange = calcChange(currentExpenses, lastExpenses);
 
     // 7. Group Daily Expenses for Chart
-    // Create an array for all days of the current month up to today
     const dailyExpensesMap = {};
     const daysInMonth = now.getDate(); // Only up to today
     
@@ -124,17 +155,6 @@ export const getDashboardSummary = async (req, res) => {
       amount: dailyExpensesMap[date]
     }));
 
-    // 7b. Group Daily Expenses for the last 7 days
-    const startOf7DaysAgo = new Date(now);
-    startOf7DaysAgo.setDate(now.getDate() - 6);
-    startOf7DaysAgo.setHours(0, 0, 0, 0);
-
-    const last7DaysTxs = await Transaction.find({
-      userId,
-      type: 'expense',
-      date: { $gte: startOf7DaysAgo, $lte: now }
-    }).select('date amount');
-
     const last7DaysExpenses = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
@@ -152,16 +172,6 @@ export const getDashboardSummary = async (req, res) => {
         amount: parseFloat(sum.toFixed(2))
       });
     }
-
-    // 7c. Calculate historical available and credit balance evolution (180 days)
-    const startOfHistory = new Date(now);
-    startOfHistory.setDate(now.getDate() - 180);
-    startOfHistory.setHours(0, 0, 0, 0);
-
-    const historyTxs = await Transaction.find({
-      userId,
-      date: { $gte: startOfHistory, $lte: now }
-    }).select('accountId toAccountId type amount date').sort({ date: -1 });
 
     const accountBalances = {};
     rawAccounts.forEach(acc => {
@@ -282,8 +292,7 @@ export const getDashboardSummary = async (req, res) => {
     const notifications = [];
     const budgetAlerts = [];
 
-    // a. Budgets
-    const budgets = await Budget.find({ userId }).populate('categoryId', 'name icon');
+    // a. Budgets (already fetched in Promise.all)
     budgets.forEach(budget => {
       const catId = budget.categoryId?._id?.toString() || budget.categoryId?.toString();
       const spent = catId ? (categoryMap[catId]?.amount || 0) : 0;
@@ -319,8 +328,7 @@ export const getDashboardSummary = async (req, res) => {
 
     // b. Scheduled & Pending Transactions
     if (enableScheduledAlerts) {
-      // Find pending transactions awaiting user validation
-      const pendingTxs = await Transaction.find({ userId, isPending: true }).populate('categoryId', 'name icon');
+      // Find pending transactions awaiting user validation (already fetched in Promise.all)
       pendingTxs.forEach(tx => {
         notifications.push({
           id: `pending-${tx._id}`,
@@ -333,14 +341,7 @@ export const getDashboardSummary = async (req, res) => {
         });
       });
 
-      // Find upcoming transactions in the next 3 days
-      const futureLimit = new Date();
-      futureLimit.setDate(now.getDate() + 3);
-      const upcomingSchedules = await ScheduledTransaction.find({
-        userId,
-        isActive: true,
-        nextDate: { $gte: now, $lte: futureLimit }
-      }).populate('categoryId', 'name icon');
+      // Find upcoming transactions in the next 3 days (already fetched in Promise.all)
 
       upcomingSchedules.forEach(st => {
         notifications.push({
@@ -357,7 +358,7 @@ export const getDashboardSummary = async (req, res) => {
 
     // c. Savings Goals
     if (enableSavingsAlerts) {
-      const savingsGoals = await SavingsGoal.find({ userId });
+      // savingsGoals (already fetched in Promise.all)
       const weekFromNow = new Date();
       weekFromNow.setDate(now.getDate() + 7);
 
@@ -411,7 +412,6 @@ export const getDashboardSummary = async (req, res) => {
 
     // e. AI Insights / Spending Anomalies
     if (enableAiInsightsAlerts) {
-      const oldestTx = await Transaction.findOne({ userId }).sort({ date: 1 });
       if (oldestTx) {
         const oldestDate = new Date(oldestTx.date);
         

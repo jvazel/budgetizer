@@ -51,20 +51,28 @@ export const getMonthlyReport = async (req, res) => {
     const startOfHistory = new Date(Date.UTC(yearNum, monthNum - 4, 1, 0, 0, 0, 0));
     const endOfHistory = new Date(Date.UTC(yearNum, monthNum - 1, 0, 23, 59, 59, 999));
 
-    // --- ÉTAPE 2 : CALCULS GLOBAUX ---
-    // Transactions du mois M
-    const txsM = await Transaction.find({
-      userId,
-      date: { $gte: startOfM, $lte: endOfM },
-      isPending: { $ne: true }
-    }).populate('categoryId');
-
-    // Transactions du mois M-1
-    const txsPrev = await Transaction.find({
-      userId,
-      date: { $gte: startOfPrev, $lte: endOfPrev },
-      isPending: { $ne: true }
-    }).select('type amount');
+    // --- ÉTAPE 2 : CALCULS GLOBAUX & CHARGEMENT PARALLÈLE ---
+    const [txsM, txsPrev, savingsGoals, subs, historyTxs, budgets] = await Promise.all([
+      Transaction.find({
+        userId,
+        date: { $gte: startOfM, $lte: endOfM },
+        isPending: { $ne: true }
+      }).populate('categoryId'),
+      Transaction.find({
+        userId,
+        date: { $gte: startOfPrev, $lte: endOfPrev },
+        isPending: { $ne: true }
+      }).select('type amount'),
+      SavingsGoal.find({ userId }),
+      ScheduledTransaction.find({ userId, isSubscription: true }),
+      Transaction.find({
+        userId,
+        type: 'expense',
+        date: { $gte: startOfHistory, $lte: endOfHistory },
+        isPending: { $ne: true }
+      }).select('categoryId amount date'),
+      Budget.find({ userId }).populate('categoryId')
+    ]);
 
     // Revenus & Dépenses Mois M
     let incomeM = 0;
@@ -100,9 +108,7 @@ export const getMonthlyReport = async (req, res) => {
       globalExpenseChangeText = `Prends ce mois comme référence pour comparer tes futures dépenses mensuelles.`;
     }
 
-    // --- ÉTAPE 3 : OBJECTIFS D'ÉPARGNE COMPLÉTÉS ---
-    // Détecter si un objectif a été complété durant le mois M
-    const savingsGoals = await SavingsGoal.find({ userId });
+    // Détecter si un objectif a été complété durant le mois M (savingsGoals déjà chargé)
     let completedGoalName = null;
 
     const completedGoals = savingsGoals.filter(goal => goal.currentAmount >= goal.targetAmount);
@@ -142,8 +148,7 @@ export const getMonthlyReport = async (req, res) => {
       }
     }
 
-    // --- ÉTAPE 4 : VARIATIONS D'ABONNEMENTS ---
-    const subs = await ScheduledTransaction.find({ userId, isSubscription: true });
+    // --- ÉTAPE 4 : VARIATIONS D'ABONNEMENTS --- (subs déjà chargé)
     let subChangeText = '';
 
     let subTransactions = [];
@@ -183,14 +188,7 @@ export const getMonthlyReport = async (req, res) => {
       }
     }
 
-    // --- ÉTAPE 5 : TRANSACTIONS HORS NORMES (OUTLIERS) ---
-    // Récupérer les transactions d'historique de référence (M-3 à M-1)
-    const historyTxs = await Transaction.find({
-      userId,
-      type: 'expense',
-      date: { $gte: startOfHistory, $lte: endOfHistory },
-      isPending: { $ne: true }
-    }).select('categoryId amount date');
+    // --- ÉTAPE 5 : TRANSACTIONS HORS NORMES (OUTLIERS) --- (historyTxs déjà chargé)
 
     // Calculer le montant moyen d'une transaction de dépense par catégorie dans l'historique
     const categoryTxSums = {}; // catId -> totalAmount
@@ -256,8 +254,7 @@ export const getMonthlyReport = async (req, res) => {
       catHistoryAverages[catId] = catHistoryTotal[catId] / numMonths;
     });
 
-    // Budgets définis
-    const budgets = await Budget.find({ userId }).populate('categoryId');
+    // Budgets définis (budgets déjà chargé)
     let exceededBudgetName = null;
     let exceededBudgetPercent = 0;
     let wellManagedBudgetName = null;

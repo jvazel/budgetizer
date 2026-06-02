@@ -101,14 +101,10 @@ describe('Dashboard Controller', () => {
       
       // Setup findOne mock to handle lastTx sorting per account and oldestTx date
       Transaction.findOne.mockImplementation((query) => {
-        if (query.$or) {
-          return {
-            sort: vi.fn().mockResolvedValue({ date: new Date('2026-06-01') })
-          };
+        if (query && query.$or) {
+          return mockChain({ date: new Date('2026-06-01') });
         }
-        return {
-          sort: vi.fn().mockResolvedValue({ date: new Date('2026-01-01') }) // Oldest transaction
-        };
+        return mockChain({ date: new Date('2026-01-01') }); // Oldest transaction
       });
 
       // Setup find mock implementation for various calls based on query keys
@@ -165,9 +161,7 @@ describe('Dashboard Controller', () => {
       ];
 
       Account.find.mockResolvedValue(mockAccounts);
-      Transaction.findOne.mockImplementation(() => ({
-        sort: vi.fn().mockResolvedValue({ date: new Date('2026-01-01') })
-      }));
+      Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
@@ -206,9 +200,7 @@ describe('Dashboard Controller', () => {
       ];
 
       Account.find.mockResolvedValue(mockAccounts);
-      Transaction.findOne.mockImplementation(() => ({
-        sort: vi.fn().mockResolvedValue({ date: new Date('2026-01-01') })
-      }));
+      Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
@@ -225,6 +217,58 @@ describe('Dashboard Controller', () => {
       const response = res.json.mock.calls[0][0];
       expect(response.budgetAlerts).toEqual([]);
     });
+
+    it('should correctly calculate balance history backtracking with transfers involving excluded accounts', async () => {
+      const mockAccounts = [
+        { _id: 'acc_inc', name: 'Compte Courant', balance: 100, type: 'checking', includeInTotal: true, toObject: function() { return this; } },
+        { _id: 'acc_exc', name: 'Livret Epargne', balance: 500, type: 'savings', includeInTotal: false, toObject: function() { return this; } }
+      ];
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const mockHistoryTxs = [
+        {
+          _id: 'tx_transfer',
+          type: 'transfer',
+          amount: 50,
+          accountId: 'acc_inc',
+          toAccountId: 'acc_exc',
+          date: yesterday
+        }
+      ];
+
+      Account.find.mockResolvedValue(mockAccounts);
+      Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
+
+      Transaction.find.mockImplementation((query) => {
+        if (query.isPending === true) return mockChain([]);
+        if (query.date && query.date.$gte && query.date.$lte) {
+          const diffDays = (query.date.$lte - query.date.$gte) / (1000 * 60 * 60 * 24);
+          if (diffDays > 100) {
+            return mockChain(mockHistoryTxs);
+          }
+        }
+        return mockChain([]);
+      });
+
+      Budget.find.mockReturnValue(mockChain([]));
+      SavingsGoal.find.mockResolvedValue([]);
+      ScheduledTransaction.find.mockReturnValue(mockChain([]));
+
+      await getDashboardSummary(req, res);
+
+      expect(res.json).toHaveBeenCalled();
+      const response = res.json.mock.calls[0][0];
+
+      const day0 = response.balanceHistory.find(h => h.dayIndex === 0);
+      const day1 = response.balanceHistory.find(h => h.dayIndex === 1);
+      const day2 = response.balanceHistory.find(h => h.dayIndex === 2);
+
+      expect(day0.total).toBe(100);
+      expect(day1.total).toBe(100);
+      expect(day2.total).toBe(150);
+    });
   });
 
   describe('getMonthlySummaries', () => {
@@ -239,9 +283,7 @@ describe('Dashboard Controller', () => {
 
       // Oldest and newest tx for availableYears computation
       Transaction.findOne.mockImplementation((query) => {
-        return {
-          sort: vi.fn().mockResolvedValue({ date: new Date('2025-05-01') })
-        };
+        return mockChain({ date: new Date('2025-05-01') });
       });
 
       Transaction.find.mockResolvedValue(mockTxs);

@@ -81,6 +81,7 @@ vi.mock('../../models/Account.js', () => {
   MockAccount.find = vi.fn();
   MockAccount.findById = vi.fn();
   MockAccount.findOne = vi.fn();
+  MockAccount.insertMany = vi.fn();
 
   return { default: MockAccount };
 });
@@ -99,6 +100,7 @@ vi.mock('../../models/Category.js', () => {
 
   MockCategory.find = vi.fn();
   MockCategory.findOne = vi.fn();
+  MockCategory.insertMany = vi.fn();
 
   return { default: MockCategory };
 });

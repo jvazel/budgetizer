@@ -333,18 +333,18 @@ export const getCalendarTransactions = async (req, res) => {
       endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     }
 
-    // 1. Fetch real transactions
-    const realTransactions = await Transaction.find({
-      userId: req.user.id,
-      date: { $gte: startDate, $lte: endDate }
-    }).populate('categoryId', 'name icon color type').populate('accountId', 'name color icon');
-
-    // 2. Fetch active scheduled transactions that could occur in this period
-    const scheduledTxs = await ScheduledTransaction.find({
-      userId: req.user.id,
-      isActive: true,
-      nextDate: { $lte: endDate }
-    }).populate('categoryId', 'name icon color type').populate('accountId', 'name color icon');
+    // 1. Fetch real transactions and active scheduled transactions in parallel
+    const [realTransactions, scheduledTxs] = await Promise.all([
+      Transaction.find({
+        userId: req.user.id,
+        date: { $gte: startDate, $lte: endDate }
+      }).populate('categoryId', 'name icon color type').populate('accountId', 'name color icon'),
+      ScheduledTransaction.find({
+        userId: req.user.id,
+        isActive: true,
+        nextDate: { $lte: endDate }
+      }).populate('categoryId', 'name icon color type').populate('accountId', 'name color icon')
+    ]);
 
     // Calculate occurrences
     const projectedTransactions = [];
@@ -502,6 +502,10 @@ export const importTransactions = async (req, res) => {
 
     const transactionsToInsert = [];
 
+    // Cache new accounts and categories to bulk-insert later
+    const newAccountsToInsert = [];
+    const newCategoriesToInsert = [];
+
     // Skip headers
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVRow(lines[i]);
@@ -548,7 +552,7 @@ export const importTransactions = async (req, res) => {
           color: '#10b981',
           icon: '💳'
         });
-        await account.save({ session });
+        newAccountsToInsert.push(account);
         accountsMap.set(accKey, account);
       }
 
@@ -566,7 +570,7 @@ export const importTransactions = async (req, res) => {
             color: '#10b981',
             type
           });
-          await category.save({ session });
+          newCategoriesToInsert.push(category);
           categoriesMap.set(catKey, category);
         }
       }
@@ -592,18 +596,30 @@ export const importTransactions = async (req, res) => {
       importedCount++;
     }
 
-    // Insert all transactions in a single batch insert
-    if (transactionsToInsert.length > 0) {
-      await Transaction.insertMany(transactionsToInsert, { session });
-    }
+      // Insert all new accounts in bulk
+      if (newAccountsToInsert.length > 0) {
+        await Account.insertMany(newAccountsToInsert, { session });
+      }
 
-    // Save all modified accounts in the session
-    const modifiedAccounts = Array.from(accountsMap.values()).filter(acc => typeof acc.isModified === 'function' ? acc.isModified('balance') : true);
-    for (const acc of modifiedAccounts) {
-      await acc.save({ session });
-    }
+      // Insert all new categories in bulk
+      if (newCategoriesToInsert.length > 0) {
+        await Category.insertMany(newCategoriesToInsert, { session });
+      }
 
-    await session.commitTransaction();
+      // Insert all transactions in a single batch insert
+      if (transactionsToInsert.length > 0) {
+        await Transaction.insertMany(transactionsToInsert, { session });
+      }
+
+      // Save all modified existing accounts in the session
+      const modifiedAccounts = Array.from(accountsMap.values()).filter(acc => {
+        return !newAccountsToInsert.includes(acc) && (typeof acc.isModified === 'function' ? acc.isModified('balance') : true);
+      });
+      for (const acc of modifiedAccounts) {
+        await acc.save({ session });
+      }
+
+      await session.commitTransaction();
     res.json({
       success: true,
       importedCount,

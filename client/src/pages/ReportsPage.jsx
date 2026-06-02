@@ -33,10 +33,11 @@ const ReportsPage = () => {
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
 
-    // Get current total balance of accounts
-    let runningBalance = userAccounts
-      .filter(acc => acc.includeInTotal !== false)
-      .reduce((sum, acc) => sum + acc.balance, 0);
+    // Initialize running balances for all accounts in a Map
+    const runningBalances = {};
+    userAccounts.forEach(acc => {
+      runningBalances[acc._id.toString()] = acc.balance;
+    });
 
     // Sort transactions descending (newest to oldest)
     const sortedTxs = [...allTxs].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -44,14 +45,46 @@ const ReportsPage = () => {
     const dailyBalancesMap = {};
     let txIdx = 0;
 
+    // Helper to calculate total included balance from running balances
+    const getIncludedTotal = () => {
+      let total = 0;
+      userAccounts.forEach(acc => {
+        if (acc.includeInTotal !== false) {
+          total += runningBalances[acc._id.toString()] || 0;
+        }
+      });
+      return total;
+    };
+
+    // Helper to revert a single transaction in running balances (moving backwards in time)
+    const revertTransaction = (tx) => {
+      const accId = tx.accountId?._id || tx.accountId?.toString();
+      const toAccId = tx.toAccountId?._id || tx.toAccountId?.toString();
+
+      if (tx.type === 'expense') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] += tx.amount;
+        }
+      } else if (tx.type === 'income') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] -= tx.amount;
+        }
+      } else if (tx.type === 'transfer') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] += tx.amount;
+        }
+        if (toAccId && runningBalances[toAccId] !== undefined) {
+          runningBalances[toAccId] -= tx.amount;
+        }
+      }
+    };
+
     // 1. Reverse all transactions after the endDate
     while (txIdx < sortedTxs.length) {
       const tx = sortedTxs[txIdx];
       const txDate = new Date(tx.date);
       if (txDate > end) {
-        if (tx.type === 'expense') runningBalance += tx.amount;
-        else if (tx.type === 'income') runningBalance -= tx.amount;
-        // transfers do not affect total net worth
+        revertTransaction(tx);
         txIdx++;
       } else {
         break;
@@ -62,7 +95,9 @@ const ReportsPage = () => {
     const currentDay = new Date(end);
     while (currentDay >= start) {
       const dateStr = currentDay.toISOString().split('T')[0];
-      dailyBalancesMap[dateStr] = runningBalance;
+      
+      // Store the included total balance for the current day
+      dailyBalancesMap[dateStr] = getIncludedTotal();
 
       // Reverse transactions on this day to find the previous day's balance
       while (txIdx < sortedTxs.length) {
@@ -71,8 +106,7 @@ const ReportsPage = () => {
         const txDateStr = txDate.toISOString().split('T')[0];
 
         if (txDateStr === dateStr) {
-          if (tx.type === 'expense') runningBalance += tx.amount;
-          else if (tx.type === 'income') runningBalance -= tx.amount;
+          revertTransaction(tx);
           txIdx++;
         } else if (txDate > currentDay) {
           // Guard for timezone boundary issues
@@ -89,14 +123,18 @@ const ReportsPage = () => {
     // 3. Compile final ascending order list for Recharts
     const chartDataList = [];
     const temp = new Date(start);
+    let lastValue = getIncludedTotal();
+
     while (temp <= end) {
       const dateStr = temp.toISOString().split('T')[0];
       const label = temp.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+      const val = dailyBalancesMap[dateStr] ?? lastValue;
       chartDataList.push({
         date: dateStr,
         label,
-        balance: parseFloat((dailyBalancesMap[dateStr] ?? runningBalance).toFixed(2))
+        balance: parseFloat(val.toFixed(2))
       });
+      lastValue = val;
       temp.setDate(temp.getDate() + 1);
     }
 
