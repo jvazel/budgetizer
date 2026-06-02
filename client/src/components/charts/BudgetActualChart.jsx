@@ -169,7 +169,7 @@ const BudgetActualChart = () => {
           <p className="text-[10px] text-muted">La barre supérieure (sombre) représente la limite, la barre inférieure représente le réel dépensé. Touchez une barre pour voir les détails.</p>
         </div>
 
-        <div className="w-full flex items-center justify-center" style={{ minHeight: `${Math.max(160, chartData.length * 60)}px` }}>
+        <div className="w-full flex items-center justify-center" style={{ height: `${Math.max(160, chartData.length * 60)}px`, width: '100%' }}>
           {loading ? (
             <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
           ) : chartData.length === 0 ? (
