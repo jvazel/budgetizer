@@ -353,8 +353,8 @@ const ForecastChart = () => {
               </h3>
               <p className="text-[10px] text-muted mt-0.5">
                 {selectedMonth?.isForecast 
-                  ? `Solde projeté : ${formatCurrency(selectedMonth.projBalance)}`
-                  : `Épargne réelle : ${formatCurrency(selectedMonth.balance)}`}
+                  ? `Solde projeté : ${formatCurrency(selectedMonth?.projBalance || 0)}`
+                  : `Épargne réelle : ${formatCurrency(selectedMonth?.balance || 0)}`}
               </p>
             </div>
             <button 
