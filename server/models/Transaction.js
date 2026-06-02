@@ -79,5 +79,6 @@ transactionSchema.index({ userId: 1, accountId: 1 });
 transactionSchema.index({ userId: 1, toAccountId: 1 });
 transactionSchema.index({ userId: 1, savingsGoalId: 1 });
 transactionSchema.index({ userId: 1, categoryId: 1, date: -1 });
+transactionSchema.index({ userId: 1, date: -1, createdAt: -1 });
 
 export default mongoose.model('Transaction', transactionSchema);

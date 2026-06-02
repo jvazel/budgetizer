@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { ChevronLeft, ChevronRight, AlertTriangle, ShieldCheck, CheckCircle2, X, Calendar } from 'lucide-react';
@@ -31,7 +31,7 @@ const BudgetActualChart = () => {
   const [txLoading, setTxLoading] = useState(false);
   const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
 
-  const fetchBudgets = async () => {
+  const fetchBudgets = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get(`/budgets?month=${formatMonthQuery(month)}`);
@@ -41,7 +41,7 @@ const BudgetActualChart = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [month]);
 
   useEffect(() => {
     fetchBudgets();
@@ -82,7 +82,7 @@ const BudgetActualChart = () => {
     }));
   }, [budgets]);
 
-  const handleBarClick = async (clickedData) => {
+  const handleBarClick = useCallback(async (clickedData) => {
     if (!clickedData || !clickedData.categoryId) return;
     
     setSelectedBudgetCategory({
@@ -112,7 +112,14 @@ const BudgetActualChart = () => {
     } finally {
       setTxLoading(false);
     }
-  };
+  }, [month]);
+
+  const processedTransactions = useMemo(() => {
+    return budgetTransactions.map(tx => ({
+      ...tx,
+      formattedDate: new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    }));
+  }, [budgetTransactions]);
 
   return (
     <div className="space-y-6 pb-24">
@@ -272,12 +279,12 @@ const BudgetActualChart = () => {
             ) : budgetTransactions.length === 0 ? (
               <p className="text-center text-xs text-muted py-8">Aucune dépense enregistrée ce mois-ci.</p>
             ) : (
-              budgetTransactions.map(tx => (
+              processedTransactions.map(tx => (
                 <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
                   <div className="min-w-0 pr-2">
                     <p className="text-xs font-bold text-primary truncate">{tx.description || 'Sans description'}</p>
                     <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
-                      <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      <Calendar size={10} /> {tx.formattedDate}
                       {tx.note && <span className="truncate max-w-[120px] italic">({tx.note})</span>}
                     </p>
                   </div>

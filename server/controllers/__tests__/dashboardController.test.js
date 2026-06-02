@@ -41,6 +41,7 @@ vi.mock('../../models/ScheduledTransaction.js', () => ({
 // Helper for Mongoose chain mocking
 const mockChain = (value) => {
   const obj = {
+    select: vi.fn().mockImplementation(() => obj),
     populate: vi.fn().mockImplementation(() => obj),
     sort: vi.fn().mockImplementation(() => obj),
     then: vi.fn().mockImplementation((resolve) => Promise.resolve(value).then(resolve))

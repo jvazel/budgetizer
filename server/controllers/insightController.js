@@ -73,7 +73,7 @@ export const getInsights = async (req, res) => {
       type: 'expense',
       date: { $gte: startOfHistory, $lte: endOfHistory },
       isPending: { $ne: true }
-    }).populate('categoryId').populate('scheduledTransactionId');
+    }).select('categoryId scheduledTransactionId amount date').populate('categoryId').populate('scheduledTransactionId');
 
     // Fetch user's active subscriptions to correlate
     const subscriptions = await ScheduledTransaction.find({
@@ -118,7 +118,7 @@ export const getInsights = async (req, res) => {
       type: 'expense',
       date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
       isPending: { $ne: true }
-    }).populate('categoryId').populate('scheduledTransactionId');
+    }).select('categoryId scheduledTransactionId amount').populate('categoryId').populate('scheduledTransactionId');
 
     const currentCategorySpending = {}; // categoryId -> Number
     for (const tx of currentMonthTxs) {

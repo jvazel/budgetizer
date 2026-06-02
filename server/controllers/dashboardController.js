@@ -72,7 +72,7 @@ export const getDashboardSummary = async (req, res) => {
     const lastMonthTxs = await Transaction.find({
       userId,
       date: { $gte: startOfLastMonth, $lte: endOfLastMonth }
-    });
+    }).select('type amount');
 
     // 4. Calculate Income/Expenses for Current Month
     let currentIncome = 0;
@@ -133,7 +133,7 @@ export const getDashboardSummary = async (req, res) => {
       userId,
       type: 'expense',
       date: { $gte: startOf7DaysAgo, $lte: now }
-    });
+    }).select('date amount');
 
     const last7DaysExpenses = [];
     for (let i = 6; i >= 0; i--) {
@@ -161,7 +161,7 @@ export const getDashboardSummary = async (req, res) => {
     const historyTxs = await Transaction.find({
       userId,
       date: { $gte: startOfHistory, $lte: now }
-    }).sort({ date: -1 });
+    }).select('accountId toAccountId type amount date').sort({ date: -1 });
 
     const accountBalances = {};
     rawAccounts.forEach(acc => {
@@ -285,9 +285,8 @@ export const getDashboardSummary = async (req, res) => {
     // a. Budgets
     const budgets = await Budget.find({ userId }).populate('categoryId', 'name icon');
     budgets.forEach(budget => {
-      const spent = currentMonthTxs
-        .filter(t => t.type === 'expense' && t.categoryId && budget.categoryId && t.categoryId._id.toString() === budget.categoryId._id.toString())
-        .reduce((sum, t) => sum + t.amount, 0);
+      const catId = budget.categoryId?._id?.toString() || budget.categoryId?.toString();
+      const spent = catId ? (categoryMap[catId]?.amount || 0) : 0;
         
       const percentage = (spent / budget.amount) * 100;
       
@@ -430,18 +429,27 @@ export const getDashboardSummary = async (req, res) => {
           const startOfHistory = months[months.length - 1].start;
           const endOfHistory = months[0].end;
           
-          const historyExpenses = await Transaction.find({
-            userId,
-            type: 'expense',
-            date: { $gte: startOfHistory, $lte: endOfHistory },
-            isPending: { $ne: true }
-          });
+          const historyTotals = await Transaction.aggregate([
+            {
+              $match: {
+                userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
+                type: 'expense',
+                date: { $gte: startOfHistory, $lte: endOfHistory },
+                isPending: { $ne: true }
+              }
+            },
+            {
+              $group: {
+                _id: '$categoryId',
+                total: { $sum: '$amount' }
+              }
+            }
+          ]);
 
           const categoryTotals = {};
-          historyExpenses.forEach(tx => {
-            if (tx.categoryId) {
-              const catId = tx.categoryId._id.toString();
-              categoryTotals[catId] = (categoryTotals[catId] || 0) + tx.amount;
+          historyTotals.forEach(item => {
+            if (item._id) {
+              categoryTotals[item._id.toString()] = item.total;
             }
           });
 

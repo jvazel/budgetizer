@@ -64,14 +64,24 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
       for (const budget of budgets) {
         const { start, end } = getBudgetPeriodDates(budget.period, transaction.date || new Date());
         
-        // Sum expenses for this category in the period
-        const periodTransactions = await Transaction.find({
-          userId,
-          type: 'expense',
-          categoryId: budget.categoryId,
-          date: { $gte: start, $lte: end }
-        });
-        const spentAfter = periodTransactions.reduce((sum, t) => sum + t.amount, 0);
+        // Sum expenses for this category in the period using MongoDB aggregation for efficiency
+        const spentResult = await Transaction.aggregate([
+          {
+            $match: {
+              userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
+              type: 'expense',
+              categoryId: mongoose.Types.ObjectId.isValid(budget.categoryId) ? new mongoose.Types.ObjectId(budget.categoryId) : budget.categoryId,
+              date: { $gte: start, $lte: end }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalSpent: { $sum: '$amount' }
+            }
+          }
+        ]);
+        const spentAfter = spentResult[0]?.totalSpent || 0;
         
         let spentBefore = spentAfter - amount;
         if (oldTransaction && oldTransaction.categoryId && oldTransaction.categoryId.toString() === transaction.categoryId.toString() && oldTransaction.type === 'expense') {

@@ -98,13 +98,12 @@ describe('Insight Controller', () => {
       const isFirst = findCallCount === 0;
       findCallCount++;
       const resolved = isFirst ? mockHistoryTxs : mockCurrentTxs;
-      return {
-        populate: vi.fn().mockImplementation(() => {
-          return {
-            populate: vi.fn().mockResolvedValue(resolved)
-          };
-        })
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        populate: vi.fn().mockReturnThis(),
+        then: vi.fn().mockImplementation((resolve) => resolve(resolved))
       };
+      return query;
     });
 
     ScheduledTransaction.find.mockResolvedValue([]);
@@ -153,13 +152,12 @@ describe('Insight Controller', () => {
       const isFirst = findCallCount === 0;
       findCallCount++;
       const resolved = isFirst ? mockHistoryTxs : mockCurrentTxs;
-      return {
-        populate: vi.fn().mockImplementation(() => {
-          return {
-            populate: vi.fn().mockResolvedValue(resolved)
-          };
-        })
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        populate: vi.fn().mockReturnThis(),
+        then: vi.fn().mockImplementation((resolve) => resolve(resolved))
       };
+      return query;
     });
 
     ScheduledTransaction.find.mockResolvedValue([]);

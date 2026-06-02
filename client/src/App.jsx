@@ -10,21 +10,21 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
-import Categories from './pages/Categories';
-import Transactions from './pages/Transactions';
-import Budgets from './pages/Budgets';
-import CalendarPage from './pages/CalendarPage';
-import ScheduledPage from './pages/ScheduledPage';
-import SubscriptionsPage from './pages/SubscriptionsPage';
-import ChartsPage from './pages/ChartsPage';
-import SettingsPage from './pages/SettingsPage';
-import SummaryHistory from './pages/SummaryHistory';
-import AiInsights from './pages/AiInsights';
-import SavingsPage from './pages/SavingsPage';
-import AccountsPage from './pages/AccountsPage';
-import TransfersPage from './pages/TransfersPage';
-import ReportsPage from './pages/ReportsPage';
-import MonthlyReportPage from './pages/MonthlyReportPage';
+const Categories = React.lazy(() => import('./pages/Categories'));
+const Transactions = React.lazy(() => import('./pages/Transactions'));
+const Budgets = React.lazy(() => import('./pages/Budgets'));
+const CalendarPage = React.lazy(() => import('./pages/CalendarPage'));
+const ScheduledPage = React.lazy(() => import('./pages/ScheduledPage'));
+const SubscriptionsPage = React.lazy(() => import('./pages/SubscriptionsPage'));
+const ChartsPage = React.lazy(() => import('./pages/ChartsPage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const SummaryHistory = React.lazy(() => import('./pages/SummaryHistory'));
+const AiInsights = React.lazy(() => import('./pages/AiInsights'));
+const SavingsPage = React.lazy(() => import('./pages/SavingsPage'));
+const AccountsPage = React.lazy(() => import('./pages/AccountsPage'));
+const TransfersPage = React.lazy(() => import('./pages/TransfersPage'));
+const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
+const MonthlyReportPage = React.lazy(() => import('./pages/MonthlyReportPage'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -70,7 +70,12 @@ const AppContent = () => {
     <>
       <Toaster position="top-center" />
       <OfflineStatus />
-      <Routes>
+      <React.Suspense fallback={
+        <div className="flex justify-center items-center h-[100vh] w-full bg-background">
+          <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+        </div>
+      }>
+        <Routes>
         <Route 
           path="/login" 
           element={
@@ -231,7 +236,8 @@ const AppContent = () => {
             </ProtectedRoute>
           } 
         />
-      </Routes>
+        </Routes>
+      </React.Suspense>
     </>
   );
 };

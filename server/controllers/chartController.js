@@ -48,7 +48,7 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: start, $lte: end }
-    });
+    }).select('categoryId amount');
 
     // Compute total sum
     const totalAmount = transactions.reduce((acc, curr) => acc + curr.amount, 0);
@@ -126,7 +126,7 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: prevStartDate, $lte: prevEndDate }
-    });
+    }).select('categoryId amount');
 
     const prevGrouped = {};
     prevTransactions.forEach(tx => {
@@ -168,14 +168,14 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: start3M, $lte: end3M }
-    });
+    }).select('categoryId amount');
 
     const txs6M = await Transaction.find({
       userId: req.user.id,
       type,
       isPending: { $ne: true },
       date: { $gte: start6M, $lte: end3M }
-    });
+    }).select('categoryId amount');
 
     const sum3M = {};
     const sum6M = {};

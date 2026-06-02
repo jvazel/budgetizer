@@ -41,6 +41,16 @@ describe('Chart Controller', () => {
     };
   });
 
+  const mockQuery = (resolvedValue) => {
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      then: vi.fn().mockImplementation((resolve) => resolve(resolvedValue))
+    };
+    return query;
+  };
+
   describe('getChartsByCategory', () => {
     it('should aggregate transactions by category and calculate percentages', async () => {
       req.query = {
@@ -61,9 +71,9 @@ describe('Chart Controller', () => {
       ];
 
       Category.find.mockResolvedValue(mockCategories);
-      Transaction.find.mockResolvedValueOnce(mockTransactions); // current period
-      Transaction.find.mockResolvedValueOnce([]); // previous period (variation computation)
-      Transaction.find.mockResolvedValue([]); // 3M and 6M completed months
+      Transaction.find.mockImplementationOnce(() => mockQuery(mockTransactions)); // current period
+      Transaction.find.mockImplementationOnce(() => mockQuery([])); // previous period (variation computation)
+      Transaction.find.mockImplementation(() => mockQuery([])); // 3M and 6M completed months
 
       await getChartsByCategory(req, res);
 
@@ -98,7 +108,7 @@ describe('Chart Controller', () => {
       ];
 
       Account.find.mockResolvedValue(mockAccounts);
-      Transaction.find.mockResolvedValue(mockHistoryTransactions);
+      Transaction.find.mockImplementation(() => mockQuery(mockHistoryTransactions));
 
       await getForecastCharts(req, res);
 

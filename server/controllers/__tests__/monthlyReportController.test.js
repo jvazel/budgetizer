@@ -51,6 +51,7 @@ vi.mock('../../models/Budget.js', () => ({
 // Helper to create Mongoose-like chainable thenable mock queries
 const createMockQuery = (data) => {
   const query = {
+    select: vi.fn().mockReturnThis(),
     populate: vi.fn().mockReturnThis(),
     sort: vi.fn().mockReturnThis(),
     then: (resolve) => resolve(data),

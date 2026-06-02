@@ -64,7 +64,7 @@ export const getMonthlyReport = async (req, res) => {
       userId,
       date: { $gte: startOfPrev, $lte: endOfPrev },
       isPending: { $ne: true }
-    });
+    }).select('type amount');
 
     // Revenus & Dépenses Mois M
     let incomeM = 0;
@@ -190,7 +190,7 @@ export const getMonthlyReport = async (req, res) => {
       type: 'expense',
       date: { $gte: startOfHistory, $lte: endOfHistory },
       isPending: { $ne: true }
-    });
+    }).select('categoryId amount date');
 
     // Calculer le montant moyen d'une transaction de dépense par catégorie dans l'historique
     const categoryTxSums = {}; // catId -> totalAmount
