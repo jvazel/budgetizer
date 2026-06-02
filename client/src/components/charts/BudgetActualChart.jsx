@@ -181,7 +181,7 @@ const BudgetActualChart = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
-                layout="y"
+                layout="vertical"
                 margin={{ left: -10, right: 10, top: 10, bottom: 5 }}
               >
                 <XAxis type="number" tick={{ fontSize: 9, fill: '#888' }} axisLine={false} tickLine={false} />
@@ -213,6 +213,7 @@ const BudgetActualChart = () => {
                 <Bar 
                   dataKey="real" 
                   name="real" 
+                  fill="var(--purple)"
                   radius={[0, 4, 4, 0]} 
                   barSize={8}
                   onClick={handleBarClick}
