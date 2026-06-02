@@ -21,7 +21,7 @@
   --warning: #fbbf24;
   --info: #60a5fa;
   --purple: #a78bfa;
-  --bg-budget-guide: #251d3b;
+  --bg-budget-guide: #3a2a0d;
 }
 
 [data-theme="light"], .light {
@@ -41,7 +41,7 @@
   --warning: #f59e0b;
   --info: #3b82f6;
   --purple: #8b5cf6;
-  --bg-budget-guide: #ddd6fe;
+  --bg-budget-guide: #fcd34d;
 }
 
 body {
