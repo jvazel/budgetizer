@@ -105,6 +105,28 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 
 ---
 
+### 1.9 Graphique de Prévisions (`ForecastChart.jsx`)
+Ce composant affiche le graphique prévisionnel du solde de trésorerie avec des calculs statistiques.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu initial / Chargement** | API mockée en cours de réponse | Rendu du composant | Le spinner de chargement et le texte `"Méthode de calcul"` sont affichés. |
+| **Rendu des prévisions réussies** | Données de prévisions mockées avec confidenceInterval | Chargement et mise à jour de l'état | Les prévisions de solde estimé s'affichent correctement dans le DOM, incluant la tendance calculée. |
+| **Drill-down sécurisé (Clic)** | Clic sur un point de données prévisionnel avec solde `null` | Ouverture du BottomSheet de détail | Le panneau BottomSheet s'ouvre avec la liste de détail correspondante sans provoquer de crash (`TypeError: selectedMonth is null`). |
+
+---
+
+### 1.10 Graphique Comparatif de Budget (`BudgetActualChart.jsx`)
+Ce graphique compare les enveloppes budgétaires définies avec le réel dépensé du mois.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu initial / Chargement** | API budgets en attente | Rendu initial | Le titre `"Comparatif par Budget"` et le spinner de chargement s'affichent. |
+| **Rendu des budgets et structure** | Données de budgets mockées, comptes/catégories définis | Chargement et calculs de totaux | Affiche le cumul budgété/dépensé exact. Valide que le conteneur a une hauteur non nulle (protection anti-collapse) et que le layout Recharts est configuré à `"vertical"` (protection anti-disparition). |
+| **Drill-down dépenses** | Clic sur la barre de dépenses d'un budget | Déclenchement de la requête API et récupération des dépenses associées | Le BottomSheet glisse du bas et affiche la liste exhaustive des transactions réelles ayant grevé ce budget. |
+
+---
+
 ## 2. Tests Backend (Serveur)
 
 Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.

@@ -13,7 +13,7 @@ vi.mock('../../../services/api', () => ({
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div data-testid="recharts-responsive-container">{children}</div>,
-  BarChart: ({ children }) => <div data-testid="recharts-bar-chart">{children}</div>,
+  BarChart: ({ children, layout }) => <div data-testid="recharts-bar-chart" data-layout={layout}>{children}</div>,
   Bar: ({ children, onClick }) => {
     // If a click handler is provided, we expose a button to trigger it
     return (
@@ -109,6 +109,14 @@ describe('BudgetActualChart Component', () => {
 
     // Recharts container should render
     expect(screen.getByTestId('recharts-responsive-container')).toBeInTheDocument();
+
+    // Prevent layout collapse regression: Ensure parent container has dynamic height set
+    const wrapper = screen.getByTestId('chart-wrapper');
+    expect(wrapper).toHaveStyle('height: 160px');
+
+    // Prevent layout type regression: Ensure BarChart is configured with vertical layout for horizontal bars
+    const barChart = screen.getByTestId('recharts-bar-chart');
+    expect(barChart).toHaveAttribute('data-layout', 'vertical');
   });
 
   it('opens drill-down bottom sheet and loads transaction list on bar click', async () => {
