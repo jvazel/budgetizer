@@ -2,14 +2,21 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAccounts } from '../../hooks/useAccounts';
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { AlertCircle, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Wallet, Scale, Activity } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Wallet, Scale, Activity, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BottomSheet from '../ui/BottomSheet';
 
 const CashFlowChart = () => {
   const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ history: [], metrics: {} });
+
+  // Drill-down states
+  const [selectedMonthFlow, setSelectedMonthFlow] = useState(null);
+  const [monthTransactions, setMonthTransactions] = useState([]);
+  const [txLoading, setTxLoading] = useState(false);
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
 
   const { accounts } = useAccounts();
 
@@ -35,6 +42,14 @@ const CashFlowChart = () => {
   };
 
   const formatMonthLabel = (monthStr) => {
+    if (!monthStr) return '';
+    const [year, month] = monthStr.split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  };
+
+  const formatMonthShortLabel = (monthStr) => {
     if (!monthStr) return '';
     const [year, month] = monthStr.split('-');
     const date = new Date(year, parseInt(month) - 1, 1);
@@ -77,6 +92,34 @@ const CashFlowChart = () => {
 
   const statusStyle = getStatusStyles(metrics.status);
   const StatusIcon = statusStyle.icon;
+
+  const handleBarClick = async (clickedData) => {
+    // Recharts passes either directly the item payload or the active payload depending on where click triggers
+    const payload = clickedData?.activePayload?.[0]?.payload || clickedData;
+    if (!payload || !payload.month) return;
+    
+    setSelectedMonthFlow(payload);
+    setIsMonthSheetOpen(true);
+    setMonthTransactions([]);
+    setTxLoading(true);
+    
+    try {
+      const [year, monthNum] = payload.month.split('-').map(Number);
+      const start = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
+      const end = new Date(year, monthNum, 0).toISOString().split('T')[0];
+      
+      const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
+      const res = await api.get(`/transactions?startDate=${start}&endDate=${end}${accountParam}&limit=1000`);
+      
+      const list = res.data.transactions || res.data || [];
+      const sorted = list.sort((a, b) => b.amount - a.amount);
+      setMonthTransactions(sorted);
+    } catch (err) {
+      toast.error('Impossible de charger les transactions de ce mois.');
+    } finally {
+      setTxLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 pb-24">
@@ -182,7 +225,7 @@ const CashFlowChart = () => {
       <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
         <div>
           <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase">Graphique Mensuel</h3>
-          <p className="text-[10px] text-muted">Comparaison directe entre vos gains (vert) et vos dépenses (rouge). La ligne violette montre l'épargne nette.</p>
+          <p className="text-[10px] text-muted">Comparaison directe entre vos gains (vert) et vos dépenses (rouge). La ligne violette montre l'épargne nette. Touchez une barre pour voir les détails.</p>
         </div>
 
         <div className="w-full h-64 flex items-center justify-center">
@@ -198,10 +241,11 @@ const CashFlowChart = () => {
               <ComposedChart
                 data={history}
                 margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
+                onClick={handleBarClick}
               >
                 <XAxis
                   dataKey="month"
-                  tickFormatter={formatMonthLabel}
+                  tickFormatter={formatMonthShortLabel}
                   tick={{ fontSize: 9, fill: '#888', fontWeight: 'bold' }}
                   axisLine={false}
                   tickLine={false}
@@ -257,6 +301,7 @@ const CashFlowChart = () => {
                   fillOpacity={0.8}
                   radius={[4, 4, 0, 0]}
                   barSize={10}
+                  className="cursor-pointer"
                 />
                 <Bar
                   dataKey="expenses"
@@ -264,6 +309,7 @@ const CashFlowChart = () => {
                   fillOpacity={0.8}
                   radius={[4, 4, 0, 0]}
                   barSize={10}
+                  className="cursor-pointer"
                 />
 
                 {/* Line overlay for Net Cash Flow */}
@@ -274,6 +320,7 @@ const CashFlowChart = () => {
                   strokeWidth={2.5}
                   dot={{ r: 3, strokeWidth: 1.5, fill: '#1e293b' }}
                   activeDot={{ r: 5 }}
+                  className="cursor-pointer"
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -301,6 +348,84 @@ const CashFlowChart = () => {
           </div>
         </div>
       )}
+
+      {/* Bottom Sheet for monthly details drill-down */}
+      <BottomSheet isOpen={isMonthSheetOpen} onClose={() => setIsMonthSheetOpen(false)}>
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <div>
+              <h3 className="text-sm font-extrabold text-primary">
+                Bilan : {selectedMonthFlow ? formatMonthLabel(selectedMonthFlow.month) : ''}
+              </h3>
+              <p className="text-[10px] text-muted mt-0.5">Récapitulatif des flux de trésorerie</p>
+            </div>
+            <button 
+              onClick={() => setIsMonthSheetOpen(false)} 
+              className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors"
+            >
+              <X size={18} className="text-secondary" />
+            </button>
+          </div>
+
+          {/* Quick Stats grid */}
+          {selectedMonthFlow && (
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Gains</span>
+                <span className="font-mono text-xs font-bold text-emerald-400 block mt-1">
+                  {formatCurrency(selectedMonthFlow.income)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Dépenses</span>
+                <span className="font-mono text-xs font-bold text-red-400 block mt-1">
+                  {formatCurrency(selectedMonthFlow.expenses)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Épargne</span>
+                <span className={`font-mono text-xs font-bold block mt-1 ${selectedMonthFlow.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+                  {formatCurrency(selectedMonthFlow.net)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Transactions listing */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-extrabold uppercase text-muted tracking-wider px-1">Transactions du Mois</h4>
+            
+            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar py-1">
+              {txLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+                </div>
+              ) : monthTransactions.length === 0 ? (
+                <p className="text-center text-xs text-muted py-8">Aucune transaction ce mois-ci.</p>
+              ) : (
+                monthTransactions.map(tx => (
+                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-primary truncate">{tx.description || 'Sans description'}</p>
+                      <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
+                        <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        <span className="opacity-60">•</span>
+                        <span className="truncate max-w-[100px]">{tx.categoryId?.name || 'Transfert'}</span>
+                      </p>
+                    </div>
+                    <span className={`font-mono text-xs font-black shrink-0 ${
+                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
+                    }`}>
+                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 };

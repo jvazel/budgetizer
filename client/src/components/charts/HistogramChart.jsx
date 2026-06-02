@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAccounts } from '../../hooks/useAccounts';
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { AlertCircle, AlertTriangle, Wallet, Scale, Calendar, Sliders } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Wallet, Scale, Calendar, Sliders, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BottomSheet from '../ui/BottomSheet';
 
 const HistogramChart = () => {
   const { accounts } = useAccounts();
@@ -24,6 +25,12 @@ const HistogramChart = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ history: [], groupBy: 'day', metrics: {} });
 
+  // Drill-down states
+  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [periodTransactions, setPeriodTransactions] = useState([]);
+  const [txLoading, setTxLoading] = useState(false);
+  const [isPeriodSheetOpen, setIsPeriodSheetOpen] = useState(false);
+
   const fetchHistogramData = async () => {
     if (!startDate || !endDate) return;
     
@@ -43,6 +50,44 @@ const HistogramChart = () => {
   useEffect(() => {
     fetchHistogramData();
   }, [startDate, endDate, selectedAccountId, groupBy]);
+
+  const handleChartClick = async (clickedData) => {
+    const payload = clickedData?.activePayload?.[0]?.payload || clickedData;
+    if (!payload || !payload.key) return;
+
+    setSelectedPeriod(payload);
+    setIsPeriodSheetOpen(true);
+    setPeriodTransactions([]);
+    setTxLoading(true);
+
+    try {
+      let start, end;
+      if (data.groupBy === 'day') {
+        start = payload.key;
+        end = payload.key;
+      } else if (data.groupBy === 'week') {
+        const startDateObj = new Date(payload.key);
+        const endDateObj = new Date(startDateObj);
+        endDateObj.setDate(startDateObj.getDate() + 6);
+        start = startDateObj.toISOString().split('T')[0];
+        end = endDateObj.toISOString().split('T')[0];
+      } else { // month
+        const [year, monthNum] = payload.key.split('-').map(Number);
+        start = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
+        end = new Date(year, monthNum, 0).toISOString().split('T')[0];
+      }
+
+      const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
+      const res = await api.get(`/transactions?startDate=${start}&endDate=${end}${accountParam}&limit=1000`);
+      const list = res.data.transactions || res.data || [];
+      const sorted = list.sort((a, b) => b.amount - a.amount);
+      setPeriodTransactions(sorted);
+    } catch (err) {
+      toast.error('Impossible de charger les transactions pour cette période.');
+    } finally {
+      setTxLoading(false);
+    }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -201,6 +246,7 @@ const HistogramChart = () => {
               <ComposedChart
                 data={history}
                 margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
+                onClick={handleChartClick}
               >
                 <XAxis
                   dataKey="key"
@@ -268,6 +314,7 @@ const HistogramChart = () => {
                   fillOpacity={0.85}
                   radius={[4, 4, 0, 0]}
                   barSize={history.length > 20 ? 6 : 14}
+                  className="cursor-pointer"
                 />
                 <Bar
                   dataKey="expenses"
@@ -275,6 +322,7 @@ const HistogramChart = () => {
                   fillOpacity={0.85}
                   radius={[4, 4, 0, 0]}
                   barSize={history.length > 20 ? 6 : 14}
+                  className="cursor-pointer"
                 />
 
                 <Line
@@ -284,12 +332,91 @@ const HistogramChart = () => {
                   strokeWidth={2}
                   dot={history.length < 32 ? { r: 2.5, strokeWidth: 1, fill: '#1e293b' } : false}
                   activeDot={{ r: 4 }}
+                  className="cursor-pointer"
                 />
               </ComposedChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
+
+      {/* Bottom Sheet for detailed transactions drill-down */}
+      <BottomSheet isOpen={isPeriodSheetOpen} onClose={() => setIsPeriodSheetOpen(false)}>
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <div>
+              <h3 className="text-sm font-extrabold text-primary">
+                Bilan : {selectedPeriod ? selectedPeriod.label : ''}
+              </h3>
+              <p className="text-[10px] text-muted mt-0.5">Détail de la période sélectionnée</p>
+            </div>
+            <button 
+              onClick={() => setIsPeriodSheetOpen(false)} 
+              className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors"
+            >
+              <X size={18} className="text-secondary" />
+            </button>
+          </div>
+
+          {/* Quick Stats grid */}
+          {selectedPeriod && (
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Recettes</span>
+                <span className="font-mono text-xs font-bold text-emerald-400 block mt-1">
+                  {formatCurrency(selectedPeriod.income)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Dépenses</span>
+                <span className="font-mono text-xs font-bold text-red-400 block mt-1">
+                  {formatCurrency(selectedPeriod.expenses)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
+                <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Net</span>
+                <span className={`font-mono text-xs font-bold block mt-1 ${selectedPeriod.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+                  {formatCurrency(selectedPeriod.net)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Transactions listing */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-extrabold uppercase text-muted tracking-wider px-1">Transactions</h4>
+            
+            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar py-1">
+              {txLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+                </div>
+              ) : periodTransactions.length === 0 ? (
+                <p className="text-center text-xs text-muted py-8">Aucune transaction enregistrée.</p>
+              ) : (
+                periodTransactions.map(tx => (
+                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-primary truncate">{tx.description || 'Sans description'}</p>
+                      <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
+                        <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        <span className="opacity-60">•</span>
+                        <span className="truncate max-w-[100px]">{tx.categoryId?.name || 'Transfert'}</span>
+                      </p>
+                    </div>
+                    <span className={`font-mono text-xs font-black shrink-0 ${
+                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
+                    }`}>
+                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 };

@@ -75,6 +75,12 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       path: '/ai-insights'
     },
     { 
+      label: 'Rapport Mensuel', 
+      icon: FileText, 
+      color: 'text-purple-400 bg-purple-500/10',
+      path: '/monthly-report'
+    },
+    { 
       label: 'Exporter un rapport', 
       icon: FileText, 
       color: 'text-orange-400 bg-orange-500/10',

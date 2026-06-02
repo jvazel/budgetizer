@@ -193,7 +193,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         </div>
 
         <div className="pt-4">
-          <Button type="submit" fullWidth variant={isDeposit ? 'default' : 'secondary'}>
+          <Button type="submit" fullWidth variant={isDeposit ? 'primary' : 'secondary'}>
             {isDeposit ? 'Confirmer le versement' : 'Confirmer le retrait'}
           </Button>
         </div>

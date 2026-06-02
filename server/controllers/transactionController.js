@@ -3,7 +3,102 @@ import Account from '../models/Account.js';
 import Category from '../models/Category.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import SavingsGoal from '../models/SavingsGoal.js';
+import User from '../models/User.js';
+import Budget from '../models/Budget.js';
+import { sendPushNotification } from '../utils/pushNotification.js';
 import mongoose from 'mongoose';
+
+// Helper for budget dates
+const getBudgetPeriodDates = (period, referenceDate = new Date()) => {
+  let start, end;
+  const ref = new Date(referenceDate);
+  if (period === 'weekly') {
+    const day = ref.getDay();
+    const diff = ref.getDate() - day + (day === 0 ? -6 : 1);
+    start = new Date(ref.getFullYear(), ref.getMonth(), diff, 0, 0, 0, 0);
+    end = new Date(start.getTime());
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+  } else if (period === 'yearly') {
+    start = new Date(ref.getFullYear(), 0, 1, 0, 0, 0, 0);
+    end = new Date(ref.getFullYear(), 11, 31, 23, 59, 59, 999);
+  } else { // monthly
+    start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
+    end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
+  }
+  return { start, end };
+};
+
+const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction = null) => {
+  try {
+    if (transaction.type !== 'expense') return;
+
+    const user = await User.findById(userId);
+    if (!user) return;
+
+    // 1. Low Balance Alert
+    if (user.preferences.enableLowBalanceAlerts) {
+      const account = await Account.findById(transaction.accountId);
+      if (account) {
+        const threshold = user.preferences.lowBalanceThreshold;
+        const balanceAfter = account.balance;
+        
+        let balanceBefore = balanceAfter + amount;
+        if (oldTransaction && oldTransaction.accountId.toString() === transaction.accountId.toString() && oldTransaction.type === 'expense') {
+          balanceBefore = balanceAfter + amount - oldTransaction.amount;
+        }
+        
+        if (balanceBefore >= threshold && balanceAfter < threshold) {
+          sendPushNotification(userId, {
+            title: 'Alerte Solde Bas ⚠️',
+            body: `Le solde de votre compte "${account.name}" est passé à ${balanceAfter.toFixed(2)} € (sous le seuil de ${threshold.toFixed(2)} €).`,
+            url: '/accounts'
+          });
+        }
+      }
+    }
+
+    // 2. Budget Alert
+    if (user.preferences.enableBudgetAlerts && transaction.categoryId) {
+      const budgets = await Budget.find({ userId, categoryId: transaction.categoryId });
+      for (const budget of budgets) {
+        const { start, end } = getBudgetPeriodDates(budget.period, transaction.date || new Date());
+        
+        // Sum expenses for this category in the period
+        const periodTransactions = await Transaction.find({
+          userId,
+          type: 'expense',
+          categoryId: budget.categoryId,
+          date: { $gte: start, $lte: end }
+        });
+        const spentAfter = periodTransactions.reduce((sum, t) => sum + t.amount, 0);
+        
+        let spentBefore = spentAfter - amount;
+        if (oldTransaction && oldTransaction.categoryId && oldTransaction.categoryId.toString() === transaction.categoryId.toString() && oldTransaction.type === 'expense') {
+          spentBefore = spentAfter - amount + oldTransaction.amount;
+        }
+
+        const alertThreshold = budget.amount * ((budget.alertAt || 80) / 100);
+
+        if (spentBefore < alertThreshold && spentAfter >= alertThreshold && spentAfter < budget.amount) {
+          sendPushNotification(userId, {
+            title: 'Alerte Budget 📊',
+            body: `Attention : vous avez consommé ${Math.round((spentAfter / budget.amount) * 100)}% de votre budget "${budget.name}" (${spentAfter.toFixed(2)} € / ${budget.amount.toFixed(2)} €).`,
+            url: '/budgets'
+          });
+        } else if (spentBefore < budget.amount && spentAfter >= budget.amount) {
+          sendPushNotification(userId, {
+            title: 'Dépassement de Budget 🚨',
+            body: `Alerte : votre budget "${budget.name}" est dépassé ! (${spentAfter.toFixed(2)} € dépensés sur ${budget.amount.toFixed(2)} € alloués).`,
+            url: '/budgets'
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error triggering alerts:', err);
+  }
+};
 
 // Utility function to update account balance
 const updateAccountBalance = async (accountId, amount, type, session = null) => {
@@ -148,6 +243,9 @@ export const createTransaction = async (req, res) => {
     }
 
     await session.commitTransaction();
+    
+    // Trigger push notifications in background
+    checkAndTriggerAlerts(req.user.id, transaction, amount).catch(err => console.error('Alert trigger error:', err));
     
     // Fetch with populated fields to return
     const populatedTx = await Transaction.findById(transaction._id)
@@ -503,6 +601,14 @@ export const updateTransaction = async (req, res) => {
     if (!transaction) return res.status(404).json({ message: 'Transaction non trouvée' });
     if (transaction.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Non autorisé' });
 
+    // Store old transaction state before updates for comparison in alerts
+    const oldTransactionCopy = {
+      amount: transaction.amount,
+      accountId: transaction.accountId,
+      categoryId: transaction.categoryId,
+      type: transaction.type
+    };
+
     // 1. Revert OLD balance impact
     if (transaction.type === 'transfer') {
       await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session); // Revert expense
@@ -545,6 +651,9 @@ export const updateTransaction = async (req, res) => {
     }
 
     await session.commitTransaction();
+
+    // Trigger push notifications in background
+    checkAndTriggerAlerts(req.user.id, transaction, amount, oldTransactionCopy).catch(err => console.error('Alert trigger error:', err));
 
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')

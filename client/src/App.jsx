@@ -24,6 +24,7 @@ import SavingsPage from './pages/SavingsPage';
 import AccountsPage from './pages/AccountsPage';
 import TransfersPage from './pages/TransfersPage';
 import ReportsPage from './pages/ReportsPage';
+import MonthlyReportPage from './pages/MonthlyReportPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -187,6 +188,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <AccountsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/monthly-report" 
+          element={
+            <ProtectedRoute>
+              <MonthlyReportPage />
             </ProtectedRoute>
           } 
         />

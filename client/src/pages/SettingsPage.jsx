@@ -12,7 +12,18 @@ import { usePwa } from '../context/PwaContext';
 
 const SettingsPage = () => {
   const { user, setUser, logout } = useContext(AuthContext);
-  const { isInstallable, isStandalone, isIOS, installApp } = usePwa();
+  const { 
+    isInstallable, 
+    isStandalone, 
+    isIOS, 
+    installApp,
+    pushPermission,
+    isPushSubscribed,
+    isPushLoading,
+    subscribeToPushNotifications,
+    unsubscribeFromPushNotifications,
+    sendTestPush
+  } = usePwa();
   const [showIOSModal, setShowIOSModal] = useState(false);
 
   // Forms states
@@ -568,6 +579,69 @@ const SettingsPage = () => {
                     />
                     <div className="w-9 h-5 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[2px] after:bg-muted peer-checked:after:bg-white after:border-border after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
                   </label>
+                </div>
+
+                <hr className="border-border/20" />
+
+                {/* PWA Web Push Subscription */}
+                <div className="flex flex-col space-y-3 pt-2">
+                  <div className="flex justify-between items-center gap-4">
+                    <div>
+                      <span className="text-xs text-primary font-bold">Notifications Push sur cet appareil</span>
+                      <p className="text-[9px] text-muted font-normal mt-0.5">
+                        {pushPermission === 'unsupported' 
+                          ? "Non supporté par ce navigateur."
+                          : pushPermission === 'denied'
+                          ? "Bloqué par les réglages de votre navigateur."
+                          : isPushSubscribed
+                          ? "Abonné aux notifications sur cet appareil."
+                          : "Recevez les alertes en tâche de fond."}
+                      </p>
+                    </div>
+                    {pushPermission !== 'unsupported' && pushPermission !== 'denied' && (
+                      <button
+                        type="button"
+                        disabled={isPushLoading}
+                        onClick={async () => {
+                          try {
+                            if (isPushSubscribed) {
+                              await unsubscribeFromPushNotifications();
+                              toast.success('Désabonné avec succès');
+                            } else {
+                              await subscribeToPushNotifications();
+                              toast.success('Abonné avec succès !');
+                            }
+                          } catch (err) {
+                            toast.error(err.message || 'Échec de la configuration');
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shrink-0 active:scale-95 ${
+                          isPushSubscribed
+                            ? 'bg-danger/10 border border-danger/25 text-danger'
+                            : 'bg-accent text-white shadow-sm'
+                        }`}
+                      >
+                        {isPushLoading ? 'Chargement...' : isPushSubscribed ? 'Désactiver' : 'Activer'}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {isPushSubscribed && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await sendTestPush();
+                          toast.success('Test envoyé ! Vérifiez vos notifications.');
+                        } catch (err) {
+                          toast.error('Échec de l\'envoi du test');
+                        }
+                      }}
+                      className="w-full bg-surface border border-border/30 hover:bg-border/10 text-muted hover:text-primary py-2 rounded-xl text-[10px] font-bold active:scale-98 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Bell size={10} /> Tester la notification push
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

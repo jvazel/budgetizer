@@ -1,0 +1,322 @@
+import React, { useState, useEffect, useContext } from 'react';
+import AppShell from '../components/layout/AppShell';
+import { AuthContext } from '../context/AuthContext';
+import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
+import { useMonthlyReport } from '../hooks/useMonthlyReport';
+import { motion } from 'framer-motion';
+import { 
+  Sparkles, 
+  TrendingUp, 
+  TrendingDown, 
+  Award, 
+  AlertTriangle, 
+  Info, 
+  ChevronDown, 
+  CalendarDays,
+  CheckCircle,
+  HelpCircle
+} from 'lucide-react';
+
+const monthLabels = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+];
+
+const MonthlyReportPage = () => {
+  const { user } = useContext(AuthContext);
+  const currentYear = new Date().getFullYear();
+  const currentMonthIdx = new Date().getMonth();
+
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(currentMonthIdx);
+
+  // Fetch summaries for the selected year to know which months have data
+  const { summaries, availableYears, loading: summariesLoading } = useMonthlySummaries(selectedYear);
+
+  // Construct monthKey (format: YYYY-MM)
+  const monthKey = `${selectedYear}-${String(selectedMonthIdx + 1).padStart(2, '0')}`;
+  
+  // Fetch monthly report
+  const { report, loading: reportLoading, error, refreshReport } = useMonthlyReport(monthKey);
+
+  // Adjust month selection if summaries change
+  useEffect(() => {
+    if (summaries && summaries.length > 0) {
+      // If currently selected month is not in summaries, default to the latest available month
+      const monthExists = summaries.some(s => s.monthIndex === selectedMonthIdx);
+      if (!monthExists) {
+        setSelectedMonthIdx(summaries[0].monthIndex);
+      }
+    }
+  }, [summaries, selectedMonthIdx]);
+
+  const formatCurrency = (amount) => {
+    try {
+      const code = user?.currency?.code || 'EUR';
+      return new Intl.NumberFormat('fr-FR', { 
+        style: 'currency', 
+        currency: code 
+      }).format(amount || 0);
+    } catch (e) {
+      return `${amount || 0} €`;
+    }
+  };
+
+  const getParagraphs = (text) => {
+    if (!text || typeof text !== 'string') return ['', '', ''];
+    try {
+      const parts = text.split('\n\n');
+      return [parts[0] || '', parts[1] || '', parts[2] || ''];
+    } catch (e) {
+      return ['', '', ''];
+    }
+  };
+
+  const [p1, p2, p3] = getParagraphs(report?.reportText);
+
+  // Clean Markdown formatting for presentation (simple replacements)
+  const formatText = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    try {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '$1') // remove bold formatting for raw styling, we wrap keys differently
+        .replace(/\*(.*?)\*/g, '$1');
+    } catch (e) {
+      return text;
+    }
+  };
+
+  // Helper to highlight numbers in text
+  const renderFormattedParagraph = (text) => {
+    if (!text || typeof text !== 'string') return null;
+    try {
+      // Regexp to match currency amounts (ex: "1 250,00 €" or "500 €") or percentages (ex: "23,2%")
+      const numberRegex = /(\d+[\s\d]*[,\.]?\d*\s*€|-?\d+[,\.]?\d*%\s*)/g;
+      const parts = text.split(numberRegex);
+
+      return (
+        <p className="text-xs leading-relaxed text-secondary font-medium">
+          {parts.map((part, index) => {
+            if (part && typeof part === 'string' && part.match(numberRegex)) {
+              return (
+                <span key={index} className="font-extrabold text-primary font-mono bg-surface p-0.5 px-1.5 rounded-md border border-border/10">
+                  {part}
+                </span>
+              );
+            }
+            return part;
+          })}
+        </p>
+      );
+    } catch (e) {
+      return <p className="text-xs leading-relaxed text-secondary font-medium">{text}</p>;
+    }
+  };
+
+  return (
+    <AppShell title="Rapport Mensuel" backTo="/">
+      <div className="space-y-6 pb-24">
+        
+        {/* Month & Year Selectors Card */}
+        <div className="bg-surface-2 p-4 rounded-[28px] border border-border/40 space-y-3">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[10px] text-muted font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+              <CalendarDays size={12} /> Période d'analyse
+            </span>
+            {report?.isProvisional && (
+              <span className="text-[8px] font-extrabold bg-warning/20 text-warning px-1.5 py-0.5 rounded-md border border-warning/20">
+                Provisoire
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Year selector */}
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(Number(e.target.value));
+                }}
+                className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary appearance-none focus:outline-none focus:border-accent"
+              >
+                {Array.isArray(availableYears) && availableYears.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+            </div>
+
+            {/* Month selector */}
+            <div className="relative">
+              <select
+                value={selectedMonthIdx}
+                onChange={(e) => {
+                  setSelectedMonthIdx(Number(e.target.value));
+                }}
+                className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary appearance-none focus:outline-none focus:border-accent"
+              >
+                {monthLabels.map((label, idx) => {
+                  // Only allow selecting months that are present in the summaries or current/past months
+                  const isFuture = selectedYear === currentYear && idx > currentMonthIdx;
+                  return (
+                    <option key={idx} value={idx} disabled={isFuture}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Global Loading Spinner */}
+        {reportLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3">
+            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-secondary font-bold">Analyse en cours...</p>
+          </div>
+        ) : error ? (
+          /* Error State Card */
+          <div className="text-center py-8 bg-danger/10 border border-danger/20 rounded-[28px] p-6 space-y-3">
+            <AlertTriangle className="text-danger mx-auto" size={32} />
+            <div>
+              <p className="text-danger text-sm font-bold">Erreur de chargement</p>
+              <p className="text-xs text-secondary mt-1">
+                {typeof error === 'string' ? error : (error?.message || 'Erreur lors de la génération du rapport.')}
+              </p>
+            </div>
+            <button 
+              onClick={refreshReport}
+              className="px-4 py-2 bg-surface rounded-xl border border-border/40 text-xs font-bold text-primary hover:bg-border/20"
+            >
+              Réessayer
+            </button>
+          </div>
+        ) : !report ? (
+          <div className="text-center py-12 bg-surface-2 rounded-[28px] border border-dashed p-6">
+            <Info className="text-muted mx-auto mb-2" size={32} />
+            <p className="text-secondary text-xs">Aucune donnée disponible pour générer le rapport.</p>
+          </div>
+        ) : (!report.financialStats || (report.financialStats.income === 0 && report.financialStats.expenses === 0)) ? (
+          <div className="bg-surface-2 p-6 rounded-[28px] border border-border/40 text-center space-y-4 shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mx-auto">
+              <Info size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-primary">Données insuffisantes</h3>
+              <p className="text-xs text-secondary leading-relaxed max-w-xs mx-auto">
+                Il n'y a pas assez de transactions (revenus ou dépenses) enregistrées en {monthLabels[selectedMonthIdx]} {selectedYear} pour générer le diagnostic proactif.
+              </p>
+            </div>
+            <div className="pt-2">
+              <p className="text-[10px] text-muted font-medium">
+                Ajoute des transactions pour débloquer ton analyse mensuelle automatique !
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* Main Content Report container */
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            {/* Financial Stats grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Income card */}
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Revenus</span>
+                <span className="text-sm font-extrabold text-accent font-mono block mt-1.5">
+                  {formatCurrency(report.financialStats?.income || 0)}
+                </span>
+              </div>
+
+              {/* Expenses card */}
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Dépenses</span>
+                <span className="text-sm font-extrabold text-danger font-mono block mt-1.5">
+                  -{formatCurrency(report.financialStats?.expenses || 0)}
+                </span>
+              </div>
+
+              {/* Net Savings card */}
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Épargne Nette</span>
+                <span className={`text-sm font-extrabold font-mono block mt-1.5 ${
+                  (report.financialStats?.net || 0) >= 0 ? 'text-accent' : 'text-danger'
+                }`}>
+                  {(report.financialStats?.net || 0) >= 0 ? '+' : ''}
+                  {formatCurrency(report.financialStats?.net || 0)}
+                </span>
+              </div>
+
+              {/* Savings Rate card */}
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Taux d'Épargne</span>
+                <span className="text-sm font-extrabold text-primary font-mono block mt-1.5">
+                  {(report.financialStats?.savingsRate || 0).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Paragraph 1: Global Bilan Card */}
+            <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-accent/15 border border-accent/20 flex items-center justify-center text-accent">
+                  <TrendingUp size={16} />
+                </div>
+                <h3 className="text-xs font-extrabold text-primary uppercase tracking-wider">
+                  Bilan Financier Global
+                </h3>
+              </div>
+              <div className="border-t border-border/20 pt-3">
+                {renderFormattedParagraph(formatText(p1))}
+              </div>
+            </div>
+
+            {/* Paragraph 2: Les Victoires Card */}
+            <div className="bg-gradient-to-br from-emerald-500/5 to-transparent bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center text-accent">
+                  <Award size={16} />
+                </div>
+                <h3 className="text-xs font-extrabold text-accent uppercase tracking-wider">
+                  Les Victoires & Réussites
+                </h3>
+              </div>
+              <div className="border-t border-border/20 pt-3">
+                {p2 ? renderFormattedParagraph(formatText(p2)) : (
+                  <p className="text-xs text-muted">Aucune victoire spécifique détectée pour ce mois.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Paragraph 3: Points de vigilance Card */}
+            <div className="bg-gradient-to-br from-danger/5 to-transparent bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-danger/15 border border-danger/25 flex items-center justify-center text-danger">
+                  <AlertTriangle size={16} />
+                </div>
+                <h3 className="text-xs font-extrabold text-danger uppercase tracking-wider">
+                  Points de vigilance
+                </h3>
+              </div>
+              <div className="border-t border-border/20 pt-3">
+                {p3 ? renderFormattedParagraph(formatText(p3)) : (
+                  <p className="text-xs text-muted">Aucune alerte ni anomalie financière signalée pour ce mois.</p>
+                )}
+              </div>
+            </div>
+
+          </motion.div>
+        )}
+
+      </div>
+    </AppShell>
+  );
+};
+
+export default MonthlyReportPage;

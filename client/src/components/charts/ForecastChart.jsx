@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAccounts } from '../../hooks/useAccounts';
 import { ComposedChart, Bar, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { AlertCircle, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { AlertCircle, TrendingUp, TrendingDown, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BottomSheet from '../ui/BottomSheet';
 
 const ForecastChart = () => {
   const [method, setMethod] = useState('regression'); // regression, weighted, mobile, mean
@@ -12,6 +13,12 @@ const ForecastChart = () => {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ historicalData: [], forecast: [], trend: 'stable' });
+
+  // Drill-down states
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [detailTransactions, setDetailTransactions] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { accounts } = useAccounts();
 
@@ -34,6 +41,46 @@ const ForecastChart = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+  };
+
+  const formatMonthLabel = (monthStr) => {
+    if (!monthStr) return '';
+    const [year, month] = monthStr.split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  };
+
+  const handleChartClick = async (clickedData) => {
+    const payload = clickedData?.activePayload?.[0]?.payload || clickedData;
+    if (!payload || !payload.month) return;
+
+    setSelectedMonth(payload);
+    setIsSheetOpen(true);
+    setDetailTransactions([]);
+    setDetailLoading(true);
+
+    try {
+      const [year, monthNum] = payload.month.split('-').map(Number);
+      const start = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
+      const end = new Date(year, monthNum, 0).toISOString().split('T')[0];
+      const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
+
+      if (payload.isForecast) {
+        // Fetch future/projected transactions
+        const res = await api.get(`/charts/future?startDate=${start}&endDate=${end}${accountParam}`);
+        setDetailTransactions(res.data.futureTransactions || []);
+      } else {
+        // Fetch actual transactions from history
+        const res = await api.get(`/transactions?startDate=${start}&endDate=${end}${accountParam}&limit=1000`);
+        const list = res.data.transactions || res.data || [];
+        setDetailTransactions(list);
+      }
+    } catch (err) {
+      toast.error('Impossible de charger le détail de ce mois.');
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   // Build combined dataset for ComposedChart: historical + forecast
@@ -177,7 +224,7 @@ const ForecastChart = () => {
       <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
         <div>
           <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase">Graphique des Prévisions</h3>
-          <p className="text-[10px] text-muted">Flux réels passés et projections futures (zone verte claire = incertitude).</p>
+          <p className="text-[10px] text-muted">Flux réels passés et projections futures. Touchez un point ou une barre pour voir les transactions du mois.</p>
         </div>
 
         <div className="w-full h-56 flex items-center justify-center">
@@ -185,7 +232,7 @@ const ForecastChart = () => {
             <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={combinedData}>
+              <ComposedChart data={combinedData} onClick={handleChartClick}>
                 <defs>
                   <linearGradient id="colorConf" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
@@ -227,8 +274,8 @@ const ForecastChart = () => {
                 />
 
                 {/* History bars (actual values) */}
-                <Bar dataKey="income" name="income" fill="#10b981" fillOpacity={0.15} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expenses" name="expenses" fill="#ef4444" fillOpacity={0.15} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" name="income" fill="#10b981" fillOpacity={0.15} radius={[4, 4, 0, 0]} className="cursor-pointer" />
+                <Bar dataKey="expenses" name="expenses" fill="#ef4444" fillOpacity={0.15} radius={[4, 4, 0, 0]} className="cursor-pointer" />
 
                 {/* Solid Line (actual history balance) */}
                 <Line 
@@ -236,8 +283,9 @@ const ForecastChart = () => {
                   dataKey="balance" 
                   stroke="#10b981" 
                   strokeWidth={2} 
-                  dot={false}
+                  dot={true}
                   name="balance" 
+                  className="cursor-pointer"
                 />
 
                 {/* Dotted Line (projected forecast balance) */}
@@ -247,8 +295,9 @@ const ForecastChart = () => {
                   stroke="#10b981" 
                   strokeDasharray="4 4" 
                   strokeWidth={2} 
-                  dot={false}
+                  dot={true}
                   name="projBalance" 
+                  className="cursor-pointer"
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -292,6 +341,75 @@ const ForecastChart = () => {
       <p className="text-[10px] text-muted text-center leading-relaxed max-w-xs mx-auto">
         ⚠️ Ces prévisions sont des estimations statistiques basées sur vos flux passés. Elles ne constituent en aucun cas une garantie ou une promesse de revenus futurs.
       </p>
+
+      {/* Bottom Sheet for month details drill-down */}
+      <BottomSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}>
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <div>
+              <h3 className="text-sm font-extrabold text-primary">
+                Détail : {selectedMonth ? formatMonthLabel(selectedMonth.month) : ''}
+                {selectedMonth?.isForecast ? ' (Prévisions)' : ' (Historique)'}
+              </h3>
+              <p className="text-[10px] text-muted mt-0.5">
+                {selectedMonth?.isForecast 
+                  ? `Solde projeté : ${formatCurrency(selectedMonth.projBalance)}`
+                  : `Épargne réelle : ${formatCurrency(selectedMonth.balance)}`}
+              </p>
+            </div>
+            <button 
+              onClick={() => setIsSheetOpen(false)} 
+              className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors"
+            >
+              <X size={18} className="text-secondary" />
+            </button>
+          </div>
+
+          {/* Transactions listing */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-extrabold uppercase text-muted tracking-wider px-1">
+              {selectedMonth?.isForecast ? 'Échéances & Transactions Prévues' : 'Transactions Réelles du Mois'}
+            </h4>
+            
+            <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar py-1">
+              {detailLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+                </div>
+              ) : detailTransactions.length === 0 ? (
+                <p className="text-center text-xs text-muted py-8">Aucune transaction enregistrée ou planifiée.</p>
+              ) : (
+                detailTransactions.map((tx, idx) => (
+                  <div key={tx._id || idx} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-primary truncate">
+                        {tx.description || tx.note || 'Sans description'}
+                      </p>
+                      <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
+                        <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        <span className="opacity-80">•</span>
+                        <span className="truncate max-w-[120px]">{tx.categoryId?.name || 'Virement/Transfert'}</span>
+                        {tx.source === 'scheduled' && (
+                          <span className="bg-accent/10 text-accent text-[8px] font-extrabold px-1.5 py-0.5 rounded-md font-sans">Récurrent</span>
+                        )}
+                        {tx.source === 'pending' && (
+                          <span className="bg-warning/10 text-warning text-[8px] font-extrabold px-1.5 py-0.5 rounded-md font-sans">En attente</span>
+                        )}
+                      </p>
+                    </div>
+                    <span className={`font-mono text-xs font-black shrink-0 ${
+                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
+                    }`}>
+                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
 
     </div>
   );

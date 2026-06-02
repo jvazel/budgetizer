@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
 import { useBudgets } from '../hooks/useBudgets';
+import { useSavingsGoals } from '../hooks/useSavingsGoals';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import AppShell from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
@@ -120,6 +121,7 @@ const Home = () => {
   const today = new Date();
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const { budgets = [], loading: budgetsLoading } = useBudgets(currentMonthStr);
+  const { savingsGoals = [], loading: savingsLoading } = useSavingsGoals();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSommaireMenuOpen, setIsSommaireMenuOpen] = useState(false);
@@ -128,6 +130,7 @@ const Home = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountsMenuOpen, setIsAccountsMenuOpen] = useState(false);
   const [isLast7DaysMenuOpen, setIsLast7DaysMenuOpen] = useState(false);
+  const [isSavingsMenuOpen, setIsSavingsMenuOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [chartDuration, setChartDuration] = useState('3M');
 
@@ -560,6 +563,85 @@ const Home = () => {
         )}
       </div>
 
+      {/* Objectifs d'épargne Section */}
+      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
+        <div className="flex justify-center items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary text-center">Objectifs d'épargne</h3>
+          <div className="absolute right-0">
+            <MoreVertical 
+              onClick={() => setIsSavingsMenuOpen(true)} 
+              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+              size={18} 
+              id="savings-more-btn"
+            />
+          </div>
+        </div>
+        
+        {savingsLoading && savingsGoals.length === 0 ? (
+          <div className="space-y-3">
+            <div className="h-[80px] bg-surface-2/50 rounded-2xl animate-pulse animate-duration-1000" />
+          </div>
+        ) : savingsGoals.length === 0 ? (
+          <div className="text-center py-8 bg-surface rounded-[28px] border border-dashed border-border/40">
+            <p className="text-muted text-xs mb-3">Aucun objectif d'épargne défini.</p>
+            <button onClick={() => navigate('/savings')} className="text-accent text-xs font-bold hover:underline">
+              Créer mon premier objectif
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Show top 3 goals */}
+            {savingsGoals.slice(0, 3).map(goal => {
+              const percentage = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
+              const roundedPct = Math.round(percentage);
+              const cappedPct = Math.min(percentage, 100);
+              
+              return (
+                <div 
+                  key={goal._id} 
+                  onClick={() => navigate('/savings')}
+                  className="bg-surface p-4 rounded-2xl border border-border/30 hover:border-border/60 transition-all cursor-pointer shadow-sm relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-xl shrink-0">{goal.icon || '🎯'}</span>
+                      <span className="text-sm font-bold text-primary truncate">{goal.name}</span>
+                    </div>
+                    <span className="font-mono text-xs font-extrabold text-accent">
+                      {roundedPct}%
+                    </span>
+                  </div>
+                  
+                  <div className="h-2 w-full bg-surface-2 border border-border/20 rounded-lg overflow-hidden mb-2">
+                    <div 
+                      className="h-full rounded-lg transition-all duration-500"
+                      style={{ 
+                        width: `${cappedPct}%`, 
+                        backgroundColor: goal.color || 'var(--accent)' 
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-[10px] text-secondary font-bold">
+                    <span>{formatCurrency(goal.currentAmount, user?.currency?.code)}</span>
+                    <span className="text-muted">cible : {formatCurrency(goal.targetAmount, user?.currency?.code)}</span>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {savingsGoals.length > 3 && (
+              <button 
+                onClick={() => navigate('/savings')}
+                className="w-full text-center text-xs font-bold text-accent py-2 hover:underline"
+              >
+                Voir les {savingsGoals.length - 3} autres objectifs
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       <AccountFormSheet 
         isOpen={isFormOpen} 
         onClose={() => setIsFormOpen(false)} 
@@ -752,6 +834,35 @@ const Home = () => {
               <div className="flex-1">
                 <span>Afficher l'histogramme personnalisé</span>
                 <p className="text-xs text-muted font-normal mt-0.5">Analyser vos recettes et dépenses sur une période choisie</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet 
+        isOpen={isSavingsMenuOpen} 
+        onClose={() => setIsSavingsMenuOpen(false)}
+      >
+        <div className="space-y-6">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-md font-bold text-primary">Options des Objectifs</h2>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setIsSavingsMenuOpen(false);
+                navigate('/savings');
+              }}
+              className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-accent bg-accent/10">
+                <Target size={20} />
+              </div>
+              <div className="flex-1">
+                <span>Voir les objectifs d'épargne</span>
+                <p className="text-xs text-muted font-normal mt-0.5">Consulter, modifier ou ajouter des objectifs d'épargne</p>
               </div>
             </button>
           </div>

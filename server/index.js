@@ -19,9 +19,13 @@ import userRoutes from './routes/userRoutes.js';
 import savedFilterRoutes from './routes/savedFilterRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
 import savingsGoalRoutes from './routes/savingsGoalRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import monthlyReportRoutes from './routes/monthlyReportRoutes.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
+import { initWebPush } from './utils/pushNotification.js';
 
 dotenv.config({ override: true });
+initWebPush();
 
 // Global Error Handlers (Uncaught Exceptions & Unhandled Rejections)
 process.on('uncaughtException', (err) => {
@@ -128,6 +132,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/saved-filters', savedFilterRoutes);
 app.use('/api/insights', insightRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/monthly-reports', monthlyReportRoutes);
 
 // Error Handler to log and format error responses
 app.use((err, req, res, next) => {

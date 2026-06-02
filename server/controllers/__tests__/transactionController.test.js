@@ -125,6 +125,28 @@ vi.mock('../../models/ScheduledTransaction.js', () => ({
   }
 }));
 
+vi.mock('../../models/User.js', () => ({
+  default: {
+    findById: vi.fn().mockResolvedValue({
+      preferences: {
+        enableLowBalanceAlerts: true,
+        lowBalanceThreshold: 100,
+        enableBudgetAlerts: true
+      }
+    })
+  }
+}));
+
+vi.mock('../../models/Budget.js', () => ({
+  default: {
+    find: vi.fn().mockResolvedValue([])
+  }
+}));
+
+vi.mock('../../utils/pushNotification.js', () => ({
+  sendPushNotification: vi.fn().mockResolvedValue(true)
+}));
+
 describe('Transaction Controller', () => {
   let req, res;
 

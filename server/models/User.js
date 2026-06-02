@@ -33,6 +33,16 @@ const userSchema = new mongoose.Schema({
     enableLowBalanceAlerts: { type: Boolean, default: true },
     enableAiInsightsAlerts: { type: Boolean, default: true }
   },
+  pushSubscriptions: [
+    {
+      endpoint: { type: String, required: true },
+      keys: {
+        p256dh: { type: String, required: true },
+        auth: { type: String, required: true }
+      },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   resetPasswordToken: {
     type: String,
     default: null
