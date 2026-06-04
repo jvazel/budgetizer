@@ -29,6 +29,12 @@ Depuis la page **Paramètres**, l'utilisateur peut personnaliser :
 - **Le Premier jour de la semaine** : Lundi (valeur par défaut) ou Dimanche.
 - **Le Seuil d'anomalie** : Seuil de sensibilité (par défaut +30%) pour la détection de dépenses anormales dans l'onglet Conseils. Cette préférence est sauvegardée de manière persistante sur son profil.
 
+### 2.3 Connexion Biométrique (Passkeys / WebAuthn)
+Afin de concilier une sécurité maximale et une expérience utilisateur fluide, Budgetizer intègre le support des clés d'accès (Passkeys) basées sur la biométrie (Touch ID, Face ID, Windows Hello, etc.) :
+- **Invite proactive (Option A)** : Immédiatement après une première connexion réussie par mot de passe, si le navigateur de l'utilisateur est compatible et qu'aucune clé n'a encore été créée sur son appareil, une invite (Modal) lui propose d'activer la connexion biométrique. S'il accepte, l'appareil est enregistré sous un nom détecté automatiquement (ex: *"PC Windows (Chrome)"*).
+- **Connexion en un clic** : Sur l'écran de connexion, si la biométrie est disponible, un bouton "Se connecter avec la biométrie" permet de s'authentifier instantanément sans saisir d'e-mail ni de mot de passe.
+- **Gestion des appareils** : Depuis l'onglet Paramètres, l'utilisateur peut à tout moment enregistrer de nouveaux appareils manuellement ou révoquer/supprimer l'accès de périphériques enregistrés.
+
 ---
 
 ## 3. Le Tableau de Bord (Dashboard)

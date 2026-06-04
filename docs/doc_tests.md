@@ -141,6 +141,17 @@ Cette page affiche le diagnostic financier automatique généré par l'algorithm
 
 ---
 
+### 1.12 Invite Biométrique (`Login.jsx`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Pas d'invite si configuré** | `webauthn_registered_on_device="true"` dans localStorage | Clic sur "Se connecter" avec succès | Redirection directe vers la page d'accueil sans afficher la modale biométrique. |
+| **Invite proactive affichée** | Pas de clés WebAuthn enregistrées dans localStorage, navigateur compatible | Clic sur "Se connecter" avec succès | La modale `"Activer la connexion biométrique ? ⚡"` s'affiche à l'écran. |
+| **Refus temporaire** | Clic sur `"Plus tard"` dans la modale d'invite | Écriture locale et redirection | La clé `'webauthn_dismissed_device'` est passée à `'true'` dans le localStorage, et l'utilisateur est redirigé vers l'accueil. |
+| **Acceptation et succès** | Clic sur `"Activer"`, validation locale réussie | Appel API de génération/validation et redirection | Jeton WebAuthn enregistré sur le serveur, flag `'webauthn_registered_on_device'` à `'true'` dans le localStorage, et redirection à l'accueil avec toast de succès. |
+
+---
+
 ## 2. Tests Backend (Serveur)
 
 Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.
@@ -309,6 +320,19 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | **Détection d'une transaction hors norme** | Transaction de 350 € dans "Transports" avec une moyenne historique de 40 € (ratio 8.8) | Calcul du ratio et inclusion dans `unusualTransactions` | La réponse HTTP 201 contient `unusualTransactions` avec 1 élément. Le `reportText` mentionne la transaction. Le tableau contient les bons champs (`description`, `amount`, `categoryName`, `ratio`). |
 | **Tri des outliers multiples** | Deux transactions inhabituelles : 350 € (ratio 8.8) et 160 € (ratio 4.0) dans deux catégories différentes | Collecte et tri de toutes les transactions hors normes | La réponse contient `unusualTransactions` avec 2 éléments triés par ratio décroissant : "Billet de train" (8.8x) en premier, "Dîner gastronomique" (4.0x) en second. |
 | **Objectif complet détecté** | Objectif d'épargne avec `currentAmount >= targetAmount` atteint durant le mois | Calcul de la progression sur la période M | Le `reportText` contient le nom de l'objectif et le mot `"victoire"`. |
+
+---
+
+### 2.16 Contrôleur WebAuthn (`webauthnController.js`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Options d'enregistrement** | ID utilisateur valide | Génère les options WebAuthn et enregistre le défi (challenge) en base de données | Options renvoyées au client (HTTP 200) avec le challenge généré. Défi enregistré dans la collection `WebauthnChallenge`. |
+| **Enregistrement valide** | Réponse d'attestation WebAuthn valide et défi en BDD | Validation de l'attestation, suppression du défi temporaire et insertion de la clé publique | Clé publique stockée dans `UserCredential`. Réponse HTTP 201 `{ verified: true }`. |
+| **Enregistrement expiré** | Défi expiré ou inexistant en base de données | Tentative de validation | Rejet de la demande avec code HTTP 400. |
+| **Options de connexion** | Adresse e-mail (facultative) | Génération du défi d'authentification et enregistrement en base de données | Défi retourné au client. Si l'e-mail est fourni, la liste `allowCredentials` est filtrée avec les clés enregistrées de l'utilisateur. |
+| **Connexion biométrique réussie** | Assertion WebAuthn valide et défi en BDD | Validation de la signature de l'assertion, mise à jour du compteur anti-clonage et génération du token JWT | Réponse HTTP 200 contenant les informations de profil et le jeton de session JWT. |
+| **Suppression d'appareil** | ID d'appareil valide, utilisateur propriétaire | Suppression physique de l'enregistrement | Clé publique supprimée de `UserCredential`. Réponse HTTP 200. |
 
 ---
 

@@ -139,6 +139,22 @@ Stocke le rapport diagnostique généré pour les mois passés finalisés.
 - `createdAt` (Date, default: Date.now).
 - *Index unique* : `{ userId, monthKey }` pour garantir l'unicité du rapport par utilisateur et par mois.
 
+### 2.9 Modèle `UserCredential` (Clés d'accès Biométriques)
+Stocke les clés publiques d'authentification asymétriques des périphériques utilisateurs.
+- `userId` (ObjectId -> User, requis) : Référence de l'utilisateur.
+- `credentialID` (String, requis, unique) : Identifiant unique de la clé générée par le navigateur.
+- `publicKey` (Buffer, requis) : Clé publique brute stockée.
+- `counter` : (Number, requis, default: 0) : Compteur de signatures (anti-relecture/clonage).
+- `deviceName` : (String, default: 'Appareil de confiance') : Libellé défini ou détecté.
+- `transports` : ([String]) : Canaux de communication autorisés (ex: `['internal', 'hybrid']`).
+- `createdAt` : (Date, default: Date.now).
+
+### 2.10 Modèle `WebauthnChallenge` (Défis Temporaires)
+Défis aléatoires cryptographiques à usage unique munis d'un index TTL d'auto-destruction.
+- `challenge` (String, requis) : Défi aléatoire brut.
+- `userId` (ObjectId -> User, default: null) : Optionnel (rempli uniquement lors de l'enregistrement).
+- `createdAt` (Date, default: Date.now, expires: 300) : Expiration automatique de l'enregistrement en BDD après 5 minutes (300 secondes).
+
 ---
 
 ## 3. Spécification de l'API REST
@@ -205,6 +221,14 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
   - `financialStats` : Agrégats financiers du mois.
   - `unusualTransactions` : Tableau des dépenses inhabituelles détectées (triées par ratio décroissant).
   - `isProvisional` : `true` pour le mois en cours, `false` pour un mois finalise.
+
+### 3.11 Connexion Biométrique (`/api/webauthn`)
+- `GET /register/options` (protégé) : Génère et stocke un défi d'enregistrement, retourne les options de création.
+- `POST /register/verify` (protégé) : Reçoit l'attestation du navigateur, valide la signature cryptographique, et stocke la clé publique dans `UserCredential`.
+- `POST /login/options` : Génère et stocke un défi d'authentification (filtré par utilisateur si l'e-mail est fourni).
+- `POST /login/verify` : Valide la signature de l'assertion avec la clé stockée, incrémente le compteur, et génère un jeton de session JWT.
+- `GET /credentials` (protégé) : Liste l'ensemble des clés d'accès configurées par l'utilisateur.
+- `DELETE /credentials/:id` (protégé) : Supprime une clé d'accès (révoque l'accès biométrique d'un appareil).
 
 ---
 
