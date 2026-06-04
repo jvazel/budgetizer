@@ -164,7 +164,12 @@ const SettingsPage = () => {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      if (err && (err.name === 'InvalidStateError' || err.message?.includes('already exists'))) {
+      const isAlreadyRegistered = err && (
+        err.name === 'InvalidStateError' || 
+        err.message?.toLowerCase().includes('already exists') ||
+        err.message?.toLowerCase().includes('credential manager')
+      );
+      if (isAlreadyRegistered) {
         localStorage.setItem('webauthn_registered_on_device', 'true');
         localStorage.removeItem('webauthn_dismissed_device');
         toast.success("Cet appareil est déjà configuré pour la connexion biométrique !");

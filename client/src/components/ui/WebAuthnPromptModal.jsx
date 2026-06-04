@@ -136,8 +136,14 @@ const WebAuthnPromptModal = () => {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      if (err && (err.name === 'InvalidStateError' || err.message?.includes('already exists'))) {
-        // The credential manager has this key already registered and matches excludeCredentials.
+      const isAlreadyRegistered = err && (
+        err.name === 'InvalidStateError' || 
+        err.message?.toLowerCase().includes('already exists') ||
+        err.message?.toLowerCase().includes('credential manager')
+      );
+      if (isAlreadyRegistered) {
+        // The credential manager has this key already registered and matches excludeCredentials,
+        // or there is a Play Services wrapper error indicating it is already registered.
         // Therefore, the device is already biometrically registered and fully functional.
         localStorage.setItem('webauthn_registered_on_device', 'true');
         localStorage.removeItem('webauthn_dismissed_device');
