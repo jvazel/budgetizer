@@ -223,9 +223,9 @@ export const verifyAuthentication = async (req, res) => {
         expectedChallenge: challenge,
         expectedOrigin: getOrigin(),
         expectedRPID: getRpID(),
-        authenticator: {
-          credentialID: credential.credentialID,
-          credentialPublicKey: credential.publicKey,
+        credential: {
+          id: credential.credentialID,
+          publicKey: credential.publicKey,
           counter: credential.counter,
           transports: credential.transports,
         },
