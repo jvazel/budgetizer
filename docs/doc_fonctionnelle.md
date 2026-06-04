@@ -190,3 +190,22 @@ La fonctionnalité **Conseils** (IA & Insights) offre des analyses intelligentes
   $$\text{Économie annuelle} = (\text{Dépense moyenne mensuelle} \times \text{Pourcentage de baisse}) \times 12$$
 - **Audit d'abonnements** : Si la catégorie analysée contient des transactions issues d'abonnements (actifs ou historiques), une notification d'aide spécifique s'affiche ("Pensez à auditer vos abonnements dans cette catégorie pour économiser facilement").
 
+---
+
+## 13. Objectifs d'Épargne 💰
+
+Budgetizer permet à l'utilisateur de définir des projets d'épargne à court, moyen ou long terme (ex : Fonds de secours, Apport immobilier, Achat voiture).
+
+### 13.1 Configuration de l'Objectif
+Lors de la création ou modification d'un objectif, l'utilisateur indique :
+- **Nom du projet** (ex: "Fonds de secours").
+- **Montant cible** (€).
+- **Date d'échéance** (l'application calcule le montant mensuel restant à économiser).
+- **Couleur et Icône** d'identification.
+- **Compte de destination associé (optionnel)** : L'utilisateur peut lier l'objectif d'épargne à un compte physique (ex : Livret A). Si aucun compte n'est lié, l'objectif fonctionne de manière virtuelle (des transactions d'épargne virtuelles sont comptabilisées sans déplacer réellement l'argent entre les comptes).
+
+### 13.2 Versements et Retraits d'Épargne
+Depuis la page **Objectifs d'épargne**, l'utilisateur peut ajouter ou retirer des fonds :
+- **Si l'objectif possède un compte lié** : Le versement d'épargne est traité comme un **virement (transfert)** réel du compte débité (ex: Compte Courant) vers le compte d'épargne de l'objectif (ex: Livret A). Les soldes des comptes physiques et la progression de l'objectif sont mis à jour simultanément de manière cohérente. Le retrait d'épargne effectue le transfert inverse.
+- **Si aucun compte n'est lié** : Le versement est enregistré comme une dépense virtuelle (pour bloquer le montant sur le compte courant débité) et le retrait comme un revenu virtuel.
+

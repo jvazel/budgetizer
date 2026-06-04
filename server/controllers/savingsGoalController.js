@@ -7,7 +7,9 @@ import { validationResult } from 'express-validator';
 // @access  Private
 export const getSavingsGoals = async (req, res) => {
   try {
-    const goals = await SavingsGoal.find({ userId: req.user.id }).sort({ targetDate: 1 });
+    const goals = await SavingsGoal.find({ userId: req.user.id })
+      .populate('accountId', 'name type balance color icon')
+      .sort({ targetDate: 1 });
     res.json(goals);
   } catch (error) {
     console.error(error.message);
@@ -25,7 +27,7 @@ export const createSavingsGoal = async (req, res) => {
   }
 
   try {
-    const { name, targetAmount, targetDate, icon, color } = req.body;
+    const { name, targetAmount, targetDate, icon, color, accountId } = req.body;
 
     const newGoal = new SavingsGoal({
       userId: req.user.id,
@@ -34,11 +36,13 @@ export const createSavingsGoal = async (req, res) => {
       targetDate,
       icon,
       color,
+      accountId: accountId || null,
       currentAmount: 0 // Initialize at 0
     });
 
     const goal = await newGoal.save();
-    res.status(201).json(goal);
+    const populatedGoal = await SavingsGoal.findById(goal._id).populate('accountId', 'name type balance color icon');
+    res.status(201).json(populatedGoal);
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -64,7 +68,7 @@ export const updateSavingsGoal = async (req, res) => {
       req.params.id,
       { $set: req.body },
       { new: true }
-    );
+    ).populate('accountId', 'name type balance color icon');
 
     res.json(goal);
   } catch (error) {

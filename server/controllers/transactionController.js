@@ -124,7 +124,7 @@ const updateAccountBalance = async (accountId, amount, type, session = null) => 
 };
 
 // Utility function to update savings goal progress
-const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false, session = null) => {
+const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false, session = null, transaction = null) => {
   const goal = await SavingsGoal.findById(goalId).session(session);
   if (!goal) return;
 
@@ -133,6 +133,20 @@ const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false,
     delta = isRevert ? -amount : amount;
   } else if (type === 'income') {
     delta = isRevert ? amount : -amount;
+  } else if (type === 'transfer') {
+    if (goal.accountId && transaction) {
+      const goalAccountIdStr = goal.accountId.toString();
+      const isToGoalAccount = transaction.toAccountId?.toString() === goalAccountIdStr;
+      const isFromGoalAccount = transaction.accountId?.toString() === goalAccountIdStr;
+
+      if (isToGoalAccount) {
+        // Transfer to goal account = deposit
+        delta = isRevert ? -amount : amount;
+      } else if (isFromGoalAccount) {
+        // Transfer from goal account = withdrawal
+        delta = isRevert ? amount : -amount;
+      }
+    }
   }
 
   goal.currentAmount += delta;
@@ -245,10 +259,13 @@ export const createTransaction = async (req, res) => {
       if (!toAccountId) throw new Error('toAccountId is required for transfer');
       await updateAccountBalance(accountId, amount, 'expense', session); // From account
       await updateAccountBalance(toAccountId, amount, 'income', session); // To account
+      if (savingsGoalId) {
+        await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session, transaction);
+      }
     } else {
       await updateAccountBalance(accountId, amount, type, session);
       if (savingsGoalId) {
-        await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session);
+        await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session, transaction);
       }
     }
 
@@ -293,12 +310,15 @@ export const deleteTransaction = async (req, res) => {
       if (transaction.toAccountId) {
         await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session);
       }
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+      }
     } else {
       // If it was an expense, adding it back means 'income' type operation on balance
       const revertType = transaction.type === 'expense' ? 'income' : 'expense';
       await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
       if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session);
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
       }
     }
 
@@ -663,11 +683,14 @@ export const updateTransaction = async (req, res) => {
       if (transaction.toAccountId) {
         await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session); // Revert income
       }
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+      }
     } else {
       const revertType = transaction.type === 'expense' ? 'income' : 'expense';
       await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
       if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session);
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
       }
     }
 
@@ -691,10 +714,13 @@ export const updateTransaction = async (req, res) => {
       if (!transaction.toAccountId) throw new Error('Un compte destinataire est requis pour un transfert.');
       await updateAccountBalance(transaction.accountId, transaction.amount, 'expense', session);
       await updateAccountBalance(transaction.toAccountId, transaction.amount, 'income', session);
+      if (transaction.savingsGoalId) {
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
+      }
     } else {
       await updateAccountBalance(transaction.accountId, transaction.amount, transaction.type, session);
       if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session);
+        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
       }
     }
 

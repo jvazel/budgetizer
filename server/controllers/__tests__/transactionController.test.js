@@ -257,6 +257,43 @@ describe('Transaction Controller', () => {
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
     });
+
+    it('should support transfer for savings goal and update goal balance', async () => {
+      req.body = {
+        accountId: 'acc_1',
+        toAccountId: 'acc_savings',
+        type: 'transfer',
+        amount: 150,
+        description: 'Épargne Projet',
+        date: '2026-06-01',
+        savingsGoalId: 'goal_1'
+      };
+
+      const mockAccSource = { _id: 'acc_1', balance: 500, save: vi.fn() };
+      const mockAccDest = { _id: 'acc_savings', balance: 1000, save: vi.fn() };
+      const mockGoal = { _id: 'goal_1', accountId: 'acc_savings', currentAmount: 200, save: vi.fn() };
+
+      Account.findById.mockImplementation((id) => {
+        if (id === 'acc_1') return mockChain(mockAccSource);
+        if (id === 'acc_savings') return mockChain(mockAccDest);
+        return mockChain(null);
+      });
+      SavingsGoal.findById.mockReturnValue(mockChain(mockGoal));
+
+      const populatedTx = { _id: 'tx_new_id', ...req.body };
+      Transaction.findById.mockReturnValue(mockChain(populatedTx));
+
+      await createTransaction(req, res);
+
+      expect(mockAccSource.balance).toBe(350); // 500 - 150
+      expect(mockAccDest.balance).toBe(1150); // 1000 + 150
+      expect(mockGoal.currentAmount).toBe(350); // 200 + 150
+      expect(mockGoal.save).toHaveBeenCalled();
+      expect(mockAccSource.save).toHaveBeenCalled();
+      expect(mockAccDest.save).toHaveBeenCalled();
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
   });
 
   describe('deleteTransaction', () => {

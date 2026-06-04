@@ -35,6 +35,11 @@ const savingsGoalSchema = new mongoose.Schema({
     type: String,
     default: "#3b82f6"
   },
+  accountId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

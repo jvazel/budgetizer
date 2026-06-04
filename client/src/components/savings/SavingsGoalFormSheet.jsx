@@ -4,6 +4,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
+import { useAccounts } from '../../hooks/useAccounts';
 
 const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null }) => {
   const [name, setName] = useState('');
@@ -11,6 +12,9 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
   const [targetDate, setTargetDate] = useState('');
   const [icon, setIcon] = useState('💰');
   const [color, setColor] = useState('#3b82f6');
+  const [accountId, setAccountId] = useState('');
+
+  const { accounts } = useAccounts();
 
   useEffect(() => {
     if (initialData) {
@@ -24,6 +28,7 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
       setTargetDate(`${year}-${month}-${day}`);
       setIcon(initialData.icon || '💰');
       setColor(initialData.color || '#3b82f6');
+      setAccountId(initialData.accountId?._id || initialData.accountId || '');
     } else {
       setName('');
       setTargetAmount('');
@@ -36,6 +41,7 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
       setTargetDate(`${year}-${month}-${day}`);
       setIcon('💰');
       setColor('#3b82f6');
+      setAccountId('');
     }
   }, [initialData, isOpen]);
 
@@ -51,7 +57,8 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
         targetAmount: parseFloat(targetAmount),
         targetDate: new Date(targetDate).toISOString(),
         icon,
-        color
+        color,
+        accountId: accountId || null
       });
       toast.success(initialData ? 'Objectif d\'épargne modifié' : 'Objectif d\'épargne créé');
       onClose();
@@ -132,6 +139,25 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
               required
             />
           </div>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="mb-2 text-sm text-secondary font-medium">Compte de destination associé (optionnel)</label>
+          <select 
+            value={accountId}
+            onChange={e => setAccountId(e.target.value)}
+            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent"
+          >
+            <option value="">-- Aucun compte associé --</option>
+            {accounts.map(acc => (
+              <option key={acc._id} value={acc._id}>
+                {acc.name} ({new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(acc.balance)})
+              </option>
+            ))}
+          </select>
+          <span className="text-[10px] text-muted mt-1 leading-normal">
+            Si associé, les versements d'épargne vers cet objectif transféreront automatiquement l'argent du compte débité vers ce compte d'épargne.
+          </span>
         </div>
 
         <div className="flex flex-col">

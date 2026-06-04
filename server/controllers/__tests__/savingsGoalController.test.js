@@ -77,6 +77,7 @@ describe('Savings Goal Controller', () => {
       ];
 
       SavingsGoal.find.mockReturnValue({
+        populate: vi.fn().mockReturnThis(),
         sort: vi.fn().mockResolvedValue(mockGoals)
       });
 
@@ -96,6 +97,19 @@ describe('Savings Goal Controller', () => {
         icon: '🏠',
         color: 'green'
       };
+
+      SavingsGoal.findById.mockReturnValue({
+        populate: vi.fn().mockResolvedValue({
+          _id: 'g3',
+          userId: 'user_123',
+          name: 'Appartement',
+          targetAmount: 50000,
+          targetDate: '2029-12-31',
+          icon: '🏠',
+          color: 'green',
+          currentAmount: 0
+        })
+      });
 
       await createSavingsGoal(req, res);
 
@@ -128,7 +142,9 @@ describe('Savings Goal Controller', () => {
       };
 
       SavingsGoal.findById.mockResolvedValue(mockExistingGoal);
-      SavingsGoal.findByIdAndUpdate.mockResolvedValue(mockUpdatedGoal);
+      SavingsGoal.findByIdAndUpdate.mockReturnValue({
+        populate: vi.fn().mockResolvedValue(mockUpdatedGoal)
+      });
 
       await updateSavingsGoal(req, res);
 

@@ -116,6 +116,19 @@ Contient le patron de récurrence pour générer automatiquement les transaction
 - `alertAt` (Number, default: 80) : Pourcentage de dépense déclenchant une alerte.
 - `color` (String, default: '#8b5cf6').
 
+### 2.7 Modèle `SavingsGoal` (Objectifs d'épargne)
+Représente un projet ou un fonds d'épargne défini par l'utilisateur.
+- `userId` (ObjectId -> User, requis) : Propriétaire de l'objectif.
+- `name` (String, requis) : Nom du projet d'épargne.
+- `targetAmount` (Number, requis, min: 0.01) : Montant cible à économiser.
+- `currentAmount` (Number, default: 0) : Montant actuellement mis de côté.
+- `startDate` (Date, default: Date.now) : Date de début du projet.
+- `targetDate` (Date, requis) : Date d'échéance de l'objectif.
+- `icon` (String, default: "💰") : Icône associée.
+- `color` (String, default: "#3b82f6") : Couleur associée.
+- `accountId` (ObjectId -> Account, default: null) : Compte bancaire de destination associé (ex : Livret A) pour enregistrer les versements et retraits sous forme de transferts physiques réels.
+- `createdAt` (Date, default: Date.now).
+
 ---
 
 ## 3. Spécification de l'API REST
@@ -169,6 +182,12 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 
 ### 3.8 IA & Insights (`/api/insights`)
 - `GET /` : Retourne la liste des anomalies détectées (selon le seuil spécifié) et le top 3 des suggestions de réductions budgétaires avec alertes d'abonnements.
+
+### 3.9 Objectifs d'épargne (`/api/savings-goals`)
+- `GET /` : Liste tous les objectifs d'épargne de l'utilisateur.
+- `POST /` : Crée un nouvel objectif d'épargne (optionnellement lié à un `accountId`).
+- `PUT /:id` : Modifie un objectif d'épargne.
+- `DELETE /:id` : Supprime un objectif d'épargne (et détache cet objectif des transactions associées).
 
 ---
 
