@@ -50,9 +50,12 @@ vi.mock('@simplewebauthn/server', () => ({
   verifyRegistrationResponse: vi.fn().mockResolvedValue({
     verified: true,
     registrationInfo: {
-      credentialID: 'mockCredId',
-      credentialPublicKey: Buffer.from('mockPublicKey'),
-      counter: 0
+      credential: {
+        id: Buffer.from('mockCredId', 'base64url'),
+        publicKey: Buffer.from('mockPublicKey'),
+        counter: 0,
+        transports: []
+      }
     }
   }),
   generateAuthenticationOptions: vi.fn().mockResolvedValue({
@@ -141,7 +144,7 @@ describe('WebAuthn Controller', () => {
       expect(WebauthnChallenge.deleteOne).toHaveBeenCalledWith({ _id: 'chal123' });
       expect(UserCredential.create).toHaveBeenCalledWith(expect.objectContaining({
         userId: 'user123',
-        credentialID: 'mockCredId',
+        credentialID: 'mockCredIQ',
         deviceName: 'MacBook'
       }));
       expect(res.status).toHaveBeenCalledWith(201);

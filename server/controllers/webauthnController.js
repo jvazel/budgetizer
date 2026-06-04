@@ -102,11 +102,12 @@ export const verifyRegistration = async (req, res) => {
     }
 
     const { verified, registrationInfo } = verification;
-    if (!verified || !registrationInfo) {
+    if (!verified || !registrationInfo || !registrationInfo.credential) {
       return res.status(400).json({ message: 'Authentification biométrique invalide.' });
     }
 
-    const { credentialID, credentialPublicKey, counter } = registrationInfo;
+    const { id, publicKey, counter, transports } = registrationInfo.credential;
+    const credentialID = Buffer.from(id).toString('base64url');
 
     // Check if credential ID already exists in DB
     const existingCred = await UserCredential.findOne({ credentialID });
@@ -118,10 +119,10 @@ export const verifyRegistration = async (req, res) => {
     await UserCredential.create({
       userId,
       credentialID,
-      publicKey: Buffer.from(credentialPublicKey),
+      publicKey: Buffer.from(publicKey),
       counter,
       deviceName: body.deviceName || req.body.deviceName || 'Appareil de confiance',
-      transports: body.response.transports || []
+      transports: transports || body.response.transports || []
     });
 
     res.status(201).json({ verified: true });
