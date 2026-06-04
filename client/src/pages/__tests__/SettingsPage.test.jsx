@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SettingsPage from '../SettingsPage';
@@ -178,4 +178,186 @@ describe('SettingsPage Component', () => {
       expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('définitivement supprimés'));
     });
   });
+
+  describe('WebAuthn / Passkey Management', () => {
+    beforeEach(() => {
+      // Enable WebAuthn support
+      window.PublicKeyCredential = vi.fn();
+      Object.defineProperty(navigator, 'credentials', {
+        value: {
+          get: vi.fn(),
+          create: vi.fn()
+        },
+        configurable: true,
+        writable: true
+      });
+      localStorage.clear();
+    });
+
+    afterEach(() => {
+      delete window.PublicKeyCredential;
+      Object.defineProperty(navigator, 'credentials', {
+        value: undefined,
+        configurable: true,
+        writable: true
+      });
+      localStorage.clear();
+    });
+
+    it('renders biometric configuration section and loaded credentials', async () => {
+      const mockCredentials = [
+        { _id: 'cred_1', deviceName: 'MacBook Pro', createdAt: '2026-06-01T12:00:00.000Z' },
+        { _id: 'cred_2', deviceName: 'Pixel 8', createdAt: '2026-06-02T12:00:00.000Z' }
+      ];
+      api.get.mockImplementation((url) => {
+        if (url === '/webauthn/credentials') {
+          return Promise.resolve({ data: mockCredentials });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      renderComponent();
+
+      // Verify header
+      expect(screen.getByText('Connexion Biométrique (Passkeys)')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Nom de l'appareil (ex: Mon MacBook)")).toBeInTheDocument();
+
+      // Wait for credentials to load and verify rendering
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith('/webauthn/credentials');
+        expect(screen.getByText('MacBook Pro')).toBeInTheDocument();
+        expect(screen.getByText('Pixel 8')).toBeInTheDocument();
+      });
+    });
+
+    it('allows registering a new biometric credential', async () => {
+      let credentialsList = [];
+      const mockRegOptions = {
+        challenge: 'mockChallengeBase64url',
+        user: { id: 'mockUserId' },
+        excludeCredentials: []
+      };
+
+      api.get.mockImplementation((url) => {
+        if (url === '/webauthn/credentials') {
+          return Promise.resolve({ data: credentialsList });
+        }
+        if (url === '/webauthn/register/options') {
+          return Promise.resolve({ data: mockRegOptions });
+        }
+        return Promise.resolve({ data: {} });
+      });
+      
+      const mockCredential = {
+        id: 'newCredId',
+        rawId: new Uint8Array([1, 2, 3]).buffer,
+        type: 'public-key',
+        response: {
+          clientDataJSON: new Uint8Array([4, 5, 6]).buffer,
+          attestationObject: new Uint8Array([7, 8, 9]).buffer,
+          getTransports: vi.fn().mockReturnValue(['internal'])
+        }
+      };
+      navigator.credentials.create.mockResolvedValueOnce(mockCredential);
+      
+      api.post.mockImplementation((url, data) => {
+        if (url === '/webauthn/register/verify') {
+          credentialsList = [{ _id: 'cred_new', deviceName: 'Mon iPhone', createdAt: new Date().toISOString() }];
+          return Promise.resolve({ data: { verified: true } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      renderComponent();
+
+      const nameInput = screen.getByPlaceholderText("Nom de l'appareil (ex: Mon MacBook)");
+      fireEvent.change(nameInput, { target: { value: 'Mon iPhone' } });
+
+      const submitBtn = screen.getByRole('button', { name: /^Enregistrer$/ });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith('/webauthn/register/options');
+        expect(navigator.credentials.create).toHaveBeenCalled();
+        expect(api.post).toHaveBeenCalledWith('/webauthn/register/verify', expect.objectContaining({
+          deviceName: 'Mon iPhone'
+        }));
+        expect(toast.success).toHaveBeenCalledWith('Périphérique biométrique enregistré avec succès !');
+        expect(localStorage.getItem('webauthn_registered_on_device')).toBe('true');
+      });
+    });
+
+    it('should handle already exists / InvalidStateError during registration', async () => {
+      const mockRegOptions = {
+        challenge: 'mockChallengeBase64url',
+        user: { id: 'mockUserId' },
+        excludeCredentials: []
+      };
+
+      api.get.mockImplementation((url) => {
+        if (url === '/webauthn/credentials') {
+          return Promise.resolve({ data: [] });
+        }
+        if (url === '/webauthn/register/options') {
+          return Promise.resolve({ data: mockRegOptions });
+        }
+        return Promise.resolve({ data: {} });
+      });
+      
+      // Simulate InvalidStateError (passkey already exists on user's device/account)
+      const error = new Error('The credential manager has already registered a credential for this...');
+      error.name = 'InvalidStateError';
+      navigator.credentials.create.mockRejectedValueOnce(error);
+
+      renderComponent();
+
+      const nameInput = screen.getByPlaceholderText("Nom de l'appareil (ex: Mon MacBook)");
+      fireEvent.change(nameInput, { target: { value: 'Mon iPhone' } });
+
+      const submitBtn = screen.getByRole('button', { name: /^Enregistrer$/ });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('déjà configuré'));
+        expect(localStorage.getItem('webauthn_registered_on_device')).toBe('true');
+      });
+    });
+
+    it('allows deleting an existing credential and resets localStorage flags', async () => {
+      let mockCredentials = [
+        { _id: 'cred_delete_1', deviceName: 'MacBook Pro', createdAt: '2026-06-01T12:00:00.000Z' }
+      ];
+      api.get.mockImplementation((url) => {
+        if (url === '/webauthn/credentials') {
+          return Promise.resolve({ data: mockCredentials });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      localStorage.setItem('webauthn_registered_on_device', 'true');
+      localStorage.setItem('webauthn_dismissed_device', 'true');
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('MacBook Pro')).toBeInTheDocument();
+      });
+
+      api.delete.mockImplementationOnce(() => {
+        mockCredentials = [];
+        return Promise.resolve({ data: { message: 'Success' } });
+      });
+
+      const deleteBtn = screen.getByTitle('Supprimer cet appareil');
+      fireEvent.click(deleteBtn);
+
+      await waitFor(() => {
+        expect(api.delete).toHaveBeenCalledWith('/webauthn/credentials/cred_delete_1');
+        expect(toast.success).toHaveBeenCalledWith('Périphérique supprimé');
+        expect(localStorage.getItem('webauthn_registered_on_device')).toBeNull();
+        expect(localStorage.getItem('webauthn_dismissed_device')).toBeNull();
+      });
+    });
+  });
 });
+

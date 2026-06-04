@@ -10,6 +10,7 @@ import {
 import User from '../../models/User.js';
 import UserCredential from '../../models/UserCredential.js';
 import WebauthnChallenge from '../../models/WebauthnChallenge.js';
+import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 
 // Mock Models
 vi.mock('../../models/User.js', () => ({
@@ -216,6 +217,77 @@ describe('WebAuthn Controller', () => {
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         _id: 'user123',
         token: expect.any(String)
+      }));
+    });
+
+    it('should find credential by rawId as a fallback if body.id is not found', async () => {
+      req.body = {
+        challenge: 'mockAuthChallengeBase64',
+        body: { id: 'unknownId', rawId: 'mockRawId' }
+      };
+
+      WebauthnChallenge.findOne.mockResolvedValue({ _id: 'chal456', challenge: 'mockAuthChallengeBase64' });
+      
+      const mockCred = {
+        credentialID: 'mockRawId',
+        publicKey: Buffer.from('mockPublicKey'),
+        counter: 0,
+        userId: { _id: 'user123', name: 'Test User', email: 'user@test.com', preferences: {}, currency: {} },
+        save: vi.fn().mockResolvedValue(true)
+      };
+
+      UserCredential.findOne.mockImplementation((query) => {
+        if (query.credentialID === 'unknownId') {
+          return { populate: vi.fn().mockResolvedValue(null) };
+        }
+        if (query.credentialID === 'mockRawId') {
+          return { populate: vi.fn().mockResolvedValue(mockCred) };
+        }
+        return { populate: vi.fn().mockResolvedValue(null) };
+      });
+
+      process.env.JWT_SECRET = 'testsecret';
+
+      await verifyAuthentication(req, res);
+
+      expect(UserCredential.findOne).toHaveBeenCalledWith({ credentialID: 'unknownId' });
+      expect(UserCredential.findOne).toHaveBeenCalledWith({ credentialID: 'mockRawId' });
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        _id: 'user123'
+      }));
+    });
+
+    it('should call verifyAuthenticationResponse with credential containing id, publicKey, counter, and transports', async () => {
+      req.body = {
+        challenge: 'mockAuthChallengeBase64',
+        body: { id: 'mockCredId' }
+      };
+
+      WebauthnChallenge.findOne.mockResolvedValue({ _id: 'chal456', challenge: 'mockAuthChallengeBase64' });
+      const mockCred = {
+        credentialID: 'mockCredId',
+        publicKey: Buffer.from('mockPublicKey'),
+        counter: 5,
+        transports: ['internal'],
+        userId: { _id: 'user123', name: 'Test User', email: 'user@test.com', preferences: {}, currency: {} },
+        save: vi.fn().mockResolvedValue(true)
+      };
+      
+      UserCredential.findOne.mockReturnValue({
+        populate: vi.fn().mockResolvedValue(mockCred)
+      });
+
+      process.env.JWT_SECRET = 'testsecret';
+
+      await verifyAuthentication(req, res);
+
+      expect(verifyAuthenticationResponse).toHaveBeenCalledWith(expect.objectContaining({
+        credential: {
+          id: 'mockCredId',
+          publicKey: mockCred.publicKey,
+          counter: 5,
+          transports: ['internal']
+        }
       }));
     });
   });

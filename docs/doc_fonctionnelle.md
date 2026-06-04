@@ -31,9 +31,13 @@ Depuis la page **Paramètres**, l'utilisateur peut personnaliser :
 
 ### 2.3 Connexion Biométrique (Passkeys / WebAuthn)
 Afin de concilier une sécurité maximale et une expérience utilisateur fluide, Budgetizer intègre le support des clés d'accès (Passkeys) basées sur la biométrie (Touch ID, Face ID, Windows Hello, etc.) :
-- **Invite proactive (Option A)** : Immédiatement après une première connexion réussie par mot de passe, si le navigateur de l'utilisateur est compatible et qu'aucune clé n'a encore été créée sur son appareil, une invite (Modal) lui propose d'activer la connexion biométrique. S'il accepte, l'appareil est enregistré sous un nom détecté automatiquement (ex: *"PC Windows (Chrome)"*).
+- **Invite proactive** : Immédiatement après une première connexion réussie par mot de passe, si le navigateur de l'utilisateur est compatible et qu'aucune clé n'a encore été créée sur son appareil, une invite (Modal) lui propose d'activer la connexion biométrique. S'il accepte, l'appareil est enregistré sous un nom détecté automatiquement (ex: *"Android (Chrome)"*).
 - **Connexion en un clic** : Sur l'écran de connexion, si la biométrie est disponible, un bouton "Se connecter avec la biométrie" permet de s'authentifier instantanément sans saisir d'e-mail ni de mot de passe.
-- **Gestion des appareils** : Depuis l'onglet Paramètres, l'utilisateur peut à tout moment enregistrer de nouveaux appareils manuellement ou révoquer/supprimer l'accès de périphériques enregistrés.
+- **Gestion des appareils** : Depuis la page Paramètres, l'utilisateur peut enregistrer manuellement d'autres périphériques de confiance ou révoquer l'accès de clés enregistrées.
+- **Résolution des anomalies & PWA** : Pour simplifier l'utilisation sur mobile (où vider les cookies ou modifier le gestionnaire d'identifiants natif est difficile) :
+  - **Bouton de Réinitialisation** : Un bouton *"Problème avec la biométrie ? Réinitialiser l'appareil"* est affiché sous l'écran de connexion. Il permet de forcer le nettoyage du statut de l'appareil pour relancer proprement l'inscription.
+  - **Gestion de clé existante** : Si l'appareil contient déjà le Passkey requis mais qu'il y a un désalignement, le système le détecte et confirme directement que la biométrie est bien configurée sans perturber le parcours utilisateur.
+  - **Autonettoyage automatique** : En cas d'incohérence (ex: appareil supprimé de la base de données), l'état local du périphérique est nettoyé automatiquement au premier échec pour permettre le ré-enregistrement.
 
 ---
 

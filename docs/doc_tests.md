@@ -80,6 +80,11 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 | **Bascule de visibilité** | Clic sur l'icône de visibilité du mot de passe | Commutation du type de champ de mot de passe (`password` <-> `text`) | L'état visuel change correctement. |
 | **Soumission valide** | Saisie d'email et mot de passe corrects, clic sur "Se connecter" | Appel de la fonction de connexion du contexte d'authentification | Appel réussi, toast de succès affiché, redirection vers la page d'accueil. |
 | **Erreur de connexion** | Saisie d'identifiants incorrects, clic sur "Se connecter" | Appel de connexion renvoyant un rejet API | Toast d'erreur affiché avec le message de retour. |
+| **Reset biométrique manuel** | Clic sur le bouton de réinitialisation biométrique | Suppression des clés `webauthn_registered_on_device` et `webauthn_dismissed_device` de `localStorage` | Toast de succès affiché, local storage purgé. |
+| **Rendu bouton reset** | Support de WebAuthn actif (`window.PublicKeyCredential` et `navigator.credentials` définis) | Rendu de la page de connexion | Le bouton *"Problème avec la biométrie ?"* est affiché dans le DOM. |
+| **Pas de bouton reset si non supporté** | WebAuthn non supporté par le navigateur | Rendu de la page de connexion | Le bouton de réinitialisation et de connexion biométrique ne s'affichent pas dans le DOM. |
+| **Flux de connexion biométrique** | Clic sur "Se connecter avec la biométrie" | Demande du défi, appel à `navigator.credentials.get`, puis validation sur le serveur | Connexion réussie, stockage du token JWT et redirection. |
+| **Nettoyage automatique si inconnu** | Erreur de périphérique inconnu (code HTTP 400) renvoyée par le serveur | Échec de connexion biométrique | Les clés `webauthn_registered_on_device` et `webauthn_dismissed_device` sont supprimées du `localStorage` pour éviter les blocages. |
 
 ---
 
@@ -102,6 +107,10 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 | **Changement de thème** | Clic sur le bouton de thème "Clair" | Envoi des modifications de préférences à l'API | Préférences mises à jour et enregistrées en base. |
 | **Réinitialisation des données** | Clic sur "Effacer toutes les données", puis confirmation | Appel de l'API d'effacement et rechargement de page | Données effacées, toast de succès et rechargement de la fenêtre. |
 | **Suppression de compte** | Clic sur "Supprimer définitivement mon compte", puis confirmation | Appel de l'API de suppression et déconnexion | Compte supprimé avec succès, utilisateur déconnecté. |
+| **Rendu de la liste des clés** | Liste des clés existantes renvoyée par `/webauthn/credentials` | Rendu de la section biométrique | Affiche les noms des appareils enregistrés et leurs dates de création. |
+| **Enregistrement de clé** | Saisie d'un nom d'appareil et clic sur "Enregistrer" | Appel à `/webauthn/register/options`, appel de `navigator.credentials.create`, puis validation sur le serveur | Enregistrement réussi, clé `webauthn_registered_on_device` stockée à `true`. |
+| **Gestion doublon d'appareil** | Exception `InvalidStateError` (ou mention de Credential Manager) lors de `create` | Tentative d'enregistrement d'une clé existante | L'appareil est considéré configuré, le localStorage est mis à jour (`webauthn_registered_on_device` à `true`) et un toast informatif de succès s'affiche. |
+| **Suppression d'appareil** | Clic sur l'icône de suppression d'une clé | Appel de l'API DELETE `/webauthn/credentials/:id` | Clé supprimée, flags du `localStorage` réinitialisés. |
 
 ---
 
@@ -333,6 +342,8 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | **Options de connexion** | Adresse e-mail (facultative) | Génération du défi d'authentification et enregistrement en base de données | Défi retourné au client. Si l'e-mail est fourni, la liste `allowCredentials` est filtrée avec les clés enregistrées de l'utilisateur. |
 | **Connexion biométrique réussie** | Assertion WebAuthn valide et défi en BDD | Validation de la signature de l'assertion, mise à jour du compteur anti-clonage et génération du token JWT | Réponse HTTP 200 contenant les informations de profil et le jeton de session JWT. |
 | **Suppression d'appareil** | ID d'appareil valide, utilisateur propriétaire | Suppression physique de l'enregistrement | Clé publique supprimée de `UserCredential`. Réponse HTTP 200. |
+| **Recherche par fallback rawId** | ID `body.id` introuvable mais `body.rawId` présent en BDD | Recherche alternative dans la collection `UserCredential` | Authentification validée avec succès via la clé correspondante au `rawId`. |
+| **Format du paramètre credential** | Appel à `verifyAuthenticationResponse` | Passage de l'objet contenant id, publicKey, counter et transports | SimpleWebAuthn v13 valide les paramètres sans erreur de type (évite les bugs liés au `counter` indéfini). |
 
 ---
 

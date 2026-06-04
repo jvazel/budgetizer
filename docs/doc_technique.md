@@ -391,3 +391,26 @@ Les scripts npm sont centralisés pour simplifier le travail des développeurs :
 
 Pour obtenir le détail exhaustif de chaque cas de test (entrées, traitements attendus, assertions), veuillez vous référer à la [Documentation des Tests](file:///c:/Projects/budgetizer/docs/doc_tests.md).
 
+---
+
+## 8. Implémentation Cryptographique WebAuthn & Robustesse PWA
+
+Budgetizer intègre le support natif des clés d'accès (Passkeys) via le protocole standard WebAuthn. Face aux contraintes spécifiques de production et des applications installées sur mobile (PWA), plusieurs mécanismes de robustesse ont été implémentés.
+
+### 8.1 Résolution du Double Encodage (Migration & Fallback)
+Lors du déploiement initial, une double conversion Base64URL causait un désalignement entre les identifiants de clés stockés en base de données et ceux générés par l'appareil utilisateur.
+- **Auto-migration au démarrage** : Le backend exécute un script au démarrage de la base de données (`migrateDoubleEncodedCredentials()` dans [index.js](file:///c:/Projects/budgetizer/server/index.js)) qui identifie les clés doublement encodées, les décode à leur format valide simple, et met à jour la base de données.
+- **Fallback `rawId` à la connexion** : Lors de la phase de validation de connexion dans [webauthnController.js](file:///c:/Projects/budgetizer/server/controllers/webauthnController.js), si le périphérique reste introuvable avec l'identifiant standard `body.id`, le serveur tente une recherche secondaire en utilisant l'identifiant brut `body.rawId` pour assurer une compatibilité totale avec les anciens et nouveaux formats d'encodage.
+
+### 8.2 Alignement de la Signature SimpleWebAuthn v13
+La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`. 
+- **Destructuration de la réponse d'attestation** : Dans `verifyRegistration`, les clés d'authentification et de compteur sont extraites de l'objet `registrationInfo.credential` propre à l'API v13.
+- **Destructuration de l'assertion** : Dans `verifyAuthentication`, les paramètres de vérification attendent un objet nommé `credential` contenant `{ id, publicKey, counter, transports }` au lieu de l'ancien objet obsolète `authenticator`, évitant ainsi le crash de lecture de compteur (`TypeError`).
+- **Encodage d'exclusion** : Lors de l'exclusion des clés existantes dans `getRegistrationOptions`, le serveur fournit l'ID sous forme de chaîne de caractères (`string`) au format Base64URL, ce qui est attendu par les fonctions regex de validation interne de la bibliothèque.
+
+### 8.3 Résolution des Contraintes de PWA Mobile & Android Credential Manager
+Dans un environnement de Progressive Web App (PWA) standalone sur mobile, l'utilisateur n'a pas accès aux outils de développement (DevTools) pour effacer les cookies ou réinitialiser le `localStorage` de l'application, ni à un accès direct aux réglages fins du navigateur pour révoquer ses clés d'accès.
+- **Gestion d'erreur `InvalidStateError` / Credential Manager** : Si l'utilisateur tente de ré-enregistrer un appareil qui détient déjà la clé WebAuthn (par exemple, synchronisée via Google Password Manager ou iCloud Keychain), le navigateur ou le gestionnaire de clés Android peut lever une exception `InvalidStateError` ou une erreur générique `"An error occurred when talking to the credential manager."`. Notre client intercepte de manière robuste ces erreurs et considère l'appareil comme déjà configuré avec succès au lieu de bloquer l'utilisateur.
+- **Bouton d'urgence de réinitialisation locale** : Un lien d'aide *"Problème avec la biométrie ? Réinitialiser l'appareil"* est disponible sur l'écran de connexion dans [Login.jsx](file:///c:/Projects/budgetizer/client/src/pages/Login.jsx). Il permet de purger instantanément les flags `webauthn_registered_on_device` et `webauthn_dismissed_device` du `localStorage` pour forcer une réactivation biométrique propre lors de la prochaine connexion par mot de passe.
+- **Autonettoyage automatique** : En cas d'échec de validation biométrique (ex: périphérique inconnu), le client supprime automatiquement le flag de configuration locale pour inviter à une réinscription.
+- **Sécurisation du support WebAuthn** : La détection de compatibilité biométrique vérifie l'existence de `navigator.credentials` (en plus de `window.PublicKeyCredential`). Cela évite les plantages sur les environnements PWA non sécurisés (comme les accès en HTTP par adresse IP locale) où l'API d'authentification est bloquée par le navigateur.
