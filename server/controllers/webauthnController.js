@@ -197,9 +197,17 @@ export const verifyAuthentication = async (req, res) => {
     await WebauthnChallenge.deleteOne({ _id: dbChallenge._id });
 
     // Look up the credential in DB
-    const credential = await UserCredential.findOne({ credentialID: body.id }).populate('userId');
+    let credential = await UserCredential.findOne({ credentialID: body.id }).populate('userId');
+    if (!credential && body.rawId) {
+      credential = await UserCredential.findOne({ credentialID: body.rawId }).populate('userId');
+    }
+
     if (!credential) {
-      return res.status(400).json({ message: 'Périphérique biométrique inconnu.' });
+      const allCreds = await UserCredential.find({}).select('credentialID');
+      const credList = allCreds.map(c => c.credentialID).join(', ');
+      return res.status(400).json({ 
+        message: `Périphérique biométrique inconnu. (Recherché: ${body.id}, rawId: ${body.rawId}, En DB: [${credList}])` 
+      });
     }
 
     const user = credential.userId;
