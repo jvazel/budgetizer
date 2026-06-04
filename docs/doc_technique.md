@@ -129,6 +129,16 @@ Représente un projet ou un fonds d'épargne défini par l'utilisateur.
 - `accountId` (ObjectId -> Account, default: null) : Compte bancaire de destination associé (ex : Livret A) pour enregistrer les versements et retraits sous forme de transferts physiques réels.
 - `createdAt` (Date, default: Date.now).
 
+### 2.8 Modèle `MonthlyReport` (Rapport Mensuel Mis en Cache)
+Stocke le rapport diagnostique généré pour les mois passés finalisés.
+- `userId` (ObjectId -> User, requis) : Propriétaire du rapport.
+- `monthKey` (String, requis) : Clé du mois au format `YYYY-MM` (ex: `"2026-05"`).
+- `reportText` (String, requis) : Contenu Markdown du diagnostic généré automatiquement.
+- `financialStats` (Object) : Agrégats financiers du mois : `income`, `expenses`, `net`, `savingsRate`.
+- `unusualTransactions` (Array) : Liste des dépenses inhabituelles détectées, triées par ratio décroissant. Chaque élément contient : `transactionId`, `description`, `amount`, `date`, `categoryName`, `ratio`.
+- `createdAt` (Date, default: Date.now).
+- *Index unique* : `{ userId, monthKey }` pour garantir l'unicité du rapport par utilisateur et par mois.
+
 ---
 
 ## 3. Spécification de l'API REST
@@ -188,6 +198,13 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `POST /` : Crée un nouvel objectif d'épargne (optionnellement lié à un `accountId`).
 - `PUT /:id` : Modifie un objectif d'épargne.
 - `DELETE /:id` : Supprime un objectif d'épargne (et détache cet objectif des transactions associées).
+
+### 3.10 Rapport Mensuel Proactif (`/api/monthly-reports`)
+- `GET /:monthKey` : Retourne le diagnostic proactif pour le mois spécifié (format `YYYY-MM`). Si le mois est passé et qu'un rapport est déjà mis en cache, le renvoie directement. Sinon, génère le rapport à la volée. La réponse contient :
+  - `reportText` : Paragraphes d'analyse Markdown.
+  - `financialStats` : Agrégats financiers du mois.
+  - `unusualTransactions` : Tableau des dépenses inhabituelles détectées (triées par ratio décroissant).
+  - `isProvisional` : `true` pour le mois en cours, `false` pour un mois finalise.
 
 ---
 

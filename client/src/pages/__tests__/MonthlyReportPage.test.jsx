@@ -124,4 +124,41 @@ describe('MonthlyReportPage Component - Robustness Tests', () => {
     renderComponent();
     expect(screen.getByText('Données insuffisantes')).toBeInTheDocument();
   });
+
+  it('renders unusual transactions list when present in report data', () => {
+    vi.spyOn(summariesHook, 'useMonthlySummaries').mockReturnValue({
+      summaries: [],
+      availableYears: [2026],
+      loading: false,
+      error: null
+    });
+
+    vi.spyOn(reportHook, 'useMonthlyReport').mockReturnValue({
+      report: {
+        reportText: 'P1\n\nP2\n\nP3',
+        financialStats: { income: 2000, expenses: 1000, net: 1000, savingsRate: 50 },
+        unusualTransactions: [
+          {
+            transactionId: 'unusual_1',
+            description: 'Vols Paris-Tokyo',
+            amount: 850,
+            date: new Date(Date.UTC(2026, 4, 10)),
+            categoryName: 'Voyages',
+            ratio: 4.5
+          }
+        ],
+        isProvisional: false
+      },
+      loading: false,
+      error: null,
+      refreshReport: vi.fn()
+    });
+
+    renderComponent();
+    expect(screen.getByText('Dépenses inhabituelles détectées')).toBeInTheDocument();
+    expect(screen.getByText('Vols Paris-Tokyo')).toBeInTheDocument();
+    expect(screen.getByText('Voyages')).toBeInTheDocument();
+    expect(screen.getByText(/850/)).toBeInTheDocument();
+    expect(screen.getByText('4.5x la moyenne')).toBeInTheDocument();
+  });
 });

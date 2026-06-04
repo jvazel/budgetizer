@@ -311,6 +311,45 @@ const MonthlyReportPage = () => {
               </div>
             </div>
 
+            {/* Dépenses inhabituelles */}
+            {report.unusualTransactions && report.unusualTransactions.length > 0 && (
+              <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-warning/15 border border-warning/25 flex items-center justify-center text-warning">
+                    <AlertTriangle size={16} className="text-warning" />
+                  </div>
+                  <h3 className="text-xs font-extrabold text-primary uppercase tracking-wider">
+                    Dépenses inhabituelles détectées
+                  </h3>
+                </div>
+                <div className="border-t border-border/20 pt-3 space-y-2.5">
+                  {report.unusualTransactions.map((tx, idx) => (
+                    <div key={tx.transactionId || idx} className="flex justify-between items-center bg-surface p-3.5 rounded-2xl border border-border/30 hover:border-border/60 transition-all">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-primary">{tx.description}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted font-bold bg-surface-2 px-2 py-0.5 rounded border border-border/20">
+                            {tx.categoryName}
+                          </span>
+                          <span className="text-[9px] text-muted font-medium">
+                            {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <span className="text-xs font-extrabold text-danger font-mono block">
+                          -{formatCurrency(tx.amount)}
+                        </span>
+                        <span className="text-[9px] font-extrabold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20 inline-block">
+                          {tx.ratio}x la moyenne
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </motion.div>
         )}
 

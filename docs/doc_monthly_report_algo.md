@@ -51,14 +51,16 @@ L'algorithme tente de sélectionner jusqu'à **3 victoires** par ordre de priori
 
 L'algorithme tente de sélectionner jusqu'à **3 points de vigilance** par ordre de priorité :
 
-1.  **Transaction Hors Normes (Outlier)** :
-    Recherche d'une transaction de dépense unitaire inhabituelle dans le mois $M$.
+1.  **Transactions Hors Normes (Outliers)** :
+    Recherche de **toutes** les dépenses unitaires inhabituelles dans le mois $M$, retournées sous forme de liste structurée.
     * *Condition* :
       * Pour chaque transaction $T$ de dépense dans la catégorie $C$, on compare son montant au montant unitaire moyen historique de cette même catégorie :
         $$MoyUnit_C = \text{Moyenne}(T_{Hist, \text{expense, } C})$$
-      * Si $Montant_T \ge 3 \times MoyUnit_C$ et $Montant_T \ge 50\text{ €}$, la transaction est classée comme outlier. La plus déviante (ratio max) est sélectionnée.
+      * Si $Montant_T \ge 3 \times MoyUnit_C$ et $Montant_T \ge 50\text{ €}$, la transaction est classée comme outlier.
+      * **Toutes** les transactions satisfaisant ces conditions sont collectées (plus uniquement la plus déviante), triées par ratio décroissant et renvoyées dans le champ `unusualTransactions` de la réponse API.
+      * La transaction avec le ratio le plus élevé est également utilisée pour générer la phrase d'alerte du Paragraphe 3 (Points de vigilance) du texte Markdown.
 2.  **Dépassement de Budget** :
-    * *Condition* : Une catégorie budgétée où les dépenses réelles du mois $M$ dépassent **100%** de la limite autorisée.
+    * *Condition* : Une catégorie budgetée où les dépenses réelles du mois $M$ dépassent **100%** de la limite autorisée.
 3.  **Hausse catégorielle suspecte** :
     * *Condition* : Dépense totale d'une catégorie en $M$ supérieure de plus de **30%** par rapport à sa moyenne historique glissante (seuil minimal de dépenses moyennes de 10 € pour éliminer le bruit).
 
@@ -84,17 +86,40 @@ L'algorithme injecte les valeurs chiffrées calculées dans les modèles de phra
 > [Introduction Victoire]. [Détail Objectif Complété si trouvé]. [Détail budget maîtrisé OU catégorie en baisse]. [Optionnel: Détail abonnement résilié ou diminué].
 
 ### Paragraphe 3 : Points de vigilance ⚠️
-> [Introduction Vigilance]. [Détail de la transaction hors normes si trouvée]. [Détail dépassement de budget OU hausse catégorielle]. [Optionnel: Détail abonnement souscrit ou augmenté].
+> [Introduction Vigilance]. [Détail de la transaction hors normes la plus déviante si trouvée]. [Détail dépassement de budget OU hausse catégorielle]. [Optionnel: Détail abonnement souscrit ou augmenté].
 
 ---
 
-## 4. Caching et Cycle de Vie des Rapports
+## 4. Structure de la Réponse API
 
-* **Mois passés (finalisés)** : Les rapports des mois entièrement clos sont générés une seule fois et enregistrés en base dans le modèle `MonthlyReport`. Les lectures suivantes sont immédiates.
+En plus du `reportText` en Markdown, la réponse JSON de l'endpoint `GET /api/monthly-reports/:monthKey` contient :
+
+- `financialStats` : `{ income, expenses, net, savingsRate }` — les agrégats financiers du mois.
+- `isProvisional` : `true` si le rapport est pour le mois en cours (non mis en cache), `false` pour un mois passé finalisé.
+- `unusualTransactions` : Tableau ordonné (ratio décroissant) des transactions hors normes détectées. Chaque entrée contient :
+  ```json
+  {
+    "transactionId": "<ObjectId>",
+    "description": "Billet de train",
+    "amount": 350.00,
+    "date": "2026-05-10T00:00:00.000Z",
+    "categoryName": "Transports",
+    "ratio": 8.8
+  }
+  ```
+  Ce champ est vide (`[]`) si aucune transaction inhabituelles n'a été détectée, ou si le rapport est un ancien rapport mis en cache avant l'introduction de cette fonctionnalité.
+
+---
+
+## 5. Caching et Cycle de Vie des Rapports
+
+* **Mois passés (finalisés)** : Les rapports des mois entièrement clos sont générés une seule fois et enregistrés en base dans le modèle `MonthlyReport` (incluant le champ `unusualTransactions`). Les lectures suivantes sont immédiates.
 * **Mois en cours (provisoires)** : Le rapport du mois en cours est calculé à la volée à chaque appel et renvoyé avec l'indicateur `isProvisional: true` sans écriture en base de données. Cela permet de refléter les nouvelles transactions de l'utilisateur en temps réel.
+* **Rétrocompatibilité** : Pour les rapports déjà mis en cache avant l'introduction du champ `unusualTransactions`, la réponse API injecte automatiquement un tableau vide `[]` pour ce champ afin d'éviter tout crash côté client.
 
 ---
 
-## 5. Gestion de l'absence de données (État Vide)
+## 6. Gestion de l'absence de données (État Vide)
 
 Si le mois sélectionné ne comporte aucune transaction enregistrée (c'est-à-dire si les revenus et les dépenses cumulés sont tous deux égaux à 0 €), l'application n'affiche pas de rapport vide ou d'erreurs de rendu. Le frontend bascule automatiquement sur un écran d'état vide professionnel (« Données insuffisantes ») qui indique la situation de manière claire et invite l'utilisateur à saisir ses premières transactions pour débloquer le diagnostic.
+

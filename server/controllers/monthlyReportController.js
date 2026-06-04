@@ -34,7 +34,11 @@ export const getMonthlyReport = async (req, res) => {
     if (isCompletedMonth) {
       const cachedReport = await MonthlyReport.findOne({ userId, monthKey });
       if (cachedReport) {
-        return res.json({ ...cachedReport.toObject(), isProvisional: false });
+        const reportObj = cachedReport.toObject();
+        if (!reportObj.unusualTransactions) {
+          reportObj.unusualTransactions = [];
+        }
+        return res.json({ ...reportObj, isProvisional: false });
       }
     }
 
@@ -205,6 +209,7 @@ export const getMonthlyReport = async (req, res) => {
       categoryTxAverages[catId] = categoryTxSums[catId] / categoryTxCounts[catId];
     });
 
+    const unusualTransactions = [];
     let outlierTx = null;
     let maxOutlierRatio = 0;
 
@@ -216,12 +221,26 @@ export const getMonthlyReport = async (req, res) => {
       if (avg && avg > 0) {
         const ratio = tx.amount / avg;
         // Critère d'outlier: montant >= 3 fois la moyenne unitaire, montant >= 50 €
-        if (ratio >= 3 && tx.amount >= 50 && ratio > maxOutlierRatio) {
-          maxOutlierRatio = ratio;
-          outlierTx = tx;
+        if (ratio >= 3 && tx.amount >= 50) {
+          unusualTransactions.push({
+            transactionId: tx._id,
+            description: tx.description,
+            amount: tx.amount,
+            date: tx.date,
+            categoryName: tx.categoryId.name,
+            ratio: parseFloat(ratio.toFixed(1))
+          });
+
+          if (ratio > maxOutlierRatio) {
+            maxOutlierRatio = ratio;
+            outlierTx = tx;
+          }
         }
       }
     }
+
+    // Sort unusual transactions by ratio descending
+    unusualTransactions.sort((a, b) => b.ratio - a.ratio);
 
     // --- ÉTAPE 6 : BUDGETS & VARIATIONS PAR CATÉGORIE ---
     // Dépenses de M par catégorie
@@ -357,7 +376,8 @@ export const getMonthlyReport = async (req, res) => {
         expenses: parseFloat(expensesM.toFixed(2)),
         net: parseFloat(netM.toFixed(2)),
         savingsRate: parseFloat(savingsRate.toFixed(1))
-      }
+      },
+      unusualTransactions
     };
 
     // Si le mois est terminé, on enregistre (cache) le rapport généré

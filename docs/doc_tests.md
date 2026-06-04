@@ -127,6 +127,20 @@ Ce graphique compare les enveloppes budgétaires définies avec le réel dépens
 
 ---
 
+### 1.11 Page du Rapport Mensuel (`MonthlyReportPage.jsx`)
+Cette page affiche le diagnostic financier automatique généré par l'algorithme proactif mensuel.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **État de chargement** | `loading: true` retourné par le hook `useMonthlyReport` | Rendu du composant en attente | Le spinner et le texte `"Analyse en cours..."` s'affichent. |
+| **État d'erreur** | `error: "Failed to fetch"` retourné par le hook | Rendu de l'état d'erreur | Le titre `"Erreur de chargement"` et le message d'erreur s'affichent. |
+| **Rapport null** | `report: null`, `loading: false` | Rendu de l'état vide | Le message `"Aucune donnée disponible"` s'affiche. |
+| **Données insuffisantes** | `financialStats: { income: 0, expenses: 0 }` | Détection de l'absence de transactions | L'écran `"Données insuffisantes"` et le message d'invitation à saisir des transactions s'affichent. |
+| **Propriété `financialStats` absente** | Rapport sans le champ `financialStats` | Gérance gracieuse de la propriété manquante | L'écran `"Données insuffisantes"` s'affiche sans crash. |
+| **Affichage des dépenses inhabituelles** | Rapport avec `unusualTransactions` contenant un élément | Rendu de la section dédiée | La section `"Dépenses inhabituelles détectées"` est visible. La description, la catégorie, le montant et le badge de ratio (ex: `"4.5x la moyenne"`) de la transaction inhabituelles s'affichent. |
+
+---
+
 ## 2. Tests Backend (Serveur)
 
 Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.
@@ -282,6 +296,19 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
 | **Actions de CRUD** | Requêtes de GET, POST, PUT et DELETE | Gestion complète et vérification systématique de l'autorisation d'accès | Création (HTTP 201), lecture (HTTP 200), modification (HTTP 200) et suppression (HTTP 200) exécutées avec succès. |
+
+---
+
+### 2.15 Contrôleur du Rapport Mensuel (`monthlyReportController.js`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Format invalide** | `monthKey: "invalid-date"` | Validation par regex | Réponse HTTP 400 avec message d'erreur de format. |
+| **Rapport en cache** | `monthKey: "2026-05"` pour un mois passé avec rapport déjà en base | Récupération directe depuis MongoDB via `MonthlyReport.findOne` | La réponse HTTP 200 retourne le rapport caché avec `isProvisional: false`. |
+| **Rapport provisoire** | `monthKey` correspondant au mois en cours | Calcul à la volée sans sauvegarde en base | La réponse HTTP 200 retourne le rapport avec `isProvisional: true` et les bons `financialStats`. `save()` n'est pas appelé. |
+| **Détection d'une transaction hors norme** | Transaction de 350 € dans "Transports" avec une moyenne historique de 40 € (ratio 8.8) | Calcul du ratio et inclusion dans `unusualTransactions` | La réponse HTTP 201 contient `unusualTransactions` avec 1 élément. Le `reportText` mentionne la transaction. Le tableau contient les bons champs (`description`, `amount`, `categoryName`, `ratio`). |
+| **Tri des outliers multiples** | Deux transactions inhabituelles : 350 € (ratio 8.8) et 160 € (ratio 4.0) dans deux catégories différentes | Collecte et tri de toutes les transactions hors normes | La réponse contient `unusualTransactions` avec 2 éléments triés par ratio décroissant : "Billet de train" (8.8x) en premier, "Dîner gastronomique" (4.0x) en second. |
+| **Objectif complet détecté** | Objectif d'épargne avec `currentAmount >= targetAmount` atteint durant le mois | Calcul de la progression sur la période M | Le `reportText` contient le nom de l'objectif et le mot `"victoire"`. |
 
 ---
 

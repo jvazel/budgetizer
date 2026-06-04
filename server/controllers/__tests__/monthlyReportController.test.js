@@ -160,8 +160,14 @@ describe('Monthly Report Controller', () => {
 
       // Mock current month transactions (has a big expense outlier of 350 € in Transports)
       const mockTxs = [
-        { type: 'income', amount: 2000, date: new Date(Date.UTC(2026, 4, 15)) },
         { 
+          _id: 'tx_123',
+          type: 'income', 
+          amount: 2000, 
+          date: new Date(Date.UTC(2026, 4, 15)) 
+        },
+        { 
+          _id: 'tx_456',
           type: 'expense', 
           amount: 350, 
           description: 'Billet de train',
@@ -202,6 +208,84 @@ describe('Monthly Report Controller', () => {
       expect(responseData.reportText).toContain('Billet de train');
       expect(responseData.reportText).toContain('Transports');
       expect(responseData.reportText).toContain('350.00');
+
+      expect(responseData.unusualTransactions).toBeDefined();
+      expect(responseData.unusualTransactions.length).toBe(1);
+      expect(responseData.unusualTransactions[0]).toEqual(expect.objectContaining({
+        transactionId: 'tx_456',
+        description: 'Billet de train',
+        amount: 350,
+        categoryName: 'Transports',
+        ratio: 8.8
+      }));
+    });
+
+    it('should detect multiple outlier transactions and sort them by ratio descending', async () => {
+      req.params.monthKey = '2026-05';
+      MonthlyReport.findOne.mockResolvedValue(null);
+
+      // Mock current month transactions: two outliers (amount >= 50 and ratio >= 3)
+      const mockTxs = [
+        { 
+          _id: 'tx_income',
+          type: 'income', 
+          amount: 2000, 
+          date: new Date(Date.UTC(2026, 4, 15)) 
+        },
+        { 
+          _id: 'tx_train',
+          type: 'expense', 
+          amount: 350, 
+          description: 'Billet de train',
+          date: new Date(Date.UTC(2026, 4, 10)), 
+          categoryId: { _id: 'cat_transports', name: 'Transports' } 
+        },
+        { 
+          _id: 'tx_dinner',
+          type: 'expense', 
+          amount: 160, 
+          description: 'Dîner gastronomique',
+          date: new Date(Date.UTC(2026, 4, 12)), 
+          categoryId: { _id: 'cat_resto', name: 'Restaurant' } 
+        }
+      ];
+
+      // Mock historical transactions reference
+      const mockHistoryTxs = [
+        { type: 'expense', amount: 40, categoryId: 'cat_transports', date: new Date(Date.UTC(2026, 2, 10)) },
+        { type: 'expense', amount: 40, categoryId: 'cat_resto', date: new Date(Date.UTC(2026, 2, 11)) }
+      ];
+
+      Transaction.find.mockImplementation((query) => {
+        if (query.date && query.date.$gte) {
+          const startMonth = new Date(query.date.$gte).getUTCMonth();
+          if (startMonth === 4) {
+            return createMockQuery(mockTxs);
+          } else if (startMonth === 1) {
+            return createMockQuery(mockHistoryTxs);
+          }
+        }
+        return createMockQuery([]);
+      });
+
+      Transaction.findOne.mockResolvedValue(null);
+      SavingsGoal.find.mockResolvedValue([]);
+      ScheduledTransaction.find.mockResolvedValue([]);
+      Budget.find.mockReturnValue(createMockQuery([]));
+
+      await getMonthlyReport(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      const responseData = res.json.mock.calls[0][0];
+
+      expect(responseData.unusualTransactions).toBeDefined();
+      expect(responseData.unusualTransactions.length).toBe(2);
+      
+      // Sorted by ratio descending: ratio 8.8 (Billet de train) then ratio 4.0 (Dîner gastronomique)
+      expect(responseData.unusualTransactions[0].description).toBe('Billet de train');
+      expect(responseData.unusualTransactions[0].ratio).toBe(8.8);
+      expect(responseData.unusualTransactions[1].description).toBe('Dîner gastronomique');
+      expect(responseData.unusualTransactions[1].ratio).toBe(4.0);
     });
 
     it('should detect completed savings goals and highlight them in successes paragraph', async () => {

@@ -209,3 +209,23 @@ Depuis la page **Objectifs d'épargne**, l'utilisateur peut ajouter ou retirer d
 - **Si l'objectif possède un compte lié** : Le versement d'épargne est traité comme un **virement (transfert)** réel du compte débité (ex: Compte Courant) vers le compte d'épargne de l'objectif (ex: Livret A). Les soldes des comptes physiques et la progression de l'objectif sont mis à jour simultanément de manière cohérente. Le retrait d'épargne effectue le transfert inverse.
 - **Si aucun compte n'est lié** : Le versement est enregistré comme une dépense virtuelle (pour bloquer le montant sur le compte courant débité) et le retrait comme un revenu virtuel.
 
+
+## 14. Rapport Mensuel Proactif 📊
+
+La page **Rapport Mensuel** génère automatiquement un diagnostic financier personnalisé pour chaque mois. Le rapport est entièrement déterministe et ne nécessite aucun service d'IA externe.
+
+### 14.1 Sélection de la Période
+L'utilisateur peut naviguer entre les mois et les années via deux menus déroulants. Les mois futurs sont désactivés. Un badge « Provisoire » s'affiche pour le mois en cours dont le rapport n'est pas encore finalisé.
+
+### 14.2 Contenu du Rapport
+Le rapport est structuré en 3 sections narratives :
+- **Bilan Financier Global** : Revenus totaux, dépenses totales, solde net d'épargne, taux d'épargne et comparaison des dépenses globales avec le mois précédent.
+- **Les Victoires & Réussites** : Objectif d'épargne complété, budget maîtrisé, dépense catégorielle en baisse ou abonnement résilié/diminué.
+- **Points de Vigilance** : Dépenses hors normes, dépassement de budget, hausse catégorielle suspecte ou nouvel abonnement/augmentation.
+
+### 14.3 Dépenses Inhabituelles Détectées
+En complément du texte de diagnostic, une section dédiée **« Dépenses inhabituelles détectées »** liste de manière visuelle et structurée toutes les transactions identifiées comme anormales pour le mois :
+- **Critères de détection** : Montant unitaire ≥ 3 fois la moyenne historique de la catégorie sur les 3 mois précédents, et montant ≥ 50 €.
+- **Affichage** : Pour chaque transaction inhabituelles, la carte affiche la description, la catégorie, la date de la transaction, le montant, et un badge de ratio indiquant combien de fois le montant dépasse la moyenne habituelle (ex : « 8.8x la moyenne »).
+- **Tri** : Les transactions sont triées par ratio décroissant (la plus déviante en premier).
+- **Cette section est masquée** si aucune dépense inhabituelle n'est détectée pour le mois sélectionné.

@@ -20,6 +20,17 @@ const monthlyReportSchema = new mongoose.Schema({
     net: { type: Number, default: 0 },
     savingsRate: { type: Number, default: 0 }
   },
+  unusualTransactions: [{
+    transactionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Transaction'
+    },
+    description: { type: String, required: true },
+    amount: { type: Number, required: true },
+    date: { type: Date, required: true },
+    categoryName: { type: String, required: true },
+    ratio: { type: Number, required: true }
+  }],
   createdAt: {
     type: Date,
     default: Date.now
