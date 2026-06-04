@@ -93,6 +93,8 @@ const Login = () => {
       toast.dismiss();
       console.error(err);
       const errorMessage = err.response?.data?.message || err.message || "Échec de l'authentification biométrique.";
+      const detailError = err.response?.data?.error;
+      const fullMessage = detailError ? `${errorMessage} (${detailError})` : errorMessage;
       
       // Auto-reset local storage flags if the credential is unknown on the server (400 Bad Request / unknown key)
       if (errorMessage.includes("inconnu") || errorMessage.includes("unknown") || err.response?.status === 400) {
@@ -100,7 +102,7 @@ const Login = () => {
         localStorage.removeItem('webauthn_dismissed_device');
       }
       
-      toast.error(errorMessage);
+      toast.error(fullMessage);
     }
   };
 
