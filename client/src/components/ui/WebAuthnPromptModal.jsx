@@ -18,7 +18,9 @@ const WebAuthnPromptModal = () => {
     }
 
     const isJustLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
-    const isWebAuthnSupported = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
+    const isWebAuthnSupported = typeof window !== 'undefined' && 
+      window.PublicKeyCredential !== undefined && 
+      navigator.credentials !== undefined;
     const isRegistered = localStorage.getItem('webauthn_registered_on_device') === 'true';
     const isDismissed = localStorage.getItem('webauthn_dismissed_device') === 'true';
 
@@ -102,6 +104,10 @@ const WebAuthnPromptModal = () => {
       toast.loading("Veuillez authentifier votre appareil...");
       const credential = await navigator.credentials.create({ publicKey: options });
       toast.dismiss();
+
+      if (!credential) {
+        throw new Error("L'enregistrement a été annulé ou n'a pas pu être complété.");
+      }
 
       // Convert ArrayBuffer to Base64URL
       const arrayBufferToBase64url = (buffer) => {

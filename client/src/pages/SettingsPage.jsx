@@ -62,7 +62,9 @@ const SettingsPage = () => {
     ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() 
     : 'U';
 
-  const isWebAuthnSupported = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
+  const isWebAuthnSupported = typeof window !== 'undefined' && 
+    window.PublicKeyCredential !== undefined && 
+    navigator.credentials !== undefined;
   const [credentials, setCredentials] = useState([]);
   const [loadingCreds, setLoadingCreds] = useState(false);
   const [deviceName, setDeviceName] = useState('');
@@ -128,6 +130,10 @@ const SettingsPage = () => {
       toast.loading("Veuillez authentifier votre appareil (empreinte, visage ou PIN)...");
       const credential = await navigator.credentials.create({ publicKey: options });
       toast.dismiss();
+
+      if (!credential) {
+        throw new Error("L'enregistrement a été annulé ou n'a pas pu être complété.");
+      }
 
       // Convert ArrayBuffer to Base64URL
       const arrayBufferToBase64url = (buffer) => {

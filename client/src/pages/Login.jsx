@@ -14,7 +14,9 @@ const Login = () => {
   const { login, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const isWebAuthnSupported = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
+  const isWebAuthnSupported = typeof window !== 'undefined' && 
+    window.PublicKeyCredential !== undefined && 
+    navigator.credentials !== undefined;
 
   const handleWebAuthnLogin = async () => {
     try {
@@ -53,6 +55,10 @@ const Login = () => {
       toast.loading("Authentification biométrique en cours...");
       const assertion = await navigator.credentials.get({ publicKey: options });
       toast.dismiss();
+
+      if (!assertion) {
+        throw new Error("L'authentification a été annulée ou aucun périphérique n'a été détecté.");
+      }
 
       // Convert ArrayBuffer to Base64URL
       const arrayBufferToBase64url = (buffer) => {
