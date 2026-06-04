@@ -10,8 +10,14 @@ import WebauthnChallenge from '../models/WebauthnChallenge.js';
 import jwt from 'jsonwebtoken';
 
 const rpName = 'Budgetizer';
-const getRpID = () => process.env.WEBAUTHN_RP_ID || 'localhost';
-const getOrigin = () => process.env.WEBAUTHN_ORIGIN || 'http://localhost:5173';
+const getRpID = () => {
+  const rpID = process.env.WEBAUTHN_RP_ID || 'localhost';
+  return rpID.trim();
+};
+const getOrigin = () => {
+  const origin = process.env.WEBAUTHN_ORIGIN || 'http://localhost:5173';
+  return origin.replace(/\/$/, '').trim();
+};
 
 // Helper to generate JWT (identical to authController.js)
 const generateToken = (id) => {
@@ -88,7 +94,7 @@ export const verifyRegistration = async (req, res) => {
         expectedChallenge,
         expectedOrigin: getOrigin(),
         expectedRPID: getRpID(),
-        requireUserVerification: true,
+        requireUserVerification: false,
       });
     } catch (err) {
       console.error('WebAuthn verification error:', err);
@@ -208,7 +214,7 @@ export const verifyAuthentication = async (req, res) => {
           counter: credential.counter,
           transports: credential.transports,
         },
-        requireUserVerification: true,
+        requireUserVerification: false,
       });
     } catch (err) {
       console.error('WebAuthn authentication verification error:', err);
