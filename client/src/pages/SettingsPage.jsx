@@ -164,7 +164,15 @@ const SettingsPage = () => {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      toast.error(err.response?.data?.message || err.message || "Échec de l'enregistrement de l'appareil.");
+      if (err && (err.name === 'InvalidStateError' || err.message?.includes('already exists'))) {
+        localStorage.setItem('webauthn_registered_on_device', 'true');
+        localStorage.removeItem('webauthn_dismissed_device');
+        toast.success("Cet appareil est déjà configuré pour la connexion biométrique !");
+        setDeviceName('');
+        fetchCredentials();
+      } else {
+        toast.error(err.response?.data?.message || err.message || "Échec de l'enregistrement de l'appareil.");
+      }
     }
   };
 

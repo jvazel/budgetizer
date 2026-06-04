@@ -136,7 +136,15 @@ const WebAuthnPromptModal = () => {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      toast.error(err.response?.data?.message || err.message || "Échec de l'activation.");
+      if (err && (err.name === 'InvalidStateError' || err.message?.includes('already exists'))) {
+        // The credential manager has this key already registered and matches excludeCredentials.
+        // Therefore, the device is already biometrically registered and fully functional.
+        localStorage.setItem('webauthn_registered_on_device', 'true');
+        localStorage.removeItem('webauthn_dismissed_device');
+        toast.success("Votre appareil est déjà configuré pour la connexion biométrique !");
+      } else {
+        toast.error(err.response?.data?.message || err.message || "Échec de l'activation.");
+      }
       setShowPrompt(false);
     } finally {
       setIsRegistering(false);
