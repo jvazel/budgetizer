@@ -42,7 +42,7 @@ export const getRegistrationOptions = async (req, res) => {
     // Retrieve existing credentials to exclude them from registration
     const userCredentials = await UserCredential.find({ userId: user._id });
     const excludeCredentials = userCredentials.map(cred => ({
-      id: Buffer.from(cred.credentialID, 'base64url'),
+      id: cred.credentialID,
       type: 'public-key',
       transports: cred.transports || [],
     }));
