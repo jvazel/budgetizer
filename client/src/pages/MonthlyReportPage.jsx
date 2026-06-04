@@ -326,7 +326,7 @@ const MonthlyReportPage = () => {
                   {report.unusualTransactions.map((tx, idx) => (
                     <div key={tx.transactionId || idx} className="flex justify-between items-center bg-surface p-3.5 rounded-2xl border border-border/30 hover:border-border/60 transition-all">
                       <div className="space-y-1">
-                        <p className="text-xs font-bold text-primary">{tx.description}</p>
+                        <p className="text-xs font-bold text-primary">{tx.description || tx.note || 'Sans description'}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-muted font-bold bg-surface-2 px-2 py-0.5 rounded border border-border/20">
                             {tx.categoryName}

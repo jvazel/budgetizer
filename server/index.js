@@ -21,6 +21,7 @@ import insightRoutes from './routes/insightRoutes.js';
 import savingsGoalRoutes from './routes/savingsGoalRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import monthlyReportRoutes from './routes/monthlyReportRoutes.js';
+import webauthnRoutes from './routes/webauthnRoutes.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
 
@@ -134,6 +135,7 @@ app.use('/api/insights', insightRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/monthly-reports', monthlyReportRoutes);
+app.use('/api/webauthn', webauthnRoutes);
 
 // Error Handler to log and format error responses
 app.use((err, req, res, next) => {

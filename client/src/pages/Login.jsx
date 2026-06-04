@@ -1,17 +1,93 @@
 import React, { useState, useContext } from 'react';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Fingerprint } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useContext(AuthContext);
+  const { login, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const isWebAuthnSupported = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
+
+  const handleWebAuthnLogin = async () => {
+    try {
+      toast.loading("Génération du défi de connexion...");
+      const optionsRes = await api.post('/webauthn/login/options', { email: email || undefined });
+      const options = optionsRes.data;
+      toast.dismiss();
+
+      // Convert Base64URL to ArrayBuffer
+      const base64urlToArrayBuffer = (base64url) => {
+        const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+        const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray.buffer;
+      };
+
+      options.challenge = base64urlToArrayBuffer(options.challenge);
+      if (options.allowCredentials) {
+        options.allowCredentials = options.allowCredentials.map(cred => ({
+          ...cred,
+          id: base64urlToArrayBuffer(cred.id)
+        }));
+      }
+
+      toast.loading("Authentification biométrique en cours...");
+      const assertion = await navigator.credentials.get({ publicKey: options });
+      toast.dismiss();
+
+      // Convert ArrayBuffer to Base64URL
+      const arrayBufferToBase64url = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = window.btoa(binary);
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      };
+
+      const assertionResponse = {
+        id: assertion.id,
+        rawId: arrayBufferToBase64url(assertion.rawId),
+        type: assertion.type,
+        response: {
+          clientDataJSON: arrayBufferToBase64url(assertion.response.clientDataJSON),
+          authenticatorData: arrayBufferToBase64url(assertion.response.authenticatorData),
+          signature: arrayBufferToBase64url(assertion.response.signature),
+          userHandle: assertion.response.userHandle ? arrayBufferToBase64url(assertion.response.userHandle) : undefined
+        }
+      };
+
+      toast.loading("Vérification sur le serveur...");
+      const verifyRes = await api.post('/webauthn/login/verify', {
+        body: assertionResponse,
+        challenge: arrayBufferToBase64url(options.challenge)
+      });
+      toast.dismiss();
+
+      const user = verifyRes.data;
+      localStorage.setItem('token', user.token);
+      setUser(user);
+      toast.success('Connexion biométrique réussie !');
+      navigate('/');
+    } catch (err) {
+      toast.dismiss();
+      console.error(err);
+      toast.error(err.response?.data?.message || err.message || "Échec de l'authentification biométrique.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,6 +152,27 @@ const Login = () => {
             </Button>
           </div>
         </form>
+
+        {isWebAuthnSupported && (
+          <>
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t border-border/40"></div>
+              <span className="px-3 text-xs text-muted font-bold uppercase tracking-wider">ou</span>
+              <div className="flex-1 border-t border-border/40"></div>
+            </div>
+
+            <Button 
+              type="button" 
+              variant="secondary" 
+              fullWidth 
+              onClick={handleWebAuthnLogin}
+              className="flex items-center justify-center gap-2"
+            >
+              <Fingerprint size={16} className="text-accent" />
+              Se connecter avec la biométrie
+            </Button>
+          </>
+        )}
 
         <div className="mt-8 text-center">
           <p className="text-secondary text-sm">

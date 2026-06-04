@@ -145,6 +145,23 @@ describe('MonthlyReportPage Component - Robustness Tests', () => {
             date: new Date(Date.UTC(2026, 4, 10)),
             categoryName: 'Voyages',
             ratio: 4.5
+          },
+          {
+            transactionId: 'unusual_2',
+            description: '',
+            amount: 150,
+            date: new Date(Date.UTC(2026, 4, 12)),
+            categoryName: 'Alimentation',
+            ratio: 3.2
+          },
+          {
+            transactionId: 'unusual_3',
+            description: '',
+            note: 'Courses Carrefour',
+            amount: 75,
+            date: new Date(Date.UTC(2026, 4, 14)),
+            categoryName: 'Alimentation',
+            ratio: 3.5
           }
         ],
         isProvisional: false
@@ -157,8 +174,15 @@ describe('MonthlyReportPage Component - Robustness Tests', () => {
     renderComponent();
     expect(screen.getByText('Dépenses inhabituelles détectées')).toBeInTheDocument();
     expect(screen.getByText('Vols Paris-Tokyo')).toBeInTheDocument();
+    expect(screen.getByText('Sans description')).toBeInTheDocument();
+    expect(screen.getByText('Courses Carrefour')).toBeInTheDocument();
     expect(screen.getByText('Voyages')).toBeInTheDocument();
+    expect(screen.getAllByText('Alimentation').length).toBe(2);
     expect(screen.getByText(/850/)).toBeInTheDocument();
+    expect(screen.getByText(/150/)).toBeInTheDocument();
+    expect(screen.getByText(/75/)).toBeInTheDocument();
     expect(screen.getByText('4.5x la moyenne')).toBeInTheDocument();
+    expect(screen.getByText('3.2x la moyenne')).toBeInTheDocument();
+    expect(screen.getByText('3.5x la moyenne')).toBeInTheDocument();
   });
 });

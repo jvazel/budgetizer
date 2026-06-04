@@ -339,5 +339,63 @@ describe('Monthly Report Controller', () => {
       expect(responseData.reportText).toContain('Voyage au Japon');
       expect(responseData.reportText).toContain('victoire');
     });
+
+    it('should fallback to transaction note in alert text and data when description is empty', async () => {
+      req.params.monthKey = '2026-05';
+      MonthlyReport.findOne.mockResolvedValue(null);
+
+      // Mock current month transactions (has a big expense outlier of 350 € with empty description but a note)
+      const mockTxs = [
+        { 
+          _id: 'tx_789',
+          type: 'expense', 
+          amount: 350, 
+          description: '',
+          note: 'Courses de Noel',
+          date: new Date(Date.UTC(2026, 4, 10)), 
+          categoryId: { _id: 'cat_courses', name: 'Courses' } 
+        }
+      ];
+
+      // Mock historical transactions reference
+      const mockHistoryTxs = [
+        { type: 'expense', amount: 40, categoryId: 'cat_courses', date: new Date(Date.UTC(2026, 2, 10)) }
+      ];
+
+      Transaction.find.mockImplementation((query) => {
+        if (query.date && query.date.$gte) {
+          const startMonth = new Date(query.date.$gte).getUTCMonth();
+          if (startMonth === 4) {
+            return createMockQuery(mockTxs);
+          } else if (startMonth === 1) {
+            return createMockQuery(mockHistoryTxs);
+          }
+        }
+        return createMockQuery([]);
+      });
+
+      Transaction.findOne.mockResolvedValue(null);
+      SavingsGoal.find.mockResolvedValue([]);
+      ScheduledTransaction.find.mockResolvedValue([]);
+      Budget.find.mockReturnValue(createMockQuery([]));
+
+      await getMonthlyReport(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      const responseData = res.json.mock.calls[0][0];
+      
+      expect(responseData.reportText).toContain('Courses de Noel');
+      expect(responseData.reportText).not.toContain('sans description');
+
+      expect(responseData.unusualTransactions).toBeDefined();
+      expect(responseData.unusualTransactions[0]).toEqual(expect.objectContaining({
+        transactionId: 'tx_789',
+        description: '',
+        note: 'Courses de Noel',
+        amount: 350,
+        categoryName: 'Courses',
+        ratio: 8.8
+      }));
+    });
   });
 });

@@ -225,6 +225,7 @@ export const getMonthlyReport = async (req, res) => {
           unusualTransactions.push({
             transactionId: tx._id,
             description: tx.description,
+            note: tx.note,
             amount: tx.amount,
             date: tx.date,
             categoryName: tx.categoryId.name,
@@ -348,7 +349,13 @@ export const getMonthlyReport = async (req, res) => {
     // PARAGRAPHE 3 : Les points de vigilance ⚠️
     let p3 = '';
     if (outlierTx) {
-      p3 += `Attention toutefois à certains écarts. Une transaction inhabituelle a été détectée : **${outlierTx.amount.toFixed(2)} €** pour "*${outlierTx.description}*" dans la catégorie **${outlierTx.categoryId.name}** (soit **${maxOutlierRatio.toFixed(1)} fois** le montant unitaire habituel). `;
+      const displayName = outlierTx.description && outlierTx.description.trim() !== ''
+        ? outlierTx.description
+        : outlierTx.note;
+      const txDesc = displayName && displayName.trim() !== ''
+        ? `pour "*${displayName}*"`
+        : 'sans description';
+      p3 += `Attention toutefois à certains écarts. Une transaction inhabituelle a été détectée : **${outlierTx.amount.toFixed(2)} €** ${txDesc} dans la catégorie **${outlierTx.categoryId.name}** (soit **${maxOutlierRatio.toFixed(1)} fois** le montant unitaire habituel). `;
     } else {
       p3 += `Quelques points nécessitent ta vigilance. `;
     }
