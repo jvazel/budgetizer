@@ -27,6 +27,7 @@ vi.mock('../../models/UserCredential.js', () => {
   MockUserCredential.findOne = vi.fn();
   MockUserCredential.create = vi.fn();
   MockUserCredential.deleteOne = vi.fn();
+  MockUserCredential.deleteMany = vi.fn();
   return { default: MockUserCredential };
 });
 

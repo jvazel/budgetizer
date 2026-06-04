@@ -99,23 +99,30 @@ const SettingsPage = () => {
 
       // Convert Base64URL to ArrayBuffer
       const base64urlToArrayBuffer = (base64url) => {
-        const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
-        const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
+        try {
+          const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+          const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+          }
+          return outputArray.buffer;
+        } catch (e) {
+          console.error("Failed to parse base64url string:", base64url, e);
+          return new ArrayBuffer(0);
         }
-        return outputArray.buffer;
       };
 
       options.challenge = base64urlToArrayBuffer(options.challenge);
       options.user.id = base64urlToArrayBuffer(options.user.id);
       if (options.excludeCredentials) {
-        options.excludeCredentials = options.excludeCredentials.map(cred => ({
-          ...cred,
-          id: base64urlToArrayBuffer(cred.id)
-        }));
+        options.excludeCredentials = options.excludeCredentials
+          .map(cred => ({
+            ...cred,
+            id: base64urlToArrayBuffer(cred.id)
+          }))
+          .filter(cred => cred.id.byteLength > 0);
       }
 
       toast.loading("Veuillez authentifier votre appareil (empreinte, visage ou PIN)...");
