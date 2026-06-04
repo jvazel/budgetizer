@@ -110,7 +110,7 @@ export const verifyRegistration = async (req, res) => {
     }
 
     const { id, publicKey, counter, transports } = registrationInfo.credential;
-    const credentialID = Buffer.from(id).toString('base64url');
+    const credentialID = id;
 
     // Check if credential ID already exists in DB
     const existingCred = await UserCredential.findOne({ credentialID });
