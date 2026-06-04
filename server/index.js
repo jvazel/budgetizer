@@ -22,6 +22,7 @@ import savingsGoalRoutes from './routes/savingsGoalRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import monthlyReportRoutes from './routes/monthlyReportRoutes.js';
 import webauthnRoutes from './routes/webauthnRoutes.js';
+import UserCredential from './models/UserCredential.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
 
@@ -147,6 +148,34 @@ app.use((err, req, res, next) => {
 });
 
 // MongoDB connection
+// Migration: Repair double-encoded WebAuthn credential IDs
+const migrateDoubleEncodedCredentials = async () => {
+  try {
+    const credentials = await UserCredential.find({});
+    let fixedCount = 0;
+    
+    for (const cred of credentials) {
+      try {
+        const decoded = Buffer.from(cred.credentialID, 'base64url').toString('utf-8');
+        // Check if the decoded string is a valid base64url string of typical length (20-100 characters)
+        if (/^[A-Za-z0-9_-]{20,100}$/.test(decoded)) {
+          console.log(`[Migration] Fixing double-encoded WebAuthn credential ID for device "${cred.deviceName}": "${cred.credentialID}" -> "${decoded}"`);
+          cred.credentialID = decoded;
+          await cred.save();
+          fixedCount++;
+        }
+      } catch (e) {
+        // Ignore parsing errors or non-double-encoded IDs
+      }
+    }
+    if (fixedCount > 0) {
+      console.log(`[Migration] Successfully repaired ${fixedCount} double-encoded WebAuthn credentials.`);
+    }
+  } catch (error) {
+    console.error('[Migration] Error running WebAuthn credential migration:', error);
+  }
+};
+
 let server;
 const mongoOptions = {
   maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE, 10) || 10,
@@ -155,6 +184,10 @@ const mongoOptions = {
 mongoose.connect(process.env.MONGODB_URI, mongoOptions)
   .then(() => {
     console.log('Connected to MongoDB');
+    
+    // Run WebAuthn credential migration asynchronously
+    migrateDoubleEncodedCredentials();
+
     const PORT = process.env.PORT || 5000;
     server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
