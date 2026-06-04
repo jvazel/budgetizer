@@ -10,10 +10,8 @@ import WebauthnChallenge from '../models/WebauthnChallenge.js';
 import jwt from 'jsonwebtoken';
 
 const rpName = 'Budgetizer';
-const rpID = process.env.WEBAUTHN_RP_ID || 'localhost';
-// Make sure origin handles trailing slash correctly or doesn't have it.
-// Expected origin in @simplewebauthn/server can be a string or array of strings.
-const origin = process.env.WEBAUTHN_ORIGIN || 'http://localhost:5173';
+const getRpID = () => process.env.WEBAUTHN_RP_ID || 'localhost';
+const getOrigin = () => process.env.WEBAUTHN_ORIGIN || 'http://localhost:5173';
 
 // Helper to generate JWT (identical to authController.js)
 const generateToken = (id) => {
@@ -41,7 +39,7 @@ export const getRegistrationOptions = async (req, res) => {
 
     const options = await generateRegistrationOptions({
       rpName,
-      rpID,
+      rpID: getRpID(),
       userID: user._id.toString(),
       userName: user.email,
       userDisplayName: user.name,
@@ -88,8 +86,8 @@ export const verifyRegistration = async (req, res) => {
       verification = await verifyRegistrationResponse({
         response: body,
         expectedChallenge,
-        expectedOrigin: origin,
-        expectedRPID: rpID,
+        expectedOrigin: getOrigin(),
+        expectedRPID: getRpID(),
         requireUserVerification: true,
       });
     } catch (err) {
@@ -150,7 +148,7 @@ export const getAuthenticationOptions = async (req, res) => {
     }
 
     const options = await generateAuthenticationOptions({
-      rpID,
+      rpID: getRpID(),
       allowCredentials,
       userVerification: 'preferred',
     });
@@ -202,8 +200,8 @@ export const verifyAuthentication = async (req, res) => {
       verification = await verifyAuthenticationResponse({
         response: body,
         expectedChallenge: challenge,
-        expectedOrigin: origin,
-        expectedRPID: rpID,
+        expectedOrigin: getOrigin(),
+        expectedRPID: getRpID(),
         authenticator: {
           credentialID: credential.credentialID,
           credentialPublicKey: credential.publicKey,
