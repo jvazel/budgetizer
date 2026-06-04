@@ -49,7 +49,7 @@ export const getRegistrationOptions = async (req, res) => {
     const options = await generateRegistrationOptions({
       rpName,
       rpID: getRpID(),
-      userID: user._id.toString(),
+      userID: new TextEncoder().encode(user._id.toString()),
       userName: user.email,
       userDisplayName: user.name,
       attestationType: 'none',
