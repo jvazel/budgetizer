@@ -157,6 +157,8 @@ const SettingsPage = () => {
       toast.dismiss();
 
       toast.success('Périphérique biométrique enregistré avec succès !');
+      localStorage.setItem('webauthn_registered_on_device', 'true');
+      localStorage.removeItem('webauthn_dismissed_device');
       setDeviceName('');
       fetchCredentials();
     } catch (err) {
@@ -172,6 +174,8 @@ const SettingsPage = () => {
       await api.delete(`/webauthn/credentials/${id}`);
       toast.dismiss();
       toast.success('Périphérique supprimé');
+      localStorage.removeItem('webauthn_registered_on_device');
+      localStorage.removeItem('webauthn_dismissed_device');
       fetchCredentials();
     } catch (err) {
       toast.dismiss();

@@ -92,8 +92,22 @@ const Login = () => {
     } catch (err) {
       toast.dismiss();
       console.error(err);
-      toast.error(err.response?.data?.message || err.message || "Échec de l'authentification biométrique.");
+      const errorMessage = err.response?.data?.message || err.message || "Échec de l'authentification biométrique.";
+      
+      // Auto-reset local storage flags if the credential is unknown on the server (400 Bad Request / unknown key)
+      if (errorMessage.includes("inconnu") || errorMessage.includes("unknown") || err.response?.status === 400) {
+        localStorage.removeItem('webauthn_registered_on_device');
+        localStorage.removeItem('webauthn_dismissed_device');
+      }
+      
+      toast.error(errorMessage);
     }
+  };
+
+  const handleResetWebAuthn = () => {
+    localStorage.removeItem('webauthn_registered_on_device');
+    localStorage.removeItem('webauthn_dismissed_device');
+    toast.success("Les paramètres biométriques de cet appareil ont été réinitialisés. Connectez-vous avec votre mot de passe pour les réactiver.");
   };
 
   const handleSubmit = async (e) => {
@@ -180,6 +194,16 @@ const Login = () => {
               <Fingerprint size={16} className="text-accent" />
               Se connecter avec la biométrie
             </Button>
+
+            <div className="text-center mt-3">
+              <button
+                type="button"
+                onClick={handleResetWebAuthn}
+                className="text-[10px] font-bold text-muted hover:text-accent transition-colors"
+              >
+                Problème avec la biométrie ? Réinitialiser l'appareil
+              </button>
+            </div>
           </>
         )}
 
