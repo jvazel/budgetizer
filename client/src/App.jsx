@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import OfflineStatus from './components/ui/OfflineStatus';
+import WebAuthnPromptModal from './components/ui/WebAuthnPromptModal';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { PwaProvider } from './context/PwaContext';
 import Splash from './pages/Splash';
@@ -70,6 +71,7 @@ const AppContent = () => {
     <>
       <Toaster position="top-center" />
       <OfflineStatus />
+      <WebAuthnPromptModal />
       <React.Suspense fallback={
         <div className="flex justify-center items-center h-[100vh] w-full bg-background">
           <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />

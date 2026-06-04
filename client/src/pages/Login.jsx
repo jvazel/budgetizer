@@ -14,9 +14,6 @@ const Login = () => {
   const { login, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [showWebAuthnPrompt, setShowWebAuthnPrompt] = useState(false);
-  const [tempUser, setTempUser] = useState(null);
-
   const isWebAuthnSupported = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
 
   const handleWebAuthnLogin = async () => {
@@ -92,125 +89,15 @@ const Login = () => {
     }
   };
 
-  const handleRegisterBiometrics = async () => {
-    if (!tempUser) return;
-    try {
-      let deviceName = 'Appareil';
-      const ua = navigator.userAgent;
-      if (/android/i.test(ua)) {
-        deviceName = 'Android';
-      } else if (/ipad|iphone|ipod/i.test(ua)) {
-        deviceName = 'iOS Device';
-      } else if (/macintosh/i.test(ua)) {
-        deviceName = 'Mac';
-      } else if (/windows/i.test(ua)) {
-        deviceName = 'PC Windows';
-      } else if (/linux/i.test(ua)) {
-        deviceName = 'Linux';
-      }
-      
-      if (/chrome|crios/i.test(ua)) {
-        deviceName += ' (Chrome)';
-      } else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) {
-        deviceName += ' (Safari)';
-      } else if (/firefox|fxios/i.test(ua)) {
-        deviceName += ' (Firefox)';
-      } else if (/edge/i.test(ua)) {
-        deviceName += ' (Edge)';
-      }
-
-      toast.loading("Génération des options d'enregistrement...");
-      const optionsRes = await api.get('/webauthn/register/options');
-      const options = optionsRes.data;
-      toast.dismiss();
-
-      // Convert Base64URL to ArrayBuffer
-      const base64urlToArrayBuffer = (base64url) => {
-        const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
-        const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray.buffer;
-      };
-
-      options.challenge = base64urlToArrayBuffer(options.challenge);
-      options.user.id = base64urlToArrayBuffer(options.user.id);
-      if (options.excludeCredentials) {
-        options.excludeCredentials = options.excludeCredentials.map(cred => ({
-          ...cred,
-          id: base64urlToArrayBuffer(cred.id)
-        }));
-      }
-
-      toast.loading("Veuillez authentifier votre appareil...");
-      const credential = await navigator.credentials.create({ publicKey: options });
-      toast.dismiss();
-
-      // Convert ArrayBuffer to Base64URL
-      const arrayBufferToBase64url = (buffer) => {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = window.btoa(binary);
-        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      };
-
-      const attestationResponse = {
-        id: credential.id,
-        rawId: arrayBufferToBase64url(credential.rawId),
-        type: credential.type,
-        response: {
-          clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
-          attestationObject: arrayBufferToBase64url(credential.response.attestationObject),
-          transports: credential.response.getTransports ? credential.response.getTransports() : []
-        },
-        deviceName: deviceName
-      };
-
-      toast.loading("Enregistrement du périphérique sur le serveur...");
-      await api.post('/webauthn/register/verify', attestationResponse);
-      toast.dismiss();
-
-      toast.success('Connexion biométrique activée avec succès !');
-      localStorage.setItem('webauthn_registered_on_device', 'true');
-      setShowWebAuthnPrompt(false);
-      navigate('/');
-    } catch (err) {
-      toast.dismiss();
-      console.error(err);
-      toast.error(err.response?.data?.message || err.message || "Échec de l'activation.");
-      setShowWebAuthnPrompt(false);
-      navigate('/');
-    }
-  };
-
-  const handleDismissPrompt = () => {
-    localStorage.setItem('webauthn_dismissed_device', 'true');
-    setShowWebAuthnPrompt(false);
-    navigate('/');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const loggedUser = await login(email, password);
+      sessionStorage.setItem('just_logged_in', 'true');
+      await login(email, password);
       toast.success('Connexion réussie !');
-
-      const isRegistered = localStorage.getItem('webauthn_registered_on_device');
-      const isDismissed = localStorage.getItem('webauthn_dismissed_device');
-
-      if (isWebAuthnSupported && !isRegistered && !isDismissed) {
-        setTempUser(loggedUser);
-        setShowWebAuthnPrompt(true);
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     } catch (error) {
+      sessionStorage.removeItem('just_logged_in');
       toast.error(error.response?.data?.message || 'Erreur de connexion');
     }
   };
@@ -299,37 +186,6 @@ const Login = () => {
         </div>
         </div>
 
-      {showWebAuthnPrompt && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-surface border border-border rounded-[32px] p-6 max-w-sm w-full space-y-5 text-center shadow-2xl">
-            <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/20 flex items-center justify-center text-accent mx-auto animate-pulse">
-              <Fingerprint size={32} />
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-base font-extrabold text-primary">Activer la connexion biométrique ? ⚡</h3>
-              <p className="text-xs text-secondary leading-relaxed">
-                Associez votre empreinte digitale ou reconnaissance faciale pour vous connecter en un clic la prochaine fois sur cet appareil.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
-                onClick={handleDismissPrompt}
-                className="bg-surface-2 border border-border/40 py-3 rounded-xl text-xs font-bold text-secondary active:scale-95 transition-all"
-              >
-                Plus tard
-              </button>
-              <button 
-                onClick={handleRegisterBiometrics}
-                className="bg-accent text-white py-3 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-accent/20"
-              >
-                Activer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

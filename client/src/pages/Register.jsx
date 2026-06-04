@@ -35,10 +35,12 @@ const Register = () => {
     }
     
     try {
+      sessionStorage.setItem('just_logged_in', 'true');
       await register(name, email, password);
       toast.success('Compte créé avec succès !');
       navigate('/');
     } catch (error) {
+      sessionStorage.removeItem('just_logged_in');
       toast.error(error.response?.data?.message || 'Erreur lors de l\'inscription');
     }
   };
