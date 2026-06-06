@@ -35,6 +35,8 @@ export const useBudgets = (params) => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
@@ -45,6 +47,8 @@ export const useBudgets = (params) => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
@@ -54,6 +58,8 @@ export const useBudgets = (params) => {
       await api.delete(`/budgets/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });

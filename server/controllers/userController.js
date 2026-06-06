@@ -9,6 +9,7 @@ import MonthlyReport from '../models/MonthlyReport.js';
 import UserCredential from '../models/UserCredential.js';
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 
 // 1. Update Profile (Name & Email)
 export const updateProfile = async (req, res) => {
@@ -158,43 +159,55 @@ export const updatePreferences = async (req, res) => {
 
 // 4. Delete My Account (RGPD Complete Cascade Delete)
 export const deleteMyAccount = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const userId = req.user.id;
 
     // Delete everything in cascade
-    await Transaction.deleteMany({ userId });
-    await ScheduledTransaction.deleteMany({ userId });
-    await Budget.deleteMany({ userId });
-    await Category.deleteMany({ userId });
-    await Account.deleteMany({ userId });
-    await SavedFilter.deleteMany({ userId });
-    await MonthlyReport.deleteMany({ userId });
-    await UserCredential.deleteMany({ userId });
-    await User.findByIdAndDelete(userId);
+    await Transaction.deleteMany({ userId }).session(session);
+    await ScheduledTransaction.deleteMany({ userId }).session(session);
+    await Budget.deleteMany({ userId }).session(session);
+    await Category.deleteMany({ userId }).session(session);
+    await Account.deleteMany({ userId }).session(session);
+    await SavedFilter.deleteMany({ userId }).session(session);
+    await MonthlyReport.deleteMany({ userId }).session(session);
+    await UserCredential.deleteMany({ userId }).session(session);
+    await User.findByIdAndDelete(userId).session(session);
 
+    await session.commitTransaction();
     res.json({ message: 'Compte et données supprimés en cascade avec succès' });
   } catch (error) {
+    await session.abortTransaction();
     console.error(error);
-    res.status(500).json({ message: 'Erreur Serveur' });
+    res.status(500).json({ message: 'Erreur lors de la suppression du compte' });
+  } finally {
+    session.endSession();
   }
 };
 
 // 5. Clear All My Financial Data (keeps user profile)
 export const clearMyData = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const userId = req.user.id;
-    await Transaction.deleteMany({ userId });
-    await ScheduledTransaction.deleteMany({ userId });
-    await Budget.deleteMany({ userId });
-    await Category.deleteMany({ userId });
-    await Account.deleteMany({ userId });
-    await SavedFilter.deleteMany({ userId });
-    await MonthlyReport.deleteMany({ userId });
-    await UserCredential.deleteMany({ userId });
+    await Transaction.deleteMany({ userId }).session(session);
+    await ScheduledTransaction.deleteMany({ userId }).session(session);
+    await Budget.deleteMany({ userId }).session(session);
+    await Category.deleteMany({ userId }).session(session);
+    await Account.deleteMany({ userId }).session(session);
+    await SavedFilter.deleteMany({ userId }).session(session);
+    await MonthlyReport.deleteMany({ userId }).session(session);
+    await UserCredential.deleteMany({ userId }).session(session);
 
+    await session.commitTransaction();
     res.json({ message: 'Toutes les données financières ont été effacées avec succès' });
   } catch (error) {
+    await session.abortTransaction();
     console.error(error);
-    res.status(500).json({ message: 'Erreur Serveur' });
+    res.status(500).json({ message: 'Erreur lors de la réinitialisation des données' });
+  } finally {
+    session.endSession();
   }
 };

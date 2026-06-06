@@ -21,6 +21,10 @@ export const useTransactions = (filters = {}) => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
@@ -31,6 +35,10 @@ export const useTransactions = (filters = {}) => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
@@ -40,6 +48,10 @@ export const useTransactions = (filters = {}) => {
       await api.delete(`/transactions/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });

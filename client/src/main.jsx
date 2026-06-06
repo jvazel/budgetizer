@@ -14,10 +14,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// Listen to global business events to invalidate React Query cache
-window.addEventListener('transaction-changed', () => {
-  queryClient.invalidateQueries();
-});
 
 // Automatic service worker registration and updates
 const urlParams = new URLSearchParams(window.location.search);

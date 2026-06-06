@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 export const useScheduled = () => {
+  const queryClient = useQueryClient();
   const [scheduled, setScheduled] = useState([]);
   const [pending, setPending] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
@@ -42,6 +44,9 @@ export const useScheduled = () => {
       const res = await api.post('/scheduled', data);
       toast.success('Planification créée');
       fetchScheduledData();
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
       return res.data;
     } catch (err) {
@@ -55,6 +60,9 @@ export const useScheduled = () => {
       const res = await api.put(`/scheduled/${id}`, data);
       toast.success('Planification modifiée');
       fetchScheduledData();
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
       return res.data;
     } catch (err) {
@@ -68,6 +76,9 @@ export const useScheduled = () => {
       await api.delete(`/scheduled/${id}`);
       toast.success('Planification supprimée');
       fetchScheduledData();
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors de la suppression');
@@ -80,6 +91,9 @@ export const useScheduled = () => {
       await api.post(`/scheduled/${id}/confirm`, { amount: customAmount });
       toast.success('Transaction confirmée et enregistrée !');
       fetchScheduledData();
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur de confirmation');
@@ -92,6 +106,9 @@ export const useScheduled = () => {
       await api.post(`/scheduled/${id}/skip`);
       toast.success('Échéance ignorée');
       fetchScheduledData();
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       window.dispatchEvent(new CustomEvent('transaction-changed'));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors du saut');

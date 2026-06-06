@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useSavingsGoals = () => {
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
   const fetchSavingsGoals = useCallback(async () => {
     try {
@@ -32,7 +34,9 @@ export const useSavingsGoals = () => {
   const addSavingsGoal = async (data) => {
     const res = await api.post('/savings-goals', data);
     setSavingsGoals([...savingsGoals, res.data]);
-    // Dispatch event to notify dashboard or other pages
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     window.dispatchEvent(new CustomEvent('transaction-changed'));
     return res.data;
   };
@@ -40,6 +44,9 @@ export const useSavingsGoals = () => {
   const updateSavingsGoal = async (id, data) => {
     const res = await api.put(`/savings-goals/${id}`, data);
     setSavingsGoals(savingsGoals.map(g => g._id === id ? res.data : g));
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     window.dispatchEvent(new CustomEvent('transaction-changed'));
     return res.data;
   };
@@ -47,6 +54,9 @@ export const useSavingsGoals = () => {
   const deleteSavingsGoal = async (id) => {
     await api.delete(`/savings-goals/${id}`);
     setSavingsGoals(savingsGoals.filter(g => g._id !== id));
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     window.dispatchEvent(new CustomEvent('transaction-changed'));
   };
 

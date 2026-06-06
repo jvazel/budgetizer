@@ -16,60 +16,82 @@ import SavedFilter from '../../models/SavedFilter.js';
 import MonthlyReport from '../../models/MonthlyReport.js';
 import UserCredential from '../../models/UserCredential.js';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
+
+const mockSession = {
+  startTransaction: vi.fn(),
+  commitTransaction: vi.fn(),
+  abortTransaction: vi.fn(),
+  endSession: vi.fn()
+};
+
+const mockChain = (val) => {
+  const obj = {
+    session: vi.fn().mockImplementation(() => obj),
+    then: vi.fn().mockImplementation((resolve) => Promise.resolve(val).then(resolve))
+  };
+  return obj;
+};
+
+vi.mock('mongoose', () => ({
+  default: {
+    startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
+  }
+}));
 
 vi.mock('../../models/User.js', () => ({
   default: {
     findById: vi.fn(),
     findOne: vi.fn(),
-    findByIdAndDelete: vi.fn()
+    findByIdAndDelete: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/Transaction.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/ScheduledTransaction.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/Budget.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/Category.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/Account.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/SavedFilter.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/MonthlyReport.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 
 vi.mock('../../models/UserCredential.js', () => ({
   default: {
-    deleteMany: vi.fn().mockResolvedValue({})
+    deleteMany: vi.fn().mockImplementation(() => mockChain({}))
   }
 }));
 

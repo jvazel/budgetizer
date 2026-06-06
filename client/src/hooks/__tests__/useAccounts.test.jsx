@@ -90,6 +90,7 @@ describe('useAccounts hook', () => {
     // Test addAccount
     const newAccount = { _id: 'acc2', name: 'Savings', balance: 500, includeInTotal: true };
     api.post.mockResolvedValue({ data: newAccount });
+    api.get.mockResolvedValue({ data: [...mockAccounts, newAccount] });
 
     let added;
     await act(async () => {
@@ -107,6 +108,7 @@ describe('useAccounts hook', () => {
     // Test updateAccount
     const updatedAccount = { _id: 'acc2', name: 'Super Savings', balance: 550, includeInTotal: true };
     api.put.mockResolvedValue({ data: updatedAccount });
+    api.get.mockResolvedValue({ data: [mockAccounts[0], updatedAccount] });
 
     let updated;
     await act(async () => {
@@ -121,6 +123,7 @@ describe('useAccounts hook', () => {
 
     // Test deleteAccount
     api.delete.mockResolvedValue({});
+    api.get.mockResolvedValue({ data: [mockAccounts[0]] });
 
     await act(async () => {
       await result.current.deleteAccount('acc2');
