@@ -200,6 +200,7 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `PUT /:id` : Modifie une planification.
 - `DELETE /:id` : Annule/supprime une planification.
 - `POST /:id/confirm` : Valide manuellement une transaction planifiée marquée en `pending` (met à jour le solde et passe `isPending` à faux).
+- `POST /api/jobs/process-scheduled` (Déclencheur Global) : Déclenche manuellement le processeur de transactions planifiées. En production, cet appel requiert un en-tête `x-job-key` correspondant au secret `SCHEDULED_JOBS_SECRET`.
 
 ### 3.7 Tableau de bord & Statistiques (`/api/dashboard` & `/api/charts`)
 - `GET /api/dashboard` : Synthèse des soldes, comptes, mini-calendrier hebdomadaire et dernières transactions.
@@ -250,14 +251,26 @@ Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la b
    - **Vérification des limites** :
      - Si le compteur `timesExecuted` atteint `numberOfTimes` ou si `nextDate` dépasse `endDate`, la planification est marquée `isActive = false`.
     - `Validation` : Validation de la session (`commitTransaction()`).
+4. **Multi-processus et PM2 Cluster** :
+   - Pour éviter des exécutions concurrentes en double lors de déploiements multi-instances (PM2 Cluster), le processeur de planification n'est lancé localement via `setInterval` que si la variable d'environnement `RUN_SCHEDULED_JOBS` est positionnée à `"true"`.
+   - **Déclenchement Externe (Cron / Serverless Jobs)** : L'endpoint `/api/jobs/process-scheduled` permet d'exécuter la planification à distance via un planificateur externe (comme Vercel Cron, Google Cloud Scheduler). Cela permet d'exécuter l'application sur des instances d'API sans état en paramétrant `RUN_SCHEDULED_JOBS` à `"false"` et en appelant régulièrement le point d'accès avec l'en-tête `x-job-key` configuré (`SCHEDULED_JOBS_SECRET`).
 
 ### 4.2 Détection d'Anomalies et Prévisions d'Insights (`insightController.js`)
 Cet algorithme est invoqué à la demande lors du rendu de la page « Conseils » :
 1. **Identification des mois complets historiques** : Détermine les 3 derniers mois complets relatifs à la date du jour (ex: si nous sommes en mai, les mois historiques sont février, mars et avril).
 2. **Calcul de l'âge d'activité** : Vérifie l'ancienneté de l'utilisateur par rapport à sa première transaction. Si celle-ci remonte à moins de 2 mois, l'analyse est ignorée (historique insuffisant).
-3. **Moyennes catégorielles historiques** : Agrège les dépenses historiques de l'utilisateur par catégorie et par mois. Si une catégorie n'est présente que sur un seul mois de la période historique, elle est exclue. La moyenne mensuelle de dépense de chaque catégorie valide est calculée sur le nombre de mois d'activité historique du compte (2 ou 3).
-4. **Calcul de dérive du mois en cours** : Calcule le total des dépenses du mois en cours pour chaque catégorie et compare cette somme avec la moyenne historique. Si le ratio dépasse $$1 + \text{threshold}$$, une anomalie est générée et classée par gravité (orange pour +30-60%, rouge pour >= +60%).
+3. **Moyennes catégorielles historiques (Agrégation en base de données)** : Au lieu de charger en mémoire toutes les transactions historiques pour les regrouper dans Node.js (ce qui pénalisait les performances et la consommation de mémoire), Budgetizer effectue cette agrégation côté base de données via un pipeline d'agrégation MongoDB (`Transaction.aggregate`). Ce pipeline :
+   - Filtre les transactions d'une période historique par utilisateur et par compte inclus (`$match`).
+   - Effectue une jointure (`$lookup`) avec les transactions planifiées (`scheduledtransactions`) pour vérifier le flag `isSubscription`.
+   - Extrait la clé du mois via `$dateToString`.
+   - Regroupe par catégorie et mois (`$group`), puis agrège les totaux et l'unicité des mois d'activité (`$addToSet`).
+   - Joint les métadonnées de catégorie et élimine les catégories non significatives (présentes sur un seul mois).
+4. **Calcul de dérive du mois en cours (Agrégation en base de données)** : Calcule de la même manière les dépenses courantes par catégorie directement au niveau de MongoDB via une requête d'agrégation optimisée.
 5. **Calcul de suggestions et détection d'abonnements** : Identifie les 3 catégories où les dépenses cumulées historiques sont les plus élevées. Projette l'économie annuelle pour des diminutions de budget de 10%, 20% et 30%. Analyse si ces catégories contiennent des planifications d'abonnements actives ou passées pour générer un message d'alerte spécifique.
+
+> [!IMPORTANT]
+> **Règle de syntaxe des requêtes d'agrégation MongoDB (`$match`)** :
+> Lors du filtrage dans une étape `$match` d'un pipeline d'agrégation MongoDB, les sélecteurs de requêtes classiques (ex: `{ type: "expense", isSourceChecking: true }`) doivent être privilégiés aux opérateurs d'expression `$eq` ou `$and` (qui provoqueraient une erreur `MongoServerError: unknown top level operator: $eq` s'ils ne sont pas enveloppés dans un opérateur `$expr`). Les champs calculés ou projetés lors d'une étape précédente peuvent être filtrés directement comme des champs classiques du document.
 
 ---
 
