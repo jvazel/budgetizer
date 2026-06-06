@@ -116,8 +116,8 @@ const getDailyExpensesMap = async (userId, checkingAccountIds, startDate, endDat
     {
       $match: {
         $or: [
-          { $and: [{ $eq: ["$type", "expense"] }, { $eq: ["$isSourceChecking", true] }] },
-          { $and: [{ $eq: ["$type", "transfer"] }, { $eq: ["$isSourceChecking", true] }, { $eq: ["$isDestChecking", false] }] }
+          { type: "expense", isSourceChecking: true },
+          { type: "transfer", isSourceChecking: true, isDestChecking: false }
         ]
       }
     },
