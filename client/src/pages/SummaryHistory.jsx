@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
 
@@ -56,7 +56,9 @@ const SummaryHistory = () => {
   };
 
   return (
-    <AppShell title="Historique" backTo="/">
+    <>
+      <HeaderTitle>Historique</HeaderTitle>
+      <HeaderBackButton to="/" />
       {/* Year Filter List */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
         {availableYears.map(year => (
@@ -148,7 +150,7 @@ const SummaryHistory = () => {
           ))}
         </div>
       )}
-    </AppShell>
+    </>
   );
 };
 

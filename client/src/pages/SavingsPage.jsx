@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import SavingsGoalCard from '../components/savings/SavingsGoalCard';
 import SavingsGoalFormSheet from '../components/savings/SavingsGoalFormSheet';
 import SavingsActionFormSheet from '../components/savings/SavingsActionFormSheet';
@@ -69,7 +69,10 @@ const SavingsPage = () => {
   );
 
   return (
-    <AppShell title="Objectifs d'épargne" backTo="/" actions={actions}>
+    <>
+      <HeaderTitle>Objectifs d'épargne</HeaderTitle>
+      <HeaderBackButton to="/" />
+      <HeaderActions>{actions}</HeaderActions>
       <div className="pb-24 px-1">
         
         {error && (
@@ -175,7 +178,7 @@ const SavingsPage = () => {
         actionType={actionType}
         onSuccess={fetchSavingsGoals}
       />
-    </AppShell>
+    </>
   );
 };
 

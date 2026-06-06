@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import CategoryList from '../components/categories/CategoryList';
 import CategoryFormSheet from '../components/categories/CategoryFormSheet';
 import { useCategories } from '../hooks/useCategories';
@@ -43,7 +43,10 @@ const Categories = () => {
   );
 
   return (
-    <AppShell title="Catégories" backTo="/" actions={actions}>
+    <>
+      <HeaderTitle>Catégories</HeaderTitle>
+      <HeaderBackButton to="/" />
+      <HeaderActions>{actions}</HeaderActions>
       {/* Tabs */}
       <div className="flex bg-surface-2 p-1 rounded-2xl mb-6">
         <button
@@ -108,7 +111,7 @@ const Categories = () => {
           setIsFormOpen(false);
         }}
       />
-    </AppShell>
+    </>
   );
 };
 

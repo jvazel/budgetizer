@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import AmountInput from '../components/ui/AmountInput';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions } from '../hooks/useTransactions';
@@ -121,7 +121,9 @@ const TransfersPage = () => {
   const activeToAccount = accounts.find(acc => acc._id === toAccountId);
 
   return (
-    <AppShell title="Virements Instantanés" backTo="/">
+    <>
+      <HeaderTitle>Virements Instantanés</HeaderTitle>
+      <HeaderBackButton to="/" />
       <div className="space-y-6 pb-24 px-1">
         
         {/* Main interactive transfer card */}
@@ -374,7 +376,7 @@ const TransfersPage = () => {
           </div>
         </ConfirmModal>
       )}
-    </AppShell>
+    </>
   );
 };
 

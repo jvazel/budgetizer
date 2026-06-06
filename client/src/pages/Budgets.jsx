@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BudgetFormSheet from '../components/budgets/BudgetFormSheet';
 import { useBudgets } from '../hooks/useBudgets';
@@ -135,7 +135,9 @@ const Budgets = () => {
   );
 
   return (
-    <AppShell title="Budgets" actions={actions}>
+    <>
+      <HeaderTitle>Budgets</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       <section className="pb-24">
         {/* Weekly Budgets Section */}
         <div className="mb-6">
@@ -226,7 +228,7 @@ const Budgets = () => {
         }}
         onDelete={deleteBudget}
       />
-    </AppShell>
+    </>
   );
 };
 

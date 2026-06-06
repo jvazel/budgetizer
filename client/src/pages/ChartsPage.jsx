@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import CategoryChart from '../components/charts/CategoryChart';
 import FutureChart from '../components/charts/FutureChart';
 import ForecastChart from '../components/charts/ForecastChart';
@@ -46,7 +46,9 @@ const ChartsPage = () => {
   );
 
   return (
-    <AppShell title={titleElement} backTo="/">
+    <>
+      <HeaderTitle>{titleElement}</HeaderTitle>
+      <HeaderBackButton to="/" />
       
       {/* Dynamic Tab view */}
       {activeTab === 'category' && <CategoryChart />}
@@ -113,7 +115,7 @@ const ChartsPage = () => {
         </div>
       </BottomSheet>
 
-    </AppShell>
+    </>
   );
 };
 

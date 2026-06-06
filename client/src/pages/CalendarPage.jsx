@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import MiniCalendar from '../components/calendar/MiniCalendar';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import { ChevronLeft, ChevronRight, Trash2, CalendarRange } from 'lucide-react';
@@ -87,7 +87,9 @@ const CalendarPage = () => {
   );
 
   return (
-    <AppShell title={formatMonth(currentDate)} actions={actions}>
+    <>
+      <HeaderTitle>{formatMonth(currentDate)}</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       
       {/* Calendar Grid */}
       <section className="mb-6 mt-2">
@@ -215,7 +217,7 @@ const CalendarPage = () => {
           </p>
         )}
       </ConfirmModal>
-    </AppShell>
+    </>
   );
 };
 

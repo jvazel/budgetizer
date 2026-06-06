@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
 import { useMonthlyReport } from '../hooks/useMonthlyReport';
@@ -114,7 +114,9 @@ const MonthlyReportPage = () => {
   };
 
   return (
-    <AppShell title="Rapport Mensuel" backTo="/">
+    <>
+      <HeaderTitle>Rapport Mensuel</HeaderTitle>
+      <HeaderBackButton to="/" />
       <div className="space-y-6 pb-24">
         
         {/* Month & Year Selectors Card */}
@@ -354,7 +356,7 @@ const MonthlyReportPage = () => {
         )}
 
       </div>
-    </AppShell>
+    </>
   );
 };
 

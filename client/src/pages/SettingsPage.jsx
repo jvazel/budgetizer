@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import { AlertTriangle } from 'lucide-react';
@@ -42,7 +42,9 @@ const SettingsPage = () => {
   };
 
   return (
-    <AppShell title="Paramètres" backTo="/">
+    <>
+      <HeaderTitle>Paramètres</HeaderTitle>
+      <HeaderBackButton to="/" />
       <div className="space-y-8 pb-24">
         
         {/* Profile Card Summary & Form */}
@@ -158,7 +160,7 @@ const SettingsPage = () => {
         </div>
       )}
 
-    </AppShell>
+    </>
   );
 };
 

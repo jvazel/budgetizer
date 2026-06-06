@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import { Plus, Clock, HelpCircle, Check, AlertCircle, RefreshCw, Trash2, Edit } from 'lucide-react';
@@ -79,7 +79,9 @@ const ScheduledPage = () => {
   );
 
   return (
-    <AppShell title="Planifications" actions={actions}>
+    <>
+      <HeaderTitle>Planifications</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       
       {/* 1. Pending confirmations section */}
       {pending.length > 0 && (
@@ -230,7 +232,7 @@ const ScheduledPage = () => {
         initialData={editingSchedule}
       />
 
-    </AppShell>
+    </>
   );
 };
 

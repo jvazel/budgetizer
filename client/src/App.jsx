@@ -5,6 +5,7 @@ import OfflineStatus from './components/ui/OfflineStatus';
 import WebAuthnPromptModal from './components/ui/WebAuthnPromptModal';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { PwaProvider } from './context/PwaContext';
+import AppShell from './components/layout/AppShell';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -78,166 +79,63 @@ const AppContent = () => {
         </div>
       }>
         <Routes>
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/forgot-password" 
-          element={
-            <PublicRoute>
-              <ForgotPassword />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/reset-password/:token" 
-          element={
-            <PublicRoute>
-              <ResetPassword />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/register" 
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/budgets" 
-          element={
-            <ProtectedRoute>
-              <Budgets />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/calendar" 
-          element={
-            <ProtectedRoute>
-              <CalendarPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/charts" 
-          element={
-            <ProtectedRoute>
-              <ChartsPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/savings" 
-          element={
-            <ProtectedRoute>
-              <SavingsPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/scheduled" 
-          element={
-            <ProtectedRoute>
-              <ScheduledPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/subscriptions" 
-          element={
-            <ProtectedRoute>
-              <SubscriptionsPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/transactions" 
-          element={
-            <ProtectedRoute>
-              <Transactions />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/categories" 
-          element={
-            <ProtectedRoute>
-              <Categories />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/accounts" 
-          element={
-            <ProtectedRoute>
-              <AccountsPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/monthly-report" 
-          element={
-            <ProtectedRoute>
-              <MonthlyReportPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/transfers" 
-          element={
-            <ProtectedRoute>
-              <TransfersPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/summary-history" 
-          element={
-            <ProtectedRoute>
-              <SummaryHistory />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/ai-insights" 
-          element={
-            <ProtectedRoute>
-              <AiInsights />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <ReportsPage />
-            </ProtectedRoute>
-          } 
-        />
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/forgot-password" 
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/reset-password/:token" 
+            element={
+              <PublicRoute>
+                <ResetPassword />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } 
+          />
+          
+          <Route 
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/" element={<Home />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/charts" element={<ChartsPage />} />
+            <Route path="/savings" element={<SavingsPage />} />
+            <Route path="/scheduled" element={<ScheduledPage />} />
+            <Route path="/subscriptions" element={<SubscriptionsPage />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/monthly-report" element={<MonthlyReportPage />} />
+            <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/summary-history" element={<SummaryHistory />} />
+            <Route path="/ai-insights" element={<AiInsights />} />
+            <Route path="/reports" element={<ReportsPage />} />
+          </Route>
         </Routes>
       </React.Suspense>
     </>

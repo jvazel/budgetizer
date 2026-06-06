@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { useAccounts } from '../hooks/useAccounts';
 import { AuthContext } from '../context/AuthContext';
@@ -36,7 +36,10 @@ const AccountsPage = () => {
   );
 
   return (
-    <AppShell title="Comptes" backTo="/" actions={actions}>
+    <>
+      <HeaderTitle>Comptes</HeaderTitle>
+      <HeaderBackButton to="/" />
+      <HeaderActions>{actions}</HeaderActions>
       <div className="space-y-6 pb-24">
         
         {/* Total Balance Card */}
@@ -163,7 +166,7 @@ const AccountsPage = () => {
           setIsFormOpen(false);
         }}
       />
-    </AppShell>
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import api from '../services/api';
@@ -475,7 +475,9 @@ const ReportsPage = () => {
   };
 
   return (
-    <AppShell title="Rapports d'Activité" backTo="/">
+    <>
+      <HeaderTitle>Rapports d'Activité</HeaderTitle>
+      <HeaderBackButton to="/" />
       {/* CSS overrides specifically for printing */}
       <style>{`
         /* Force light theme variables and font styles on the print container */
@@ -1095,7 +1097,7 @@ const ReportsPage = () => {
         )}
 
       </div>
-    </AppShell>
+    </>
   );
 };
 

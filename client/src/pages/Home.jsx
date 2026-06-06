@@ -5,7 +5,7 @@ import { useDashboard } from '../hooks/useDashboard';
 import { useBudgets } from '../hooks/useBudgets';
 import { useSavingsGoals } from '../hooks/useSavingsGoals';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
@@ -191,7 +191,9 @@ const Home = () => {
 
   if (loading) {
     return (
-      <AppShell title={title} actions={actions}>
+      <>
+        <HeaderTitle>{title}</HeaderTitle>
+        <HeaderActions>{actions}</HeaderActions>
         {/* Skeleton Loaders */}
         <section className="mb-8 mt-4 text-center space-y-2 animate-pulse">
           <div className="h-4 bg-surface-2 w-24 mx-auto rounded-full" />
@@ -203,7 +205,7 @@ const Home = () => {
             <div className="shrink-0 w-[300px] h-[180px] rounded-[24px] bg-surface-2 animate-pulse" />
           </div>
         </section>
-      </AppShell>
+      </>
     );
   }
 
@@ -214,7 +216,9 @@ const Home = () => {
   const lastMonthLabel = capitalize(lastMonthDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
 
   return (
-    <AppShell title={title} actions={actions}>
+    <>
+      <HeaderTitle>{title}</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       <InstallPromptBanner />
       {/* Sommaire Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
@@ -943,7 +947,7 @@ const Home = () => {
           </div>
         </div>
       </BottomSheet>
-    </AppShell>
+    </>
   );
 };
 

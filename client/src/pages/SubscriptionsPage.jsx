@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import { Plus, CreditCard, HelpCircle, Edit, Trash2 } from 'lucide-react';
@@ -75,7 +75,10 @@ const SubscriptionsPage = () => {
   );
 
   return (
-    <AppShell title="Abonnements" backTo="/scheduled" actions={actions}>
+    <>
+      <HeaderTitle>Abonnements</HeaderTitle>
+      <HeaderBackButton to="/scheduled" />
+      <HeaderActions>{actions}</HeaderActions>
       
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
@@ -174,7 +177,7 @@ const SubscriptionsPage = () => {
         defaultIsSubscription={true}
       />
 
-    </AppShell>
+    </>
   );
 };
 

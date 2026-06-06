@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import TransactionList from '../components/transactions/TransactionList';
 import { useTransactions } from '../hooks/useTransactions';
 import { useAccounts } from '../hooks/useAccounts';
@@ -140,7 +140,9 @@ const Transactions = () => {
   );
 
   return (
-    <AppShell title="Transactions" actions={actions}>
+    <>
+      <HeaderTitle>Transactions</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       <div className="mt-4 space-y-4">
         
         {/* Dynamic sliding Search Bar */}
@@ -476,7 +478,7 @@ const Transactions = () => {
           </p>
         )}
       </ConfirmModal>
-    </AppShell>
+    </>
   );
 };
 

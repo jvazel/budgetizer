@@ -71,14 +71,15 @@ vi.mock('recharts', () => ({
   Cell: () => null
 }));
 
-// Mock custom sheets and banners to keep tests focused
 vi.mock('../../components/layout/AppShell', () => ({
-  default: ({ children, title }) => (
+  default: ({ children }) => (
     <div data-testid="app-shell">
-      <h1>{title}</h1>
       {children}
     </div>
-  )
+  ),
+  HeaderTitle: ({ children }) => <h1>{children}</h1>,
+  HeaderActions: ({ children }) => <div>{children}</div>,
+  HeaderBackButton: () => <button>Back</button>
 }));
 
 vi.mock('../../components/accounts/AccountFormSheet', () => ({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import AppShell from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import { 
@@ -65,7 +65,9 @@ const AiInsights = () => {
   const hasNoData = insights.message;
 
   return (
-    <AppShell title="Conseils" backTo="/">
+    <>
+      <HeaderTitle>Conseils</HeaderTitle>
+      <HeaderBackButton to="/" />
       <div className="space-y-6 pb-24">
         
         {/* Header Introduction Card */}
@@ -305,7 +307,7 @@ const AiInsights = () => {
           </>
         )}
       </div>
-    </AppShell>
+    </>
   );
 };
 
