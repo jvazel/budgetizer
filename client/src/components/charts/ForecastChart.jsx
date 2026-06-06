@@ -51,6 +51,14 @@ const ForecastChart = () => {
     return label.charAt(0).toUpperCase() + label.slice(1);
   };
 
+  const formatMonthShortLabel = (monthStr) => {
+    if (!monthStr) return '';
+    const [year, month] = monthStr.split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    const label = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  };
+
   const handleChartClick = async (clickedData) => {
     const payload = clickedData?.activePayload?.[0]?.payload || clickedData;
     if (!payload || !payload.month) return;
@@ -241,11 +249,13 @@ const ForecastChart = () => {
                 </defs>
                 <XAxis 
                   dataKey="month" 
-                  tick={{ fontSize: 9, fill: '#888' }}
+                  tickFormatter={formatMonthShortLabel}
+                  tick={{ fontSize: 9, fill: '#888', fontWeight: 'bold' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip 
+                  labelFormatter={formatMonthLabel}
                   formatter={(val, name) => {
                     if (name === 'balance') return [formatCurrency(val), 'Solde Réel'];
                     if (name === 'projBalance') return [formatCurrency(val), 'Solde Projeté'];
