@@ -82,6 +82,7 @@ vi.mock('../../models/Account.js', () => {
   MockAccount.findById = vi.fn();
   MockAccount.findOne = vi.fn();
   MockAccount.insertMany = vi.fn();
+  MockAccount.findOneAndUpdate = vi.fn();
 
   return { default: MockAccount };
 });
@@ -118,6 +119,7 @@ vi.mock('../../models/SavingsGoal.js', () => {
   });
 
   MockSavingsGoal.findById = vi.fn();
+  MockSavingsGoal.findOneAndUpdate = vi.fn();
 
   return { default: MockSavingsGoal };
 });
@@ -148,6 +150,10 @@ vi.mock('../../models/Budget.js', () => ({
 
 vi.mock('../../utils/pushNotification.js', () => ({
   sendPushNotification: vi.fn().mockResolvedValue(true)
+}));
+
+vi.mock('../../utils/cacheInvalidator.js', () => ({
+  invalidateMonthlyReport: vi.fn().mockResolvedValue(true)
 }));
 
 describe('Transaction Controller', () => {
@@ -188,6 +194,7 @@ describe('Transaction Controller', () => {
 
       expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
         userId: 'user_123',
+        isPending: { $ne: true },
         accountId: 'acc_1',
         type: 'expense'
       }));
@@ -211,16 +218,20 @@ describe('Transaction Controller', () => {
       };
 
       const mockAcc = { _id: 'acc_1', balance: 200, save: vi.fn() };
-      Account.findById.mockReturnValue(mockChain(mockAcc));
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.balance !== undefined) {
+          mockAcc.balance += update.$inc.balance;
+        }
+        return mockAcc;
+      });
 
       const populatedTx = { _id: 'tx_new_id', ...req.body };
       Transaction.findById.mockReturnValue(mockChain(populatedTx));
 
       await createTransaction(req, res);
 
-      expect(Account.findById).toHaveBeenCalledWith('acc_1');
+      expect(Account.findOneAndUpdate).toHaveBeenCalled();
       expect(mockAcc.balance).toBe(150); // 200 - 50
-      expect(mockAcc.save).toHaveBeenCalled();
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(populatedTx);
@@ -239,10 +250,13 @@ describe('Transaction Controller', () => {
       const mockAccSource = { _id: 'acc_1', balance: 500, save: vi.fn() };
       const mockAccDest = { _id: 'acc_2', balance: 50, save: vi.fn() };
 
-      Account.findById.mockImplementation((id) => {
-        if (id === 'acc_1') return mockChain(mockAccSource);
-        if (id === 'acc_2') return mockChain(mockAccDest);
-        return mockChain(null);
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        const id = filter._id;
+        const acc = id === 'acc_1' ? mockAccSource : id === 'acc_2' ? mockAccDest : null;
+        if (acc && update && update.$inc && update.$inc.balance !== undefined) {
+          acc.balance += update.$inc.balance;
+        }
+        return acc;
       });
 
       const populatedTx = { _id: 'tx_new_id', ...req.body };
@@ -252,8 +266,6 @@ describe('Transaction Controller', () => {
 
       expect(mockAccSource.balance).toBe(400); // 500 - 100
       expect(mockAccDest.balance).toBe(150); // 50 + 100
-      expect(mockAccSource.save).toHaveBeenCalled();
-      expect(mockAccDest.save).toHaveBeenCalled();
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
     });
@@ -273,12 +285,21 @@ describe('Transaction Controller', () => {
       const mockAccDest = { _id: 'acc_savings', balance: 1000, save: vi.fn() };
       const mockGoal = { _id: 'goal_1', accountId: 'acc_savings', currentAmount: 200, save: vi.fn() };
 
-      Account.findById.mockImplementation((id) => {
-        if (id === 'acc_1') return mockChain(mockAccSource);
-        if (id === 'acc_savings') return mockChain(mockAccDest);
-        return mockChain(null);
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        const id = filter._id;
+        const acc = id === 'acc_1' ? mockAccSource : id === 'acc_savings' ? mockAccDest : null;
+        if (acc && update && update.$inc && update.$inc.balance !== undefined) {
+          acc.balance += update.$inc.balance;
+        }
+        return acc;
       });
       SavingsGoal.findById.mockReturnValue(mockChain(mockGoal));
+      SavingsGoal.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.currentAmount !== undefined) {
+          mockGoal.currentAmount += update.$inc.currentAmount;
+        }
+        return mockGoal;
+      });
 
       const populatedTx = { _id: 'tx_new_id', ...req.body };
       Transaction.findById.mockReturnValue(mockChain(populatedTx));
@@ -288,9 +309,6 @@ describe('Transaction Controller', () => {
       expect(mockAccSource.balance).toBe(350); // 500 - 150
       expect(mockAccDest.balance).toBe(1150); // 1000 + 150
       expect(mockGoal.currentAmount).toBe(350); // 200 + 150
-      expect(mockGoal.save).toHaveBeenCalled();
-      expect(mockAccSource.save).toHaveBeenCalled();
-      expect(mockAccDest.save).toHaveBeenCalled();
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
     });
@@ -311,13 +329,17 @@ describe('Transaction Controller', () => {
       const mockAcc = { _id: 'acc_1', balance: 100, save: vi.fn() };
 
       Transaction.findById.mockResolvedValue(mockTx);
-      Account.findById.mockReturnValue(mockChain(mockAcc));
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.balance !== undefined) {
+          mockAcc.balance += update.$inc.balance;
+        }
+        return mockAcc;
+      });
 
       await deleteTransaction(req, res);
 
       // Reverting an expense of 25 means balance goes from 100 to 125
       expect(mockAcc.balance).toBe(125);
-      expect(mockAcc.save).toHaveBeenCalled();
       expect(Transaction.findByIdAndDelete).toHaveBeenCalledWith('tx1', expect.any(Object));
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: 'Transaction removed' });
@@ -433,14 +455,18 @@ describe('Transaction Controller', () => {
         if (id === 'tx1') return mockChain(mockExistingTx);
         return mockChain(null);
       });
-      Account.findById.mockReturnValue(mockChain(mockAcc));
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.balance !== undefined) {
+          mockAcc.balance += update.$inc.balance;
+        }
+        return mockAcc;
+      });
 
       await updateTransaction(req, res);
 
       // Revert old expense of 50 -> balance becomes 200
       // Apply new expense of 60 -> balance becomes 140
       expect(mockAcc.balance).toBe(140);
-      expect(mockAcc.save).toHaveBeenCalled();
       expect(mockExistingTx.save).toHaveBeenCalled();
       expect(mockSession.commitTransaction).toHaveBeenCalled();
     });

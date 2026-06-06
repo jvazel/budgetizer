@@ -9,6 +9,29 @@ import * as reportHook from '../../hooks/useMonthlyReport';
 
 vi.mock('../../hooks/useMonthlySummaries');
 vi.mock('../../hooks/useMonthlyReport');
+vi.mock('../../hooks/useAccounts', () => ({
+  useAccounts: () => ({
+    accounts: [],
+    totalBalance: 0,
+    loading: false,
+    error: null,
+    fetchAccounts: vi.fn(),
+    addAccount: vi.fn(),
+    updateAccount: vi.fn(),
+    deleteAccount: vi.fn()
+  })
+}));
+vi.mock('../../hooks/useTransactions', () => ({
+  useTransactions: () => ({
+    transactions: [],
+    loading: false,
+    error: null,
+    fetchTransactions: vi.fn(),
+    addTransaction: vi.fn(),
+    updateTransaction: vi.fn(),
+    deleteTransaction: vi.fn()
+  })
+}));
 
 describe('MonthlyReportPage Component - Robustness Tests', () => {
   const renderComponent = () => {

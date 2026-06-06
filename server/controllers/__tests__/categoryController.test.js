@@ -1,6 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { getCategories, createCategory, deleteCategory } from '../categoryController.js';
 import Category from '../../models/Category.js';
+import Transaction from '../../models/Transaction.js';
+import ScheduledTransaction from '../../models/ScheduledTransaction.js';
 
 vi.mock('../../models/Category.js', () => {
   const mockSave = vi.fn().mockImplementation(function() {
@@ -27,6 +29,22 @@ vi.mock('../../models/Category.js', () => {
   MockCategory.findByIdAndDelete = vi.fn();
   
   return { default: MockCategory };
+});
+
+vi.mock('../../models/Transaction.js', () => {
+  return {
+    default: {
+      countDocuments: vi.fn()
+    }
+  };
+});
+
+vi.mock('../../models/ScheduledTransaction.js', () => {
+  return {
+    default: {
+      countDocuments: vi.fn()
+    }
+  };
 });
 
 describe('Category Controller', () => {
@@ -125,7 +143,51 @@ describe('Category Controller', () => {
       expect(Category.findByIdAndDelete).not.toHaveBeenCalled();
     });
 
-    it('should delete own custom categories if they have no subcategories', async () => {
+    it('should block deletion if the category is used in active transactions', async () => {
+      req.params.id = 'used_cat_id';
+      
+      const mockCategory = {
+        _id: 'used_cat_id',
+        userId: { toString: () => 'user_123' },
+        isDefault: false
+      };
+
+      Category.findById.mockResolvedValue(mockCategory);
+      Category.countDocuments.mockResolvedValue(0); // No subcategories
+      Transaction.countDocuments.mockResolvedValue(1); // Used in 1 transaction
+      ScheduledTransaction.countDocuments.mockResolvedValue(0);
+
+      await deleteCategory(req, res);
+
+      expect(Transaction.countDocuments).toHaveBeenCalledWith({ categoryId: 'used_cat_id' });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Cannot delete a category that is used in transactions' });
+      expect(Category.findByIdAndDelete).not.toHaveBeenCalled();
+    });
+
+    it('should block deletion if the category is used in scheduled transactions', async () => {
+      req.params.id = 'scheduled_cat_id';
+      
+      const mockCategory = {
+        _id: 'scheduled_cat_id',
+        userId: { toString: () => 'user_123' },
+        isDefault: false
+      };
+
+      Category.findById.mockResolvedValue(mockCategory);
+      Category.countDocuments.mockResolvedValue(0); // No subcategories
+      Transaction.countDocuments.mockResolvedValue(0);
+      ScheduledTransaction.countDocuments.mockResolvedValue(1); // Used in 1 scheduled transaction
+
+      await deleteCategory(req, res);
+
+      expect(ScheduledTransaction.countDocuments).toHaveBeenCalledWith({ categoryId: 'scheduled_cat_id' });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Cannot delete a category that is used in scheduled transactions' });
+      expect(Category.findByIdAndDelete).not.toHaveBeenCalled();
+    });
+
+    it('should delete own custom categories if they have no subcategories and are not used', async () => {
       req.params.id = 'custom_cat_id';
       
       const mockCategory = {
@@ -136,6 +198,8 @@ describe('Category Controller', () => {
 
       Category.findById.mockResolvedValue(mockCategory);
       Category.countDocuments.mockResolvedValue(0); // No subcategories
+      Transaction.countDocuments.mockResolvedValue(0);
+      ScheduledTransaction.countDocuments.mockResolvedValue(0);
 
       await deleteCategory(req, res);
 

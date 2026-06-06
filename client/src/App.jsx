@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Home from './pages/Home';
+const Home = React.lazy(() => import('./pages/Home'));
 const Categories = React.lazy(() => import('./pages/Categories'));
 const Transactions = React.lazy(() => import('./pages/Transactions'));
 const Budgets = React.lazy(() => import('./pages/Budgets'));

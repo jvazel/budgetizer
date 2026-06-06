@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useBudgets = (params) => {
@@ -11,13 +11,11 @@ export const useBudgets = (params) => {
     year = params.year;
   }
 
-  const [budgets, setBudgets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const fetchBudgets = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['budgets', { weekStart, month, year }],
+    queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (weekStart) queryParams.append('weekStart', weekStart);
       if (month) queryParams.append('month', month);
@@ -25,53 +23,49 @@ export const useBudgets = (params) => {
 
       const queryString = queryParams.toString();
       const res = await api.get(`/budgets${queryString ? `?${queryString}` : ''}`);
-      setBudgets(res.data);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching budgets');
-    } finally {
-      setLoading(false);
-    }
-  }, [weekStart, month, year]);
+      return res.data;
+    },
+  });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchBudgets();
+  const budgets = data || [];
 
-    const handleRefresh = () => fetchBudgets();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => {
-      window.removeEventListener('transaction-changed', handleRefresh);
-    };
-  }, [fetchBudgets]);
+  const addMutation = useMutation({
+    mutationFn: async (newData) => {
+      const res = await api.post('/budgets', newData);
+      return res.data;
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const addBudget = async (data) => {
-    const res = await api.post('/budgets', data);
-    setBudgets([...budgets, res.data]);
-    return res.data;
-  };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const res = await api.put(`/budgets/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const updateBudget = async (id, data) => {
-    const res = await api.put(`/budgets/${id}`, data);
-    // Because spent/remaining are calculated on the backend during the GET,
-    // an update might not return the fully enriched object if we just return the saved document.
-    // So we trigger a re-fetch to ensure data consistency.
-    await fetchBudgets();
-    return res.data;
-  };
-
-  const deleteBudget = async (id) => {
-    await api.delete(`/budgets/${id}`);
-    setBudgets(budgets.filter(b => b._id !== id));
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/budgets/${id}`);
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
   return {
     budgets,
-    loading,
-    error,
-    fetchBudgets,
-    addBudget,
-    updateBudget,
-    deleteBudget
+    loading: isLoading,
+    error: error ? (error.response?.data?.message || 'Error fetching budgets') : null,
+    fetchBudgets: () => queryClient.invalidateQueries({ queryKey: ['budgets'] }),
+    addBudget: addMutation.mutateAsync,
+    updateBudget: (id, data) => updateMutation.mutateAsync({ id, data }),
+    deleteBudget: deleteMutation.mutateAsync
   };
 };
+

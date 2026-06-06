@@ -6,25 +6,26 @@ import SavingsGoal from '../models/SavingsGoal.js';
 import User from '../models/User.js';
 import Budget from '../models/Budget.js';
 import { sendPushNotification } from '../utils/pushNotification.js';
+import { invalidateMonthlyReport } from '../utils/cacheInvalidator.js';
 import mongoose from 'mongoose';
 
-// Helper for budget dates
+// Helper for budget dates (UTC)
 const getBudgetPeriodDates = (period, referenceDate = new Date()) => {
   let start, end;
   const ref = new Date(referenceDate);
   if (period === 'weekly') {
-    const day = ref.getDay();
-    const diff = ref.getDate() - day + (day === 0 ? -6 : 1);
-    start = new Date(ref.getFullYear(), ref.getMonth(), diff, 0, 0, 0, 0);
+    const day = ref.getUTCDay();
+    const diff = ref.getUTCDate() - day + (day === 0 ? -6 : 1);
+    start = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), diff, 0, 0, 0, 0));
     end = new Date(start.getTime());
-    end.setDate(end.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
+    end.setUTCDate(end.getUTCDate() + 6);
+    end.setUTCHours(23, 59, 59, 999);
   } else if (period === 'yearly') {
-    start = new Date(ref.getFullYear(), 0, 1, 0, 0, 0, 0);
-    end = new Date(ref.getFullYear(), 11, 31, 23, 59, 59, 999);
+    start = new Date(Date.UTC(ref.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+    end = new Date(Date.UTC(ref.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
   } else { // monthly
-    start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
-    end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
+    start = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), 1, 0, 0, 0, 0));
+    end = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth() + 1, 0, 23, 59, 59, 999));
   }
   return { start, end };
 };
@@ -61,15 +62,21 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
     // 2. Budget Alert
     if (user.preferences.enableBudgetAlerts && transaction.categoryId) {
       const budgets = await Budget.find({ userId, categoryId: transaction.categoryId });
-      for (const budget of budgets) {
-        const { start, end } = getBudgetPeriodDates(budget.period, transaction.date || new Date());
-        
-        // Sum expenses for this category in the period using MongoDB aggregation for efficiency
+      if (budgets.length > 0) {
+        const includedAccounts = await Account.find({ userId, includeInTotal: { $ne: false } }).select('_id');
+        const includedAccountIds = includedAccounts.map(acc => acc._id);
+
+        for (const budget of budgets) {
+          const { start, end } = getBudgetPeriodDates(budget.period, transaction.date || new Date());
+
+          // Sum expenses for this category in the period using MongoDB aggregation for efficiency (only for included accounts)
         const spentResult = await Transaction.aggregate([
           {
             $match: {
               userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
               type: 'expense',
+              accountId: { $in: includedAccountIds },
+              isPending: { $ne: true },
               categoryId: mongoose.Types.ObjectId.isValid(budget.categoryId) ? new mongoose.Types.ObjectId(budget.categoryId) : budget.categoryId,
               date: { $gte: start, $lte: end }
             }
@@ -104,6 +111,7 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
           });
         }
       }
+      }
     }
   } catch (err) {
     console.error('Error triggering alerts:', err);
@@ -112,15 +120,15 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
 
 // Utility function to update account balance
 const updateAccountBalance = async (accountId, amount, type, session = null) => {
-  const account = await Account.findById(accountId).session(session);
+  const numericAmount = Number(amount);
+  if (isNaN(numericAmount)) throw new Error('Invalid amount');
+  const delta = type === 'expense' ? -numericAmount : numericAmount;
+  const account = await Account.findOneAndUpdate(
+    { _id: accountId },
+    { $inc: { balance: delta } },
+    { session, new: true }
+  );
   if (!account) throw new Error('Account not found');
-
-  if (type === 'expense') {
-    account.balance -= amount;
-  } else if (type === 'income') {
-    account.balance += amount;
-  }
-  await account.save({ session });
 };
 
 // Utility function to update savings goal progress
@@ -128,11 +136,14 @@ const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false,
   const goal = await SavingsGoal.findById(goalId).session(session);
   if (!goal) return;
 
+  const numericAmount = Number(amount);
+  if (isNaN(numericAmount)) throw new Error('Invalid amount');
+
   let delta = 0;
   if (type === 'expense') {
-    delta = isRevert ? -amount : amount;
+    delta = isRevert ? -numericAmount : numericAmount;
   } else if (type === 'income') {
-    delta = isRevert ? amount : -amount;
+    delta = isRevert ? numericAmount : -numericAmount;
   } else if (type === 'transfer') {
     if (goal.accountId && transaction) {
       const goalAccountIdStr = goal.accountId.toString();
@@ -141,16 +152,22 @@ const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false,
 
       if (isToGoalAccount) {
         // Transfer to goal account = deposit
-        delta = isRevert ? -amount : amount;
+        delta = isRevert ? -numericAmount : numericAmount;
       } else if (isFromGoalAccount) {
         // Transfer from goal account = withdrawal
-        delta = isRevert ? amount : -amount;
+        delta = isRevert ? numericAmount : -numericAmount;
       }
     }
   }
 
-  goal.currentAmount += delta;
-  await goal.save({ session });
+  if (delta !== 0) {
+    const updatedGoal = await SavingsGoal.findOneAndUpdate(
+      { _id: goalId },
+      { $inc: { currentAmount: delta } },
+      { session, new: true }
+    );
+    if (!updatedGoal) throw new Error('Savings goal not found');
+  }
 };
 
 // @desc    Get user transactions with pagination & filters
@@ -160,7 +177,7 @@ export const getTransactions = async (req, res) => {
   try {
     const { accountId, categoryId, type, startDate, endDate, search, page = 1, limit = 20 } = req.query;
 
-    let query = { userId: req.user.id };
+    let query = { userId: req.user.id, isPending: { $ne: true } };
 
     if (accountId) query.accountId = accountId;
     if (categoryId) query.categoryId = categoryId;
@@ -274,6 +291,9 @@ export const createTransaction = async (req, res) => {
     // Trigger push notifications in background
     checkAndTriggerAlerts(req.user.id, transaction, amount).catch(err => console.error('Alert trigger error:', err));
     
+    // Invalidate monthly report cache
+    invalidateMonthlyReport(req.user.id, transaction.date).catch(err => console.error('Cache invalidation error:', err));
+
     // Fetch with populated fields to return
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')
@@ -304,27 +324,33 @@ export const deleteTransaction = async (req, res) => {
     if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
     if (transaction.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
 
-    // Revert balances
-    if (transaction.type === 'transfer') {
-      await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session);
-      if (transaction.toAccountId) {
-        await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session);
-      }
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
-      }
-    } else {
-      // If it was an expense, adding it back means 'income' type operation on balance
-      const revertType = transaction.type === 'expense' ? 'income' : 'expense';
-      await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+    // Revert balances if the transaction is not pending (meaning it was actually executed and affected balances)
+    if (!transaction.isPending) {
+      if (transaction.type === 'transfer') {
+        await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session);
+        if (transaction.toAccountId) {
+          await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session);
+        }
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+        }
+      } else {
+        // If it was an expense, adding it back means 'income' type operation on balance
+        const revertType = transaction.type === 'expense' ? 'income' : 'expense';
+        await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+        }
       }
     }
 
     await Transaction.findByIdAndDelete(req.params.id, { session });
     
     await session.commitTransaction();
+    
+    // Invalidate monthly report cache
+    invalidateMonthlyReport(req.user.id, transaction.date).catch(err => console.error('Cache invalidation error:', err));
+
     res.json({ message: 'Transaction removed' });
   } catch (error) {
     await session.abortTransaction();
@@ -344,13 +370,13 @@ export const getCalendarTransactions = async (req, res) => {
     let startDate, endDate;
 
     if (month) {
-      const [y, m] = month.split('-');
-      startDate = new Date(y, m - 1, 1);
-      endDate = new Date(y, m, 0, 23, 59, 59, 999);
+      const [y, m] = month.split('-').map(Number);
+      startDate = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      endDate = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
     } else {
       const now = new Date();
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
     }
 
     // 1. Fetch real transactions and active scheduled transactions in parallel
@@ -392,17 +418,17 @@ export const getCalendarTransactions = async (req, res) => {
           });
         }
 
-        // Move to next date
+        // Move to next date (UTC)
         const { every, unit } = st.frequency;
         if (st.frequency && every > 0 && unit) {
           if (unit === 'day') {
-            curr.setDate(curr.getDate() + every);
+            curr.setUTCDate(curr.getUTCDate() + every);
           } else if (unit === 'week') {
-            curr.setDate(curr.getDate() + every * 7);
+            curr.setUTCDate(curr.getUTCDate() + every * 7);
           } else if (unit === 'month') {
-            curr.setMonth(curr.getMonth() + every);
+            curr.setUTCMonth(curr.getUTCMonth() + every);
           } else if (unit === 'year') {
-            curr.setFullYear(curr.getFullYear() + every);
+            curr.setUTCFullYear(curr.getUTCFullYear() + every);
           }
         } else {
           break; // Avoid infinite loops if unit or every is invalid
@@ -412,7 +438,16 @@ export const getCalendarTransactions = async (req, res) => {
       }
     });
 
-    const allTransactions = [...realTransactions, ...projectedTransactions];
+    const allTransactions = [
+      ...realTransactions.map(tx => {
+        if (tx.isPending) {
+          const txObj = tx.toObject ? tx.toObject() : tx;
+          return { ...txObj, isPlanned: true };
+        }
+        return tx;
+      }),
+      ...projectedTransactions
+    ];
     res.json(allTransactions);
   } catch (error) {
     console.error(error.message);
@@ -426,7 +461,7 @@ export const getCalendarTransactions = async (req, res) => {
 export const exportTransactions = async (req, res) => {
   try {
     const { startDate, endDate, accountId } = req.query;
-    let query = { userId: req.user.id };
+    let query = { userId: req.user.id, isPending: { $ne: true } };
 
     if (accountId) query.accountId = accountId;
     if (startDate || endDate) {
@@ -674,23 +709,26 @@ export const updateTransaction = async (req, res) => {
       amount: transaction.amount,
       accountId: transaction.accountId,
       categoryId: transaction.categoryId,
-      type: transaction.type
+      type: transaction.type,
+      date: transaction.date
     };
 
-    // 1. Revert OLD balance impact
-    if (transaction.type === 'transfer') {
-      await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session); // Revert expense
-      if (transaction.toAccountId) {
-        await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session); // Revert income
-      }
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
-      }
-    } else {
-      const revertType = transaction.type === 'expense' ? 'income' : 'expense';
-      await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+    // 1. Revert OLD balance impact if the transaction is not pending
+    if (!transaction.isPending) {
+      if (transaction.type === 'transfer') {
+        await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session); // Revert expense
+        if (transaction.toAccountId) {
+          await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session); // Revert income
+        }
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+        }
+      } else {
+        const revertType = transaction.type === 'expense' ? 'income' : 'expense';
+        await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
+        }
       }
     }
 
@@ -709,18 +747,20 @@ export const updateTransaction = async (req, res) => {
 
     await transaction.save({ session });
 
-    // 3. Apply NEW balance impact
-    if (transaction.type === 'transfer') {
-      if (!transaction.toAccountId) throw new Error('Un compte destinataire est requis pour un transfert.');
-      await updateAccountBalance(transaction.accountId, transaction.amount, 'expense', session);
-      await updateAccountBalance(transaction.toAccountId, transaction.amount, 'income', session);
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
-      }
-    } else {
-      await updateAccountBalance(transaction.accountId, transaction.amount, transaction.type, session);
-      if (transaction.savingsGoalId) {
-        await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
+    // 3. Apply NEW balance impact if the transaction is not pending
+    if (!transaction.isPending) {
+      if (transaction.type === 'transfer') {
+        if (!transaction.toAccountId) throw new Error('Un compte destinataire est requis pour un transfert.');
+        await updateAccountBalance(transaction.accountId, transaction.amount, 'expense', session);
+        await updateAccountBalance(transaction.toAccountId, transaction.amount, 'income', session);
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
+        }
+      } else {
+        await updateAccountBalance(transaction.accountId, transaction.amount, transaction.type, session);
+        if (transaction.savingsGoalId) {
+          await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
+        }
       }
     }
 
@@ -728,6 +768,12 @@ export const updateTransaction = async (req, res) => {
 
     // Trigger push notifications in background
     checkAndTriggerAlerts(req.user.id, transaction, amount, oldTransactionCopy).catch(err => console.error('Alert trigger error:', err));
+
+    // Invalidate monthly report cache for both old and new dates if changed
+    invalidateMonthlyReport(req.user.id, oldTransactionCopy.date).catch(err => console.error('Cache invalidation error:', err));
+    if (date && new Date(date).getTime() !== new Date(oldTransactionCopy.date).getTime()) {
+      invalidateMonthlyReport(req.user.id, date).catch(err => console.error('Cache invalidation error:', err));
+    }
 
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')

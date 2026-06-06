@@ -26,120 +26,7 @@ const ReportsPage = () => {
     }).format(amount);
   };
 
-  // Backtracking Algorithm to calculate historical balances
-  const calculateDailyBalances = (userAccounts, allTxs, startStr, endStr) => {
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    start.setUTCHours(0, 0, 0, 0);
-    end.setUTCHours(23, 59, 59, 999);
 
-    // Initialize running balances for all accounts in a Map
-    const runningBalances = {};
-    userAccounts.forEach(acc => {
-      runningBalances[acc._id.toString()] = acc.balance;
-    });
-
-    // Sort transactions descending (newest to oldest)
-    const sortedTxs = [...allTxs].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    const dailyBalancesMap = {};
-    let txIdx = 0;
-
-    // Helper to calculate total included balance from running balances
-    const getIncludedTotal = () => {
-      let total = 0;
-      userAccounts.forEach(acc => {
-        if (acc.includeInTotal !== false) {
-          total += runningBalances[acc._id.toString()] || 0;
-        }
-      });
-      return total;
-    };
-
-    // Helper to revert a single transaction in running balances (moving backwards in time)
-    const revertTransaction = (tx) => {
-      const accId = tx.accountId?._id || tx.accountId?.toString();
-      const toAccId = tx.toAccountId?._id || tx.toAccountId?.toString();
-
-      if (tx.type === 'expense') {
-        if (accId && runningBalances[accId] !== undefined) {
-          runningBalances[accId] += tx.amount;
-        }
-      } else if (tx.type === 'income') {
-        if (accId && runningBalances[accId] !== undefined) {
-          runningBalances[accId] -= tx.amount;
-        }
-      } else if (tx.type === 'transfer') {
-        if (accId && runningBalances[accId] !== undefined) {
-          runningBalances[accId] += tx.amount;
-        }
-        if (toAccId && runningBalances[toAccId] !== undefined) {
-          runningBalances[toAccId] -= tx.amount;
-        }
-      }
-    };
-
-    // 1. Reverse all transactions after the endDate
-    while (txIdx < sortedTxs.length) {
-      const tx = sortedTxs[txIdx];
-      const txDate = new Date(tx.date);
-      if (txDate > end) {
-        revertTransaction(tx);
-        txIdx++;
-      } else {
-        break;
-      }
-    }
-
-    // 2. Reconstruct balances backwards daily
-    const currentDay = new Date(end);
-    while (currentDay >= start) {
-      const dateStr = currentDay.toISOString().split('T')[0];
-      
-      // Store the included total balance for the current day
-      dailyBalancesMap[dateStr] = getIncludedTotal();
-
-      // Reverse transactions on this day to find the previous day's balance
-      while (txIdx < sortedTxs.length) {
-        const tx = sortedTxs[txIdx];
-        const txDate = new Date(tx.date);
-        const txDateStr = txDate.toISOString().split('T')[0];
-
-        if (txDateStr === dateStr) {
-          revertTransaction(tx);
-          txIdx++;
-        } else if (txDate > currentDay) {
-          // Guard for timezone boundary issues
-          txIdx++;
-        } else {
-          break;
-        }
-      }
-
-      // Move to previous day
-      currentDay.setDate(currentDay.getDate() - 1);
-    }
-
-    // 3. Compile final ascending order list for Recharts
-    const chartDataList = [];
-    const temp = new Date(start);
-    let lastValue = getIncludedTotal();
-
-    while (temp <= end) {
-      const dateStr = temp.toISOString().split('T')[0];
-      const label = temp.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-      const val = dailyBalancesMap[dateStr] ?? lastValue;
-      chartDataList.push({
-        date: dateStr,
-        label,
-        balance: parseFloat(val.toFixed(2))
-      });
-      lastValue = val;
-      temp.setDate(temp.getDate() + 1);
-    }
-
-    return chartDataList;
-  };
 
   const getTodayStr = () => new Date().toISOString().split('T')[0];
   const getOneMonthAgoStr = () => {
@@ -206,14 +93,23 @@ const ReportsPage = () => {
     const toastId = toast.loading("Analyse des données en cours...");
     
     try {
-      logDebug("Envoi de la requête de récupération des transactions...");
-      const txRes = await api.get('/transactions', {
-        params: {
-          startDate,
-          limit: 2000
-        }
-      });
+      logDebug("Envoi de la requête de récupération des transactions et de l'historique des soldes...");
+      const [txRes, balanceHistoryRes] = await Promise.all([
+        api.get('/transactions', {
+          params: {
+            startDate,
+            limit: 2000
+          }
+        }),
+        api.get('/charts/balance-history', {
+          params: {
+            startDate,
+            endDate
+          }
+        })
+      ]);
       const allTransactionsFetched = txRes.data.transactions || [];
+      const reconstructedBalances = balanceHistoryRes.data || [];
       logDebug(`Transactions récupérées du serveur : ${allTransactionsFetched.length}`);
 
       // Filter transactions that are within our selected report period
@@ -240,14 +136,24 @@ const ReportsPage = () => {
       }
 
       // 2. Calculate summary statistics (Inflow / Outflow)
+      const checkingAccountIds = (accounts || [])
+        .filter(acc => acc.type === 'checking')
+        .map(acc => acc._id.toString());
+
       let totalIncome = 0;
       let totalExpenses = 0;
       const categoryMap = {};
 
       periodTxs.forEach(tx => {
-        if (tx.type === 'income') {
+        const txAccId = tx.accountId?._id?.toString() || tx.accountId?.toString();
+        const txToAccId = tx.toAccountId?._id?.toString() || tx.toAccountId?.toString();
+
+        const sourceIsChecking = checkingAccountIds.includes(txAccId);
+        const destIsChecking = txToAccId ? checkingAccountIds.includes(txToAccId) : false;
+
+        if (tx.type === 'income' && sourceIsChecking) {
           totalIncome += tx.amount;
-        } else if (tx.type === 'expense') {
+        } else if (tx.type === 'expense' && sourceIsChecking) {
           totalExpenses += tx.amount;
           
           // Categorize
@@ -266,6 +172,12 @@ const ReportsPage = () => {
             };
           }
           categoryMap[catId].value += tx.amount;
+        } else if (tx.type === 'transfer') {
+          if (sourceIsChecking && !destIsChecking) {
+            totalExpenses += tx.amount;
+          } else if (!sourceIsChecking && destIsChecking) {
+            totalIncome += tx.amount;
+          }
         }
       });
 
@@ -284,13 +196,22 @@ const ReportsPage = () => {
       logDebug(`Catégories de dépenses calculées : ${sortedCategories.length}`);
 
       // 3. Reconstruct running balance evolution daily
-      logDebug("Reconstruction de l'évolution du solde journalier (backtracking)...");
-      const reconstructedBalances = calculateDailyBalances(accounts, allTransactionsFetched, startDate, endDate);
+      logDebug("Mise à jour de l'évolution du solde journalier (reçu du serveur)...");
       setDailyBalances(reconstructedBalances);
       logDebug(`Évolution du solde calculée sur ${reconstructedBalances.length} jours`);
 
       // 4. Identify unusual expenses
-      const expensesOnly = periodTxs.filter(tx => tx.type === 'expense');
+      const expensesOnly = periodTxs.filter(tx => {
+        const txAccId = tx.accountId?._id?.toString() || tx.accountId?.toString();
+        const txToAccId = tx.toAccountId?._id?.toString() || tx.toAccountId?.toString();
+        const sourceIsChecking = checkingAccountIds.includes(txAccId);
+        const destIsChecking = txToAccId ? checkingAccountIds.includes(txToAccId) : false;
+
+        if (tx.type === 'expense' && sourceIsChecking) return true;
+        if (tx.type === 'transfer' && sourceIsChecking && !destIsChecking) return true;
+        return false;
+      });
+
       const avgExpenseAmount = expensesOnly.length > 0 
         ? expensesOnly.reduce((sum, tx) => sum + tx.amount, 0) / expensesOnly.length
         : 0;

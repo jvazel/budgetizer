@@ -1,61 +1,57 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useTransactions = (filters = {}) => {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const fetchTransactions = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['transactions', filters],
+    queryFn: async () => {
       const params = new URLSearchParams(filters);
       const res = await api.get(`/transactions?${params.toString()}`);
-      setTransactions(res.data.transactions);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching transactions');
-    } finally {
-      setLoading(false);
-    }
-  }, [JSON.stringify(filters)]); // Re-fetch when filters change
+      return res.data.transactions;
+    },
+  });
 
-  useEffect(() => {
-    fetchTransactions();
+  const transactions = data || [];
 
-    const handleRefresh = () => fetchTransactions();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => {
-      window.removeEventListener('transaction-changed', handleRefresh);
-    };
-  }, [fetchTransactions]);
+  const addMutation = useMutation({
+    mutationFn: async (newData) => {
+      const res = await api.post('/transactions', newData);
+      return res.data;
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const addTransaction = async (data) => {
-    const res = await api.post('/transactions', data);
-    setTransactions([res.data, ...transactions]);
-    return res.data;
-  };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const res = await api.put(`/transactions/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const updateTransaction = async (id, data) => {
-    const res = await api.put(`/transactions/${id}`, data);
-    setTransactions(transactions.map(t => t._id === id ? res.data : t));
-    window.dispatchEvent(new CustomEvent('transaction-changed'));
-    return res.data;
-  };
-
-  const deleteTransaction = async (id) => {
-    await api.delete(`/transactions/${id}`);
-    setTransactions(transactions.filter(t => t._id !== id));
-    window.dispatchEvent(new CustomEvent('transaction-changed'));
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/transactions/${id}`);
+    },
+    onSuccess: () => {
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
   return {
     transactions,
-    loading,
-    error,
-    fetchTransactions,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction
+    loading: isLoading,
+    error: error ? (error.response?.data?.message || 'Error fetching transactions') : null,
+    fetchTransactions: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+    addTransaction: addMutation.mutateAsync,
+    updateTransaction: (id, data) => updateMutation.mutateAsync({ id, data }),
+    deleteTransaction: deleteMutation.mutateAsync
   };
 };
+

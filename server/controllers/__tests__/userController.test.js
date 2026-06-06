@@ -13,6 +13,8 @@ import Budget from '../../models/Budget.js';
 import Category from '../../models/Category.js';
 import Account from '../../models/Account.js';
 import SavedFilter from '../../models/SavedFilter.js';
+import MonthlyReport from '../../models/MonthlyReport.js';
+import UserCredential from '../../models/UserCredential.js';
 import bcrypt from 'bcryptjs';
 
 vi.mock('../../models/User.js', () => ({
@@ -54,6 +56,18 @@ vi.mock('../../models/Account.js', () => ({
 }));
 
 vi.mock('../../models/SavedFilter.js', () => ({
+  default: {
+    deleteMany: vi.fn().mockResolvedValue({})
+  }
+}));
+
+vi.mock('../../models/MonthlyReport.js', () => ({
+  default: {
+    deleteMany: vi.fn().mockResolvedValue({})
+  }
+}));
+
+vi.mock('../../models/UserCredential.js', () => ({
   default: {
     deleteMany: vi.fn().mockResolvedValue({})
   }
@@ -225,6 +239,8 @@ describe('User Controller', () => {
       expect(Category.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(Account.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(SavedFilter.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(MonthlyReport.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(UserCredential.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(User.findByIdAndDelete).toHaveBeenCalledWith('user_123');
       expect(res.json).toHaveBeenCalledWith({ message: expect.stringContaining('cascade') });
     });
@@ -240,6 +256,8 @@ describe('User Controller', () => {
       expect(Category.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(Account.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(SavedFilter.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(MonthlyReport.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(UserCredential.deleteMany).toHaveBeenCalledWith({ userId: 'user_123' });
       expect(User.findByIdAndDelete).not.toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: expect.stringContaining('financières ont été effacées') });
     });

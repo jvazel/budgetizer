@@ -16,6 +16,16 @@ vi.mock('../../models/ScheduledTransaction.js', () => ({
   }
 }));
 
+vi.mock('../../models/Account.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue([{ _id: 'acc1' }])
+      }))
+    }))
+  }
+}));
+
 describe('Insight Controller', () => {
   let req, res;
   let findCallCount = 0;
@@ -44,7 +54,9 @@ describe('Insight Controller', () => {
 
   it('should return empty lists and a message if no transactions are found', async () => {
     Transaction.findOne.mockReturnValue({
-      sort: vi.fn().mockResolvedValue(null)
+      sort: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue(null)
+      }))
     });
 
     await getInsights(req, res);
@@ -60,7 +72,9 @@ describe('Insight Controller', () => {
   it('should return a message if history is less than 2 full months', async () => {
     const mockOldestTx = { date: new Date('2026-05-15') };
     Transaction.findOne.mockReturnValue({
-      sort: vi.fn().mockResolvedValue(mockOldestTx)
+      sort: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue(mockOldestTx)
+      }))
     });
 
     await getInsights(req, res);
@@ -76,7 +90,9 @@ describe('Insight Controller', () => {
   it('should calculate anomalies and suggestions when history is sufficient', async () => {
     const mockOldestTx = { date: new Date('2026-01-10') };
     Transaction.findOne.mockReturnValue({
-      sort: vi.fn().mockResolvedValue(mockOldestTx)
+      sort: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue(mockOldestTx)
+      }))
     });
 
     const mockCategoryFood = { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' };
@@ -101,12 +117,15 @@ describe('Insight Controller', () => {
       const query = {
         select: vi.fn().mockReturnThis(),
         populate: vi.fn().mockReturnThis(),
+        lean: vi.fn().mockReturnThis(),
         then: vi.fn().mockImplementation((resolve) => resolve(resolved))
       };
       return query;
     });
 
-    ScheduledTransaction.find.mockResolvedValue([]);
+    ScheduledTransaction.find.mockReturnValue({
+      lean: vi.fn().mockResolvedValue([])
+    });
 
     await getInsights(req, res);
 
@@ -134,7 +153,9 @@ describe('Insight Controller', () => {
   it('should handle custom anomaly threshold from query parameters', async () => {
     const mockOldestTx = { date: new Date('2026-01-10') };
     Transaction.findOne.mockReturnValue({
-      sort: vi.fn().mockResolvedValue(mockOldestTx)
+      sort: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue(mockOldestTx)
+      }))
     });
 
     req.query.threshold = '50';
@@ -155,12 +176,15 @@ describe('Insight Controller', () => {
       const query = {
         select: vi.fn().mockReturnThis(),
         populate: vi.fn().mockReturnThis(),
+        lean: vi.fn().mockReturnThis(),
         then: vi.fn().mockImplementation((resolve) => resolve(resolved))
       };
       return query;
     });
 
-    ScheduledTransaction.find.mockResolvedValue([]);
+    ScheduledTransaction.find.mockReturnValue({
+      lean: vi.fn().mockResolvedValue([])
+    });
 
     await getInsights(req, res);
 

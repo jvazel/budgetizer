@@ -84,8 +84,9 @@ const CategoryChart = () => {
     try {
       setCategoryTransactionsLoading(true);
       const { startDate, endDate } = getDates(period);
-      const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}`);
-      const filtered = res.data.filter(
+      const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}&limit=1000`);
+      const list = res.data.transactions || res.data || [];
+      const filtered = list.filter(
         tx => (tx.categoryId?._id === cat.categoryId || tx.categoryId?.name === cat.name) && tx.type === type
       );
       setCategoryTransactions(filtered);
@@ -287,9 +288,10 @@ const CategoryChart = () => {
     try {
       const { startDate, endDate } = getDates(period);
       // Fetch all transactions in period for this user
-      const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}`);
+      const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}&limit=1000`);
+      const list = res.data.transactions || res.data || [];
       // Filter by subcategory name
-      const filtered = res.data.filter(tx => tx.categoryId?.name === subcatName && tx.type === type);
+      const filtered = list.filter(tx => tx.categoryId?.name === subcatName && tx.type === type);
       setTransactionListSheet({
         isOpen: true,
         subcatName,

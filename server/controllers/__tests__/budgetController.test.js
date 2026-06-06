@@ -34,6 +34,14 @@ vi.mock('../../models/Transaction.js', () => ({
   }
 }));
 
+vi.mock('../../models/Account.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockResolvedValue([{ _id: 'acc1' }])
+    }))
+  }
+}));
+
 describe('Budget Controller', () => {
   let req, res;
 

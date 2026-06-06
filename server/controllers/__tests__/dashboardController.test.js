@@ -44,6 +44,7 @@ const mockChain = (value) => {
     select: vi.fn().mockImplementation(() => obj),
     populate: vi.fn().mockImplementation(() => obj),
     sort: vi.fn().mockImplementation(() => obj),
+    lean: vi.fn().mockImplementation(() => obj),
     then: vi.fn().mockImplementation((resolve) => Promise.resolve(value).then(resolve))
   };
   return obj;
@@ -54,7 +55,10 @@ describe('Dashboard Controller', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    Transaction.aggregate.mockResolvedValue([]);
+    Transaction.aggregate.mockResolvedValue([
+      { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') },
+      { _id: 'acc2', lastTransactionDate: new Date('2026-06-01') }
+    ]);
 
     req = {
       user: {
@@ -82,8 +86,8 @@ describe('Dashboard Controller', () => {
   describe('getDashboardSummary', () => {
     it('should aggregate accounts, transaction metrics, charts, and notifications', async () => {
       const mockAccounts = [
-        { _id: 'acc1', name: 'Compte Courant', balance: 500, type: 'checking', includeInTotal: true, toObject: function() { return this; } },
-        { _id: 'acc2', name: 'Livret A', balance: 2000, type: 'savings', includeInTotal: true, toObject: function() { return this; } }
+        { _id: 'acc1', name: 'Compte Courant', balance: 500, type: 'checking', includeInTotal: true },
+        { _id: 'acc2', name: 'Livret A', balance: 2000, type: 'savings', includeInTotal: true }
       ];
 
       const mockCategoryFood = { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' };
@@ -94,16 +98,15 @@ describe('Dashboard Controller', () => {
       ];
 
       const mockLastMonthTxs = [
-        { _id: 'tx3', type: 'expense', amount: 100, date: new Date(new Date().setMonth(new Date().getMonth() - 1)) }
+        { _id: 'tx3', type: 'expense', amount: 100, accountId: 'acc1', date: new Date(new Date().setMonth(new Date().getMonth() - 1)) }
       ];
 
-      Account.find.mockResolvedValue(mockAccounts);
+      Account.find.mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue(mockAccounts)
+      }));
       
-      // Setup findOne mock to handle lastTx sorting per account and oldestTx date
+      // Setup findOne mock to handle oldestTx date
       Transaction.findOne.mockImplementation((query) => {
-        if (query && query.$or) {
-          return mockChain({ date: new Date('2026-06-01') });
-        }
         return mockChain({ date: new Date('2026-01-01') }); // Oldest transaction
       });
 
@@ -127,7 +130,7 @@ describe('Dashboard Controller', () => {
       });
 
       Budget.find.mockReturnValue(mockChain([]));
-      SavingsGoal.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(mockChain([]));
       ScheduledTransaction.find.mockReturnValue(mockChain([]));
 
       await getDashboardSummary(req, res);
@@ -160,7 +163,7 @@ describe('Dashboard Controller', () => {
         { _id: 'tx1', type: 'expense', amount: 120, categoryId: mockCategoryFood, accountId: 'acc1', date: new Date() }
       ];
 
-      Account.find.mockResolvedValue(mockAccounts);
+      Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
       Transaction.find.mockImplementation((query) => {
@@ -172,7 +175,7 @@ describe('Dashboard Controller', () => {
       });
 
       Budget.find.mockReturnValue(mockChain(mockBudgets));
-      SavingsGoal.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(mockChain([]));
       ScheduledTransaction.find.mockReturnValue(mockChain([]));
 
       await getDashboardSummary(req, res);
@@ -199,7 +202,7 @@ describe('Dashboard Controller', () => {
         { _id: 'b1', name: 'Alimentation', amount: 100, alertAt: 80, categoryId: null }
       ];
 
-      Account.find.mockResolvedValue(mockAccounts);
+      Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
       Transaction.find.mockImplementation((query) => {
@@ -208,7 +211,7 @@ describe('Dashboard Controller', () => {
       });
 
       Budget.find.mockReturnValue(mockChain(mockBudgets));
-      SavingsGoal.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(mockChain([]));
       ScheduledTransaction.find.mockReturnValue(mockChain([]));
 
       await getDashboardSummary(req, res);
@@ -238,7 +241,7 @@ describe('Dashboard Controller', () => {
         }
       ];
 
-      Account.find.mockResolvedValue(mockAccounts);
+      Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
       Transaction.find.mockImplementation((query) => {
@@ -253,7 +256,7 @@ describe('Dashboard Controller', () => {
       });
 
       Budget.find.mockReturnValue(mockChain([]));
-      SavingsGoal.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(mockChain([]));
       ScheduledTransaction.find.mockReturnValue(mockChain([]));
 
       await getDashboardSummary(req, res);
@@ -269,6 +272,28 @@ describe('Dashboard Controller', () => {
       expect(day1.total).toBe(100);
       expect(day2.total).toBe(150);
     });
+
+    it('should exclude pending transactions from current month, last month, last 7 days and history queries', async () => {
+      Account.find.mockReturnValue(mockChain([]));
+      Transaction.findOne.mockImplementation(() => mockChain({ date: new Date() }));
+      Transaction.find.mockReturnValue(mockChain([]));
+      Budget.find.mockReturnValue(mockChain([]));
+      SavingsGoal.find.mockReturnValue(mockChain([]));
+      ScheduledTransaction.find.mockReturnValue(mockChain([]));
+
+      await getDashboardSummary(req, res);
+
+      // Verify that Transaction.find was called to query transactions with isPending: { $ne: true }
+      const calls = Transaction.find.mock.calls;
+      const filteredQueries = calls.filter(call => call[0] && call[0].isPending);
+      
+      expect(filteredQueries.length).toBeGreaterThanOrEqual(4);
+      filteredQueries.forEach(queryCall => {
+        if (queryCall[0].isPending !== true) {
+          expect(queryCall[0].isPending).toEqual({ $ne: true });
+        }
+      });
+    });
   });
 
   describe('getMonthlySummaries', () => {
@@ -276,9 +301,9 @@ describe('Dashboard Controller', () => {
       req.query.year = '2026';
 
       const mockTxs = [
-        { type: 'income', amount: 2000, date: new Date('2026-01-15') },
-        { type: 'expense', amount: 500, date: new Date('2026-01-20') },
-        { type: 'expense', amount: 300, date: new Date('2026-02-10') }
+        { type: 'income', amount: 2000, date: new Date('2026-01-15'), accountId: 'acc1' },
+        { type: 'expense', amount: 500, date: new Date('2026-01-20'), accountId: 'acc1' },
+        { type: 'expense', amount: 300, date: new Date('2026-02-10'), accountId: 'acc1' }
       ];
 
       // Oldest and newest tx for availableYears computation
@@ -286,7 +311,11 @@ describe('Dashboard Controller', () => {
         return mockChain({ date: new Date('2025-05-01') });
       });
 
-      Transaction.find.mockResolvedValue(mockTxs);
+      Account.find.mockReturnValue(mockChain([
+        { _id: 'acc1', type: 'checking', includeInTotal: true }
+      ]));
+
+      Transaction.find.mockReturnValue(mockChain(mockTxs));
 
       await getMonthlySummaries(req, res);
 

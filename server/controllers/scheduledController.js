@@ -4,14 +4,15 @@ import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 
 const updateAccountBalance = async (accountId, amount, type, session) => {
-  const account = await Account.findById(accountId).session(session);
+  const numericAmount = Number(amount);
+  if (isNaN(numericAmount)) throw new Error('Invalid amount');
+  const delta = type === 'expense' ? -numericAmount : numericAmount;
+  const account = await Account.findOneAndUpdate(
+    { _id: accountId },
+    { $inc: { balance: delta } },
+    { session, new: true }
+  );
   if (!account) throw new Error('Account not found');
-  if (type === 'expense') {
-    account.balance -= amount;
-  } else if (type === 'income') {
-    account.balance += amount;
-  }
-  await account.save({ session });
 };
 
 // 1. Get all active scheduled transactions
@@ -239,8 +240,7 @@ export const getUpcomingTransactions = async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
     const now = new Date();
-    const futureLimit = new Date();
-    futureLimit.setDate(now.getDate() + days);
+    const futureLimit = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + days, 23, 59, 59, 999));
 
     const scheduledTxs = await ScheduledTransaction.find({
       userId: req.user.id,
@@ -272,12 +272,12 @@ export const getUpcomingTransactions = async (req, res) => {
           autoConfirm: st.autoConfirm
         });
 
-        // Move to next date
+        // Move to next date (UTC)
         const { every, unit } = st.frequency;
-        if (unit === 'day') curr.setDate(curr.getDate() + every);
-        else if (unit === 'week') curr.setDate(curr.getDate() + every * 7);
-        else if (unit === 'month') curr.setMonth(curr.getMonth() + every);
-        else if (unit === 'year') curr.setFullYear(curr.getFullYear() + every);
+        if (unit === 'day') curr.setUTCDate(curr.getUTCDate() + every);
+        else if (unit === 'week') curr.setUTCDate(curr.getUTCDate() + every * 7);
+        else if (unit === 'month') curr.setUTCMonth(curr.getUTCMonth() + every);
+        else if (unit === 'year') curr.setUTCFullYear(curr.getUTCFullYear() + every);
 
         timesLeft--;
       }

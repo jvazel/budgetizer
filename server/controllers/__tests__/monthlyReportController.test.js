@@ -18,7 +18,9 @@ vi.mock('../../models/MonthlyReport.js', () => {
     };
   });
 
-  MockMonthlyReport.findOne = vi.fn();
+  MockMonthlyReport.findOne = vi.fn().mockImplementation(() => ({
+    lean: vi.fn().mockResolvedValue(null)
+  }));
   
   return { default: MockMonthlyReport };
 });
@@ -48,12 +50,23 @@ vi.mock('../../models/Budget.js', () => ({
   }
 }));
 
+vi.mock('../../models/Account.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      select: vi.fn().mockImplementation(() => ({
+        lean: vi.fn().mockResolvedValue([{ _id: 'acc1', type: 'checking' }])
+      }))
+    }))
+  }
+}));
+
 // Helper to create Mongoose-like chainable thenable mock queries
 const createMockQuery = (data) => {
   const query = {
     select: vi.fn().mockReturnThis(),
     populate: vi.fn().mockReturnThis(),
     sort: vi.fn().mockReturnThis(),
+    lean: vi.fn().mockReturnThis(),
     then: (resolve) => resolve(data),
     catch: (reject) => {}
   };
@@ -66,6 +79,10 @@ describe('Monthly Report Controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSaveReport.mockReset();
+
+    MonthlyReport.findOne.mockImplementation(() => ({
+      lean: vi.fn().mockResolvedValue(null)
+    }));
 
     req = {
       user: { id: 'user_reports_123' },
@@ -99,7 +116,9 @@ describe('Monthly Report Controller', () => {
         toObject: function() { return this; }
       };
 
-      MonthlyReport.findOne.mockResolvedValue(mockCachedReport);
+      MonthlyReport.findOne.mockImplementationOnce(() => ({
+        lean: vi.fn().mockResolvedValue(mockCachedReport)
+      }));
 
       await getMonthlyReport(req, res);
 
@@ -118,12 +137,11 @@ describe('Monthly Report Controller', () => {
       const currentMonthKey = `${currentYear}-${currentMonthStr}`;
 
       req.params.monthKey = currentMonthKey;
-      MonthlyReport.findOne.mockResolvedValue(null);
 
       // Mock transactions for current month M (provisional)
       const mockTxs = [
-        { type: 'income', amount: 3000, date: now },
-        { type: 'expense', amount: 1200, date: now, categoryId: { _id: 'cat_1', name: 'Alimentation' } }
+        { type: 'income', amount: 3000, date: now, accountId: 'acc1' },
+        { type: 'expense', amount: 1200, date: now, accountId: 'acc1', categoryId: { _id: 'cat_1', name: 'Alimentation' } }
       ];
 
       Transaction.find.mockImplementation((query) => {
@@ -135,8 +153,8 @@ describe('Monthly Report Controller', () => {
       });
 
       Transaction.findOne.mockResolvedValue(null);
-      SavingsGoal.find.mockResolvedValue([]);
-      ScheduledTransaction.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(createMockQuery([]));
+      ScheduledTransaction.find.mockReturnValue(createMockQuery([]));
       Budget.find.mockReturnValue(createMockQuery([]));
 
       await getMonthlyReport(req, res);
@@ -156,7 +174,6 @@ describe('Monthly Report Controller', () => {
 
     it('should detect outlier transactions and add them to warnings paragraph', async () => {
       req.params.monthKey = '2026-05';
-      MonthlyReport.findOne.mockResolvedValue(null);
 
       // Mock current month transactions (has a big expense outlier of 350 € in Transports)
       const mockTxs = [
@@ -164,12 +181,14 @@ describe('Monthly Report Controller', () => {
           _id: 'tx_123',
           type: 'income', 
           amount: 2000, 
+          accountId: 'acc1',
           date: new Date(Date.UTC(2026, 4, 15)) 
         },
         { 
           _id: 'tx_456',
           type: 'expense', 
           amount: 350, 
+          accountId: 'acc1',
           description: 'Billet de train',
           date: new Date(Date.UTC(2026, 4, 10)), 
           categoryId: { _id: 'cat_transports', name: 'Transports' } 
@@ -178,7 +197,7 @@ describe('Monthly Report Controller', () => {
 
       // Mock historical transactions (3-month reference window average for Transports is 40 €)
       const mockHistoryTxs = [
-        { type: 'expense', amount: 40, categoryId: 'cat_transports', date: new Date(Date.UTC(2026, 2, 10)) }
+        { type: 'expense', amount: 40, accountId: 'acc1', categoryId: 'cat_transports', date: new Date(Date.UTC(2026, 2, 10)) }
       ];
 
       Transaction.find.mockImplementation((query) => {
@@ -196,8 +215,8 @@ describe('Monthly Report Controller', () => {
       });
 
       Transaction.findOne.mockResolvedValue(null);
-      SavingsGoal.find.mockResolvedValue([]);
-      ScheduledTransaction.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(createMockQuery([]));
+      ScheduledTransaction.find.mockReturnValue(createMockQuery([]));
       Budget.find.mockReturnValue(createMockQuery([]));
 
       await getMonthlyReport(req, res);
@@ -222,7 +241,6 @@ describe('Monthly Report Controller', () => {
 
     it('should detect multiple outlier transactions and sort them by ratio descending', async () => {
       req.params.monthKey = '2026-05';
-      MonthlyReport.findOne.mockResolvedValue(null);
 
       // Mock current month transactions: two outliers (amount >= 50 and ratio >= 3)
       const mockTxs = [
@@ -230,12 +248,14 @@ describe('Monthly Report Controller', () => {
           _id: 'tx_income',
           type: 'income', 
           amount: 2000, 
+          accountId: 'acc1',
           date: new Date(Date.UTC(2026, 4, 15)) 
         },
         { 
           _id: 'tx_train',
           type: 'expense', 
           amount: 350, 
+          accountId: 'acc1',
           description: 'Billet de train',
           date: new Date(Date.UTC(2026, 4, 10)), 
           categoryId: { _id: 'cat_transports', name: 'Transports' } 
@@ -244,6 +264,7 @@ describe('Monthly Report Controller', () => {
           _id: 'tx_dinner',
           type: 'expense', 
           amount: 160, 
+          accountId: 'acc1',
           description: 'Dîner gastronomique',
           date: new Date(Date.UTC(2026, 4, 12)), 
           categoryId: { _id: 'cat_resto', name: 'Restaurant' } 
@@ -252,8 +273,8 @@ describe('Monthly Report Controller', () => {
 
       // Mock historical transactions reference
       const mockHistoryTxs = [
-        { type: 'expense', amount: 40, categoryId: 'cat_transports', date: new Date(Date.UTC(2026, 2, 10)) },
-        { type: 'expense', amount: 40, categoryId: 'cat_resto', date: new Date(Date.UTC(2026, 2, 11)) }
+        { type: 'expense', amount: 40, accountId: 'acc1', categoryId: 'cat_transports', date: new Date(Date.UTC(2026, 2, 10)) },
+        { type: 'expense', amount: 40, accountId: 'acc1', categoryId: 'cat_resto', date: new Date(Date.UTC(2026, 2, 11)) }
       ];
 
       Transaction.find.mockImplementation((query) => {
@@ -269,8 +290,8 @@ describe('Monthly Report Controller', () => {
       });
 
       Transaction.findOne.mockResolvedValue(null);
-      SavingsGoal.find.mockResolvedValue([]);
-      ScheduledTransaction.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(createMockQuery([]));
+      ScheduledTransaction.find.mockReturnValue(createMockQuery([]));
       Budget.find.mockReturnValue(createMockQuery([]));
 
       await getMonthlyReport(req, res);
@@ -290,12 +311,11 @@ describe('Monthly Report Controller', () => {
 
     it('should detect completed savings goals and highlight them in successes paragraph', async () => {
       req.params.monthKey = '2026-05';
-      MonthlyReport.findOne.mockResolvedValue(null);
 
       // Current month transactions
       const mockTxs = [
-        { type: 'income', amount: 2000, date: new Date(Date.UTC(2026, 4, 15)) },
-        { type: 'expense', amount: 500, date: new Date(Date.UTC(2026, 4, 10)), categoryId: { _id: 'cat_1', name: 'Loisirs' } }
+        { type: 'income', amount: 2000, date: new Date(Date.UTC(2026, 4, 15)), accountId: 'acc1' },
+        { type: 'expense', amount: 500, date: new Date(Date.UTC(2026, 4, 10)), accountId: 'acc1', categoryId: { _id: 'cat_1', name: 'Loisirs' } }
       ];
 
       Transaction.find.mockImplementation((query) => {
@@ -306,7 +326,7 @@ describe('Monthly Report Controller', () => {
           }
           // Transfers during M (and from M onwards)
           return createMockQuery([
-            { type: 'transfer', amount: 300, date: new Date(Date.UTC(2026, 4, 2)), savingsGoalId: 'goal_japon' }
+            { type: 'transfer', amount: 300, date: new Date(Date.UTC(2026, 4, 2)), savingsGoalId: 'goal_japon', accountId: 'acc1', toAccountId: 'acc2' }
           ]);
         }
         if (query.date && query.date.$gte) {
@@ -328,9 +348,9 @@ describe('Monthly Report Controller', () => {
         }
       ];
 
-      SavingsGoal.find.mockResolvedValue(mockGoals);
+      SavingsGoal.find.mockReturnValue(createMockQuery(mockGoals));
       Transaction.findOne.mockResolvedValue(null);
-      ScheduledTransaction.find.mockResolvedValue([]);
+      ScheduledTransaction.find.mockReturnValue(createMockQuery([]));
       Budget.find.mockReturnValue(createMockQuery([]));
 
       await getMonthlyReport(req, res);
@@ -342,7 +362,6 @@ describe('Monthly Report Controller', () => {
 
     it('should fallback to transaction note in alert text and data when description is empty', async () => {
       req.params.monthKey = '2026-05';
-      MonthlyReport.findOne.mockResolvedValue(null);
 
       // Mock current month transactions (has a big expense outlier of 350 € with empty description but a note)
       const mockTxs = [
@@ -350,6 +369,7 @@ describe('Monthly Report Controller', () => {
           _id: 'tx_789',
           type: 'expense', 
           amount: 350, 
+          accountId: 'acc1',
           description: '',
           note: 'Courses de Noel',
           date: new Date(Date.UTC(2026, 4, 10)), 
@@ -359,7 +379,7 @@ describe('Monthly Report Controller', () => {
 
       // Mock historical transactions reference
       const mockHistoryTxs = [
-        { type: 'expense', amount: 40, categoryId: 'cat_courses', date: new Date(Date.UTC(2026, 2, 10)) }
+        { type: 'expense', amount: 40, accountId: 'acc1', categoryId: 'cat_courses', date: new Date(Date.UTC(2026, 2, 10)) }
       ];
 
       Transaction.find.mockImplementation((query) => {
@@ -375,8 +395,8 @@ describe('Monthly Report Controller', () => {
       });
 
       Transaction.findOne.mockResolvedValue(null);
-      SavingsGoal.find.mockResolvedValue([]);
-      ScheduledTransaction.find.mockResolvedValue([]);
+      SavingsGoal.find.mockReturnValue(createMockQuery([]));
+      ScheduledTransaction.find.mockReturnValue(createMockQuery([]));
       Budget.find.mockReturnValue(createMockQuery([]));
 
       await getMonthlyReport(req, res);

@@ -1,5 +1,6 @@
 import Budget from '../models/Budget.js';
 import Transaction from '../models/Transaction.js';
+import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
 
@@ -10,54 +11,59 @@ export const getBudgets = async (req, res) => {
   try {
     const { weekStart, month, year } = req.query;
 
-    // 1. Weekly range (Monday to Sunday)
+    // 1. Weekly range (Monday to Sunday) (UTC)
     let wStart, wEnd;
     if (weekStart) {
       const [y, m, d] = weekStart.split('-').map(Number);
-      wStart = new Date(y, m - 1, d, 0, 0, 0, 0);
-      wEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
-      wEnd.setDate(wEnd.getDate() + 6);
+      wStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+      wEnd = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
+      wEnd.setUTCDate(wEnd.getUTCDate() + 6);
     } else {
       const now = new Date();
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      wStart = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0, 0);
+      const day = now.getUTCDay();
+      const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1);
+      wStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0));
       wEnd = new Date(wStart.getTime());
-      wEnd.setDate(wEnd.getDate() + 6);
-      wEnd.setHours(23, 59, 59, 999);
+      wEnd.setUTCDate(wEnd.getUTCDate() + 6);
+      wEnd.setUTCHours(23, 59, 59, 999);
     }
 
-    // 2. Monthly range (1st to last day)
+    // 2. Monthly range (1st to last day) (UTC)
     let mStart, mEnd;
     if (month) {
       const [y, m] = month.split('-').map(Number);
-      mStart = new Date(y, m - 1, 1, 0, 0, 0, 0);
-      mEnd = new Date(y, m, 0, 23, 59, 59, 999);
+      mStart = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      mEnd = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
     } else {
       const now = new Date();
-      mStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      mStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+      mEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
     }
 
-    // 3. Yearly range (Jan 1st to Dec 31st)
+    // 3. Yearly range (Jan 1st to Dec 31st) (UTC)
     let yStart, yEnd;
     if (year) {
       const y = Number(year);
-      yStart = new Date(y, 0, 1, 0, 0, 0, 0);
-      yEnd = new Date(y, 11, 31, 23, 59, 59, 999);
+      yStart = new Date(Date.UTC(y, 0, 1, 0, 0, 0, 0));
+      yEnd = new Date(Date.UTC(y, 11, 31, 23, 59, 59, 999));
     } else {
       const now = new Date();
-      yStart = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-      yEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+      yStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+      yEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
     }
+
+    const includedAccounts = await Account.find({ userId: req.user.id, includeInTotal: { $ne: false } }).select('_id');
+    const includedAccountIds = includedAccounts.map(acc => acc._id);
 
     const budgets = await Budget.find({ userId: req.user.id })
       .populate('categoryId', 'name icon type');
 
-    // Fetch expense transactions within any of the three calculated ranges
+    // Fetch expense transactions within any of the three calculated ranges (only for included accounts)
     const transactions = await Transaction.find({
       userId: req.user.id,
       type: 'expense',
+      accountId: { $in: includedAccountIds },
+      isPending: { $ne: true },
       $or: [
         { date: { $gte: wStart, $lte: wEnd } },
         { date: { $gte: mStart, $lte: mEnd } },

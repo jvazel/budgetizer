@@ -1,38 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useDashboard = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
       const res = await api.get('/dashboard/summary');
-      setData(res.data);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDashboard();
-
-    const handleRefresh = () => fetchDashboard();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => {
-      window.removeEventListener('transaction-changed', handleRefresh);
-    };
-  }, [fetchDashboard]);
+      return res.data;
+    },
+  });
 
   return {
-    data,
-    loading,
-    error,
-    refreshDashboard: fetchDashboard
+    data: data || null,
+    loading: isLoading,
+    error: error ? (error.response?.data?.message || 'Error fetching dashboard data') : null,
+    refreshDashboard: () => queryClient.invalidateQueries({ queryKey: ['dashboard'] })
   };
 };
+

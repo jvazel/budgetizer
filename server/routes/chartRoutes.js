@@ -7,7 +7,8 @@ import {
   getNetWorthHistory,
   getCashFlowHistory,
   getExpenseRanking,
-  getHistogramData
+  getHistogramData,
+  getBalanceHistory
 } from '../controllers/chartController.js';
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get('/net-worth', getNetWorthHistory);
 router.get('/cash-flow', getCashFlowHistory);
 router.get('/ranking', getExpenseRanking);
 router.get('/histogram', getHistogramData);
+router.get('/balance-history', getBalanceHistory);
 
 export default router;

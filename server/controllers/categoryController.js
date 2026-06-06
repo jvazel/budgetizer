@@ -1,4 +1,6 @@
 import Category from '../models/Category.js';
+import Transaction from '../models/Transaction.js';
+import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import { validationResult } from 'express-validator';
 
 // @desc    Get all categories for a user
@@ -102,7 +104,17 @@ export const deleteCategory = async (req, res) => {
       return res.status(400).json({ message: 'Cannot delete a category that has subcategories' });
     }
 
-    // TODO: Step 4 - Check if used in transactions
+    // Check if used in transactions
+    const transactionCount = await Transaction.countDocuments({ categoryId: req.params.id });
+    if (transactionCount > 0) {
+      return res.status(400).json({ message: 'Cannot delete a category that is used in transactions' });
+    }
+
+    // Check if used in scheduled transactions
+    const scheduledCount = await ScheduledTransaction.countDocuments({ categoryId: req.params.id });
+    if (scheduledCount > 0) {
+      return res.status(400).json({ message: 'Cannot delete a category that is used in scheduled transactions' });
+    }
 
     await Category.findByIdAndDelete(req.params.id);
     

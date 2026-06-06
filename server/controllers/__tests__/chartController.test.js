@@ -46,6 +46,7 @@ describe('Chart Controller', () => {
       select: vi.fn().mockReturnThis(),
       populate: vi.fn().mockReturnThis(),
       sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockReturnThis(),
       then: vi.fn().mockImplementation((resolve) => resolve(resolvedValue))
     };
     return query;
@@ -70,7 +71,7 @@ describe('Chart Controller', () => {
         { categoryId: 'cat_rent', amount: 800, type: 'expense', date: new Date('2026-06-01') }
       ];
 
-      Category.find.mockResolvedValue(mockCategories);
+      Category.find.mockImplementation(() => mockQuery(mockCategories));
       Transaction.find.mockImplementationOnce(() => mockQuery(mockTransactions)); // current period
       Transaction.find.mockImplementationOnce(() => mockQuery([])); // previous period (variation computation)
       Transaction.find.mockImplementation(() => mockQuery([])); // 3M and 6M completed months
@@ -107,7 +108,7 @@ describe('Chart Controller', () => {
         { amount: 800, type: 'expense', date: new Date('2026-01-10') } // Net margin = +200 every month
       ];
 
-      Account.find.mockResolvedValue(mockAccounts);
+      Account.find.mockImplementation(() => mockQuery(mockAccounts));
       Transaction.find.mockImplementation(() => mockQuery(mockHistoryTransactions));
 
       await getForecastCharts(req, res);

@@ -197,9 +197,26 @@ mongoose.connect(process.env.MONGODB_URI, mongoOptions)
         (process.env.NODE_ENV !== 'production' && process.env.RUN_SCHEDULED_JOBS !== 'false');
 
       if (shouldRunJobs) {
-        processScheduledTransactions();
+        let isProcessingScheduledJobs = false;
+
+        const runScheduledJobsSafe = async () => {
+          if (isProcessingScheduledJobs) {
+            console.log('[ScheduledProcessor] Previous job still running, skipping this interval...');
+            return;
+          }
+          isProcessingScheduledJobs = true;
+          try {
+            await processScheduledTransactions();
+          } catch (err) {
+            console.error('[ScheduledProcessor] Error in scheduled run:', err);
+          } finally {
+            isProcessingScheduledJobs = false;
+          }
+        };
+
+        runScheduledJobsSafe();
         const intervalMs = parseInt(process.env.SCHEDULED_JOB_INTERVAL_MS, 10) || 3600000;
-        setInterval(processScheduledTransactions, intervalMs);
+        setInterval(runScheduledJobsSafe, intervalMs);
         console.log(`Scheduled jobs runner initialized (interval: ${intervalMs}ms)`);
       } else {
         console.log('Scheduled jobs runner disabled for this instance');

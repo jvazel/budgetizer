@@ -73,7 +73,8 @@ vi.mock('../../models/Transaction.js', () => ({
 
 vi.mock('../../models/Account.js', () => ({
   default: {
-    findById: vi.fn()
+    findById: vi.fn(),
+    findOneAndUpdate: vi.fn()
   }
 }));
 
@@ -222,7 +223,12 @@ describe('Scheduled Controller', () => {
       const mockAcc = { _id: 'acc_1', balance: 100, save: vi.fn() };
 
       Transaction.findOne.mockResolvedValue(mockTx);
-      Account.findById.mockReturnValue(mockChain(mockAcc));
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.balance !== undefined) {
+          mockAcc.balance += update.$inc.balance;
+        }
+        return mockAcc;
+      });
 
       await confirmPendingTransaction(req, res);
 
@@ -230,7 +236,37 @@ describe('Scheduled Controller', () => {
       expect(mockTx.isPending).toBe(false);
       expect(mockTx.save).toHaveBeenCalled();
       expect(mockAcc.balance).toBe(65); // 100 - 35
-      expect(mockAcc.save).toHaveBeenCalled();
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('should correctly parse string amounts to avoid MongoDB validation errors', async () => {
+      req.params.id = 'tx1';
+      req.body = { amount: '45.50' }; // string amount
+
+      const mockTx = {
+        _id: 'tx1',
+        userId: 'user_123',
+        accountId: 'acc_1',
+        type: 'income',
+        amount: 30,
+        isPending: true,
+        save: vi.fn()
+      };
+
+      const mockAcc = { _id: 'acc_1', balance: 100, save: vi.fn() };
+
+      Transaction.findOne.mockResolvedValue(mockTx);
+      Account.findOneAndUpdate.mockImplementation((filter, update) => {
+        if (update && update.$inc && update.$inc.balance !== undefined) {
+          mockAcc.balance += update.$inc.balance;
+        }
+        return mockAcc;
+      });
+
+      await confirmPendingTransaction(req, res);
+
+      expect(mockTx.amount).toBe('45.50');
+      expect(mockAcc.balance).toBe(145.5); // 100 + 45.5
       expect(mockSession.commitTransaction).toHaveBeenCalled();
     });
   });

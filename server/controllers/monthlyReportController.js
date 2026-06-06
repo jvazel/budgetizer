@@ -4,6 +4,7 @@ import SavingsGoal from '../models/SavingsGoal.js';
 import Budget from '../models/Budget.js';
 import Category from '../models/Category.js';
 import MonthlyReport from '../models/MonthlyReport.js';
+import Account from '../models/Account.js';
 
 const monthNamesFr = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -24,17 +25,17 @@ export const getMonthlyReport = async (req, res) => {
 
     const [yearNum, monthNum] = monthKey.split('-').map(Number);
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1; // 1-indexed
+    const currentYear = now.getUTCFullYear();
+    const currentMonth = now.getUTCMonth() + 1; // 1-indexed
 
     // Déterminer si le mois est terminé
     const isCompletedMonth = yearNum < currentYear || (yearNum === currentYear && monthNum < currentMonth);
 
     // Si le mois est terminé, on vérifie s'il y a un rapport déjà mis en cache
     if (isCompletedMonth) {
-      const cachedReport = await MonthlyReport.findOne({ userId, monthKey });
+      const cachedReport = await MonthlyReport.findOne({ userId, monthKey }).lean();
       if (cachedReport) {
-        const reportObj = cachedReport.toObject();
+        const reportObj = { ...cachedReport };
         if (!reportObj.unusualTransactions) {
           reportObj.unusualTransactions = [];
         }
@@ -56,42 +57,78 @@ export const getMonthlyReport = async (req, res) => {
     const endOfHistory = new Date(Date.UTC(yearNum, monthNum - 1, 0, 23, 59, 59, 999));
 
     // --- ÉTAPE 2 : CALCULS GLOBAUX & CHARGEMENT PARALLÈLE ---
+    const checkingAccounts = await Account.find({ userId, type: 'checking' }).select('_id').lean();
+    const checkingAccountIds = checkingAccounts.map(acc => acc._id);
+
     const [txsM, txsPrev, savingsGoals, subs, historyTxs, budgets] = await Promise.all([
       Transaction.find({
         userId,
+        $or: [
+          { accountId: { $in: checkingAccountIds } },
+          { toAccountId: { $in: checkingAccountIds } }
+        ],
         date: { $gte: startOfM, $lte: endOfM },
         isPending: { $ne: true }
-      }).populate('categoryId'),
+      }).populate('categoryId').lean(),
       Transaction.find({
         userId,
+        $or: [
+          { accountId: { $in: checkingAccountIds } },
+          { toAccountId: { $in: checkingAccountIds } }
+        ],
         date: { $gte: startOfPrev, $lte: endOfPrev },
         isPending: { $ne: true }
-      }).select('type amount'),
-      SavingsGoal.find({ userId }),
-      ScheduledTransaction.find({ userId, isSubscription: true }),
+      }).select('type amount accountId toAccountId').lean(),
+      SavingsGoal.find({ userId }).lean(),
+      ScheduledTransaction.find({ userId, isSubscription: true }).lean(),
       Transaction.find({
         userId,
         type: 'expense',
+        accountId: { $in: checkingAccountIds },
         date: { $gte: startOfHistory, $lte: endOfHistory },
         isPending: { $ne: true }
-      }).select('categoryId amount date'),
-      Budget.find({ userId }).populate('categoryId')
+      }).select('categoryId amount date').lean(),
+      Budget.find({ userId }).populate('categoryId').lean()
     ]);
 
     // Revenus & Dépenses Mois M
     let incomeM = 0;
     let expensesM = 0;
     txsM.forEach(tx => {
-      if (tx.type === 'income') incomeM += tx.amount;
-      else if (tx.type === 'expense') expensesM += tx.amount;
+      const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
+      const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
+
+      if (tx.type === 'income' && sourceChecking) {
+        incomeM += tx.amount;
+      } else if (tx.type === 'expense' && sourceChecking) {
+        expensesM += tx.amount;
+      } else if (tx.type === 'transfer') {
+        if (sourceChecking && !destChecking) {
+          expensesM += tx.amount;
+        } else if (!sourceChecking && destChecking) {
+          incomeM += tx.amount;
+        }
+      }
     });
 
     // Revenus & Dépenses Mois M-1
     let incomePrev = 0;
     let expensesPrev = 0;
     txsPrev.forEach(tx => {
-      if (tx.type === 'income') incomePrev += tx.amount;
-      else if (tx.type === 'expense') expensesPrev += tx.amount;
+      const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
+      const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
+
+      if (tx.type === 'income' && sourceChecking) {
+        incomePrev += tx.amount;
+      } else if (tx.type === 'expense' && sourceChecking) {
+        expensesPrev += tx.amount;
+      } else if (tx.type === 'transfer') {
+        if (sourceChecking && !destChecking) {
+          expensesPrev += tx.amount;
+        } else if (!sourceChecking && destChecking) {
+          incomePrev += tx.amount;
+        }
+      }
     });
 
     const netM = incomeM - expensesM;
@@ -124,7 +161,7 @@ export const getMonthlyReport = async (req, res) => {
         type: 'transfer',
         date: { $gte: startOfM },
         isPending: { $ne: true }
-      });
+      }).lean();
     }
 
     for (const goal of savingsGoals) {
@@ -162,7 +199,7 @@ export const getMonthlyReport = async (req, res) => {
         scheduledTransactionId: { $in: subs.map(s => s._id) },
         date: { $gte: startOfPrev, $lte: endOfM },
         isPending: { $ne: true }
-      });
+      }).lean();
     }
 
     for (const sub of subs) {
@@ -260,7 +297,7 @@ export const getMonthlyReport = async (req, res) => {
       if (tx.type === 'expense' && tx.categoryId) {
         const catId = tx.categoryId.toString();
         const txDate = new Date(tx.date);
-        const mKey = `${txDate.getFullYear()}-${txDate.getMonth()}`;
+        const mKey = `${txDate.getUTCFullYear()}-${txDate.getUTCMonth()}`;
         
         catHistoryTotal[catId] = (catHistoryTotal[catId] || 0) + tx.amount;
         if (!catHistoryMonths[catId]) catHistoryMonths[catId] = new Set();

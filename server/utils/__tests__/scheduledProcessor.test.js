@@ -35,7 +35,8 @@ vi.mock('../../models/Transaction.js', () => {
 
 vi.mock('../../models/Account.js', () => ({
   default: {
-    findById: vi.fn()
+    findById: vi.fn(),
+    findOneAndUpdate: vi.fn()
   }
 }));
 
@@ -60,6 +61,7 @@ describe('Scheduled Processor', () => {
       autoConfirm: true,
       timesExecuted: 0,
       numberOfTimes: 12,
+      isActive: true,
       save: mockSaveSchedule
     };
 
@@ -75,8 +77,11 @@ describe('Scheduled Processor', () => {
       save: mockSaveAccount
     };
 
-    Account.findById.mockReturnValue({
-      session: vi.fn().mockResolvedValue(mockAccount)
+    Account.findOneAndUpdate.mockImplementation((filter, update) => {
+      if (update && update.$inc && update.$inc.balance !== undefined) {
+        mockAccount.balance += update.$inc.balance;
+      }
+      return Promise.resolve(mockAccount);
     });
 
     await processScheduledTransactions();
@@ -89,7 +94,6 @@ describe('Scheduled Processor', () => {
     
     // Check if account balance is updated (expense 600 subtracted from 1500 = 900)
     expect(mockAccount.balance).toBe(900);
-    expect(mockSaveAccount).toHaveBeenCalled();
 
     // Check schedule timesExecuted is incremented
     expect(mockSchedule.timesExecuted).toBe(1);
@@ -117,6 +121,7 @@ describe('Scheduled Processor', () => {
       autoConfirm: false, // requires manual confirmation
       timesExecuted: 0,
       numberOfTimes: 0,
+      isActive: true,
       save: mockSaveSchedule
     };
 
@@ -127,8 +132,8 @@ describe('Scheduled Processor', () => {
     await processScheduledTransactions();
 
     // Transaction is created but isPending is true
-    // Account.findById should not be called since autoConfirm is false
-    expect(Account.findById).not.toHaveBeenCalled();
+    // Account.findOneAndUpdate should not be called since autoConfirm is false
+    expect(Account.findOneAndUpdate).not.toHaveBeenCalled();
     expect(mockSchedule.timesExecuted).toBe(1);
     expect(mockSession.commitTransaction).toHaveBeenCalled();
   });

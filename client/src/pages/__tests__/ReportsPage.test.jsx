@@ -16,8 +16,8 @@ vi.mock('../../services/api', () => ({
 vi.mock('../../hooks/useAccounts', () => ({
   useAccounts: () => ({
     accounts: [
-      { _id: 'acc_inc', name: 'Compte Courant', balance: 100, includeInTotal: true },
-      { _id: 'acc_exc', name: 'Livret Epargne', balance: 500, includeInTotal: false }
+      { _id: 'acc_inc', name: 'Compte Courant', balance: 100, type: 'checking', includeInTotal: true },
+      { _id: 'acc_exc', name: 'Livret Epargne', balance: 500, type: 'savings', includeInTotal: false }
     ],
     totalBalance: 100
   })
@@ -111,8 +111,21 @@ describe('ReportsPage Component', () => {
       }
     ];
 
-    api.get.mockResolvedValue({
-      data: { transactions: mockTxs }
+    api.get.mockImplementation((url) => {
+      if (url === '/transactions') {
+        return Promise.resolve({
+          data: { transactions: mockTxs }
+        });
+      }
+      if (url === '/charts/balance-history') {
+        return Promise.resolve({
+          data: [
+            { date: '2026-06-05', label: '5 juin', balance: 100 },
+            { date: '2026-06-06', label: '6 juin', balance: 100 }
+          ]
+        });
+      }
+      return Promise.resolve({ data: {} });
     });
 
     renderComponent();
@@ -124,6 +137,7 @@ describe('ReportsPage Component', () => {
     // Verify it triggers api request
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith('/transactions', expect.any(Object));
+      expect(api.get).toHaveBeenCalledWith('/charts/balance-history', expect.any(Object));
       expect(toast.loading).toHaveBeenCalledWith('Analyse des données en cours...');
     });
 

@@ -1,60 +1,70 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useAccounts = (fetchOnMount = true) => {
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
       const res = await api.get('/accounts');
-      setAccounts(res.data);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching accounts');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return res.data;
+    },
+    enabled: fetchOnMount,
+  });
 
-  useEffect(() => {
-    if (fetchOnMount) {
-      fetchAccounts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchAccounts]);
+  const accounts = data || [];
 
   const totalBalance = accounts
     .filter(acc => acc.includeInTotal)
     .reduce((acc, curr) => acc + curr.balance, 0);
 
-  const addAccount = async (accountData) => {
-    const res = await api.post('/accounts', accountData);
-    setAccounts([...accounts, res.data]);
-    return res.data;
-  };
+  const addMutation = useMutation({
+    mutationFn: async (accountData) => {
+      const res = await api.post('/accounts', accountData);
+      return res.data;
+    },
+    onSuccess: (newAcc) => {
+      queryClient.setQueryData(['accounts'], (old = []) => [...old, newAcc]);
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const updateAccount = async (id, accountData) => {
-    const res = await api.put(`/accounts/${id}`, accountData);
-    setAccounts(accounts.map(acc => acc._id === id ? res.data : acc));
-    return res.data;
-  };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, accountData }) => {
+      const res = await api.put(`/accounts/${id}`, accountData);
+      return res.data;
+    },
+    onSuccess: (updatedAcc, variables) => {
+      queryClient.setQueryData(['accounts'], (old = []) => 
+        old.map(acc => acc._id === variables.id ? updatedAcc : acc)
+      );
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
-  const deleteAccount = async (id) => {
-    await api.delete(`/accounts/${id}`);
-    setAccounts(accounts.filter(acc => acc._id !== id));
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/accounts/${id}`);
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['accounts'], (old = []) => 
+        old.filter(acc => acc._id !== id)
+      );
+      window.dispatchEvent(new CustomEvent('transaction-changed'));
+    },
+  });
 
   return {
     accounts,
     totalBalance,
-    loading,
-    error,
-    fetchAccounts,
-    addAccount,
-    updateAccount,
-    deleteAccount
+    loading: fetchOnMount ? isLoading : false,
+    error: error ? (error.response?.data?.message || 'Error fetching accounts') : null,
+    fetchAccounts: refetch,
+    addAccount: addMutation.mutateAsync,
+    updateAccount: (id, accountData) => updateMutation.mutateAsync({ id, accountData }),
+    deleteAccount: deleteMutation.mutateAsync
   };
 };
+
+

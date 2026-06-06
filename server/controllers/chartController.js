@@ -36,7 +36,7 @@ export const getChartsByCategory = async (req, res) => {
     end.setUTCHours(23, 59, 59, 999);
     
     // Fetch all categories for reference
-    const allCategories = await Category.find({ userId: req.user.id });
+    const allCategories = await Category.find({ userId: req.user.id }).lean();
     const categoryMap = {};
     allCategories.forEach(cat => {
       categoryMap[cat._id.toString()] = cat;
@@ -48,7 +48,7 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: start, $lte: end }
-    }).select('categoryId amount');
+    }).select('categoryId amount').lean();
 
     // Compute total sum
     const totalAmount = transactions.reduce((acc, curr) => acc + curr.amount, 0);
@@ -126,7 +126,7 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: prevStartDate, $lte: prevEndDate }
-    }).select('categoryId amount');
+    }).select('categoryId amount').lean();
 
     const prevGrouped = {};
     prevTransactions.forEach(tx => {
@@ -168,14 +168,14 @@ export const getChartsByCategory = async (req, res) => {
       type,
       isPending: { $ne: true },
       date: { $gte: start3M, $lte: end3M }
-    }).select('categoryId amount');
+    }).select('categoryId amount').lean();
 
     const txs6M = await Transaction.find({
       userId: req.user.id,
       type,
       isPending: { $ne: true },
       date: { $gte: start6M, $lte: end3M }
-    }).select('categoryId amount');
+    }).select('categoryId amount').lean();
 
     const sum3M = {};
     const sum6M = {};
@@ -249,10 +249,10 @@ export const getFutureCharts = async (req, res) => {
     // Get starting balance of chosen account(s)
     let startBalance = 0;
     if (accountId) {
-      const account = await Account.findOne({ _id: accountId, userId: req.user.id });
+      const account = await Account.findOne({ _id: accountId, userId: req.user.id }).lean();
       if (account) startBalance = account.balance;
     } else {
-      const accounts = await Account.find({ userId: req.user.id });
+      const accounts = await Account.find({ userId: req.user.id }).lean();
       startBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
     }
 
@@ -261,20 +261,20 @@ export const getFutureCharts = async (req, res) => {
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $lte: new Date() }
-    });
+    }).lean();
 
     // Query pending transactions
     const pendingTransactions = await Transaction.find({
       userId: req.user.id,
       isPending: true,
       date: { $gte: start, $lte: end }
-    }).populate('categoryId', 'name icon color');
+    }).populate('categoryId', 'name icon color').lean();
 
     // Query scheduled transactions
     const scheduledSchedules = await ScheduledTransaction.find({
       userId: req.user.id,
       isActive: true
-    }).populate('categoryId', 'name icon color');
+    }).populate('categoryId', 'name icon color').lean();
 
     // 1. Project schedule occurrences in range
     const simulatedScheduled = [];
@@ -320,7 +320,7 @@ export const getFutureCharts = async (req, res) => {
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $gt: new Date(), $lte: end }
-    }).populate('categoryId', 'name icon color');
+    }).populate('categoryId', 'name icon color').lean();
 
     const manualList = futureReal.map(ft => ({
       date: ft.date,
@@ -402,10 +402,10 @@ export const getForecastCharts = async (req, res) => {
     // Get active/starting balance
     let startBalance = 0;
     if (accountId) {
-      const account = await Account.findOne({ _id: accountId, userId: req.user.id });
+      const account = await Account.findOne({ _id: accountId, userId: req.user.id }).lean();
       if (account) startBalance = account.balance;
     } else {
-      const accounts = await Account.find({ userId: req.user.id });
+      const accounts = await Account.find({ userId: req.user.id }).lean();
       startBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
     }
 
@@ -417,7 +417,7 @@ export const getForecastCharts = async (req, res) => {
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $gte: historyStart, $lte: now }
-    });
+    }).lean();
 
     // Populate historical monthly buckets
     const historicalBuckets = {};
@@ -563,13 +563,13 @@ export const getNetWorthHistory = async (req, res) => {
     startDate.setDate(now.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
 
-    const accounts = await Account.find({ userId });
+    const accounts = await Account.find({ userId }).lean();
     
     // Get transactions in range to reverse balances
     const transactions = await Transaction.find({
       userId,
       date: { $gte: startDate, $lte: now }
-    }).sort({ date: -1 });
+    }).sort({ date: -1 }).lean();
 
     const runningBalances = {};
     accounts.forEach(acc => {
@@ -685,7 +685,7 @@ export const getCashFlowHistory = async (req, res) => {
       query.accountId = accountId;
     }
 
-    const transactions = await Transaction.find(query);
+    const transactions = await Transaction.find(query).lean();
 
     const buckets = {};
     for (let i = 0; i < monthsCount; i++) {
@@ -790,7 +790,7 @@ export const getExpenseRanking = async (req, res) => {
       type: 'expense',
       isPending: { $ne: true },
       date: { $gte: start, $lte: end }
-    }).populate('categoryId', 'name icon color parentId');
+    }).populate('categoryId', 'name icon color parentId').lean();
 
     const groups = {};
 
@@ -921,7 +921,7 @@ export const getHistogramData = async (req, res) => {
       ];
     }
 
-    const transactions = await Transaction.find(query).sort({ date: 1 });
+    const transactions = await Transaction.find(query).sort({ date: 1 }).lean();
 
     // Initialize buckets
     const buckets = {};
@@ -1027,6 +1027,122 @@ export const getHistogramData = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error calculating histogram data' });
+  }
+};
+
+// 8. Get historical balance day-by-day (server-side backtracking)
+export const getBalanceHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const now = new Date();
+
+    const accounts = await Account.find({ userId }).lean();
+    
+    // Fetch all transactions from start date until now (needed for backtracking from today)
+    const transactions = await Transaction.find({
+      userId,
+      isPending: { $ne: true },
+      date: { $gte: start }
+    }).sort({ date: -1 }).lean();
+
+    const runningBalances = {};
+    accounts.forEach(acc => {
+      runningBalances[acc._id.toString()] = acc.balance;
+    });
+
+    const formatDateKey = (date) => {
+      const d = new Date(date);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    // Group transactions by date key
+    const txsByDate = {};
+    transactions.forEach(tx => {
+      const dateKey = formatDateKey(tx.date);
+      if (!txsByDate[dateKey]) {
+        txsByDate[dateKey] = [];
+      }
+      txsByDate[dateKey].push(tx);
+    });
+
+    // We backtrack from today down to start date
+    const history = [];
+    const currentDay = new Date(now);
+    currentDay.setHours(0, 0, 0, 0);
+
+    const getIncludedTotal = () => {
+      let total = 0;
+      accounts.forEach(acc => {
+        if (acc.includeInTotal !== false) {
+          total += runningBalances[acc._id.toString()] || 0;
+        }
+      });
+      return total;
+    };
+
+    // Helper to revert a single transaction in running balances (moving backwards in time)
+    const revertTransaction = (tx) => {
+      const accId = tx.accountId?.toString();
+      const toAccId = tx.toAccountId?.toString();
+
+      if (tx.type === 'expense') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] += tx.amount;
+        }
+      } else if (tx.type === 'income') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] -= tx.amount;
+        }
+      } else if (tx.type === 'transfer') {
+        if (accId && runningBalances[accId] !== undefined) {
+          runningBalances[accId] += tx.amount;
+        }
+        if (toAccId && runningBalances[toAccId] !== undefined) {
+          runningBalances[toAccId] -= tx.amount;
+        }
+      }
+    };
+
+    // We walk backwards day-by-day from today
+    while (currentDay >= start) {
+      const dateStr = currentDay.toISOString().split('T')[0];
+      const dateKey = formatDateKey(currentDay);
+      
+      const totalVal = getIncludedTotal();
+
+      // Only include in history if it is within the requested range [startDate, endDate]
+      if (currentDay <= end) {
+        const label = currentDay.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        history.push({
+          date: dateStr,
+          label,
+          balance: parseFloat(totalVal.toFixed(2))
+        });
+      }
+
+      // Revert all transactions on this day
+      const dayTxs = txsByDate[dateKey] || [];
+      dayTxs.forEach(revertTransaction);
+
+      currentDay.setDate(currentDay.getDate() - 1);
+    }
+
+    history.reverse();
+    res.json(history);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error during balance history calculation' });
   }
 };
 

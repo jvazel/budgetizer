@@ -1,5 +1,6 @@
 import Transaction from '../models/Transaction.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
+import Account from '../models/Account.js';
 
 /**
  * @desc    Get AI Insights (spending anomalies & reduction suggestions)
@@ -23,7 +24,7 @@ export const getInsights = async (req, res) => {
     }
 
     // Retrieve user's oldest transaction to determine history age
-    const oldestTx = await Transaction.findOne({ userId }).sort({ date: 1 });
+    const oldestTx = await Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: 1 }).lean();
     if (!oldestTx) {
       return res.status(200).json({ 
         anomalies: [], 
@@ -33,13 +34,13 @@ export const getInsights = async (req, res) => {
     }
     const oldestDate = new Date(oldestTx.date);
 
-    // Identify last 3 full months
+    // Identify last 3 full months (UTC)
     const months = [];
     for (let i = 1; i <= 3; i++) {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1, 0, 0, 0, 0));
       // Last day of that month: day 0 of the next month
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
-      const monthKey = `${startOfMonth.getFullYear()}-${startOfMonth.getMonth()}`;
+      const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 0, 23, 59, 59, 999));
+      const monthKey = `${startOfMonth.getUTCFullYear()}-${startOfMonth.getUTCMonth()}`;
       
       // Valid if the end of the month is after or equal to the oldest transaction date
       const isValid = endOfMonth >= oldestDate;
@@ -67,20 +68,25 @@ export const getInsights = async (req, res) => {
     const startOfHistory = validMonths[validMonths.length - 1].startOfMonth;
     const endOfHistory = validMonths[0].endOfMonth;
 
-    // Fetch historical expenses
+    // Fetch user's included accounts
+    const includedAccounts = await Account.find({ userId, includeInTotal: { $ne: false } }).select('_id').lean();
+    const includedAccountIds = includedAccounts.map(acc => acc._id);
+
+    // Fetch historical expenses (only for included accounts)
     const historyTxs = await Transaction.find({
       userId,
       type: 'expense',
+      accountId: { $in: includedAccountIds },
       date: { $gte: startOfHistory, $lte: endOfHistory },
       isPending: { $ne: true }
-    }).select('categoryId scheduledTransactionId amount date').populate('categoryId').populate('scheduledTransactionId');
+    }).select('categoryId scheduledTransactionId amount date').populate('categoryId').populate('scheduledTransactionId').lean();
 
     // Fetch user's active subscriptions to correlate
     const subscriptions = await ScheduledTransaction.find({
       userId,
       isSubscription: true,
       isActive: true
-    });
+    }).lean();
 
     // Group history by category and month
     const categoryHistory = {}; // categoryId -> { category: Object, total: Number, months: Set, hasSubscription: Boolean }
@@ -89,7 +95,7 @@ export const getInsights = async (req, res) => {
       if (!tx.categoryId) continue;
       const catId = tx.categoryId._id.toString();
       const txDate = new Date(tx.date);
-      const monthKey = `${txDate.getFullYear()}-${txDate.getMonth()}`;
+      const monthKey = `${txDate.getUTCFullYear()}-${txDate.getUTCMonth()}`;
 
       if (!categoryHistory[catId]) {
         categoryHistory[catId] = {
@@ -109,16 +115,17 @@ export const getInsights = async (req, res) => {
       }
     }
 
-    // Fetch current month's expenses
-    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    // Fetch current month's expenses (UTC)
+    const startOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+    const endOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
     const currentMonthTxs = await Transaction.find({
       userId,
       type: 'expense',
+      accountId: { $in: includedAccountIds },
       date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
       isPending: { $ne: true }
-    }).select('categoryId scheduledTransactionId amount').populate('categoryId').populate('scheduledTransactionId');
+    }).select('categoryId scheduledTransactionId amount').populate('categoryId').populate('scheduledTransactionId').lean();
 
     const currentCategorySpending = {}; // categoryId -> Number
     for (const tx of currentMonthTxs) {
