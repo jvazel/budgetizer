@@ -5,6 +5,180 @@ import SavingsGoal from '../models/SavingsGoal.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import mongoose from 'mongoose';
 
+const toObjectId = (id) => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return new mongoose.Types.ObjectId(id);
+  }
+  return id;
+};
+
+const aggregatePeriodStats = async (userId, checkingAccountIds, startDate, endDate) => {
+  if (checkingAccountIds.length === 0) return { income: 0, expenses: 0 };
+  const checkingAccountObjectIds = checkingAccountIds.map(toObjectId);
+  const result = await Transaction.aggregate([
+    {
+      $match: {
+        userId: toObjectId(userId),
+        isPending: { $ne: true },
+        date: { $gte: startDate, $lte: endDate },
+        $or: [
+          { accountId: { $in: checkingAccountObjectIds } },
+          { toAccountId: { $in: checkingAccountObjectIds } }
+        ]
+      }
+    },
+    {
+      $project: {
+        type: 1,
+        amount: 1,
+        accountId: 1,
+        toAccountId: 1,
+        isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+        isDestChecking: {
+          $cond: {
+            if: { $ne: ["$toAccountId", null] },
+            then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+            else: false
+          }
+        }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        income: {
+          $sum: {
+            $cond: [
+              {
+                $or: [
+                  { $and: [{ $eq: ["$type", "income"] }, "$isSourceChecking"] },
+                  { $and: [{ $eq: ["$type", "transfer"] }, { $not: ["$isSourceChecking"] }, "$isDestChecking"] }
+                ]
+              },
+              "$amount",
+              0
+            ]
+          }
+        },
+        expenses: {
+          $sum: {
+            $cond: [
+              {
+                $or: [
+                  { $and: [{ $eq: ["$type", "expense"] }, "$isSourceChecking"] },
+                  { $and: [{ $eq: ["$type", "transfer"] }, "$isSourceChecking", { $not: ["$isDestChecking"] }] }
+                ]
+              },
+              "$amount",
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
+  
+  return result[0] || { income: 0, expenses: 0 };
+};
+
+const getDailyExpensesMap = async (userId, checkingAccountIds, startDate, endDate) => {
+  if (checkingAccountIds.length === 0) return {};
+  const checkingAccountObjectIds = checkingAccountIds.map(toObjectId);
+  const result = await Transaction.aggregate([
+    {
+      $match: {
+        userId: toObjectId(userId),
+        isPending: { $ne: true },
+        date: { $gte: startDate, $lte: endDate },
+        $or: [
+          { accountId: { $in: checkingAccountObjectIds } },
+          { toAccountId: { $in: checkingAccountObjectIds } }
+        ]
+      }
+    },
+    {
+      $project: {
+        type: 1,
+        amount: 1,
+        accountId: 1,
+        toAccountId: 1,
+        date: 1,
+        isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+        isDestChecking: {
+          $cond: {
+            if: { $ne: ["$toAccountId", null] },
+            then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+            else: false
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        $or: [
+          { $and: [{ $eq: ["$type", "expense"] }, { $eq: ["$isSourceChecking", true] }] },
+          { $and: [{ $eq: ["$type", "transfer"] }, { $eq: ["$isSourceChecking", true] }, { $eq: ["$isDestChecking", false] }] }
+        ]
+      }
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: "%Y-%m-%d", date: "$date" }
+        },
+        amount: { $sum: "$amount" }
+      }
+    }
+  ]);
+
+  const map = {};
+  result.forEach(item => {
+    map[item._id] = item.amount;
+  });
+  return map;
+};
+
+const aggregateExpensesByCategory = async (userId, checkingAccountIds, startDate, endDate) => {
+  if (checkingAccountIds.length === 0) return [];
+  const checkingAccountObjectIds = checkingAccountIds.map(toObjectId);
+  return await Transaction.aggregate([
+    {
+      $match: {
+        userId: toObjectId(userId),
+        isPending: { $ne: true },
+        type: 'expense',
+        date: { $gte: startDate, $lte: endDate },
+        accountId: { $in: checkingAccountObjectIds }
+      }
+    },
+    {
+      $group: {
+        _id: '$categoryId',
+        amount: { $sum: '$amount' }
+      }
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'categoryInfo'
+      }
+    },
+    { $unwind: '$categoryInfo' },
+    {
+      $project: {
+        id: '$_id',
+        name: '$categoryInfo.name',
+        icon: '$categoryInfo.icon',
+        color: '$categoryInfo.color',
+        amount: 1
+      }
+    },
+    { $sort: { amount: -1 } }
+  ]);
+};
+
 export const getDashboardSummary = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -27,59 +201,100 @@ export const getDashboardSummary = async (req, res) => {
     // Future limit for upcoming scheduled transactions (3 days) (UTC)
     const futureLimit = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 3, 23, 59, 59, 999));
 
-    // 1. Fetch accounts first to extract included and checking account IDs for filtering transaction queries
+    // 1. Fetch accounts first to extract included and checking account IDs
     const rawAccounts = await Account.find({ userId }).lean();
     const includedAccountIds = rawAccounts.filter(acc => acc.includeInTotal !== false).map(acc => acc._id);
     const checkingAccountIds = rawAccounts.filter(acc => acc.type === 'checking').map(acc => acc._id);
 
-    // 2. Fetch all other collections in parallel
+    // 2. Fetch other collections and perform database-level calculations in parallel
     const [
-      currentMonthTxs,
-      lastMonthTxs,
-      last7DaysTxs,
-      historyTxs,
+      currentMonthStats,
+      lastMonthStats,
+      currentMonthDailyMap,
+      last7DaysDailyMap,
+      expensesByCategory,
+      dailyAccountDeltas,
       budgets,
       pendingTxs,
       upcomingSchedules,
       savingsGoals,
-      oldestTx
+      oldestTx,
+      recentTransactions
     ] = await Promise.all([
-      Transaction.find({
-        userId,
-        isPending: { $ne: true },
-        $or: [
-          { accountId: { $in: checkingAccountIds } },
-          { toAccountId: { $in: checkingAccountIds } }
-        ],
-        date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth }
-      }).populate('categoryId', 'name icon color type').sort({ date: -1 }).lean(),
-      Transaction.find({
-        userId,
-        isPending: { $ne: true },
-        $or: [
-          { accountId: { $in: checkingAccountIds } },
-          { toAccountId: { $in: checkingAccountIds } }
-        ],
-        date: { $gte: startOfLastMonth, $lte: endOfLastMonth }
-      }).select('type amount accountId toAccountId').lean(),
-      Transaction.find({
-        userId,
-        isPending: { $ne: true },
-        $or: [
-          { accountId: { $in: checkingAccountIds } },
-          { toAccountId: { $in: checkingAccountIds } }
-        ],
-        date: { $gte: startOf7DaysAgo, $lte: now }
-      }).select('date amount type accountId toAccountId').lean(),
-      Transaction.find({
-        userId,
-        isPending: { $ne: true },
-        $or: [
-          { accountId: { $in: includedAccountIds } },
-          { toAccountId: { $in: includedAccountIds } }
-        ],
-        date: { $gte: startOfHistory, $lte: now }
-      }).select('accountId toAccountId type amount date').sort({ date: -1 }).lean(),
+      aggregatePeriodStats(userId, checkingAccountIds, startOfCurrentMonth, endOfCurrentMonth),
+      aggregatePeriodStats(userId, checkingAccountIds, startOfLastMonth, endOfLastMonth),
+      getDailyExpensesMap(userId, checkingAccountIds, startOfCurrentMonth, endOfCurrentMonth),
+      getDailyExpensesMap(userId, checkingAccountIds, startOf7DaysAgo, now),
+      aggregateExpensesByCategory(userId, checkingAccountIds, startOfCurrentMonth, endOfCurrentMonth),
+      Transaction.aggregate([
+        {
+          $match: {
+            userId: toObjectId(userId),
+            isPending: { $ne: true },
+            date: { $gte: startOfHistory, $lte: now }
+          }
+        },
+        {
+          $facet: {
+            sourceDeltas: [
+              {
+                $match: {
+                  accountId: { $in: includedAccountIds.map(toObjectId) }
+                }
+              },
+              {
+                $group: {
+                  _id: {
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                    accountId: "$accountId"
+                  },
+                  delta: {
+                    $sum: {
+                      $cond: [
+                        { $eq: ["$type", "income"] },
+                        "$amount",
+                        { $multiply: ["$amount", -1] }
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
+            destDeltas: [
+              {
+                $match: {
+                  type: "transfer",
+                  toAccountId: { $in: includedAccountIds.map(toObjectId) }
+                }
+              },
+              {
+                $group: {
+                  _id: {
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                    accountId: "$toAccountId"
+                  },
+                  delta: { $sum: "$amount" }
+                }
+              }
+            ]
+          }
+        },
+        {
+          $project: {
+            allDeltas: { $concatArrays: ["$sourceDeltas", "$destDeltas"] }
+          }
+        },
+        { $unwind: "$allDeltas" },
+        {
+          $group: {
+            _id: {
+              date: "$allDeltas._id.date",
+              accountId: "$allDeltas._id.accountId"
+            },
+            totalDelta: { $sum: "$allDeltas.delta" }
+          }
+        }
+      ]),
       Budget.find({ userId }).populate('categoryId', 'name icon').lean(),
       Transaction.find({ userId, isPending: true }).populate('categoryId', 'name icon').lean(),
       ScheduledTransaction.find({
@@ -88,14 +303,27 @@ export const getDashboardSummary = async (req, res) => {
         nextDate: { $gte: now, $lte: futureLimit }
       }).populate('categoryId', 'name icon').lean(),
       SavingsGoal.find({ userId }).lean(),
-      Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: 1 }).lean()
+      Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: 1 }).lean(),
+      Transaction.find({
+        userId,
+        isPending: { $ne: true },
+        $or: [
+          { accountId: { $in: checkingAccountIds } },
+          { toAccountId: { $in: checkingAccountIds } }
+        ],
+        date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth }
+      })
+      .populate('categoryId', 'name icon color type')
+      .sort({ date: -1 })
+      .limit(5)
+      .lean()
     ]);
 
     // 3. Fetch latest transaction date per account in a single aggregation query
     const latestTxDates = await Transaction.aggregate([
       {
         $match: {
-          userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
+          userId: toObjectId(userId),
           isPending: { $ne: true }
         }
       },
@@ -146,47 +374,12 @@ export const getDashboardSummary = async (req, res) => {
     const totalAvailable = rawAccounts.filter(acc => acc.type !== 'credit').reduce((sum, acc) => sum + acc.balance, 0);
     const totalCredit = rawAccounts.filter(acc => acc.type === 'credit').reduce((sum, acc) => sum + acc.balance, 0);
 
-    // 4. Calculate Income/Expenses for Current Month
-    let currentIncome = 0;
-    let currentExpenses = 0;
-    currentMonthTxs.forEach(tx => {
-      const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
-      const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
+    // 4. Monthly totals and variations
+    const currentIncome = currentMonthStats.income;
+    const currentExpenses = currentMonthStats.expenses;
+    const lastIncome = lastMonthStats.income;
+    const lastExpenses = lastMonthStats.expenses;
 
-      if (tx.type === 'income' && sourceChecking) {
-        currentIncome += tx.amount;
-      } else if (tx.type === 'expense' && sourceChecking) {
-        currentExpenses += tx.amount;
-      } else if (tx.type === 'transfer') {
-        if (sourceChecking && !destChecking) {
-          currentExpenses += tx.amount;
-        } else if (!sourceChecking && destChecking) {
-          currentIncome += tx.amount;
-        }
-      }
-    });
-
-    // 5. Calculate Income/Expenses for Last Month
-    let lastIncome = 0;
-    let lastExpenses = 0;
-    lastMonthTxs.forEach(tx => {
-      const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
-      const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
-
-      if (tx.type === 'income' && sourceChecking) {
-        lastIncome += tx.amount;
-      } else if (tx.type === 'expense' && sourceChecking) {
-        lastExpenses += tx.amount;
-      } else if (tx.type === 'transfer') {
-        if (sourceChecking && !destChecking) {
-          lastExpenses += tx.amount;
-        } else if (!sourceChecking && destChecking) {
-          lastIncome += tx.amount;
-        }
-      }
-    });
-
-    // 6. Calculate % changes (safeguard against division by zero)
     const calcChange = (current, last) => {
       if (last === 0) return current > 0 ? 100 : 0;
       return ((current - last) / last) * 100;
@@ -195,87 +388,55 @@ export const getDashboardSummary = async (req, res) => {
     const incomeChange = calcChange(currentIncome, lastIncome);
     const expenseChange = calcChange(currentExpenses, lastExpenses);
 
-    // 7. Group Daily Expenses for Chart
-    const dailyExpensesMap = {};
+    // 5. Daily Expenses list
     const daysInMonth = now.getUTCDate(); // Only up to today (UTC)
-    
+    const dailyExpenses = [];
     const yearStr = now.getUTCFullYear();
     const monthStr = String(now.getUTCMonth() + 1).padStart(2, '0');
+
     for (let i = 1; i <= daysInMonth; i++) {
-      const dayStr = `${yearStr}-${monthStr}-${String(i).padStart(2, '0')}`;
-      dailyExpensesMap[dayStr] = 0;
-    }
-
-    currentMonthTxs.forEach(tx => {
-      const d = new Date(tx.date);
-      if (d <= now) {
-        const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
-        const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
-
-        let isExpense = false;
-        if (tx.type === 'expense' && sourceChecking) isExpense = true;
-        else if (tx.type === 'transfer' && sourceChecking && !destChecking) isExpense = true;
-
-        if (isExpense) {
-          const dayStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-          if (dailyExpensesMap[dayStr] !== undefined) {
-            dailyExpensesMap[dayStr] += tx.amount;
-          }
-        }
-      }
-    });
-
-    const dailyExpenses = Object.keys(dailyExpensesMap).sort().map(date => ({
-      date: date.substring(8, 10), // just the day '01', '02'
-      amount: dailyExpensesMap[date]
-    }));
-
-    const last7DaysExpenses = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-      const dayStr = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-      const startOfDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
-      const endOfDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
-      
-      const sum = last7DaysTxs
-        .filter(tx => tx.date >= startOfDay && tx.date <= endOfDay)
-        .filter(tx => {
-          const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
-          const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
-          if (tx.type === 'expense' && sourceChecking) return true;
-          if (tx.type === 'transfer' && sourceChecking && !destChecking) return true;
-          return false;
-        })
-        .reduce((acc, tx) => acc + tx.amount, 0);
-        
-      last7DaysExpenses.push({
-        date: dayStr,
-        amount: parseFloat(sum.toFixed(2))
+      const dateKey = `${yearStr}-${monthStr}-${String(i).padStart(2, '0')}`;
+      dailyExpenses.push({
+        date: String(i).padStart(2, '0'),
+        amount: currentMonthDailyMap[dateKey] || 0
       });
     }
 
+    // 6. Last 7 Days Expenses list
+    const last7DaysExpenses = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+      const dateKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      const dayLabel = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+      last7DaysExpenses.push({
+        date: dayLabel,
+        amount: parseFloat((last7DaysDailyMap[dateKey] || 0).toFixed(2))
+      });
+    }
+
+    // 7. Balance History backwards sweep
     const accountBalances = {};
     rawAccounts.forEach(acc => {
       accountBalances[acc._id.toString()] = acc.balance;
     });
 
-    const formatDateKey = (date) => {
-      const d = new Date(date);
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-    };
-
-    // Group transactions by date key for constant time lookup: O(N)
-    const txsByDate = {};
-    historyTxs.forEach(tx => {
-      const dateKey = formatDateKey(tx.date);
-      if (!txsByDate[dateKey]) {
-        txsByDate[dateKey] = [];
+    const deltaMap = {};
+    dailyAccountDeltas.forEach(item => {
+      const dateKey = item._id.date;
+      const accId = item._id.accountId.toString();
+      if (!deltaMap[dateKey]) {
+        deltaMap[dateKey] = {};
       }
-      txsByDate[dateKey].push(tx);
+      deltaMap[dateKey][accId] = item.totalDelta;
     });
 
     const balanceHistory = [];
     const runningBalances = { ...accountBalances };
+
+    const formatDateKey = (date) => {
+      const d = new Date(date);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    };
 
     for (let i = 0; i <= 180; i++) {
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i, 0, 0, 0, 0));
@@ -307,57 +468,27 @@ export const getDashboardSummary = async (req, res) => {
         total: parseFloat((totalAvailableVal + totalCreditVal).toFixed(2))
       });
 
-      const dayTxs = txsByDate[dateKey] || [];
-      dayTxs.forEach(tx => {
-        const accId = tx.accountId?.toString();
-        const toAccId = tx.toAccountId?.toString();
-
-        if (tx.type === 'expense') {
-          if (accId && runningBalances[accId] !== undefined) {
-            runningBalances[accId] += tx.amount;
-          }
-        } else if (tx.type === 'income') {
-          if (accId && runningBalances[accId] !== undefined) {
-            runningBalances[accId] -= tx.amount;
-          }
-        } else if (tx.type === 'transfer') {
-          if (accId && runningBalances[accId] !== undefined) {
-            runningBalances[accId] += tx.amount;
-          }
-          if (toAccId && runningBalances[toAccId] !== undefined) {
-            runningBalances[toAccId] -= tx.amount;
-          }
+      // Apply deltas in reverse (subtract delta to go backward)
+      const dayDeltas = deltaMap[dateKey] || {};
+      for (const [accId, delta] of Object.entries(dayDeltas)) {
+        if (runningBalances[accId] !== undefined) {
+          runningBalances[accId] -= delta;
         }
-      });
+      }
     }
 
     balanceHistory.reverse();
 
-    // 8. Top Expenses by Category
+    // 8. Category spending map for budgets & insights
     const categoryMap = {};
-    currentMonthTxs.forEach(tx => {
-      if (tx.type === 'expense' && tx.categoryId) {
-        const catId = tx.categoryId._id.toString();
-        if (!categoryMap[catId]) {
-          categoryMap[catId] = {
-            id: catId,
-            name: tx.categoryId.name,
-            icon: tx.categoryId.icon,
-            color: tx.categoryId.color,
-            amount: 0
-          };
-        }
-        categoryMap[catId].amount += tx.amount;
-      }
+    expensesByCategory.forEach(cat => {
+      categoryMap[cat.id.toString()] = {
+        amount: cat.amount,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color
+      };
     });
-
-    const expensesByCategory = Object.values(categoryMap)
-      .sort((a, b) => b.amount - a.amount)
-      .map(cat => ({
-        ...cat,
-        percentage: currentExpenses > 0 ? (cat.amount / currentExpenses) * 100 : 0
-      }))
-      .slice(0, 5); // Top 5
 
     // 9. Notifications Aggregation
     const prefs = req.user.preferences || {};
@@ -372,11 +503,10 @@ export const getDashboardSummary = async (req, res) => {
     const notifications = [];
     const budgetAlerts = [];
 
-    // a. Budgets (already fetched in Promise.all)
+    // a. Budgets
     budgets.forEach(budget => {
       const catId = budget.categoryId?._id?.toString() || budget.categoryId?.toString();
       const spent = catId ? (categoryMap[catId]?.amount || 0) : 0;
-        
       const percentage = (spent / budget.amount) * 100;
       
       if (percentage >= budget.alertAt) {
@@ -408,7 +538,6 @@ export const getDashboardSummary = async (req, res) => {
 
     // b. Scheduled & Pending Transactions
     if (enableScheduledAlerts) {
-      // Find pending transactions awaiting user validation (already fetched in Promise.all)
       pendingTxs.forEach(tx => {
         notifications.push({
           id: `pending-${tx._id}`,
@@ -420,8 +549,6 @@ export const getDashboardSummary = async (req, res) => {
           action: { label: 'Valider', path: '/scheduled' }
         });
       });
-
-      // Find upcoming transactions in the next 3 days (already fetched in Promise.all)
 
       upcomingSchedules.forEach(st => {
         notifications.push({
@@ -438,7 +565,6 @@ export const getDashboardSummary = async (req, res) => {
 
     // c. Savings Goals
     if (enableSavingsAlerts) {
-      // savingsGoals (already fetched in Promise.all)
       const weekFromNow = new Date();
       weekFromNow.setDate(now.getDate() + 7);
 
@@ -494,8 +620,6 @@ export const getDashboardSummary = async (req, res) => {
     if (enableAiInsightsAlerts) {
       if (oldestTx) {
         const oldestDate = new Date(oldestTx.date);
-        
-        // 3 previous months in UTC
         const months = [];
         for (let i = 1; i <= 3; i++) {
           const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1, 0, 0, 0, 0));
@@ -512,7 +636,7 @@ export const getDashboardSummary = async (req, res) => {
           const historyTotals = await Transaction.aggregate([
             {
               $match: {
-                userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
+                userId: toObjectId(userId),
                 type: 'expense',
                 date: { $gte: startOfHistory, $lte: endOfHistory },
                 isPending: { $ne: true }
@@ -579,8 +703,15 @@ export const getDashboardSummary = async (req, res) => {
       dailyExpenses,
       last7DaysExpenses,
       balanceHistory,
-      expensesByCategory,
-      recentTransactions: currentMonthTxs.slice(0, 5),
+      expensesByCategory: expensesByCategory.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        amount: cat.amount,
+        percentage: currentExpenses > 0 ? (cat.amount / currentExpenses) * 100 : 0
+      })).slice(0, 5),
+      recentTransactions,
       budgetAlerts,
       notifications
     });
@@ -604,18 +735,7 @@ export const getMonthlySummaries = async (req, res) => {
     const checkingAccounts = await Account.find({ userId, type: 'checking' }).select('_id').lean();
     const checkingAccountIds = checkingAccounts.map(acc => acc._id);
 
-    // Fetch transactions within the specified year (exclude pending, restrict to checking accounts via $or)
-    const transactions = await Transaction.find({
-      userId,
-      $or: [
-        { accountId: { $in: checkingAccountIds } },
-        { toAccountId: { $in: checkingAccountIds } }
-      ],
-      date: { $gte: startOfYear, $lte: endOfYear },
-      isPending: { $ne: true }
-    }).lean();
-
-    // Group transactions by month in memory
+    // Group transactions by month
     const monthlyData = Array.from({ length: 12 }, (_, i) => ({
       monthIndex: i, // 0 to 11
       income: 0,
@@ -623,33 +743,83 @@ export const getMonthlySummaries = async (req, res) => {
       net: 0
     }));
 
-    transactions.forEach(tx => {
-      const txDate = new Date(tx.date);
-      const monthIndex = txDate.getUTCMonth();
-      if (monthIndex >= 0 && monthIndex < 12) {
-        const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
-        const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId.toString()) : false;
+    if (checkingAccountIds.length > 0) {
+      const checkingAccountObjectIds = checkingAccountIds.map(toObjectId);
+      const userObjectId = toObjectId(userId);
 
-        if (tx.type === 'income' && sourceChecking) {
-          monthlyData[monthIndex].income += tx.amount;
-        } else if (tx.type === 'expense' && sourceChecking) {
-          monthlyData[monthIndex].expenses += tx.amount;
-        } else if (tx.type === 'transfer') {
-          if (sourceChecking && !destChecking) {
-            monthlyData[monthIndex].expenses += tx.amount;
-          } else if (!sourceChecking && destChecking) {
-            monthlyData[monthIndex].income += tx.amount;
+      const aggregates = await Transaction.aggregate([
+        {
+          $match: {
+            userId: userObjectId,
+            isPending: { $ne: true },
+            date: { $gte: startOfYear, $lte: endOfYear },
+            $or: [
+              { accountId: { $in: checkingAccountObjectIds } },
+              { toAccountId: { $in: checkingAccountObjectIds } }
+            ]
+          }
+        },
+        {
+          $project: {
+            monthIndex: { $subtract: [{ $month: "$date" }, 1] }, // convert 1-12 to 0-11
+            type: 1,
+            amount: 1,
+            accountId: 1,
+            toAccountId: 1,
+            isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+            isDestChecking: {
+              $cond: {
+                if: { $ne: ["$toAccountId", null] },
+                then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+                else: false
+              }
+            }
+          }
+        },
+        {
+          $group: {
+            _id: "$monthIndex",
+            income: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $and: [{ $eq: ["$type", "income"] }, "$isSourceChecking"] },
+                      { $and: [{ $eq: ["$type", "transfer"] }, { $not: ["$isSourceChecking"] }, "$isDestChecking"] }
+                    ]
+                  },
+                  "$amount",
+                  0
+                ]
+              }
+            },
+            expenses: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $and: [{ $eq: ["$type", "expense"] }, "$isSourceChecking"] },
+                      { $and: [{ $eq: ["$type", "transfer"] }, "$isSourceChecking", { $not: ["$isDestChecking"] }] }
+                    ]
+                  },
+                  "$amount",
+                  0
+                ]
+              }
+            }
           }
         }
-      }
-    });
+      ]);
 
-    // Compute net and round
-    monthlyData.forEach(item => {
-      item.income = parseFloat(item.income.toFixed(2));
-      item.expenses = parseFloat(item.expenses.toFixed(2));
-      item.net = parseFloat((item.income - item.expenses).toFixed(2));
-    });
+      aggregates.forEach(item => {
+        const mIdx = item._id;
+        if (mIdx >= 0 && mIdx < 12) {
+          monthlyData[mIdx].income = parseFloat(item.income.toFixed(2));
+          monthlyData[mIdx].expenses = parseFloat(item.expenses.toFixed(2));
+          monthlyData[mIdx].net = parseFloat((item.income - item.expenses).toFixed(2));
+        }
+      });
+    }
 
     // For the current year, filter out future months
     let filteredSummaries = monthlyData;

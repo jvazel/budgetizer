@@ -44,6 +44,7 @@ const mockChain = (value) => {
     select: vi.fn().mockImplementation(() => obj),
     populate: vi.fn().mockImplementation(() => obj),
     sort: vi.fn().mockImplementation(() => obj),
+    limit: vi.fn().mockImplementation(() => obj),
     lean: vi.fn().mockImplementation(() => obj),
     then: vi.fn().mockImplementation((resolve) => Promise.resolve(value).then(resolve))
   };
@@ -97,10 +98,6 @@ describe('Dashboard Controller', () => {
         { _id: 'tx2', type: 'income', amount: 1500, categoryId: null, accountId: 'acc1', date: new Date() }
       ];
 
-      const mockLastMonthTxs = [
-        { _id: 'tx3', type: 'expense', amount: 100, accountId: 'acc1', date: new Date(new Date().setMonth(new Date().getMonth() - 1)) }
-      ];
-
       Account.find.mockImplementation(() => ({
         lean: vi.fn().mockResolvedValue(mockAccounts)
       }));
@@ -110,22 +107,50 @@ describe('Dashboard Controller', () => {
         return mockChain({ date: new Date('2026-01-01') }); // Oldest transaction
       });
 
-      // Setup find mock implementation for various calls based on query keys
+      // Setup Transaction.aggregate mock
+      Transaction.aggregate.mockImplementation((pipeline) => {
+        const pipelineStr = JSON.stringify(pipeline);
+        if (pipelineStr.includes('"sourceDeltas"') && pipelineStr.includes('"destDeltas"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"income"') && pipelineStr.includes('"expenses"') && pipelineStr.includes('"$sum"')) {
+          const matchStage = pipeline.find(s => s.$match);
+          const dateQuery = matchStage.$match.date;
+          const gte = new Date(dateQuery.$gte);
+          const now = new Date();
+          const startOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+          if (gte >= startOfCurrentMonth) {
+            return Promise.resolve([{ income: 1500, expenses: 50 }]);
+          }
+          return Promise.resolve([{ income: 0, expenses: 100 }]);
+        }
+        if (pipelineStr.includes('"$dateToString"') && pipelineStr.includes('"%Y-%m-%d"')) {
+          const today = new Date();
+          const todayKey = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+          return Promise.resolve([{ _id: todayKey, amount: 50 }]);
+        }
+        if (pipelineStr.includes('"categories"')) {
+          return Promise.resolve([
+            { id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange', amount: 50 }
+          ]);
+        }
+        if (pipelineStr.includes('"lastTransactionDate"') || pipelineStr.includes('"$max"')) {
+          return Promise.resolve([
+            { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') },
+            { _id: 'acc2', lastTransactionDate: new Date('2026-06-01') }
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
+      // Setup find mock implementation for various calls
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) {
-          return mockChain([]); // No pending transactions
+          return mockChain([]);
         }
         if (query.date && query.date.$gte && query.date.$lte) {
-          const lte = query.date.$lte;
-          const oneMonthAgo = new Date();
-          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-          
-          if (new Date(lte).getMonth() === oneMonthAgo.getMonth()) {
-            return mockChain(mockLastMonthTxs);
-          }
           return mockChain(mockCurrentMonthTxs);
         }
-        // Historical or 7 days
         return mockChain([]);
       });
 
@@ -158,19 +183,35 @@ describe('Dashboard Controller', () => {
         { _id: 'b1', name: 'Alimentation', amount: 100, alertAt: 80, categoryId: mockCategoryFood }
       ];
 
-      // Current month spend 120 (exceeds budget 100)
-      const mockCurrentMonthTxs = [
-        { _id: 'tx1', type: 'expense', amount: 120, categoryId: mockCategoryFood, accountId: 'acc1', date: new Date() }
-      ];
-
       Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
+      Transaction.aggregate.mockImplementation((pipeline) => {
+        const pipelineStr = JSON.stringify(pipeline);
+        if (pipelineStr.includes('"sourceDeltas"') && pipelineStr.includes('"destDeltas"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"income"') && pipelineStr.includes('"expenses"') && pipelineStr.includes('"$sum"')) {
+          return Promise.resolve([{ income: 0, expenses: 120 }]);
+        }
+        if (pipelineStr.includes('"categories"')) {
+          return Promise.resolve([
+            { id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange', amount: 120 }
+          ]);
+        }
+        if (pipelineStr.includes('"$dateToString"') && pipelineStr.includes('"%Y-%m-%d"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"lastTransactionDate"') || pipelineStr.includes('"$max"')) {
+          return Promise.resolve([
+            { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') }
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
-        if (query.date && query.date.$gte && query.date.$lte) {
-          return mockChain(mockCurrentMonthTxs);
-        }
         return mockChain([]);
       });
 
@@ -205,6 +246,25 @@ describe('Dashboard Controller', () => {
       Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
+      Transaction.aggregate.mockImplementation((pipeline) => {
+        const pipelineStr = JSON.stringify(pipeline);
+        if (pipelineStr.includes('"sourceDeltas"') && pipelineStr.includes('"destDeltas"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"income"') && pipelineStr.includes('"expenses"') && pipelineStr.includes('"$sum"')) {
+          return Promise.resolve([{ income: 0, expenses: 0 }]);
+        }
+        if (pipelineStr.includes('"categories"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"lastTransactionDate"') || pipelineStr.includes('"$max"')) {
+          return Promise.resolve([
+            { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') }
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
         return mockChain([]);
@@ -230,28 +290,41 @@ describe('Dashboard Controller', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      const mockHistoryTxs = [
-        {
-          _id: 'tx_transfer',
-          type: 'transfer',
-          amount: 50,
-          accountId: 'acc_inc',
-          toAccountId: 'acc_exc',
-          date: yesterday
-        }
-      ];
-
       Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date('2026-01-01') }));
 
+      Transaction.aggregate.mockImplementation((pipeline) => {
+        const pipelineStr = JSON.stringify(pipeline);
+        if (pipelineStr.includes('"sourceDeltas"') && pipelineStr.includes('"destDeltas"')) {
+          const yesterdayStr = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, '0')}-${String(yesterday.getUTCDate()).padStart(2, '0')}`;
+          return Promise.resolve([
+            {
+              _id: { date: yesterdayStr, accountId: 'acc_inc' },
+              totalDelta: -50
+            },
+            {
+              _id: { date: yesterdayStr, accountId: 'acc_exc' },
+              totalDelta: 50
+            }
+          ]);
+        }
+        if (pipelineStr.includes('"income"') && pipelineStr.includes('"expenses"') && pipelineStr.includes('"$sum"')) {
+          return Promise.resolve([{ income: 0, expenses: 0 }]);
+        }
+        if (pipelineStr.includes('"categories"')) {
+          return Promise.resolve([]);
+        }
+        if (pipelineStr.includes('"lastTransactionDate"') || pipelineStr.includes('"$max"')) {
+          return Promise.resolve([
+            { _id: 'acc_inc', lastTransactionDate: new Date('2026-06-01') },
+            { _id: 'acc_exc', lastTransactionDate: new Date('2026-06-01') }
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
-        if (query.date && query.date.$gte && query.date.$lte) {
-          const diffDays = (query.date.$lte - query.date.$gte) / (1000 * 60 * 60 * 24);
-          if (diffDays > 100) {
-            return mockChain(mockHistoryTxs);
-          }
-        }
         return mockChain([]);
       });
 
@@ -274,24 +347,32 @@ describe('Dashboard Controller', () => {
     });
 
     it('should exclude pending transactions from current month, last month, last 7 days and history queries', async () => {
-      Account.find.mockReturnValue(mockChain([]));
+      const mockAccounts = [
+        { _id: 'acc1', name: 'Compte Courant', balance: 500, type: 'checking', includeInTotal: true }
+      ];
+      Account.find.mockReturnValue(mockChain(mockAccounts));
       Transaction.findOne.mockImplementation(() => mockChain({ date: new Date() }));
       Transaction.find.mockReturnValue(mockChain([]));
       Budget.find.mockReturnValue(mockChain([]));
       SavingsGoal.find.mockReturnValue(mockChain([]));
       ScheduledTransaction.find.mockReturnValue(mockChain([]));
+      Transaction.aggregate.mockResolvedValue([]);
 
       await getDashboardSummary(req, res);
 
-      // Verify that Transaction.find was called to query transactions with isPending: { $ne: true }
-      const calls = Transaction.find.mock.calls;
-      const filteredQueries = calls.filter(call => call[0] && call[0].isPending);
+      // Verify that Transaction.aggregate was called to query transactions with isPending: { $ne: true }
+      const calls = Transaction.aggregate.mock.calls;
+      const filteredQueries = calls.filter(call => {
+        const pipeline = call[0];
+        const matchStage = pipeline && pipeline.find(s => s.$match);
+        return matchStage && matchStage.$match && matchStage.$match.isPending;
+      });
       
       expect(filteredQueries.length).toBeGreaterThanOrEqual(4);
       filteredQueries.forEach(queryCall => {
-        if (queryCall[0].isPending !== true) {
-          expect(queryCall[0].isPending).toEqual({ $ne: true });
-        }
+        const pipeline = queryCall[0];
+        const matchStage = pipeline.find(s => s.$match);
+        expect(matchStage.$match.isPending).toEqual({ $ne: true });
       });
     });
   });
@@ -299,12 +380,6 @@ describe('Dashboard Controller', () => {
   describe('getMonthlySummaries', () => {
     it('should aggregate income/expenses by month indices', async () => {
       req.query.year = '2026';
-
-      const mockTxs = [
-        { type: 'income', amount: 2000, date: new Date('2026-01-15'), accountId: 'acc1' },
-        { type: 'expense', amount: 500, date: new Date('2026-01-20'), accountId: 'acc1' },
-        { type: 'expense', amount: 300, date: new Date('2026-02-10'), accountId: 'acc1' }
-      ];
 
       // Oldest and newest tx for availableYears computation
       Transaction.findOne.mockImplementation((query) => {
@@ -315,7 +390,14 @@ describe('Dashboard Controller', () => {
         { _id: 'acc1', type: 'checking', includeInTotal: true }
       ]));
 
-      Transaction.find.mockReturnValue(mockChain(mockTxs));
+      Transaction.aggregate.mockImplementation((pipeline) => {
+        return Promise.resolve([
+          { _id: 0, income: 2000, expenses: 500 },
+          { _id: 1, income: 0, expenses: 300 }
+        ]);
+      });
+
+      Transaction.find.mockReturnValue(mockChain([]));
 
       await getMonthlySummaries(req, res);
 

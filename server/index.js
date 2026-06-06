@@ -138,6 +138,25 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/monthly-reports', monthlyReportRoutes);
 app.use('/api/webauthn', webauthnRoutes);
 
+// Secure scheduled job endpoint for external trigger
+app.post('/api/jobs/process-scheduled', async (req, res) => {
+  const jobKey = req.headers['x-job-key'];
+  const expectedKey = process.env.SCHEDULED_JOBS_SECRET;
+  
+  if (process.env.NODE_ENV === 'production' && (!expectedKey || jobKey !== expectedKey)) {
+    return res.status(401).json({ message: 'Unauthorized job execution key' });
+  }
+  
+  try {
+    console.log('[Jobs] Manually triggering scheduled transactions processor...');
+    await processScheduledTransactions();
+    res.json({ message: 'Scheduled transactions processed successfully' });
+  } catch (err) {
+    console.error('[Jobs] Error in manual job execution:', err);
+    res.status(500).json({ message: 'Error processing scheduled transactions' });
+  }
+});
+
 // Error Handler to log and format error responses
 app.use((err, req, res, next) => {
   console.error('Express Error:', err);

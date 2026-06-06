@@ -6,7 +6,8 @@ import ScheduledTransaction from '../../models/ScheduledTransaction.js';
 vi.mock('../../models/Transaction.js', () => ({
   default: {
     findOne: vi.fn(),
-    find: vi.fn()
+    find: vi.fn(),
+    aggregate: vi.fn()
   }
 }));
 
@@ -98,29 +99,38 @@ describe('Insight Controller', () => {
     const mockCategoryFood = { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' };
     const mockCategoryRent = { _id: 'cat_rent', name: 'Loyer', icon: '🏠', color: 'blue' };
 
-    const mockHistoryTxs = [
-      { categoryId: mockCategoryFood, amount: 150, type: 'expense', date: new Date('2026-05-10') },
-      { categoryId: mockCategoryFood, amount: 150, type: 'expense', date: new Date('2026-04-10') },
-      { categoryId: mockCategoryRent, amount: 1500, type: 'expense', date: new Date('2026-05-01') },
-      { categoryId: mockCategoryRent, amount: 1500, type: 'expense', date: new Date('2026-04-01') }
-    ];
-
-    const mockCurrentTxs = [
-      { categoryId: mockCategoryFood, amount: 250, type: 'expense', date: new Date('2026-06-05') }
-    ];
-
-    // Mock chaining for find().populate().populate()
-    Transaction.find.mockImplementation(() => {
-      const isFirst = findCallCount === 0;
-      findCallCount++;
-      const resolved = isFirst ? mockHistoryTxs : mockCurrentTxs;
-      const query = {
-        select: vi.fn().mockReturnThis(),
-        populate: vi.fn().mockReturnThis(),
-        lean: vi.fn().mockReturnThis(),
-        then: vi.fn().mockImplementation((resolve) => resolve(resolved))
-      };
-      return query;
+    let aggregateCallCount = 0;
+    Transaction.aggregate.mockImplementation((pipeline) => {
+      const isFirst = aggregateCallCount === 0;
+      aggregateCallCount++;
+      if (isFirst) {
+        // historyAggregated
+        return Promise.resolve([
+          {
+            _id: 'cat_food',
+            total: 300,
+            months: ['2026-04', '2026-05'],
+            hasSubscription: false,
+            categoryInfo: mockCategoryFood
+          },
+          {
+            _id: 'cat_rent',
+            total: 3000,
+            months: ['2026-04', '2026-05'],
+            hasSubscription: false,
+            categoryInfo: mockCategoryRent
+          }
+        ]);
+      } else {
+        // currentMonthAggregated
+        return Promise.resolve([
+          {
+            _id: 'cat_food',
+            totalAmount: 250,
+            hasSubscription: false
+          }
+        ]);
+      }
     });
 
     ScheduledTransaction.find.mockReturnValue({
@@ -161,25 +171,30 @@ describe('Insight Controller', () => {
     req.query.threshold = '50';
 
     const mockCategoryFood = { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' };
-    const mockHistoryTxs = [
-      { categoryId: mockCategoryFood, amount: 300, type: 'expense', date: new Date('2026-05-10') }
-    ];
 
-    const mockCurrentTxs = [
-      { categoryId: mockCategoryFood, amount: 140, type: 'expense', date: new Date('2026-06-05') }
-    ];
-
-    Transaction.find.mockImplementation(() => {
-      const isFirst = findCallCount === 0;
-      findCallCount++;
-      const resolved = isFirst ? mockHistoryTxs : mockCurrentTxs;
-      const query = {
-        select: vi.fn().mockReturnThis(),
-        populate: vi.fn().mockReturnThis(),
-        lean: vi.fn().mockReturnThis(),
-        then: vi.fn().mockImplementation((resolve) => resolve(resolved))
-      };
-      return query;
+    let aggregateCallCount = 0;
+    Transaction.aggregate.mockImplementation((pipeline) => {
+      const isFirst = aggregateCallCount === 0;
+      aggregateCallCount++;
+      if (isFirst) {
+        return Promise.resolve([
+          {
+            _id: 'cat_food',
+            total: 300,
+            months: ['2026-04', '2026-05'],
+            hasSubscription: false,
+            categoryInfo: mockCategoryFood
+          }
+        ]);
+      } else {
+        return Promise.resolve([
+          {
+            _id: 'cat_food',
+            totalAmount: 140,
+            hasSubscription: false
+          }
+        ]);
+      }
     });
 
     ScheduledTransaction.find.mockReturnValue({

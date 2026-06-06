@@ -1,6 +1,14 @@
 import Transaction from '../models/Transaction.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import Account from '../models/Account.js';
+import mongoose from 'mongoose';
+
+const toObjectId = (id) => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return new mongoose.Types.ObjectId(id);
+  }
+  return id;
+};
 
 /**
  * @desc    Get AI Insights (spending anomalies & reduction suggestions)
@@ -72,14 +80,12 @@ export const getInsights = async (req, res) => {
     const includedAccounts = await Account.find({ userId, includeInTotal: { $ne: false } }).select('_id').lean();
     const includedAccountIds = includedAccounts.map(acc => acc._id);
 
-    // Fetch historical expenses (only for included accounts)
-    const historyTxs = await Transaction.find({
-      userId,
-      type: 'expense',
-      accountId: { $in: includedAccountIds },
-      date: { $gte: startOfHistory, $lte: endOfHistory },
-      isPending: { $ne: true }
-    }).select('categoryId scheduledTransactionId amount date').populate('categoryId').populate('scheduledTransactionId').lean();
+    if (includedAccountIds.length === 0) {
+      return res.status(200).json({
+        anomalies: [],
+        suggestions: []
+      });
+    }
 
     // Fetch user's active subscriptions to correlate
     const subscriptions = await ScheduledTransaction.find({
@@ -88,58 +94,143 @@ export const getInsights = async (req, res) => {
       isActive: true
     }).lean();
 
-    // Group history by category and month
-    const categoryHistory = {}; // categoryId -> { category: Object, total: Number, months: Set, hasSubscription: Boolean }
+    // Fetch and aggregate historical expenses (only for included accounts)
+    const historyAggregated = await Transaction.aggregate([
+      {
+        $match: {
+          userId: toObjectId(userId),
+          type: 'expense',
+          accountId: { $in: includedAccountIds.map(toObjectId) },
+          date: { $gte: startOfHistory, $lte: endOfHistory },
+          isPending: { $ne: true }
+        }
+      },
+      {
+        $lookup: {
+          from: 'scheduledtransactions',
+          localField: 'scheduledTransactionId',
+          foreignField: '_id',
+          as: 'schedInfo'
+        }
+      },
+      {
+        $addFields: {
+          isSub: {
+            $cond: [
+              { $eq: [{ $arrayElemAt: ["$schedInfo.isSubscription", 0] }, true] },
+              true,
+              false
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          categoryId: 1,
+          amount: 1,
+          date: 1,
+          isSub: 1,
+          monthKey: {
+            $dateToString: { format: "%Y-%m", date: "$date" }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            categoryId: "$categoryId",
+            monthKey: "$monthKey"
+          },
+          totalAmount: { $sum: "$amount" },
+          hasSubscription: { $max: "$isSub" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.categoryId",
+          total: { $sum: "$totalAmount" },
+          months: { $addToSet: "$_id.monthKey" },
+          hasSubscription: { $max: "$hasSubscription" }
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'categoryInfo'
+        }
+      },
+      { $unwind: '$categoryInfo' }
+    ]);
 
-    for (const tx of historyTxs) {
-      if (!tx.categoryId) continue;
-      const catId = tx.categoryId._id.toString();
-      const txDate = new Date(tx.date);
-      const monthKey = `${txDate.getUTCFullYear()}-${txDate.getUTCMonth()}`;
-
-      if (!categoryHistory[catId]) {
+    // Group history by category
+    const categoryHistory = {};
+    historyAggregated.forEach(item => {
+      if (item._id) {
+        const catId = item._id.toString();
+        const activeMonths = new Set(item.months);
         categoryHistory[catId] = {
-          category: tx.categoryId,
-          total: 0,
-          months: new Set(),
-          hasSubscription: false
+          category: item.categoryInfo,
+          total: item.total,
+          months: activeMonths,
+          hasSubscription: item.hasSubscription
         };
       }
-
-      categoryHistory[catId].total += tx.amount;
-      categoryHistory[catId].months.add(monthKey);
-
-      // Check if this transaction came from a subscription
-      if (tx.scheduledTransactionId && tx.scheduledTransactionId.isSubscription) {
-        categoryHistory[catId].hasSubscription = true;
-      }
-    }
+    });
 
     // Fetch current month's expenses (UTC)
     const startOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
     const endOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
-    const currentMonthTxs = await Transaction.find({
-      userId,
-      type: 'expense',
-      accountId: { $in: includedAccountIds },
-      date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
-      isPending: { $ne: true }
-    }).select('categoryId scheduledTransactionId amount').populate('categoryId').populate('scheduledTransactionId').lean();
+    const currentMonthAggregated = await Transaction.aggregate([
+      {
+        $match: {
+          userId: toObjectId(userId),
+          type: 'expense',
+          accountId: { $in: includedAccountIds.map(toObjectId) },
+          date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
+          isPending: { $ne: true }
+        }
+      },
+      {
+        $lookup: {
+          from: 'scheduledtransactions',
+          localField: 'scheduledTransactionId',
+          foreignField: '_id',
+          as: 'schedInfo'
+        }
+      },
+      {
+        $addFields: {
+          isSub: {
+            $cond: [
+              { $eq: [{ $arrayElemAt: ["$schedInfo.isSubscription", 0] }, true] },
+              true,
+              false
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$categoryId",
+          totalAmount: { $sum: "$amount" },
+          hasSubscription: { $max: "$isSub" }
+        }
+      }
+    ]);
 
-    const currentCategorySpending = {}; // categoryId -> Number
-    for (const tx of currentMonthTxs) {
-      if (!tx.categoryId) continue;
-      const catId = tx.categoryId._id.toString();
-      currentCategorySpending[catId] = (currentCategorySpending[catId] || 0) + tx.amount;
-
-      // Update subscription flag if found in current month
-      if (tx.scheduledTransactionId && tx.scheduledTransactionId.isSubscription) {
-        if (categoryHistory[catId]) {
+    const currentCategorySpending = {};
+    currentMonthAggregated.forEach(item => {
+      if (item._id) {
+        const catId = item._id.toString();
+        currentCategorySpending[catId] = item.totalAmount;
+        if (item.hasSubscription && categoryHistory[catId]) {
           categoryHistory[catId].hasSubscription = true;
         }
       }
-    }
+    });
 
     const anomalies = [];
     const suggestionsCandidates = [];
