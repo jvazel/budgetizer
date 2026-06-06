@@ -4,15 +4,16 @@ import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
 import { useBudgets } from '../hooks/useBudgets';
 import { useSavingsGoals } from '../hooks/useSavingsGoals';
+import { useFinancialScore } from '../hooks/useFinancialScore';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
 import { 
-  Bell, AlertTriangle, TrendingUp, MoreVertical, Wallet, 
+  Bell, AlertTriangle, TrendingUp, TrendingDown, MoreVertical, Wallet, 
   CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle,
-  BarChart2
+  BarChart2, Award, Minus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LabelList, PieChart, Pie, Cell } from 'recharts';
@@ -112,6 +113,24 @@ const getNotificationColors = (color) => {
   }
 };
 
+// ─── Score helpers (defined outside component for reuse) ──────────────────────
+const getGradeColor = (grade) => {
+  switch (grade) {
+    case 'A': return 'text-accent';
+    case 'B': return 'text-info';
+    case 'C': return 'text-warning';
+    case 'D': return 'text-danger';
+    default:  return 'text-muted';
+  }
+};
+
+const getScoreBarColor = (score) => {
+  if (score >= 80) return 'var(--accent)';
+  if (score >= 60) return 'var(--info)';
+  if (score >= 40) return 'var(--warning)';
+  return 'var(--danger)';
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
@@ -120,8 +139,14 @@ const Home = () => {
   
   const today = new Date();
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  // Previous month key
+  const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
   const { budgets = [], loading: budgetsLoading } = useBudgets(currentMonthStr);
   const { savingsGoals = [], loading: savingsLoading } = useSavingsGoals();
+  const { score: currentScore, loading: currentScoreLoading } = useFinancialScore(currentMonthStr);
+  const { score: prevScore, loading: prevScoreLoading } = useFinancialScore(prevMonthStr);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSommaireMenuOpen, setIsSommaireMenuOpen] = useState(false);
@@ -131,6 +156,7 @@ const Home = () => {
   const [isAccountsMenuOpen, setIsAccountsMenuOpen] = useState(false);
   const [isLast7DaysMenuOpen, setIsLast7DaysMenuOpen] = useState(false);
   const [isSavingsMenuOpen, setIsSavingsMenuOpen] = useState(false);
+  const [isScoreMenuOpen, setIsScoreMenuOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [chartDuration, setChartDuration] = useState('3M');
 
@@ -215,6 +241,8 @@ const Home = () => {
   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const lastMonthLabel = capitalize(lastMonthDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
 
+  const scoreVariation = currentScore && prevScore ? currentScore.score - prevScore.score : null;
+
   return (
     <>
       <HeaderTitle>{title}</HeaderTitle>
@@ -286,6 +314,90 @@ const Home = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Score Financier Card */}
+      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
+        <div className="flex justify-center items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary text-center">Score Financier</h3>
+          <div className="absolute right-0">
+            <MoreVertical
+              onClick={() => setIsScoreMenuOpen(true)}
+              className="text-secondary cursor-pointer hover:text-primary transition-colors"
+              size={18}
+              id="score-more-btn"
+            />
+          </div>
+        </div>
+
+        {currentScoreLoading && prevScoreLoading ? (
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-2 animate-pulse">
+            <div className="space-y-2">
+              <div className="h-3 bg-surface w-20 rounded-full" />
+              <div className="h-8 bg-surface w-16 rounded-xl" />
+              <div className="h-2 bg-surface rounded-full" />
+            </div>
+            <div className="w-[1px] bg-border/20 self-stretch my-1" />
+            <div className="space-y-2">
+              <div className="h-3 bg-surface w-20 rounded-full" />
+              <div className="h-8 bg-surface w-16 rounded-xl" />
+              <div className="h-2 bg-surface rounded-full" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+            {/* Current Month Score */}
+            {[{ data: currentScore, label: currentMonthLabel, variation: scoreVariation }, { data: prevScore, label: lastMonthLabel, variation: null }].map(({ data, label, variation }, idx) => (
+              <>
+                {idx === 1 && <div className="w-[1px] bg-border/20 self-stretch my-1" />}
+                <div key={label} className="space-y-2 min-w-0">
+                  <h4 className="text-xs font-bold text-primary px-1 truncate">{label}</h4>
+                  {!data ? (
+                    <div className="text-center py-2">
+                      <p className="text-[10px] text-muted">Aucune donnée</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {/* Grade + Score */}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-lg font-extrabold ${getGradeColor(data.grade)}`}>
+                          {data.grade}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-end gap-1 flex-wrap">
+                            <span className="text-xl font-extrabold text-primary">{data.score}</span>
+                            <span className="text-[9px] text-muted font-semibold">/100</span>
+                          </div>
+                          {data.bonusScore > 0 && (
+                            <span className="text-[9px] font-bold text-accent">+{data.bonusScore} bonus</span>
+                          )}
+                        </div>
+                        {variation !== null && (
+                          <div className={`flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
+                            variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
+                          }`}>
+                            {variation > 0 ? <TrendingUp size={11} /> : variation < 0 ? <TrendingDown size={11} /> : <Minus size={11} />}
+                            {variation > 0 ? '+' : ''}{variation}
+                          </div>
+                        )}
+                      </div>
+                      {/* Progress bar */}
+                      <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${data.score}%`,
+                            backgroundColor: getScoreBarColor(data.score)
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Comptes Card */}
@@ -872,6 +984,37 @@ const Home = () => {
               <div className="flex-1">
                 <span>Voir les objectifs d'épargne</span>
                 <p className="text-xs text-muted font-normal mt-0.5">Consulter, modifier ou ajouter des objectifs d'épargne</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        isOpen={isScoreMenuOpen}
+        onClose={() => setIsScoreMenuOpen(false)}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-md font-bold text-primary">Options du Score Financier</h2>
+          </div>
+
+          {/* Menu list */}
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setIsScoreMenuOpen(false);
+                navigate('/financial-scores');
+              }}
+              className="w-full p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center gap-4 hover:bg-surface-2/80 transition-colors text-left font-bold text-primary"
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-accent bg-accent/10">
+                <TrendingUp size={20} />
+              </div>
+              <div className="flex-1">
+                <span>Afficher le détail</span>
+                <p className="text-xs text-muted font-normal mt-0.5">Voir l'historique complet de vos scores mensuels</p>
               </div>
             </button>
           </div>

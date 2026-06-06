@@ -722,6 +722,451 @@ export const getDashboardSummary = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FINANCIAL SCORE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compute the monthly financial score for a given monthKey (YYYY-MM).
+ * Returns a detailed breakdown of all 5 pillars + savings goal bonus.
+ */
+const computeMonthScore = async (userId, monthKey) => {
+  const [yearStr, monthStr] = monthKey.split('-');
+  const year = parseInt(yearStr);
+  const month = parseInt(monthStr) - 1; // 0-indexed
+
+  const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+  const endOfMonth   = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+  // ── Fetch accounts ──────────────────────────────────────────────────────────
+  const rawAccounts = await Account.find({ userId }).lean();
+  const checkingAccounts = rawAccounts.filter(a => a.type === 'checking');
+  const savingsAccounts  = rawAccounts.filter(a => a.type === 'savings');
+  const allIncludedAccounts = rawAccounts.filter(a => a.includeInTotal !== false);
+
+  const checkingIds = checkingAccounts.map(a => a._id);
+  const savingsIds  = savingsAccounts.map(a => a._id);
+  const allIncludedIds = allIncludedAccounts.map(a => a._id);
+
+  const checkingObjectIds     = checkingIds.map(toObjectId);
+  const savingsObjectIds      = savingsIds.map(toObjectId);
+  const allIncludedObjectIds  = allIncludedIds.map(toObjectId);
+
+  const userObjectId = toObjectId(userId);
+
+  // ── Helper: determine previous month key ────────────────────────────────────
+  const prevDate = new Date(Date.UTC(year, month - 1, 1));
+  const prevMonthKey = `${prevDate.getUTCFullYear()}-${String(prevDate.getUTCMonth() + 1).padStart(2, '0')}`;
+
+  // ── Fetch all transactions in the month ─────────────────────────────────────
+  const monthTransactions = await Transaction.find({
+    userId,
+    isPending: { $ne: true },
+    date: { $gte: startOfMonth, $lte: endOfMonth }
+  }).lean();
+
+  // ── Pilier 1 : Taux d'épargne ───────────────────────────────────────────────
+  // Income = income transactions on checking accounts
+  // Savings transfers = transfers FROM checking TO savings (counted as savings, not expense)
+  // Pure expenses = expense transactions on checking accounts
+  let pillar1Income = 0;
+  let pillar1Expenses = 0; // consumption only (excludes savings transfers)
+  let pillar1Savings = 0;  // net savings transfers TO savings accounts
+
+  for (const tx of monthTransactions) {
+    const srcIsChecking = checkingIds.some(id => id.toString() === tx.accountId?.toString());
+    const dstIsSavings  = savingsIds.some(id => id.toString() === tx.toAccountId?.toString());
+    const srcIsSavings  = savingsIds.some(id => id.toString() === tx.accountId?.toString());
+
+    if (tx.type === 'income' && srcIsChecking) {
+      pillar1Income += tx.amount;
+    } else if (tx.type === 'expense' && srcIsChecking) {
+      pillar1Expenses += tx.amount;
+    } else if (tx.type === 'transfer') {
+      if (srcIsChecking && dstIsSavings) {
+        // Transfer to savings → counts as savings, NOT expense
+        pillar1Savings += tx.amount;
+      }
+      // Other transfers (checking→checking, savings→checking) → neutral
+    }
+  }
+
+  const pillar1TotalSavings = pillar1Savings; // not counting net income - expenses here; savings = explicit savings transfers
+  const savingsRate = pillar1Income > 0 ? ((pillar1Income - pillar1Expenses) / pillar1Income) * 100 : 0;
+  let pillar1Score = 0;
+  if (savingsRate >= 20) pillar1Score = 30;
+  else if (savingsRate >= 10) pillar1Score = 20;
+  else if (savingsRate >= 0) pillar1Score = 10;
+  else pillar1Score = 0;
+
+  // ── Pilier 2 : Respect des budgets ──────────────────────────────────────────
+  const budgets = await Budget.find({ userId, period: 'monthly' }).lean();
+  let pillar2Score = null; // null = no budgets defined
+  let pillar2Details = { totalBudget: 0, totalOverrun: 0, budgetCount: 0 };
+
+  if (budgets.length > 0) {
+    // Aggregate spending by category for the month (checking accounts only)
+    const expByCategory = {};
+    for (const tx of monthTransactions) {
+      if (tx.type === 'expense' && checkingIds.some(id => id.toString() === tx.accountId?.toString())) {
+        const catId = tx.categoryId?.toString();
+        if (catId) {
+          expByCategory[catId] = (expByCategory[catId] || 0) + tx.amount;
+        }
+      }
+    }
+
+    let totalBudget  = 0;
+    let totalOverrun = 0;
+    for (const b of budgets) {
+      const catId = b.categoryId?.toString();
+      const spent  = catId ? (expByCategory[catId] || 0) : 0;
+      const overrun = Math.max(0, spent - b.amount);
+      totalBudget  += b.amount;
+      totalOverrun += overrun;
+    }
+
+    pillar2Details = { totalBudget, totalOverrun, budgetCount: budgets.length };
+    const ratio = totalBudget > 0 ? Math.max(0, 1 - totalOverrun / totalBudget) : 1;
+    pillar2Score = Math.round(ratio * 25);
+  }
+
+  // ── Pilier 3 : Ratio charges fixes / revenus ─────────────────────────────────
+  // Fixed charges = transactions with isScheduled: true that are expenses on checking accounts
+  let fixedCharges = 0;
+  for (const tx of monthTransactions) {
+    if (
+      tx.isScheduled === true &&
+      tx.type === 'expense' &&
+      checkingIds.some(id => id.toString() === tx.accountId?.toString())
+    ) {
+      fixedCharges += tx.amount;
+    }
+  }
+
+  const fixedRatio = pillar1Income > 0 ? (fixedCharges / pillar1Income) * 100 : 0;
+  let pillar3Score = 0;
+  if (fixedRatio < 50) pillar3Score = 20;
+  else if (fixedRatio < 65) pillar3Score = 12;
+  else if (fixedRatio < 75) pillar3Score = 5;
+  else pillar3Score = 0;
+
+  // ── Pilier 4 : Évolution du patrimoine global ────────────────────────────────
+  // Reconstruct patrimonies at start & end of month using delta sweep
+  let pillar4Score = 0;
+  let patrimoineStart = null;
+  let patrimoineEnd   = null;
+
+  if (allIncludedObjectIds.length > 0) {
+    // Current balances (today's snapshot)
+    const currentPatrimoine = allIncludedAccounts.reduce((sum, a) => sum + a.balance, 0);
+
+    // Get all transactions AFTER end of month up to today, to compute patrimoine at end of month
+    const now = new Date();
+    const txsAfterMonth = await Transaction.find({
+      userId,
+      isPending: { $ne: true },
+      date: { $gt: endOfMonth, $lte: now },
+      $or: [
+        { accountId: { $in: allIncludedIds } },
+        { toAccountId: { $in: allIncludedIds } }
+      ]
+    }).lean();
+
+    let deltaAfterMonth = 0;
+    for (const tx of txsAfterMonth) {
+      const srcIncluded = allIncludedIds.some(id => id.toString() === tx.accountId?.toString());
+      const dstIncluded = allIncludedIds.some(id => id.toString() === tx.toAccountId?.toString());
+
+      if (tx.type === 'income' && srcIncluded) deltaAfterMonth += tx.amount;
+      else if (tx.type === 'expense' && srcIncluded) deltaAfterMonth -= tx.amount;
+      else if (tx.type === 'transfer') {
+        if (srcIncluded && !dstIncluded) deltaAfterMonth -= tx.amount;
+        else if (!srcIncluded && dstIncluded) deltaAfterMonth += tx.amount;
+        // both included → neutral for global patrimony
+      }
+    }
+
+    // Patrimony at end of month = current - changes that happened after month
+    patrimoineEnd = currentPatrimoine - deltaAfterMonth;
+
+    // Patrimony at start of month = patrimoineEnd minus the month's own delta
+    let deltaInMonth = 0;
+    for (const tx of monthTransactions) {
+      const srcIncluded = allIncludedIds.some(id => id.toString() === tx.accountId?.toString());
+      const dstIncluded = allIncludedIds.some(id => id.toString() === tx.toAccountId?.toString());
+
+      if (tx.type === 'income' && srcIncluded) deltaInMonth += tx.amount;
+      else if (tx.type === 'expense' && srcIncluded) deltaInMonth -= tx.amount;
+      else if (tx.type === 'transfer') {
+        if (srcIncluded && !dstIncluded) deltaInMonth -= tx.amount;
+        else if (!srcIncluded && dstIncluded) deltaInMonth += tx.amount;
+      }
+    }
+
+    patrimoineStart = patrimoineEnd - deltaInMonth;
+
+    if (patrimoineStart !== null && patrimoineStart !== 0) {
+      const evolution = ((patrimoineEnd - patrimoineStart) / Math.abs(patrimoineStart)) * 100;
+      if (evolution > 1) pillar4Score = 15;
+      else if (evolution >= -1) pillar4Score = 8;
+      else pillar4Score = 0;
+    }
+    // If first month (no prior data), patrimoineStart stays 0 → 0 pts
+  }
+
+  // ── Pilier 5 : Matelas de sécurité ───────────────────────────────────────────
+  // Minimum balance reached on checking accounts during the month
+  let pillar5Score = 0;
+
+  if (checkingIds.length > 0 && fixedCharges > 0) {
+    // Reconstruct daily checking balance using delta sweep from current balance
+    const currentCheckingBalance = checkingAccounts.reduce((sum, a) => sum + a.balance, 0);
+
+    // Get transactions after end of month (to rewind to end-of-month state)
+    const now2 = new Date();
+    const txsAfterForChecking = await Transaction.find({
+      userId,
+      isPending: { $ne: true },
+      date: { $gt: endOfMonth, $lte: now2 },
+      $or: [
+        { accountId: { $in: checkingIds } },
+        { toAccountId: { $in: checkingIds } }
+      ]
+    }).lean();
+
+    let checkingDeltaAfter = 0;
+    for (const tx of txsAfterForChecking) {
+      const srcChecking = checkingIds.some(id => id.toString() === tx.accountId?.toString());
+      const dstChecking = checkingIds.some(id => id.toString() === tx.toAccountId?.toString());
+      if (tx.type === 'income' && srcChecking) checkingDeltaAfter += tx.amount;
+      else if (tx.type === 'expense' && srcChecking) checkingDeltaAfter -= tx.amount;
+      else if (tx.type === 'transfer') {
+        if (srcChecking && !dstChecking) checkingDeltaAfter -= tx.amount;
+        else if (!srcChecking && dstChecking) checkingDeltaAfter += tx.amount;
+      }
+    }
+
+    // Balance at end of month
+    let runningChecking = currentCheckingBalance - checkingDeltaAfter;
+
+    // Sort month transactions descending to sweep backwards day by day
+    const monthCheckingTxs = monthTransactions
+      .filter(tx =>
+        checkingIds.some(id => id.toString() === tx.accountId?.toString()) ||
+        checkingIds.some(id => id.toString() === tx.toAccountId?.toString())
+      )
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let minBalance = runningChecking;
+
+    for (const tx of monthCheckingTxs) {
+      const srcChecking = checkingIds.some(id => id.toString() === tx.accountId?.toString());
+      const dstChecking = checkingIds.some(id => id.toString() === tx.toAccountId?.toString());
+
+      // Undo the transaction (go backwards)
+      if (tx.type === 'income' && srcChecking) runningChecking -= tx.amount;
+      else if (tx.type === 'expense' && srcChecking) runningChecking += tx.amount;
+      else if (tx.type === 'transfer') {
+        if (srcChecking && !dstChecking) runningChecking += tx.amount;
+        else if (!srcChecking && dstChecking) runningChecking -= tx.amount;
+      }
+
+      if (runningChecking < minBalance) minBalance = runningChecking;
+    }
+
+    const cushionRatio = minBalance / fixedCharges;
+    pillar5Score = Math.min(10, Math.max(0, parseFloat((cushionRatio * 10).toFixed(2))));
+    pillar5Score = Math.round(pillar5Score * 10) / 10;
+  } else if (checkingIds.length > 0 && fixedCharges === 0) {
+    // No fixed charges → full score for this pillar
+    pillar5Score = 10;
+  }
+
+  // ── Redistribution si aucun budget ──────────────────────────────────────────
+  // Base scores (without budget pillar if not applicable)
+  let finalScore;
+  const hasBudgets = pillar2Score !== null;
+
+  if (hasBudgets) {
+    finalScore = pillar1Score + pillar2Score + pillar3Score + pillar4Score + Math.round(pillar5Score);
+  } else {
+    // Redistribute 25 pts proportionally among other pillars
+    // Ratios: P1=30, P3=20, P4=15, P5=10 → total 75
+    const baseTotal = 75;
+    const redistribute = 25;
+    const p1Adjusted = pillar1Score + Math.round((30 / baseTotal) * pillar1Score * redistribute / 30);
+    // Simpler: just scale the raw score over 100
+    const rawScore = pillar1Score + pillar3Score + pillar4Score + Math.round(pillar5Score);
+    finalScore = Math.round((rawScore / 75) * 100);
+  }
+  finalScore = Math.min(100, Math.max(0, finalScore));
+
+  // ── Bonus objectifs d'épargne ─────────────────────────────────────────────
+  const savingsGoals = await SavingsGoal.find({ userId }).lean();
+  let bonusScore = 0;
+  let bonusDetails = [];
+
+  const activeGoals = savingsGoals.filter(g =>
+    g.currentAmount < g.targetAmount && g.targetDate && new Date(g.targetDate) > endOfMonth
+  );
+
+  if (activeGoals.length > 0) {
+    let allOnTrackOrAhead = true;
+    let allAhead = true;
+
+    for (const goal of activeGoals) {
+      const totalDuration = new Date(goal.targetDate) - new Date(goal.startDate);
+      const elapsed = endOfMonth - new Date(goal.startDate);
+      const timeProgress = totalDuration > 0 ? Math.min(1, Math.max(0, elapsed / totalDuration)) : 0;
+      const expectedAmount = goal.targetAmount * timeProgress;
+
+      let status;
+      if (goal.currentAmount >= expectedAmount * 1.05) {
+        status = 'ahead';
+      } else if (goal.currentAmount >= expectedAmount * 0.95) {
+        status = 'ontrack';
+      } else {
+        status = 'behind';
+        allOnTrackOrAhead = false;
+        allAhead = false;
+      }
+
+      if (status === 'ontrack') allAhead = false;
+
+      bonusDetails.push({
+        goalId: goal._id,
+        name: goal.name,
+        status,
+        currentAmount: goal.currentAmount,
+        expectedAmount: parseFloat(expectedAmount.toFixed(2)),
+        targetAmount: goal.targetAmount,
+        timeProgress: parseFloat((timeProgress * 100).toFixed(1))
+      });
+    }
+
+    if (allAhead) bonusScore = 5;
+    else if (allOnTrackOrAhead) bonusScore = 2;
+    else bonusScore = 0;
+  }
+
+  // ── Grade ─────────────────────────────────────────────────────────────────
+  const totalWithBonus = Math.min(105, finalScore + bonusScore);
+  let grade;
+  if (finalScore >= 80) grade = 'A';
+  else if (finalScore >= 60) grade = 'B';
+  else if (finalScore >= 40) grade = 'C';
+  else grade = 'D';
+
+  return {
+    monthKey,
+    score: finalScore,
+    grade,
+    bonusScore,
+    totalWithBonus,
+    pillars: {
+      savingsRate: {
+        score: pillar1Score,
+        maxScore: hasBudgets ? 30 : Math.round((30 / 75) * 100),
+        savingsRate: parseFloat(savingsRate.toFixed(1)),
+        income: parseFloat(pillar1Income.toFixed(2)),
+        expenses: parseFloat(pillar1Expenses.toFixed(2)),
+        savingsTransfers: parseFloat(pillar1TotalSavings.toFixed(2))
+      },
+      budgets: {
+        score: pillar2Score,
+        maxScore: 25,
+        applicable: hasBudgets,
+        totalBudget: parseFloat(pillar2Details.totalBudget.toFixed(2)),
+        totalOverrun: parseFloat(pillar2Details.totalOverrun.toFixed(2)),
+        budgetCount: pillar2Details.budgetCount
+      },
+      fixedCharges: {
+        score: pillar3Score,
+        maxScore: hasBudgets ? 20 : Math.round((20 / 75) * 100),
+        fixedCharges: parseFloat(fixedCharges.toFixed(2)),
+        income: parseFloat(pillar1Income.toFixed(2)),
+        ratio: parseFloat(fixedRatio.toFixed(1))
+      },
+      patrimony: {
+        score: pillar4Score,
+        maxScore: hasBudgets ? 15 : Math.round((15 / 75) * 100),
+        patrimoineStart: patrimoineStart !== null ? parseFloat(patrimoineStart.toFixed(2)) : null,
+        patrimoineEnd: patrimoineEnd !== null ? parseFloat(patrimoineEnd.toFixed(2)) : null
+      },
+      cushion: {
+        score: pillar5Score,
+        maxScore: hasBudgets ? 10 : Math.round((10 / 75) * 100),
+        fixedCharges: parseFloat(fixedCharges.toFixed(2))
+      }
+    },
+    savingsGoalsBonus: {
+      bonusScore,
+      goals: bonusDetails
+    }
+  };
+};
+
+export const getMonthlyScore = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+    const defaultMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    const monthKey = req.query.monthKey || defaultMonthKey;
+
+    // Validate monthKey format
+    if (!/^\d{4}-\d{2}$/.test(monthKey)) {
+      return res.status(400).json({ message: 'monthKey must be in YYYY-MM format' });
+    }
+
+    const result = await computeMonthScore(userId, monthKey);
+    res.json(result);
+  } catch (error) {
+    console.error('Error computing monthly score:', error);
+    res.status(500).json({ message: 'Server Error during score computation' });
+  }
+};
+
+export const getMonthlyScoreHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+    const currentYear = now.getUTCFullYear();
+    const year = parseInt(req.query.year) || currentYear;
+
+    // Determine available years from transaction range
+    const oldestTx = await Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: 1 }).lean();
+    const newestTx  = await Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: -1 }).lean();
+
+    const availableYearsSet = new Set([currentYear, year]);
+    if (oldestTx && newestTx) {
+      const minYear = new Date(oldestTx.date).getUTCFullYear();
+      const maxYear = new Date(newestTx.date).getUTCFullYear();
+      for (let y = minYear; y <= maxYear; y++) availableYearsSet.add(y);
+    }
+    const availableYears = Array.from(availableYearsSet).sort((a, b) => b - a);
+
+    // Determine which months to compute
+    const currentMonthIndex = now.getUTCMonth();
+    const maxMonth = year === currentYear ? currentMonthIndex : 11;
+
+    const scorePromises = [];
+    for (let m = 0; m <= maxMonth; m++) {
+      const monthKey = `${year}-${String(m + 1).padStart(2, '0')}`;
+      scorePromises.push(computeMonthScore(userId, monthKey));
+    }
+
+    const scores = await Promise.all(scorePromises);
+    // Return newest first
+    scores.sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+
+    res.json({ year, scores, availableYears });
+  } catch (error) {
+    console.error('Error computing score history:', error);
+    res.status(500).json({ message: 'Server Error during score history computation' });
+  }
+};
+
 export const getMonthlySummaries = async (req, res) => {
   try {
     const userId = req.user.id;

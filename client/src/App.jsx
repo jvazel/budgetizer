@@ -27,6 +27,7 @@ const AccountsPage = React.lazy(() => import('./pages/AccountsPage'));
 const TransfersPage = React.lazy(() => import('./pages/TransfersPage'));
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
 const MonthlyReportPage = React.lazy(() => import('./pages/MonthlyReportPage'));
+const FinancialScoresPage = React.lazy(() => import('./pages/FinancialScoresPage'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -135,6 +136,7 @@ const AppContent = () => {
             <Route path="/summary-history" element={<SummaryHistory />} />
             <Route path="/ai-insights" element={<AiInsights />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/financial-scores" element={<FinancialScoresPage />} />
           </Route>
         </Routes>
       </React.Suspense>
