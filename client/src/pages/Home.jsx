@@ -1,4 +1,4 @@
-import { useContext, useState, useMemo } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
@@ -10,6 +10,7 @@ import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
+import CircularScoreGauge from '../components/ui/CircularScoreGauge';
 import { 
   Bell, AlertTriangle, TrendingUp, TrendingDown, MoreVertical, Wallet, 
   CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle,
@@ -334,67 +335,68 @@ const Home = () => {
           <div className="grid grid-cols-[1fr_auto_1fr] gap-2 animate-pulse">
             <div className="space-y-2">
               <div className="h-3 bg-surface w-20 rounded-full" />
-              <div className="h-8 bg-surface w-16 rounded-xl" />
-              <div className="h-2 bg-surface rounded-full" />
+              <div className="flex items-center gap-3 pt-1">
+                <div className="w-[50px] h-[50px] rounded-full bg-surface" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 bg-surface w-10 rounded-lg" />
+                  <div className="h-2.5 bg-surface w-14 rounded-full" />
+                </div>
+              </div>
             </div>
             <div className="w-[1px] bg-border/20 self-stretch my-1" />
             <div className="space-y-2">
               <div className="h-3 bg-surface w-20 rounded-full" />
-              <div className="h-8 bg-surface w-16 rounded-xl" />
-              <div className="h-2 bg-surface rounded-full" />
+              <div className="flex items-center gap-3 pt-1">
+                <div className="w-[50px] h-[50px] rounded-full bg-surface" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 bg-surface w-10 rounded-lg" />
+                  <div className="h-2.5 bg-surface w-14 rounded-full" />
+                </div>
+              </div>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
             {/* Current Month Score */}
             {[{ data: currentScore, label: currentMonthLabel, variation: scoreVariation }, { data: prevScore, label: lastMonthLabel, variation: null }].map(({ data, label, variation }, idx) => (
-              <>
+              <React.Fragment key={label}>
                 {idx === 1 && <div className="w-[1px] bg-border/20 self-stretch my-1" />}
-                <div key={label} className="space-y-2 min-w-0">
+                <div className="space-y-2 min-w-0">
                   <h4 className="text-xs font-bold text-primary px-1 truncate">{label}</h4>
                   {!data ? (
                     <div className="text-center py-2">
                       <p className="text-[10px] text-muted">Aucune donnée</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {/* Grade + Score */}
-                      <div className="flex items-center gap-2">
-                        <span className={`text-lg font-extrabold ${getGradeColor(data.grade)}`}>
-                          {data.grade}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-end gap-1 flex-wrap">
-                            <span className="text-xl font-extrabold text-primary">{data.score}</span>
-                            <span className="text-[9px] text-muted font-semibold">/100</span>
-                          </div>
-                          {data.bonusScore > 0 && (
-                            <span className="text-[9px] font-bold text-accent">+{data.bonusScore} bonus</span>
+                    <div className="flex items-center gap-3 pt-1">
+                      <CircularScoreGauge score={data.score} size={50} strokeWidth={5} />
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs font-black px-1.5 py-0.5 rounded-lg border ${
+                            data.grade === 'A' ? 'bg-accent/10 border-accent/20 text-accent' :
+                            data.grade === 'B' ? 'bg-info/10 border-info/20 text-info' :
+                            data.grade === 'C' ? 'bg-warning/10 border-warning/20 text-warning' :
+                            'bg-danger/10 border-danger/20 text-danger'
+                          }`}>
+                            {data.grade}
+                          </span>
+                          {variation !== null && (
+                            <div className={`flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
+                              variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
+                            }`}>
+                              {variation > 0 ? <TrendingUp size={11} /> : variation < 0 ? <TrendingDown size={11} /> : <Minus size={11} />}
+                              {variation > 0 ? '+' : ''}{variation}
+                            </div>
                           )}
                         </div>
-                        {variation !== null && (
-                          <div className={`flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
-                            variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
-                          }`}>
-                            {variation > 0 ? <TrendingUp size={11} /> : variation < 0 ? <TrendingDown size={11} /> : <Minus size={11} />}
-                            {variation > 0 ? '+' : ''}{variation}
-                          </div>
+                        {data.bonusScore > 0 && (
+                          <div className="text-[9px] font-bold text-accent">+{data.bonusScore} bonus</div>
                         )}
-                      </div>
-                      {/* Progress bar */}
-                      <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${data.score}%`,
-                            backgroundColor: getScoreBarColor(data.score)
-                          }}
-                        />
                       </div>
                     </div>
                   )}
                 </div>
-              </>
+              </React.Fragment>
             ))}
           </div>
         )}

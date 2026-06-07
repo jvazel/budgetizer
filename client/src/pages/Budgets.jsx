@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BudgetFormSheet from '../components/budgets/BudgetFormSheet';
 import { useBudgets } from '../hooks/useBudgets';
@@ -138,6 +138,7 @@ const Budgets = () => {
     <>
       <HeaderTitle>Budgets</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
+      <HeaderBackButton to="/" />
       <section className="pb-24">
         {/* Weekly Budgets Section */}
         <div className="mb-6">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import { Plus, Clock, HelpCircle, Check, AlertCircle, RefreshCw, Trash2, Edit } from 'lucide-react';
@@ -82,6 +82,7 @@ const ScheduledPage = () => {
     <>
       <HeaderTitle>Planifications</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
+      <HeaderBackButton to="/" />
       
       {/* 1. Pending confirmations section */}
       {pending.length > 0 && (

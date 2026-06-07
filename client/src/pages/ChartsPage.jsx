@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
+import { HeaderTitle } from '../components/layout/AppShell';
 import CategoryChart from '../components/charts/CategoryChart';
 import FutureChart from '../components/charts/FutureChart';
 import ForecastChart from '../components/charts/ForecastChart';
@@ -48,7 +48,6 @@ const ChartsPage = () => {
   return (
     <>
       <HeaderTitle>{titleElement}</HeaderTitle>
-      <HeaderBackButton to="/" />
       
       {/* Dynamic Tab view */}
       {activeTab === 'category' && <CategoryChart />}

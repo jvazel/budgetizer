@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, Award } from 'lucide-react';
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { useFinancialScoreHistory } from '../hooks/useFinancialScore';
+import CircularScoreGauge from '../components/ui/CircularScoreGauge';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -154,38 +155,29 @@ const ScoreCard = ({ scoreData, prevScore }) => {
           className="p-5 flex items-center gap-4 cursor-pointer hover:bg-surface/30 transition-colors"
           onClick={() => setExpanded(v => !v)}
         >
-          {/* Grade Badge */}
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-extrabold border shrink-0 ${getGradeBg(scoreData.grade)} ${getGradeColor(scoreData.grade)}`}>
-            {scoreData.grade}
-          </div>
+          {/* Circular Gauge Score */}
+          <CircularScoreGauge score={scoreData.score} size={54} strokeWidth={5} />
 
-          {/* Score + Bar */}
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold text-primary">{scoreData.score}</span>
-                <span className="text-xs text-muted font-semibold">/100</span>
-                {scoreData.bonusScore > 0 && (
-                  <span className="text-xs font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded-lg">
-                    +{scoreData.bonusScore} bonus
-                  </span>
-                )}
-              </div>
-              {variation !== null && (
-                <div className={`flex items-center gap-0.5 text-xs font-bold shrink-0 ${
-                  variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
-                }`}>
-                  {variation > 0 ? <TrendingUp size={13} /> : variation < 0 ? <TrendingDown size={13} /> : <Minus size={13} />}
-                  {variation > 0 ? '+' : ''}{variation} pts
-                </div>
+          {/* Score details */}
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-xs font-black px-2 py-0.5 rounded-lg border shrink-0 ${getGradeBg(scoreData.grade)} ${getGradeColor(scoreData.grade)}`}>
+                Grade {scoreData.grade}
+              </span>
+              {scoreData.bonusScore > 0 && (
+                <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded-lg border border-accent/20 shrink-0">
+                  +{scoreData.bonusScore} bonus
+                </span>
               )}
             </div>
-            <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${scoreData.score}%`, backgroundColor: getScoreBarColor(scoreData.score) }}
-              />
-            </div>
+            {variation !== null && (
+              <div className={`flex items-center gap-1 text-xs font-bold ${
+                variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
+              }`}>
+                {variation > 0 ? <TrendingUp size={13} /> : variation < 0 ? <TrendingDown size={13} /> : <Minus size={13} />}
+                <span>{variation > 0 ? '+' : ''}{variation} pts</span>
+              </div>
+            )}
           </div>
 
           {/* Expand chevron */}
