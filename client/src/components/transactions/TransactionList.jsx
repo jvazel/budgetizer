@@ -24,18 +24,21 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
         <div key={date} className="mb-6">
           <div className="sticky top-[56px] bg-base/95 backdrop-blur-sm z-10 py-2 mb-2 flex justify-between items-center px-1">
             <h3 className="text-sm font-bold text-secondary capitalize">{date}</h3>
-            {/* Can add daily summary here */}
           </div>
           
-          <div className="space-y-3">
+          <div className="bg-surface-2 rounded-[24px] border border-border/40 overflow-hidden divide-y divide-border/30 shadow-sm">
             {txs.map(tx => (
-              <div key={tx._id} className="bg-surface-2 p-3 sm:p-4 rounded-2xl flex items-center gap-3 sm:gap-4 hover:bg-surface-2/80 transition-colors">
+              <div 
+                key={tx._id} 
+                onClick={onEdit ? () => onEdit(tx) : undefined}
+                className={`p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors ${onEdit ? 'cursor-pointer' : ''}`}
+              >
                 <div 
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl shrink-0"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
                   style={{ 
                     backgroundColor: tx.type === 'transfer' 
-                      ? '#3b82f620' 
-                      : `${tx.categoryId?.color || '#888'}20` 
+                      ? 'rgba(59, 130, 246, 0.12)' 
+                      : `${tx.categoryId?.color || '#888'}15` 
                   }}
                 >
                   {tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
@@ -69,12 +72,13 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                       </span>
                     </div>
                   ) : (
-                    <div className="flex flex-col mt-1 gap-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {tx.categoryId?.name && (
                         <span className="text-[10px] text-secondary/80 font-medium truncate">
                           {tx.categoryId.name}
                         </span>
                       )}
+                      {tx.categoryId?.name && <span className="text-muted text-[8px]">•</span>}
                       <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate w-fit max-w-full">
                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
                         <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
@@ -84,28 +88,9 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                 </div>
                 
                 <div className="text-right shrink-0 ml-auto pl-1">
-                  <p className={`font-mono font-bold text-xs sm:text-sm ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
+                  <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
                     {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount)}
                   </p>
-                </div>
-
-                <div className="flex items-center gap-0.5 shrink-0 ml-1 sm:ml-2 border-l border-border/20 pl-1.5 sm:pl-2">
-                  {onEdit && (
-                    <button 
-                      onClick={() => onEdit(tx)}
-                      className="text-secondary hover:text-amber-400 hover:bg-amber-400/10 p-1.5 rounded-xl transition-colors"
-                      title="Modifier la transaction"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => onDelete(tx)}
-                    className="text-danger hover:bg-danger/10 p-1.5 rounded-xl transition-colors"
-                    title="Supprimer la transaction"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
               </div>
             ))}

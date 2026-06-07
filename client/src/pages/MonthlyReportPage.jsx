@@ -99,7 +99,7 @@ const MonthlyReportPage = () => {
           {parts.map((part, index) => {
             if (part && typeof part === 'string' && part.match(numberRegex)) {
               return (
-                <span key={index} className="font-extrabold text-primary font-mono bg-surface p-0.5 px-1.5 rounded-md border border-border/10">
+                <span key={index} className="font-extrabold text-primary font-premium-numbers">
                   {part}
                 </span>
               );
@@ -231,7 +231,7 @@ const MonthlyReportPage = () => {
               {/* Income card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Revenus</span>
-                <span className="text-sm font-extrabold text-accent font-mono block mt-1.5">
+                <span className="text-sm font-extrabold text-accent font-premium-numbers block mt-1.5">
                   {formatCurrency(report.financialStats?.income || 0)}
                 </span>
               </div>
@@ -239,7 +239,7 @@ const MonthlyReportPage = () => {
               {/* Expenses card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Dépenses</span>
-                <span className="text-sm font-extrabold text-danger font-mono block mt-1.5">
+                <span className="text-sm font-extrabold text-danger font-premium-numbers block mt-1.5">
                   -{formatCurrency(report.financialStats?.expenses || 0)}
                 </span>
               </div>
@@ -247,7 +247,7 @@ const MonthlyReportPage = () => {
               {/* Net Savings card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Épargne Nette</span>
-                <span className={`text-sm font-extrabold font-mono block mt-1.5 ${
+                <span className={`text-sm font-extrabold font-premium-numbers block mt-1.5 ${
                   (report.financialStats?.net || 0) >= 0 ? 'text-accent' : 'text-danger'
                 }`}>
                   {(report.financialStats?.net || 0) >= 0 ? '+' : ''}
@@ -258,7 +258,7 @@ const MonthlyReportPage = () => {
               {/* Savings Rate card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Taux d'Épargne</span>
-                <span className="text-sm font-extrabold text-primary font-mono block mt-1.5">
+                <span className="text-sm font-extrabold text-primary font-premium-numbers block mt-1.5">
                   {(report.financialStats?.savingsRate || 0).toFixed(1)}%
                 </span>
               </div>
@@ -339,7 +339,7 @@ const MonthlyReportPage = () => {
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <span className="text-xs font-extrabold text-danger font-mono block">
+                        <span className="text-xs font-extrabold text-danger font-premium-numbers block">
                           -{formatCurrency(tx.amount)}
                         </span>
                         <span className="text-[9px] font-extrabold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20 inline-block">

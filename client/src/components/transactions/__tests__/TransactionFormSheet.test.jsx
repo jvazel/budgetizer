@@ -149,6 +149,6 @@ describe('TransactionFormSheet Component', () => {
     expect(screen.getByPlaceholderText('0.00').value).toBe('1500');
     expect(screen.getByLabelText('Compte').value).toBe('acc2');
     expect(screen.getByLabelText('Note (optionnel)').value).toBe('Mon salaire');
-    expect(screen.getByRole('button', { name: 'Enregistrer les modifications' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeInTheDocument();
   });
 });

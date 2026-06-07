@@ -17,7 +17,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   
   const { accounts } = useAccounts();
   const { categoriesTree } = useCategories();
-  const { addTransaction, updateTransaction } = useTransactions();
+  const { addTransaction, updateTransaction, deleteTransaction } = useTransactions();
 
   useEffect(() => {
     if (isOpen) {
@@ -41,6 +41,19 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const handleTypeChange = (newType) => {
     setType(newType);
     setCategoryId('');
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Supprimer cette transaction ?')) {
+      try {
+        await deleteTransaction(transactionToEdit._id);
+        toast.success('Transaction supprimée');
+        window.dispatchEvent(new CustomEvent('transaction-changed'));
+        onClose();
+      } catch (e) {
+        toast.error('Erreur lors de la suppression');
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -193,17 +206,40 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
         {/* Action Button */}
         <div className="mt-auto pt-4">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
-              type === 'expense' 
-                ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
-                : 'bg-accent hover:bg-accent/90 shadow-accent/20'
-            }`}
-          >
-            {transactionToEdit ? 'Enregistrer les modifications' : 'Ajouter la transaction'}
-          </button>
+          {transactionToEdit ? (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex-1 py-4 rounded-2xl bg-danger/10 hover:bg-danger/15 text-danger font-bold transition-all shadow-sm active:scale-95"
+              >
+                Supprimer
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className={`flex-[2] py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
+                  type === 'expense' 
+                    ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
+                    : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+                }`}
+              >
+                Enregistrer
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
+                type === 'expense' 
+                  ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
+                  : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+              }`}
+            >
+              Ajouter la transaction
+            </button>
+          )}
         </div>
 
       </div>

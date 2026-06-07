@@ -11,6 +11,7 @@ export const HeaderPortalContext = createContext({
   titleTarget: null,
   actionsTarget: null,
   backTarget: null,
+  openMenu: () => {},
 });
 
 export const HeaderTitle = ({ children }) => {
@@ -59,7 +60,7 @@ const AppShell = () => {
   const [backTarget, setBackTarget] = useState(null);
 
   return (
-    <HeaderPortalContext.Provider value={{ titleTarget, actionsTarget, backTarget }}>
+    <HeaderPortalContext.Provider value={{ titleTarget, actionsTarget, backTarget, openMenu: () => setIsMenuOpen(true) }}>
       <div className="min-h-screen bg-base pb-[80px]">
         
         {/* Header Centralisé */}

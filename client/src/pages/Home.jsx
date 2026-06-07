@@ -115,13 +115,13 @@ const getNotificationColors = (color) => {
 };
 
 // ─── Score helpers (defined outside component for reuse) ──────────────────────
-const getGradeColor = (grade) => {
+const getGradeClass = (grade) => {
   switch (grade) {
-    case 'A': return 'text-accent';
-    case 'B': return 'text-info';
-    case 'C': return 'text-warning';
-    case 'D': return 'text-danger';
-    default:  return 'text-muted';
+    case 'A': return 'badge-grade-a';
+    case 'B': return 'badge-grade-b';
+    case 'C': return 'badge-grade-c';
+    case 'D': return 'badge-grade-d';
+    default:  return 'bg-surface-2 border-border/40 text-muted';
   }
 };
 
@@ -221,16 +221,9 @@ const Home = () => {
       <>
         <HeaderTitle>{title}</HeaderTitle>
         <HeaderActions>{actions}</HeaderActions>
-        {/* Skeleton Loaders */}
-        <section className="mb-8 mt-4 text-center space-y-2 animate-pulse">
-          <div className="h-4 bg-surface-2 w-24 mx-auto rounded-full" />
-          <div className="h-10 bg-surface-2 w-48 mx-auto rounded-xl" />
-          <div className="h-6 bg-surface-2 w-32 mx-auto rounded-full" />
-        </section>
-        <section className="mb-8 -mx-4">
-          <div className="px-4 flex gap-4 overflow-x-auto no-scrollbar">
-            <div className="shrink-0 w-[300px] h-[180px] rounded-[24px] bg-surface-2 animate-pulse" />
-          </div>
+        {/* Skeleton Glass Card Loader */}
+        <section className="mb-6 mt-4 animate-pulse">
+          <div className="h-[148px] w-full bg-surface-2 border border-border/40 rounded-[24px]" />
         </section>
       </>
     );
@@ -241,7 +234,6 @@ const Home = () => {
   const lastMonthDate = new Date();
   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const lastMonthLabel = capitalize(lastMonthDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
-
   const scoreVariation = currentScore && prevScore ? currentScore.score - prevScore.score : null;
 
   return (
@@ -249,66 +241,102 @@ const Home = () => {
       <HeaderTitle>{title}</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <InstallPromptBanner />
-      {/* Sommaire Card */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Sommaire</h3>
-          <div className="absolute right-0">
-            <MoreVertical 
-              onClick={() => setIsSommaireMenuOpen(true)} 
-              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-              size={18} 
-              id="sommaire-more-btn"
-            />
+
+      {/* Hero Balance Header - Glass Card Concept */}
+      <section className="mb-6 mt-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-surface-2/80 via-surface/95 to-surface-2/80 backdrop-blur-md rounded-[24px] border border-white/[0.06] p-5 shadow-[0_12px_24px_rgba(0,0,0,0.35)] group">
+          {/* Decorative premium light reflections / glowing points */}
+          <div className="absolute -right-16 -bottom-16 w-36 h-36 bg-accent/10 rounded-full blur-[40px] pointer-events-none transition-transform duration-1000 group-hover:scale-110" />
+          <div className="absolute -left-16 -top-16 w-36 h-36 bg-info/10 rounded-full blur-[40px] pointer-events-none transition-transform duration-1000 group-hover:scale-110" />
+          
+          <div className="flex justify-between items-start mb-6 relative z-10">
+            <div>
+              <p className="text-[10px] text-secondary/80 font-bold tracking-widest uppercase">Solde Disponible</p>
+              <h2 className="text-3xl font-extrabold text-primary font-premium-numbers tracking-tight mt-1">
+                {formatCurrency(totalAvailable, user?.currency?.code)}
+              </h2>
+            </div>
+            
+            <div className="flex flex-col items-end gap-1 opacity-70">
+              <span className="text-[9px] font-black text-secondary tracking-widest uppercase">CARD</span>
+              <div className="w-6 h-4 rounded bg-white/10 border border-white/20 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent/40" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-end border-t border-white/[0.04] pt-4 mt-2 relative z-10">
+            <div>
+              <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Titulaire du compte</p>
+              <p className="text-[11px] font-semibold text-secondary mt-0.5 truncate max-w-[150px]">{user?.name || 'Utilisateur'}</p>
+            </div>
+            {totalCredit > 0 && (
+              <div className="text-right">
+                <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Encours cartes</p>
+                <p className="text-xs font-bold text-danger font-premium-numbers mt-0.5">
+                  -{formatCurrency(totalCredit, user?.currency?.code)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+      {/* Sommaire d'activité Card */}
+      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
+        <div className="flex justify-between items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary">Sommaire d'activité</h3>
+          <MoreVertical 
+            onClick={() => setIsSommaireMenuOpen(true)} 
+            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+            size={18} 
+            id="sommaire-more-btn"
+          />
+        </div>
+
+        <div className="space-y-3">
           {/* Current Month */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-primary px-1">{currentMonthLabel}</h4>
-            <div className="flex items-center gap-2">
-              <MiniGauge income={month.income} expenses={month.expenses} />
-              <div className="flex-1 space-y-0.5 text-[10px] min-w-0">
-                <div className="flex justify-between gap-1">
-                  <span className="text-secondary truncate">Revenus:</span>
-                  <span className="font-semibold text-accent shrink-0">{formatCurrency(month.income, user?.currency?.code)}</span>
+          <div className="bg-surface/40 p-3.5 rounded-2xl border border-border/20 flex items-center gap-3">
+            <MiniGauge income={month.income} expenses={month.expenses} />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-primary mb-1.5">{currentMonthLabel}</h4>
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-secondary font-medium">
+                <div>
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Revenus</span>
+                  <span className="font-premium-numbers font-bold text-accent">{formatCurrency(month.income, user?.currency?.code)}</span>
                 </div>
-                <div className="flex justify-between gap-1">
-                  <span className="text-secondary truncate">Dépenses:</span>
-                  <span className="font-semibold text-danger shrink-0">-{formatCurrency(month.expenses, user?.currency?.code)}</span>
+                <div>
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Dépenses</span>
+                  <span className="font-premium-numbers font-bold text-danger">-{formatCurrency(month.expenses, user?.currency?.code)}</span>
                 </div>
-                <div className="flex justify-between border-t border-border/20 pt-0.5 mt-0.5 gap-1">
-                  <span className="text-secondary font-medium truncate">Total:</span>
-                  <span className={`font-semibold shrink-0 ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                    {formatCurrency(month.net, user?.currency?.code)}
+                <div className="text-right">
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Net</span>
+                  <span className={`font-premium-numbers font-bold ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+                    {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Separator */}
-          <div className="w-[1px] bg-border/20 self-stretch my-1" />
-
           {/* Previous Month */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-primary px-1">{lastMonthLabel}</h4>
-            <div className="flex items-center gap-2">
-              <MiniGauge income={lastMonth.income} expenses={lastMonth.expenses} />
-              <div className="flex-1 space-y-0.5 text-[10px] min-w-0">
-                <div className="flex justify-between gap-1">
-                  <span className="text-secondary truncate">Revenus:</span>
-                  <span className="font-semibold text-accent shrink-0">{formatCurrency(lastMonth.income, user?.currency?.code)}</span>
+          <div className="bg-surface/40 p-3.5 rounded-2xl border border-border/20 flex items-center gap-3">
+            <MiniGauge income={lastMonth.income} expenses={lastMonth.expenses} />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-secondary mb-1.5">{lastMonthLabel}</h4>
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-secondary/80 font-medium">
+                <div>
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Revenus</span>
+                  <span className="font-premium-numbers font-bold text-accent/80">{formatCurrency(lastMonth.income, user?.currency?.code)}</span>
                 </div>
-                <div className="flex justify-between gap-1">
-                  <span className="text-secondary truncate">Dépenses:</span>
-                  <span className="font-semibold text-danger shrink-0">-{formatCurrency(lastMonth.expenses, user?.currency?.code)}</span>
+                <div>
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Dépenses</span>
+                  <span className="font-premium-numbers font-bold text-danger/80">-{formatCurrency(lastMonth.expenses, user?.currency?.code)}</span>
                 </div>
-                <div className="flex justify-between border-t border-border/20 pt-0.5 mt-0.5 gap-1">
-                  <span className="text-secondary font-medium truncate">Total:</span>
-                  <span className={`font-semibold shrink-0 ${lastMonth.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                    {formatCurrency(lastMonth.net, user?.currency?.code)}
+                <div className="text-right">
+                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Net</span>
+                  <span className={`font-premium-numbers font-bold ${lastMonth.net >= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
+                    {lastMonth.net >= 0 ? '+' : ''}{formatCurrency(lastMonth.net, user?.currency?.code)}
                   </span>
                 </div>
               </div>
@@ -319,101 +347,98 @@ const Home = () => {
 
       {/* Score Financier Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Score Financier</h3>
-          <div className="absolute right-0">
-            <MoreVertical
-              onClick={() => setIsScoreMenuOpen(true)}
-              className="text-secondary cursor-pointer hover:text-primary transition-colors"
-              size={18}
-              id="score-more-btn"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary">Score Financier</h3>
+          <MoreVertical
+            onClick={() => setIsScoreMenuOpen(true)}
+            className="text-secondary cursor-pointer hover:text-primary transition-colors"
+            size={18}
+            id="score-more-btn"
+          />
         </div>
 
         {currentScoreLoading && prevScoreLoading ? (
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-2 animate-pulse">
-            <div className="space-y-2">
-              <div className="h-3 bg-surface w-20 rounded-full" />
-              <div className="flex items-center gap-3 pt-1">
-                <div className="w-[50px] h-[50px] rounded-full bg-surface" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="h-4 bg-surface w-10 rounded-lg" />
-                  <div className="h-2.5 bg-surface w-14 rounded-full" />
-                </div>
-              </div>
-            </div>
-            <div className="w-[1px] bg-border/20 self-stretch my-1" />
-            <div className="space-y-2">
-              <div className="h-3 bg-surface w-20 rounded-full" />
-              <div className="flex items-center gap-3 pt-1">
-                <div className="w-[50px] h-[50px] rounded-full bg-surface" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="h-4 bg-surface w-10 rounded-lg" />
-                  <div className="h-2.5 bg-surface w-14 rounded-full" />
-                </div>
-              </div>
-            </div>
+          <div className="space-y-3 animate-pulse">
+            <div className="h-14 bg-surface/40 rounded-2xl" />
+            <div className="h-14 bg-surface/40 rounded-2xl" />
           </div>
         ) : (
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+          <div className="space-y-3">
             {/* Current Month Score */}
-            {[{ data: currentScore, label: currentMonthLabel, variation: scoreVariation }, { data: prevScore, label: lastMonthLabel, variation: null }].map(({ data, label, variation }, idx) => (
-              <React.Fragment key={label}>
-                {idx === 1 && <div className="w-[1px] bg-border/20 self-stretch my-1" />}
-                <div className="space-y-2 min-w-0">
-                  <h4 className="text-xs font-bold text-primary px-1 truncate">{label}</h4>
-                  {!data ? (
-                    <div className="text-center py-2">
-                      <p className="text-[10px] text-muted">Aucune donnée</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 pt-1">
-                      <CircularScoreGauge score={data.score} size={50} strokeWidth={5} />
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-xs font-black px-1.5 py-0.5 rounded-lg border ${
-                            data.grade === 'A' ? 'bg-accent/10 border-accent/20 text-accent' :
-                            data.grade === 'B' ? 'bg-info/10 border-info/20 text-info' :
-                            data.grade === 'C' ? 'bg-warning/10 border-warning/20 text-warning' :
-                            'bg-danger/10 border-danger/20 text-danger'
-                          }`}>
-                            {data.grade}
-                          </span>
-                          {variation !== null && (
-                            <div className={`flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
-                              variation > 0 ? 'text-accent' : variation < 0 ? 'text-danger' : 'text-muted'
-                            }`}>
-                              {variation > 0 ? <TrendingUp size={11} /> : variation < 0 ? <TrendingDown size={11} /> : <Minus size={11} />}
-                              {variation > 0 ? '+' : ''}{variation}
-                            </div>
-                          )}
-                        </div>
-                        {data.bonusScore > 0 && (
-                          <div className="text-[9px] font-bold text-accent">+{data.bonusScore} bonus</div>
-                        )}
-                      </div>
+            <div className="bg-surface/40 p-3.5 rounded-2xl border border-border/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {currentScore ? (
+                  <CircularScoreGauge score={currentScore.score} size={42} strokeWidth={4} />
+                ) : (
+                  <div className="w-[42px] h-[42px] rounded-full border border-dashed border-border/40 flex items-center justify-center text-[10px] text-muted">—</div>
+                )}
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-primary">{currentMonthLabel}</h4>
+                  {currentScore && (
+                    <p className="text-[10px] text-muted mt-0.5">
+                      Santé financière : <span className="font-premium-numbers text-secondary font-bold">{currentScore.score} / 100</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {currentScore && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${getGradeClass(currentScore.grade)}`}>
+                    {currentScore.grade}
+                  </span>
+                  {scoreVariation !== null && (
+                    <div className={`flex items-center gap-0.5 text-[10px] font-bold ${
+                      scoreVariation > 0 ? 'text-accent' : scoreVariation < 0 ? 'text-danger' : 'text-muted'
+                    }`}>
+                      {scoreVariation > 0 ? <TrendingUp size={11} /> : scoreVariation < 0 ? <TrendingDown size={11} /> : <Minus size={11} />}
+                      <span className="font-premium-numbers">{scoreVariation > 0 ? '+' : ''}{scoreVariation}</span>
                     </div>
                   )}
                 </div>
-              </React.Fragment>
-            ))}
+              )}
+            </div>
+
+            {/* Previous Month Score */}
+            <div className="bg-surface/40 p-3.5 rounded-2xl border border-border/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {prevScore ? (
+                  <CircularScoreGauge score={prevScore.score} size={42} strokeWidth={4} />
+                ) : (
+                  <div className="w-[42px] h-[42px] rounded-full border border-dashed border-border/40 flex items-center justify-center text-[10px] text-muted">—</div>
+                )}
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-secondary">{lastMonthLabel}</h4>
+                  {prevScore && (
+                    <p className="text-[10px] text-secondary/60 mt-0.5">
+                      Score : <span className="font-premium-numbers font-bold">{prevScore.score} / 100</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {prevScore && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border opacity-60 ${getGradeClass(prevScore.grade)}`}>
+                    {prevScore.grade}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       {/* Comptes Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Comptes</h3>
-          <div className="absolute right-0">
-            <MoreVertical 
-              onClick={() => setIsAccountsMenuOpen(true)}
-              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-              size={18} 
-              id="accounts-more-btn"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary">Comptes</h3>
+          <MoreVertical 
+            onClick={() => setIsAccountsMenuOpen(true)}
+            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+            size={18} 
+            id="accounts-more-btn"
+          />
         </div>
         
         <div className="space-y-3">
@@ -431,17 +456,17 @@ const Home = () => {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm shrink-0"
-                      style={{ backgroundColor: `${acc.color || '#4ade80'}20`, color: acc.color }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-lg border border-border/10 shrink-0"
+                      style={{ backgroundColor: `${acc.color || '#10b981'}15`, color: acc.color }}
                     >
                       {acc.type === 'credit' ? <CreditCard size={18} /> : <Wallet size={18} />}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-primary truncate">{acc.name}</p>
-                      <p className="text-xs text-muted">Dernière utilisation: {lastTxDateStr}</p>
+                      <p className="text-sm font-bold text-primary truncate leading-tight">{acc.name}</p>
+                      <p className="text-[10px] text-muted">Dernière utilisation: {lastTxDateStr}</p>
                     </div>
                   </div>
-                  <span className={`font-mono font-bold shrink-0 ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
+                  <span className={`font-premium-numbers font-bold shrink-0 ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
                     {formatCurrency(acc.balance, acc.currency)}
                   </span>
                 </div>
@@ -460,16 +485,14 @@ const Home = () => {
 
       {/* Dépenses - 7 derniers jours Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Dépenses - 7 derniers jours</h3>
-          <div className="absolute right-0">
-            <MoreVertical 
-              onClick={() => setIsLast7DaysMenuOpen(true)}
-              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-              size={18} 
-              id="last7days-more-btn"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-4 relative">
+          <h3 className="text-sm font-bold text-primary">Dépenses - 7 derniers jours</h3>
+          <MoreVertical 
+            onClick={() => setIsLast7DaysMenuOpen(true)}
+            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
+            size={18} 
+            id="last7days-more-btn"
+          />
         </div>
         
         <div className="h-40 w-full mt-4">
@@ -493,13 +516,13 @@ const Home = () => {
               <Bar 
                 dataKey="amount" 
                 fill="var(--danger)" 
-                radius={[6, 6, 0, 0]}
+                radius={[4, 4, 0, 0]}
               >
                 <LabelList 
                   dataKey="amount" 
                   position="top" 
                   formatter={(val) => val > 0 ? `${val.toFixed(0)} €` : ''} 
-                  style={{ fill: 'var(--text-secondary)', fontSize: 9, fontWeight: 'bold' }}
+                  style={{ fill: 'var(--text-secondary)', fontSize: 9, fontWeight: 'bold', fontFamily: 'var(--font-premium-numbers)' }}
                 />
               </Bar>
             </BarChart>
@@ -507,10 +530,10 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Solde Card */}
+      {/* Solde Historique Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
         <div className="flex justify-between items-center mb-4 px-1">
-          <h3 className="text-sm font-bold text-primary">Solde</h3>
+          <h3 className="text-sm font-bold text-primary">Solde historique</h3>
           <div className="flex bg-surface p-0.5 rounded-xl border border-border/40 text-[10px] font-bold">
             {['1M', '3M', '6M'].map((d) => (
               <button
@@ -528,18 +551,6 @@ const Home = () => {
           </div>
         </div>
         
-        {/* Metrics */}
-        <div className="space-y-1 mb-4 px-2">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-secondary font-medium">Montant total disponible:</span>
-            <span className="font-bold text-accent">{formatCurrency(totalAvailable, user?.currency?.code)}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-secondary font-medium">Cartes de crédit:</span>
-            <span className="font-bold text-danger">{formatCurrency(totalCredit, user?.currency?.code)}</span>
-          </div>
-        </div>
-        
         {/* Chart */}
         <div className="h-44 w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -549,7 +560,7 @@ const Home = () => {
             >
               <defs>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--info)" stopOpacity={0.2}/>
+                  <stop offset="5%" stopColor="var(--info)" stopOpacity={0.15}/>
                   <stop offset="95%" stopColor="var(--info)" stopOpacity={0}/>
                 </linearGradient>
               </defs>

@@ -9,23 +9,13 @@ const MONTH_NAMES = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ];
 
-const getGradeColor = (grade) => {
+const getGradeClass = (grade) => {
   switch (grade) {
-    case 'A': return 'text-accent';
-    case 'B': return 'text-info';
-    case 'C': return 'text-warning';
-    case 'D': return 'text-danger';
-    default:  return 'text-muted';
-  }
-};
-
-const getGradeBg = (grade) => {
-  switch (grade) {
-    case 'A': return 'bg-accent/10 border-accent/30';
-    case 'B': return 'bg-info/10 border-info/30';
-    case 'C': return 'bg-warning/10 border-warning/30';
-    case 'D': return 'bg-danger/10 border-danger/30';
-    default:  return 'bg-surface-2 border-border/40';
+    case 'A': return 'badge-grade-a';
+    case 'B': return 'badge-grade-b';
+    case 'C': return 'badge-grade-c';
+    case 'D': return 'badge-grade-d';
+    default:  return 'bg-surface-2 border-border/40 text-muted';
   }
 };
 
@@ -47,7 +37,7 @@ const PillarRow = ({ label, score, maxScore, detail, applicable = true }) => {
   }
 
   const pct = maxScore > 0 ? Math.min(100, (score / maxScore) * 100) : 0;
-  const barColor = pct >= 80 ? 'var(--accent)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+  const barColor = getScoreBarColor(pct);
 
   return (
     <div className="space-y-1">
@@ -161,7 +151,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
           {/* Score details */}
           <div className="flex-1 min-w-0 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-xs font-black px-2 py-0.5 rounded-lg border shrink-0 ${getGradeBg(scoreData.grade)} ${getGradeColor(scoreData.grade)}`}>
+              <span className={`text-xs font-black px-2 py-0.5 rounded-lg border shrink-0 ${getGradeClass(scoreData.grade)}`}>
                 Grade {scoreData.grade}
               </span>
               {scoreData.bonusScore > 0 && (

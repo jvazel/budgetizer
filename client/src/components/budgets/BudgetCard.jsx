@@ -140,98 +140,82 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   const temporalProgress = getTemporalProgress();
 
   return (
-    <div className="bg-surface-2 p-5 rounded-[28px] mb-5 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border transition-colors">
+    <div className="bg-surface-2 p-5 rounded-[24px] mb-5 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border transition-colors">
       <div className="flex gap-4 items-start">
         
         {/* Category Icon */}
         <div
           onClick={onEdit ? () => onEdit(budget) : undefined}
-          className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shrink-0 shadow-sm ${onEdit ? 'transition-transform active:scale-95 cursor-pointer' : 'cursor-default'}`}
-          style={{ backgroundColor: `${budget.color || '#3b82f6'}20`, border: `1px solid ${budget.color || '#3b82f6'}30` }}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm border border-border/10 ${onEdit ? 'transition-transform active:scale-95 cursor-pointer' : 'cursor-default'}`}
+          style={{ backgroundColor: `${budget.color || '#3b82f6'}15`, color: budget.color || '#3b82f6' }}
         >
           {budget.categoryId?.icon || '📦'}
         </div>
 
         {/* Content Right Stack */}
-        <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex-1 min-w-0 space-y-3">
           
           {/* Header Row */}
-          <div>
-            <h3 className="text-sm font-bold text-primary truncate leading-tight">{budget.name}</h3>
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider">{budget.categoryId?.name || 'Toutes catégories'}</p>
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-primary truncate leading-tight">{budget.name}</h3>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mt-0.5">{budget.categoryId?.name || 'Toutes catégories'}</p>
+            </div>
+            <span className={`${textColor} text-sm font-premium-numbers font-extrabold tracking-tight shrink-0`}>{percentage}%</span>
           </div>
 
-          {/* Date and Percentage Row */}
-          <div className="flex justify-between items-center text-[10px] font-bold">
-            <span className="text-muted">{dates.start}</span>
-            <span className={`${textColor} text-sm font-mono font-extrabold tracking-tight`}>{percentage}%</span>
-            <span className="text-muted">{dates.end}</span>
-          </div>
-
-          {/* Progress Bar Container — includes today marker above */}
-          <div className="relative pt-3">
-
-            {/* Today tick marker (above the bar) */}
-            {temporalProgress > 1 && temporalProgress < 99 && (
-              <div
-                className="absolute top-0 flex flex-col items-center z-20"
-                style={{ left: `calc(${temporalProgress}% - 1px)` }}
-                title="Aujourd'hui"
-              >
-                {/* Triangle arrow pointing down */}
-                <div className="w-0 h-0" style={{
-                  borderLeft: '5px solid transparent',
-                  borderRight: '5px solid transparent',
-                  borderTop: '5px solid rgba(255,255,255,0.8)'
-                }} />
-              </div>
-            )}
+          {/* Progress Bar Container */}
+          <div className="relative">
 
             {/* Progress Bar */}
-            <div className="h-4 w-full bg-surface border border-border/30 rounded-lg overflow-hidden relative">
+            <div className="h-2 w-full bg-surface border border-border/20 rounded-full overflow-hidden relative">
               {/* Spent fill */}
               <div
-                className={`h-full ${barColor} ${isOverBudget ? 'animate-pulse' : ''} rounded-lg transition-all duration-700 ease-out`}
+                className={`h-full ${barColor} ${isOverBudget ? 'animate-pulse' : ''} rounded-full transition-all duration-700 ease-out`}
                 style={{ width: `${cappedPercentage}%` }}
               />
 
               {/* Today vertical line inside bar */}
               {temporalProgress > 1 && temporalProgress < 99 && (
                 <div
-                  className="absolute top-0 bottom-0 w-[2px] bg-white/75 shadow-lg z-10"
+                  className="absolute top-0 bottom-0 w-[1.5px] bg-white/70 shadow-sm z-10"
                   style={{ left: `${temporalProgress}%` }}
+                  title="Aujourd'hui"
                 />
               )}
             </div>
 
             {/* Amounts row aligned under the bar */}
-            <div className="relative flex justify-between items-center mt-2 h-4 text-[10px] font-bold">
-              <span className="text-muted">0 €</span>
-
-              {/* Spent marker centered */}
-              {budget.spent > 0 && (
-                <span
-                  className={`text-[11px] font-mono font-extrabold ${textColor} absolute left-1/2 -translate-x-1/2`}
-                >
+            <div className="flex justify-between items-center mt-2 text-[10px] font-medium text-secondary">
+              <div>
+                <span>Dépensé : </span>
+                <span className={`font-premium-numbers font-bold ${textColor}`}>
                   {formatCurrency(budget.spent)}
                 </span>
-              )}
-
-              <span className="text-primary font-bold">{formatCurrency(budget.amount)}</span>
+              </div>
+              <div>
+                <span className="text-muted">Limite : </span>
+                <span className="font-premium-numbers font-bold text-primary">
+                  {formatCurrency(budget.amount)}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Residual/Exceeded Info Row */}
-          <div className="pt-2 border-t border-border/20 flex items-center justify-between">
+          {/* Bottom Info & Dates */}
+          <div className="pt-2 border-t border-border/20 flex flex-wrap items-center justify-between gap-1">
             {isOverBudget ? (
-              <span className="text-[11px] font-bold text-danger flex items-center gap-1">
+              <span className="text-[10px] font-bold text-danger flex items-center gap-1">
                 ⚠️ Dépassement : {formatCurrency(budget.spent - budget.amount)}
               </span>
             ) : (
-              <span className="text-[11px] font-bold text-secondary">
-                Montant résiduel : {formatCurrency(budget.remaining)}
+              <span className="text-[10px] font-bold text-secondary">
+                Reste : {formatCurrency(budget.remaining)}
               </span>
             )}
+            <span className="text-[9px] font-medium text-muted">
+              du {dates.start} au {dates.end}
+            </span>
           </div>
 
         </div>
@@ -239,13 +223,13 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
 
       {/* Floating Action Buttons for Card */}
       {onEdit && onDelete && (
-        <div className="absolute top-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-2/90 backdrop-blur-sm p-1 rounded-xl border border-border/40 shadow-sm">
+        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-2/95 backdrop-blur-sm p-1 rounded-xl border border-border/40 shadow-sm">
           <button 
             onClick={() => onEdit(budget)} 
             className="p-1.5 text-secondary hover:text-amber-400 hover:bg-surface rounded-lg transition-colors"
             title="Modifier le budget"
           >
-            <Edit2 size={14} />
+            <Edit2 size={13} />
           </button>
           <button 
             onClick={() => {
@@ -256,7 +240,7 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
             className="p-1.5 text-danger/80 hover:text-danger hover:bg-surface rounded-lg transition-colors"
             title="Supprimer le budget"
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} />
           </button>
         </div>
       )}

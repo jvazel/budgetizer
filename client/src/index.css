@@ -5,50 +5,50 @@
 @tailwind utilities;
 
 :root {
-  /* === DARK MODE (Défaut) === */
-  --bg-base: #0a0d14;
-  --bg-surface: #121622;
-  --bg-surface-2: #1b2030;
-  --bg-elevated: #242b40;
-  --border: #23293e;
+  /* === DARK MODE (Défaut Premium) === */
+  --bg-base: #080a10;
+  --bg-surface: #0e121e;
+  --bg-surface-2: #141a2b;
+  --bg-elevated: #1e263d;
+  --border: rgba(255, 255, 255, 0.06);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #475569;
-  --accent: #4ade80;
-  --accent-dim: #14532d;
-  --danger: #f87171;
-  --danger-dim: #7f1d1d;
-  --warning: #fbbf24;
-  --info: #60a5fa;
-  --purple: #a78bfa;
-  --bg-budget-guide: #3a2a0d;
-}
-
-[data-theme="light"], .light {
-  /* === LIGHT MODE === */
-  --bg-base: #f5f5f5;
-  --bg-surface: #ffffff;
-  --bg-surface-2: #f0f0f0;
-  --bg-elevated: #ffffff;
-  --border: #e0e0e0;
-  --text-primary: #111111;
-  --text-secondary: #666666;
-  --text-muted: #888888;
-  --accent: #16a34a;
-  --accent-dim: #bbf7d0;
-  --danger: #ef4444;
-  --danger-dim: #fecaca;
+  --accent: #10b981; /* Vert émeraude premium */
+  --accent-dim: rgba(16, 185, 129, 0.12);
+  --danger: #f43f5e; /* Rose-rouge premium style Stripe/Linear */
+  --danger-dim: rgba(244, 63, 94, 0.12);
   --warning: #f59e0b;
   --info: #3b82f6;
   --purple: #8b5cf6;
-  --bg-budget-guide: #fcd34d;
+  --bg-budget-guide: #2b1f0d;
+}
+
+[data-theme="light"], .light {
+  /* === LIGHT MODE Premium === */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --border: rgba(0, 0, 0, 0.06);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --accent: #059669;
+  --accent-dim: rgba(5, 150, 105, 0.1);
+  --danger: #e11d48;
+  --danger-dim: rgba(225, 29, 72, 0.1);
+  --warning: #d97706;
+  --info: #2563eb;
+  --purple: #7c3aed;
+  --bg-budget-guide: #fef3c7;
 }
 
 body {
   @apply bg-base text-primary font-sans antialiased;
 }
 
-/* Utilities for hiding scrollbar but keeping functionality */
+/* Utilities for premium design */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -56,3 +56,46 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Chiffres tabulaires alignés pour montants financiers */
+.font-premium-numbers {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* === Financial Grade Badges === */
+:root {
+  --color-accent-rgb: 16, 185, 129;
+  --color-info-rgb: 59, 130, 246;
+  --color-warning-rgb: 245, 158, 11;
+  --color-danger-rgb: 244, 63, 94;
+}
+
+[data-theme="light"], .light {
+  --color-accent-rgb: 5, 150, 105;
+  --color-info-rgb: 37, 99, 235;
+  --color-warning-rgb: 217, 119, 6;
+  --color-danger-rgb: 225, 29, 72;
+}
+
+.badge-grade-a {
+  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
+  border-color: rgba(var(--color-accent-rgb), 0.2) !important;
+  color: var(--accent) !important;
+}
+.badge-grade-b {
+  background-color: rgba(var(--color-info-rgb), 0.1) !important;
+  border-color: rgba(var(--color-info-rgb), 0.2) !important;
+  color: var(--info) !important;
+}
+.badge-grade-c {
+  background-color: rgba(var(--color-warning-rgb), 0.1) !important;
+  border-color: rgba(var(--color-warning-rgb), 0.2) !important;
+  color: var(--warning) !important;
+}
+.badge-grade-d {
+  background-color: rgba(var(--color-danger-rgb), 0.1) !important;
+  border-color: rgba(var(--color-danger-rgb), 0.2) !important;
+  color: var(--danger) !important;
+}
+
