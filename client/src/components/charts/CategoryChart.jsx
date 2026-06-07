@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
 import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
@@ -17,6 +17,25 @@ const CategoryChart = () => {
   
   // Drill-down states
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const renderActiveShape = (props) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+    return (
+      <g>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius + 5}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          className="transition-all duration-300 ease-out"
+        />
+      </g>
+    );
+  };
 
   // Detail Bottom Sheet states
   const [detailSheet, setDetailSheet] = useState({ isOpen: false, category: null });
@@ -263,6 +282,7 @@ const CategoryChart = () => {
       const res = await api.get(`/charts/by-category?startDate=${startDate}&endDate=${endDate}&type=${type}`);
       setData(res.data);
       setSelectedCategory(null); // Reset drilldown on fetch
+      setActiveIndex(null);
     } catch (err) {
       toast.error('Erreur lors du chargement des graphiques');
     } finally {
@@ -275,6 +295,7 @@ const CategoryChart = () => {
   }, [period, type]);
 
   const handleSliceClick = (entry) => {
+    setActiveIndex(null);
     if (!selectedCategory) {
       // Find exact category object
       const cat = data.categories.find(c => c.name === entry.name);
@@ -477,13 +498,24 @@ const CategoryChart = () => {
           ) : (
             <>
               {/* Overlay center info */}
-              <div className="absolute text-center space-y-0.5 pointer-events-none">
-                <span className="text-[10px] uppercase font-extrabold text-muted tracking-wider">
-                  {selectedCategory ? selectedCategory.name : 'Total'}
+              <div className="absolute text-center space-y-0.5 pointer-events-none flex flex-col items-center justify-center w-[120px] select-none">
+                <span className="text-[9px] uppercase font-extrabold text-muted tracking-wider truncate max-w-full">
+                  {activeIndex !== null && pieData[activeIndex]
+                    ? pieData[activeIndex].name
+                    : (selectedCategory ? selectedCategory.name : 'Total')}
                 </span>
-                <p className="font-mono text-xl font-black text-primary">
-                  {formatCurrency(selectedCategory ? selectedCategory.amount : data.total)}
+                <p className="font-mono text-lg font-black text-primary truncate max-w-full leading-none mt-0.5">
+                  {formatCurrency(
+                    activeIndex !== null && pieData[activeIndex]
+                      ? pieData[activeIndex].value
+                      : (selectedCategory ? selectedCategory.amount : data.total)
+                  )}
                 </p>
+                {activeIndex !== null && pieData[activeIndex] && (
+                  <span className="text-[9px] text-accent font-bold block mt-0.5">
+                    {`${((pieData[activeIndex].value / (selectedCategory ? selectedCategory.amount : data.total || 1)) * 100).toFixed(1)}%`}
+                  </span>
+                )}
               </div>
 
               <ResponsiveContainer width="100%" height="100%">
@@ -497,6 +529,10 @@ const CategoryChart = () => {
                     paddingAngle={3}
                     dataKey="value"
                     onClick={handleSliceClick}
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex(null)}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} className="cursor-pointer focus:outline-none" />
@@ -504,7 +540,16 @@ const CategoryChart = () => {
                   </Pie>
                   <Tooltip 
                     formatter={(val) => formatCurrency(val)} 
-                    contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontFamily: 'monospace', fontSize: '12px' }}
+                    contentStyle={{
+                      borderRadius: '16px',
+                      background: 'rgba(10, 10, 12, 0.85)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: '#fff',
+                      fontFamily: 'monospace',
+                      fontSize: '11px',
+                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>

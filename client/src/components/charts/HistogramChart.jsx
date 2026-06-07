@@ -120,6 +120,37 @@ const HistogramChart = () => {
           <Sliders size={14} className="text-accent" /> Filtres d'Analyse
         </h3>
         
+        {/* Date presets */}
+        <div className="flex gap-1.5 py-1 select-none overflow-x-auto no-scrollbar">
+          {[
+            { label: '30 Derniers Jours', id: '30days' },
+            { label: 'Ce Mois', id: 'thisMonth' },
+            { label: 'Cette Année', id: 'thisYear' }
+          ].map(preset => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => {
+                const today = new Date();
+                const start = new Date();
+                if (preset.id === '30days') {
+                  start.setDate(today.getDate() - 30);
+                } else if (preset.id === 'thisMonth') {
+                  start.setDate(1);
+                } else if (preset.id === 'thisYear') {
+                  start.setMonth(0);
+                  start.setDate(1);
+                }
+                setStartDate(start.toISOString().split('T')[0]);
+                setEndDate(today.toISOString().split('T')[0]);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-border/20 border border-border/40 text-[10px] font-bold text-secondary hover:text-primary transition-all active:scale-95 shrink-0"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+        
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] font-bold text-muted uppercase">Date de début</label>
@@ -248,6 +279,16 @@ const HistogramChart = () => {
                 margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
                 onClick={handleChartClick}
               >
+                <defs>
+                  <linearGradient id="histIncomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.95}/>
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="histExpenseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.95}/>
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  </linearGradient>
+                </defs>
                 <XAxis
                   dataKey="key"
                   tickFormatter={formatTickLabel}
@@ -285,12 +326,14 @@ const HistogramChart = () => {
                   }}
                   contentStyle={{
                     borderRadius: '16px',
-                    background: 'rgba(30, 41, 59, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(10, 10, 12, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     color: '#fff',
                     fontSize: '11px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
                   }}
+                  cursor={{ stroke: 'rgba(255, 255, 255, 0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Legend
                   verticalAlign="top"
@@ -310,17 +353,15 @@ const HistogramChart = () => {
 
                 <Bar
                   dataKey="income"
-                  fill="#10b981"
-                  fillOpacity={0.85}
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#histIncomeGrad)"
+                  radius={[5, 5, 0, 0]}
                   barSize={history.length > 20 ? 6 : 14}
                   className="cursor-pointer"
                 />
                 <Bar
                   dataKey="expenses"
-                  fill="#ef4444"
-                  fillOpacity={0.85}
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#histExpenseGrad)"
+                  radius={[5, 5, 0, 0]}
                   barSize={history.length > 20 ? 6 : 14}
                   className="cursor-pointer"
                 />

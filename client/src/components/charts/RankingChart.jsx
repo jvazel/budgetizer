@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { ChevronRight, ChevronLeft, Calendar, HelpCircle, Sparkles, TrendingUp, AlertCircle, Award, ListOrdered, Tag, Store } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const RankingChart = () => {
   const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
@@ -416,11 +417,14 @@ const RankingChart = () => {
                     {/* Bottom Row: Premium Progress Bar */}
                     <div className="w-full pl-8 pr-5 mt-2.5">
                       <div className="w-full bg-border/20 h-2 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500 ease-out"
+                        <motion.div 
+                          className="h-full rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progressPct}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
                           style={{ 
-                            width: `${progressPct}%`,
-                            backgroundColor: groupBy === 'category' ? (item.color || '#4ade80') : '#4ade80'
+                            backgroundColor: groupBy === 'category' ? (item.color || '#4ade80') : '#4ade80',
+                            backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%)'
                           }}
                         />
                       </div>
@@ -428,46 +432,56 @@ const RankingChart = () => {
                   </button>
 
                   {/* Accordion Expand Area */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4.5 pt-1.5 border-t border-border/15 bg-surface/30 space-y-3.5 pl-12 animate-fadeIn">
-                      {/* Projection Banner */}
-                      <div className="p-3 bg-accent/5 border border-accent/15 rounded-xl flex items-start gap-2.5">
-                        <Sparkles size={14} className="text-accent shrink-0 mt-0.5" />
-                        <div className="space-y-0.5">
-                          <span className="text-[8px] uppercase font-extrabold text-accent/80 tracking-wider">Projection sur 1 An (Effet Cumulé)</span>
-                          <p className="text-[10.5px] text-primary leading-snug">
-                            Si vous continuez ainsi, cette habitude vous coûtera <strong className="text-accent font-extrabold">{formatCurrency(item.projectedAnnual)}</strong> par an.
-                          </p>
-                        </div>
-                      </div>
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-4 pb-4.5 pt-1.5 border-t border-border/15 bg-surface/30 space-y-3.5 pl-12">
+                          {/* Projection Banner */}
+                          <div className="p-3 bg-accent/5 border border-accent/15 rounded-xl flex items-start gap-2.5">
+                            <Sparkles size={14} className="text-accent shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                              <span className="text-[8px] uppercase font-extrabold text-accent/80 tracking-wider">Projection sur 1 An (Effet Cumulé)</span>
+                              <p className="text-[10.5px] text-primary leading-snug">
+                                Si vous continuez ainsi, cette habitude vous coûtera <strong className="text-accent font-extrabold">{formatCurrency(item.projectedAnnual)}</strong> par an.
+                              </p>
+                            </div>
+                          </div>
 
-                      {/* Diagnostic / Tip */}
-                      <div className="flex items-center gap-2 px-1">
-                        {item.projectedAnnual > 1200 ? (
-                          <>
-                            <AlertCircle size={14} className="text-red-400 shrink-0" />
-                            <span className="text-[9.5px] text-red-300 font-medium">
-                              Poste de dépense élevé à l'année. Essayez de réduire la récurrence ou le panier moyen.
-                            </span>
-                          </>
-                        ) : item.projectedAnnual > 300 ? (
-                          <>
-                            <TrendingUp size={14} className="text-amber-400 shrink-0" />
-                            <span className="text-[9.5px] text-amber-300 font-medium">
-                              Habitude modérée. Surveillez son évolution pour éviter qu'elle ne prenne trop d'ampleur.
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <Award size={14} className="text-emerald-400 shrink-0" />
-                            <span className="text-[9.5px] text-emerald-300 font-medium">
-                              Dépense très bien maîtrisée. L'impact annuel reste parfaitement négligeable.
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                          {/* Diagnostic / Tip */}
+                          <div className="flex items-center gap-2 px-1">
+                            {item.projectedAnnual > 1200 ? (
+                              <>
+                                <AlertCircle size={14} className="text-red-400 shrink-0" />
+                                <span className="text-[9.5px] text-red-300 font-medium">
+                                  Poste de dépense élevé à l'année. Essayez de réduire la récurrence ou le panier moyen.
+                                </span>
+                              </>
+                            ) : item.projectedAnnual > 300 ? (
+                              <>
+                                <TrendingUp size={14} className="text-amber-400 shrink-0" />
+                                <span className="text-[9.5px] text-amber-300 font-medium">
+                                  Habitude modérée. Surveillez son évolution pour éviter qu'elle ne prenne trop d'ampleur.
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Award size={14} className="text-emerald-400 shrink-0" />
+                                <span className="text-[9.5px] text-emerald-300 font-medium">
+                                  Dépense très bien maîtrisée. L'impact annuel reste parfaitement négligeable.
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}

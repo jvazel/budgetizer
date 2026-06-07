@@ -243,6 +243,16 @@ const CashFlowChart = () => {
                 margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
                 onClick={handleBarClick}
               >
+                <defs>
+                  <linearGradient id="cfIncomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.95}/>
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="cfExpenseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.95}/>
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  </linearGradient>
+                </defs>
                 <XAxis
                   dataKey="month"
                   tickFormatter={formatMonthShortLabel}
@@ -270,12 +280,14 @@ const CashFlowChart = () => {
                   }}
                   contentStyle={{
                     borderRadius: '16px',
-                    background: 'rgba(30, 41, 59, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(10, 10, 12, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     color: '#fff',
                     fontSize: '11px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
                   }}
+                  cursor={{ stroke: 'rgba(255, 255, 255, 0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Legend
                   verticalAlign="top"
@@ -297,17 +309,15 @@ const CashFlowChart = () => {
                 {/* Bars for Income & Expenses side-by-side */}
                 <Bar
                   dataKey="income"
-                  fill="#10b981"
-                  fillOpacity={0.8}
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#cfIncomeGrad)"
+                  radius={[5, 5, 0, 0]}
                   barSize={10}
                   className="cursor-pointer"
                 />
                 <Bar
                   dataKey="expenses"
-                  fill="#ef4444"
-                  fillOpacity={0.8}
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#cfExpenseGrad)"
+                  radius={[5, 5, 0, 0]}
                   barSize={10}
                   className="cursor-pointer"
                 />

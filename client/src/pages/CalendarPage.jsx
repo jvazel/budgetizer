@@ -50,7 +50,7 @@ const CalendarPage = () => {
   };
 
   const formatMonth = (date) => {
-    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase();
   };
 
   const formatCurrency = (amount) => {

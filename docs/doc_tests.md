@@ -131,8 +131,8 @@ Ce graphique compare les enveloppes budgétaires définies avec le réel dépens
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
 | **Rendu initial / Chargement** | API budgets en attente | Rendu initial | Le titre `"Comparatif par Budget"` et le spinner de chargement s'affichent. |
-| **Rendu des budgets et structure** | Données de budgets mockées, comptes/catégories définis | Chargement et calculs de totaux | Affiche le cumul budgété/dépensé exact. Valide que le conteneur a une hauteur non nulle (protection anti-collapse) et que le layout Recharts est configuré à `"vertical"` (protection anti-disparition). |
-| **Drill-down dépenses** | Clic sur la barre de dépenses d'un budget | Déclenchement de la requête API et récupération des dépenses associées | Le BottomSheet glisse du bas et affiche la liste exhaustive des transactions réelles ayant grevé ce budget. |
+| **Rendu des budgets et structure** | Données de budgets mockées, comptes/catégories définis | Chargement et calculs de totaux | Affiche le cumul budgété/dépensé exact. Valide la présence des enveloppes budgétaires individuelles pour chaque catégorie sous forme de cartes de jauge personnalisées. |
+| **Drill-down dépenses** | Clic sur la carte de budget cliquable | Déclenchement de la requête API et récupération des dépenses associées | Le BottomSheet glisse du bas et affiche la liste exhaustive des transactions réelles ayant grevé ce budget. |
 
 ---
 

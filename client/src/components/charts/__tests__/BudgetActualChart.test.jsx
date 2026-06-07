@@ -107,16 +107,9 @@ describe('BudgetActualChart Component', () => {
     expect(screen.getByText('Respectés :')).toBeInTheDocument();
     expect(screen.getByText('Dépassés :')).toBeInTheDocument();
 
-    // Recharts container should render
-    expect(screen.getByTestId('recharts-responsive-container')).toBeInTheDocument();
-
-    // Prevent layout collapse regression: Ensure parent container has dynamic height set
-    const wrapper = screen.getByTestId('chart-wrapper');
-    expect(wrapper).toHaveStyle('height: 160px');
-
-    // Prevent layout type regression: Ensure BarChart is configured with vertical layout for horizontal bars
-    const barChart = screen.getByTestId('recharts-bar-chart');
-    expect(barChart).toHaveAttribute('data-layout', 'vertical');
+    // Custom budget cards should render
+    expect(screen.getByText('Alimentation')).toBeInTheDocument();
+    expect(screen.getByText('Loisirs')).toBeInTheDocument();
   });
 
   it('opens drill-down bottom sheet and loads transaction list on bar click', async () => {

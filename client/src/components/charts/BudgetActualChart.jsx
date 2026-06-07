@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../../services/api';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+
 import { ChevronLeft, ChevronRight, AlertTriangle, ShieldCheck, CheckCircle2, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
@@ -186,66 +186,76 @@ const BudgetActualChart = () => {
           <p className="text-[10px] text-muted">La barre supérieure (sombre) représente la limite, la barre inférieure représente le réel dépensé. Touchez une barre pour voir les détails.</p>
         </div>
 
-        <div data-testid="chart-wrapper" className="w-full flex items-center justify-center" style={{ height: `${Math.max(160, chartData.length * 60)}px`, width: '100%' }}>
+        <div className="w-full">
           {loading ? (
-            <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+            <div className="flex justify-center py-12">
+              <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+            </div>
           ) : chartData.length === 0 ? (
             <div className="text-center text-muted text-xs flex flex-col items-center gap-1.5 py-10">
               <AlertTriangle size={24} className="text-muted/60" />
               <span>Aucun budget défini pour ce mois.</span>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ left: -10, right: 10, top: 10, bottom: 5 }}
-              >
-                <XAxis type="number" tick={{ fontSize: 9, fill: '#888' }} axisLine={false} tickLine={false} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tick={{ fontSize: 9, fill: '#bbb', fontWeight: 'bold' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={90}
-                />
-                <Tooltip
-                  formatter={(val, name) => [formatCurrency(val), name === 'budget' ? 'Budget alloué' : 'Dépense réelle']}
-                  contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
-                />
-                <Legend
-                  verticalAlign="top"
-                  height={32}
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: '9px', fontWeight: 'bold' }}
-                  formatter={(value) => value === 'budget' ? 'Enveloppe allouée' : 'Réel dépensé'}
-                />
+            <div className="space-y-4">
+              {chartData.map((entry, index) => {
+                const ratio = entry.budget > 0 ? entry.real / entry.budget : 0;
+                const percentage = Math.min(100, Math.round(ratio * 100));
+                const isExceeded = entry.real > entry.budget;
                 
-                {/* Budget Limit Bar */}
-                <Bar dataKey="budget" name="budget" fill="var(--bg-budget-guide)" stroke="var(--border)" strokeWidth={1} radius={[0, 4, 4, 0]} barSize={12} />
-                
-                {/* Spent Bar */}
-                <Bar 
-                  dataKey="real" 
-                  name="real" 
-                  fill="var(--purple)"
-                  radius={[0, 4, 4, 0]} 
-                  barSize={8}
-                  onClick={handleBarClick}
-                  className="cursor-pointer"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.exceeded ? 'var(--danger)' : 'var(--purple)'} 
-                      fillOpacity={0.85}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                return (
+                  <div 
+                    key={index}
+                    onClick={() => handleBarClick(entry)}
+                    data-testid="bar-click-trigger"
+                    className="bg-surface p-4 rounded-2xl border border-border/40 hover:bg-surface-2/45 cursor-pointer transition-all active:scale-[0.99] flex flex-col gap-2.5 shadow-sm group"
+                  >
+                    {/* Top row info */}
+                    <div className="flex justify-between items-center w-full">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-base shrink-0">{entry.categoryIcon || '📁'}</span>
+                        <h4 className="text-xs font-bold text-primary truncate leading-tight group-hover:text-accent transition-colors">{entry.name}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono text-xs font-bold text-primary">
+                          {formatCurrency(entry.real)}
+                        </span>
+                        <span className="text-[10px] text-muted"> / {formatCurrency(entry.budget)}</span>
+                      </div>
+                    </div>
+
+                    {/* Capsule track progress */}
+                    <div className="relative w-full h-3 bg-surface-2 rounded-full border border-border/10 overflow-hidden flex items-center">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${
+                          isExceeded ? 'bg-danger' : 'bg-purple'
+                        }`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                      
+                      {/* Glow tip if near/at limit */}
+                      {!isExceeded && percentage >= 85 && (
+                        <div className="absolute w-2 h-2 rounded-full bg-warning animate-pulse" style={{ left: `calc(${percentage}% - 6px)` }} />
+                      )}
+                    </div>
+
+                    {/* Exceed details warning if any */}
+                    <div className="flex justify-between items-center text-[9px] font-bold">
+                      <span className={`${isExceeded ? 'text-danger' : 'text-muted'}`}>
+                        {isExceeded 
+                          ? `Dépassement de ${formatCurrency(entry.real - entry.budget)}` 
+                          : `${percentage}% consommé`}
+                      </span>
+                      {isExceeded && (
+                        <span className="bg-danger/10 text-danger border border-danger/25 px-1.5 py-0.5 rounded-full">
+                          Alerte dépassement
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

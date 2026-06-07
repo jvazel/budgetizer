@@ -131,7 +131,13 @@ const NetWorthChart = () => {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={history} margin={{ left: -25, right: 5, top: 10, bottom: 5 }}>
+              <ComposedChart 
+                data={history.map(item => ({
+                  ...item,
+                  credit: item.credit ? -Math.abs(item.credit) : 0
+                }))} 
+                margin={{ left: -25, right: 5, top: 10, bottom: 5 }}
+              >
                 <defs>
                   <linearGradient id="colorChecking" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--info)" stopOpacity={0.25}/>
@@ -148,6 +154,10 @@ const NetWorthChart = () => {
                   <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.02}/>
+                  </linearGradient>
+                  <linearGradient id="colorCredit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--danger)" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="var(--danger)" stopOpacity={0.02}/>
                   </linearGradient>
                 </defs>
                 <XAxis 
@@ -171,13 +181,22 @@ const NetWorthChart = () => {
                       savings: 'Épargne',
                       cash: 'Espèces',
                       investment: 'Investissements',
-                      credit: 'Carte Crédit / Passif',
+                      credit: 'Carte Crédit (Dette)',
                       netWorth: 'Richesse Nette'
                     };
-                    return [formatCurrency(val), labelMap[name] || name];
+                    const formattedVal = formatCurrency(name === 'credit' ? Math.abs(val) : val);
+                    return [formattedVal, labelMap[name] || name];
                   }}
                   labelFormatter={(lbl) => `Date : ${lbl}`}
-                  contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
+                  contentStyle={{
+                    borderRadius: '16px',
+                    background: 'rgba(10, 10, 12, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                  }}
                 />
                 <Legend 
                   verticalAlign="top" 
@@ -191,16 +210,18 @@ const NetWorthChart = () => {
                       savings: 'Épargne',
                       cash: 'Espèces',
                       investment: 'Investissements',
+                      credit: 'Crédit (Dette)',
                       netWorth: 'Richesse Nette'
                     };
                     return labelMap[value] || value;
                   }}
                 />
-                {/* Stacked Assets Areas */}
-                <Area type="monotone" dataKey="checking" stackId="1" stroke="var(--info)" strokeWidth={1} fillOpacity={1} fill="url(#colorChecking)" />
-                <Area type="monotone" dataKey="savings" stackId="1" stroke="var(--purple)" strokeWidth={1} fillOpacity={1} fill="url(#colorSavings)" />
-                <Area type="monotone" dataKey="cash" stackId="1" stroke="var(--warning)" strokeWidth={1} fillOpacity={1} fill="url(#colorCash)" />
-                <Area type="monotone" dataKey="investment" stackId="1" stroke="#10b981" strokeWidth={1} fillOpacity={1} fill="url(#colorInvestment)" />
+                {/* Stacked Assets & Liabilities Areas */}
+                <Area type="monotone" dataKey="checking" stackId="1" stroke="var(--info)" strokeWidth={1} fillOpacity={0.8} fill="url(#colorChecking)" />
+                <Area type="monotone" dataKey="savings" stackId="1" stroke="var(--purple)" strokeWidth={1} fillOpacity={0.8} fill="url(#colorSavings)" />
+                <Area type="monotone" dataKey="cash" stackId="1" stroke="var(--warning)" strokeWidth={1} fillOpacity={0.8} fill="url(#colorCash)" />
+                <Area type="monotone" dataKey="investment" stackId="1" stroke="#10b981" strokeWidth={1} fillOpacity={0.8} fill="url(#colorInvestment)" />
+                <Area type="monotone" dataKey="credit" stackId="1" stroke="var(--danger)" strokeWidth={1} fillOpacity={0.8} fill="url(#colorCredit)" />
                 
                 {/* Net Worth Line */}
                 <Line type="monotone" dataKey="netWorth" stroke="var(--accent)" strokeWidth={3} dot={false} activeDot={{ r: 5 }} />
