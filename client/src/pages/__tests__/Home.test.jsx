@@ -169,23 +169,14 @@ describe('Home Page Dashboard - Savings Goals preview card', () => {
     expect(screen.getByText(/3 333/)).toBeInTheDocument();
   });
 
-  it('opens savings goal options menu on click and offers redirection link', async () => {
+  it('offers a direct redirection button to savings page', async () => {
     mockSavingsGoals = [];
     mockSavingsLoading = false;
     
     renderComponent();
 
-    // The sub-menu should be hidden initially
-    expect(screen.queryByText("Options des Objectifs")).not.toBeInTheDocument();
-
-    // Click on the more button for savings goals
-    const moreBtn = document.getElementById('savings-more-btn');
-    expect(moreBtn).toBeInTheDocument();
-    
-    fireEvent.click(moreBtn);
-
-    // Verify sub-menu title and redirect action button are displayed
-    expect(screen.getByText("Options des Objectifs")).toBeInTheDocument();
-    expect(screen.getByText("Voir les objectifs d'épargne")).toBeInTheDocument();
+    // The Gérer buttons should be visible
+    const manageBtns = screen.getAllByRole('button', { name: /Gérer/ });
+    expect(manageBtns.length).toBeGreaterThan(0);
   });
 });

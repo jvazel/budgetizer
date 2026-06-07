@@ -283,15 +283,15 @@ const Home = () => {
       </section>
 
       {/* Sommaire d'activité Card */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4 relative">
+      <div 
+        onClick={() => navigate('/summary-history')}
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+      >
+        <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Sommaire d'activité</h3>
-          <MoreVertical 
-            onClick={() => setIsSommaireMenuOpen(true)} 
-            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-            size={18} 
-            id="sommaire-more-btn"
-          />
+          <span className="text-[10px] font-bold text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+            Historique &rarr;
+          </span>
         </div>
 
         <div className="space-y-3">
@@ -346,15 +346,15 @@ const Home = () => {
       </div>
 
       {/* Score Financier Card */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4 relative">
+      <div 
+        onClick={() => navigate('/financial-scores')}
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+      >
+        <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Score Financier</h3>
-          <MoreVertical
-            onClick={() => setIsScoreMenuOpen(true)}
-            className="text-secondary cursor-pointer hover:text-primary transition-colors"
-            size={18}
-            id="score-more-btn"
-          />
+          <span className="text-[10px] font-bold text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+            Détails &rarr;
+          </span>
         </div>
 
         {currentScoreLoading && prevScoreLoading ? (
@@ -431,14 +431,14 @@ const Home = () => {
 
       {/* Comptes Card */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4 relative">
+        <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Comptes</h3>
-          <MoreVertical 
-            onClick={() => setIsAccountsMenuOpen(true)}
-            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-            size={18} 
-            id="accounts-more-btn"
-          />
+          <button 
+            onClick={() => navigate('/accounts')}
+            className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+          >
+            Gérer &rarr;
+          </button>
         </div>
         
         <div className="space-y-3">
@@ -484,18 +484,18 @@ const Home = () => {
       </div>
 
       {/* Dépenses - 7 derniers jours Card */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4 relative">
+      <div 
+        onClick={() => navigate('/charts')}
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+      >
+        <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Dépenses - 7 derniers jours</h3>
-          <MoreVertical 
-            onClick={() => setIsLast7DaysMenuOpen(true)}
-            className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-            size={18} 
-            id="last7days-more-btn"
-          />
+          <span className="text-[10px] font-bold text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+            Analyses &rarr;
+          </span>
         </div>
         
-        <div className="h-40 w-full mt-4">
+        <div className="h-40 w-full mt-4" onClick={(e) => e.stopPropagation()}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={last7DaysExpenses} 
@@ -530,72 +530,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Solde Historique Card */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4 px-1">
-          <h3 className="text-sm font-bold text-primary">Solde historique</h3>
-          <div className="flex bg-surface p-0.5 rounded-xl border border-border/40 text-[10px] font-bold">
-            {['1M', '3M', '6M'].map((d) => (
-              <button
-                key={d}
-                onClick={() => setChartDuration(d)}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
-                  chartDuration === d 
-                    ? 'bg-accent text-white shadow-sm' 
-                    : 'text-muted hover:text-primary'
-                }`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Chart */}
-        <div className="h-44 w-full mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart 
-              data={filteredBalanceHistory} 
-              margin={{ top: 10, right: 5, left: -25, bottom: 5 }}
-            >
-              <defs>
-                <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--info)" stopOpacity={0.15}/>
-                  <stop offset="95%" stopColor="var(--info)" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <XAxis 
-                dataKey={chartDuration === '6M' ? 'monthYear' : 'date'} 
-                tickLine={false} 
-                axisLine={false} 
-                tick={{ fill: 'var(--text-secondary)', fontSize: 9 }}
-                interval={chartDuration === '1M' ? 6 : 29}
-              />
-              <YAxis 
-                tickLine={false} 
-                axisLine={false} 
-                tick={{ fill: 'var(--text-secondary)', fontSize: 9 }}
-                tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
-              />
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
-                labelStyle={{ color: 'var(--text-secondary)' }}
-                itemStyle={{ color: 'var(--info)' }}
-                formatter={(value) => [`${value.toFixed(2)} €`, 'Solde disponible']}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="available" 
-                stroke="var(--text-primary)" 
-                strokeWidth={1.5} 
-                fillOpacity={1} 
-                fill="url(#colorBalance)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {/* Budget Alerts */}
       {budgetAlerts && budgetAlerts.length > 0 && (
         <section className="mb-8 space-y-3">
@@ -624,16 +558,14 @@ const Home = () => {
       {/* Top Expenses by Category */}
       {expensesByCategory && expensesByCategory.length > 0 && (
         <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-          <div className="flex justify-center items-center mb-4 relative">
-            <h3 className="text-sm font-bold text-primary text-center">Top catégories de dépenses</h3>
-            <div className="absolute right-0">
-              <MoreVertical 
-                onClick={() => setIsTopCategoriesMenuOpen(true)} 
-                className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-                size={18} 
-                id="top-categories-more-btn"
-              />
-            </div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-bold text-primary">Top catégories de dépenses</h3>
+            <button 
+              onClick={() => navigate('/charts')}
+              className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+            >
+              Détails &rarr;
+            </button>
           </div>
           
           <div className="space-y-4">
@@ -660,16 +592,14 @@ const Home = () => {
 
       {/* Budgets Section */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Mes budgets</h3>
-          <div className="absolute right-0">
-            <MoreVertical 
-              onClick={() => setIsBudgetsMenuOpen(true)} 
-              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-              size={18} 
-              id="budgets-more-btn"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-bold text-primary">Mes budgets</h3>
+          <button 
+            onClick={() => navigate('/budgets')}
+            className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+          >
+            Gérer &rarr;
+          </button>
         </div>
         
         {budgetsLoading ? (
@@ -699,16 +629,14 @@ const Home = () => {
 
       {/* Objectifs d'épargne Section */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-center items-center mb-4 relative">
-          <h3 className="text-sm font-bold text-primary text-center">Objectifs d'épargne</h3>
-          <div className="absolute right-0">
-            <MoreVertical 
-              onClick={() => setIsSavingsMenuOpen(true)} 
-              className="text-secondary cursor-pointer hover:text-primary transition-colors" 
-              size={18} 
-              id="savings-more-btn"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-bold text-primary">Objectifs d'épargne</h3>
+          <button 
+            onClick={() => navigate('/savings')}
+            className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+          >
+            Gérer &rarr;
+          </button>
         </div>
         
         {savingsLoading && savingsGoals.length === 0 ? (

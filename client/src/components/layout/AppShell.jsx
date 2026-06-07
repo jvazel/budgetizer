@@ -42,9 +42,9 @@ export const HeaderBackButton = ({ to, onClick }) => {
   return createPortal(
     <button 
       onClick={handleClick} 
-      className="p-1 -ml-1 rounded-full hover:bg-border/40 text-muted hover:text-primary transition-colors shrink-0"
+      className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.06] text-secondary hover:text-primary transition-colors shrink-0 -ml-2.5"
     >
-      <ChevronLeft size={24} />
+      <ChevronLeft size={22} />
     </button>,
     backTarget
   );
@@ -65,16 +65,16 @@ const AppShell = () => {
         
         {/* Header Centralisé */}
         <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-md border-b border-border h-[56px] flex items-center px-4 max-w-md mx-auto justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Back Target Portal */}
             <div ref={setBackTarget} className="peer flex items-center shrink-0" />
             
             {/* Default Menu Button (hidden if back target is not empty) */}
             <button 
               onClick={() => setIsMenuOpen(true)} 
-              className="p-1 -ml-1 rounded-full hover:bg-border/40 text-muted hover:text-primary transition-colors shrink-0 peer-[:not(:empty)]:hidden"
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.06] text-secondary hover:text-primary transition-colors shrink-0 peer-[:not(:empty)]:hidden -ml-2.5"
             >
-              <Menu size={24} />
+              <Menu size={22} />
             </button>
 
             {/* Title Target Portal */}
@@ -82,7 +82,7 @@ const AppShell = () => {
           </div>
 
           {/* Actions Target Portal */}
-          <div ref={setActionsTarget} className="flex items-center gap-3 text-muted shrink-0" />
+          <div ref={setActionsTarget} className="flex items-center gap-2 text-secondary shrink-0" />
         </header>
 
         {/* Main Content */}

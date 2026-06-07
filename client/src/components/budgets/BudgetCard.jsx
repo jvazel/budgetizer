@@ -140,13 +140,15 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   const temporalProgress = getTemporalProgress();
 
   return (
-    <div className="bg-surface-2 p-5 rounded-[24px] mb-5 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border transition-colors">
+    <div 
+      onClick={onEdit ? () => onEdit(budget) : undefined}
+      className={`bg-surface-2 p-5 rounded-[20px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${onEdit ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+    >
       <div className="flex gap-4 items-start">
         
         {/* Category Icon */}
         <div
-          onClick={onEdit ? () => onEdit(budget) : undefined}
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm border border-border/10 ${onEdit ? 'transition-transform active:scale-95 cursor-pointer' : 'cursor-default'}`}
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 shadow-sm border border-border/10"
           style={{ backgroundColor: `${budget.color || '#3b82f6'}15`, color: budget.color || '#3b82f6' }}
         >
           {budget.categoryId?.icon || '📦'}
@@ -220,30 +222,6 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
 
         </div>
       </div>
-
-      {/* Floating Action Buttons for Card */}
-      {onEdit && onDelete && (
-        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-2/95 backdrop-blur-sm p-1 rounded-xl border border-border/40 shadow-sm">
-          <button 
-            onClick={() => onEdit(budget)} 
-            className="p-1.5 text-secondary hover:text-amber-400 hover:bg-surface rounded-lg transition-colors"
-            title="Modifier le budget"
-          >
-            <Edit2 size={13} />
-          </button>
-          <button 
-            onClick={() => {
-              if (window.confirm('Supprimer ce budget ?')) {
-                onDelete(budget._id);
-              }
-            }} 
-            className="p-1.5 text-danger/80 hover:text-danger hover:bg-surface rounded-lg transition-colors"
-            title="Supprimer le budget"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      )}
     </div>
   );
 };

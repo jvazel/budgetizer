@@ -5,39 +5,39 @@
 @tailwind utilities;
 
 :root {
-  /* === DARK MODE (Défaut Premium) === */
-  --bg-base: #080a10;
-  --bg-surface: #0e121e;
-  --bg-surface-2: #141a2b;
-  --bg-elevated: #1e263d;
-  --border: rgba(255, 255, 255, 0.06);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #475569;
-  --accent: #10b981; /* Vert émeraude premium */
-  --accent-dim: rgba(16, 185, 129, 0.12);
-  --danger: #f43f5e; /* Rose-rouge premium style Stripe/Linear */
-  --danger-dim: rgba(244, 63, 94, 0.12);
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  --purple: #8b5cf6;
-  --bg-budget-guide: #2b1f0d;
+  /* === DARK MODE (Défaut Premium - Apple/Linear Style) === */
+  --bg-base: #000000;          /* Noir pur ultra-premium */
+  --bg-surface: #0a0a0c;       /* Gris très sombre pour détacher les cartes */
+  --bg-surface-2: #121215;     /* Gris intermédiaire */
+  --bg-elevated: #1a1a1f;      /* Gris élevé pour modales/sheets */
+  --border: rgba(255, 255, 255, 0.05); /* Bordure extrêmement subtile */
+  --text-primary: #f4f4f5;     /* Zinc-100 */
+  --text-secondary: #a1a1aa;   /* Zinc-400 */
+  --text-muted: #52525b;       /* Zinc-600 */
+  --accent: #10b981;           /* Vert émeraude premium */
+  --accent-dim: rgba(16, 185, 129, 0.08);
+  --danger: #f43f5e;           /* Rose-rouge Stripe/Linear */
+  --danger-dim: rgba(244, 63, 94, 0.08);
+  --warning: #f59e0b;          /* Ambre */
+  --info: #3b82f6;             /* Bleu info */
+  --purple: #8b5cf6;           /* Violet */
+  --bg-budget-guide: #1b1206;
 }
 
 [data-theme="light"], .light {
-  /* === LIGHT MODE Premium === */
-  --bg-base: #f8fafc;
+  /* === LIGHT MODE Premium (Clean & Minimalist) === */
+  --bg-base: #f9fafb;          /* Blanc cassé Gray-50 */
   --bg-surface: #ffffff;
-  --bg-surface-2: #f1f5f9;
+  --bg-surface-2: #f3f4f6;     /* Gray-100 */
   --bg-elevated: #ffffff;
-  --border: rgba(0, 0, 0, 0.06);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --accent: #059669;
-  --accent-dim: rgba(5, 150, 105, 0.1);
+  --border: rgba(0, 0, 0, 0.04);
+  --text-primary: #0f172a;     /* Slate-900 */
+  --text-secondary: #475569;   /* Slate-600 */
+  --text-muted: #94a3b8;       /* Slate-400 */
+  --accent: #059669;           /* Vert émeraude plus sombre */
+  --accent-dim: rgba(5, 150, 105, 0.06);
   --danger: #e11d48;
-  --danger-dim: rgba(225, 29, 72, 0.1);
+  --danger-dim: rgba(225, 29, 72, 0.06);
   --warning: #d97706;
   --info: #2563eb;
   --purple: #7c3aed;
@@ -63,6 +63,26 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* En-têtes secondaires premium */
+.premium-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Nesting des arrondis (Border Radius Nesting) */
+.premium-card {
+  border-radius: 20px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.premium-card-inner {
+  border-radius: 12px;
+}
+
 /* === Financial Grade Badges === */
 :root {
   --color-accent-rgb: 16, 185, 129;
@@ -79,23 +99,23 @@ body {
 }
 
 .badge-grade-a {
-  background-color: rgba(var(--color-accent-rgb), 0.1) !important;
-  border-color: rgba(var(--color-accent-rgb), 0.2) !important;
+  background-color: rgba(var(--color-accent-rgb), 0.08) !important;
+  border-color: rgba(var(--color-accent-rgb), 0.15) !important;
   color: var(--accent) !important;
 }
 .badge-grade-b {
-  background-color: rgba(var(--color-info-rgb), 0.1) !important;
-  border-color: rgba(var(--color-info-rgb), 0.2) !important;
+  background-color: rgba(var(--color-info-rgb), 0.08) !important;
+  border-color: rgba(var(--color-info-rgb), 0.15) !important;
   color: var(--info) !important;
 }
 .badge-grade-c {
-  background-color: rgba(var(--color-warning-rgb), 0.1) !important;
-  border-color: rgba(var(--color-warning-rgb), 0.2) !important;
+  background-color: rgba(var(--color-warning-rgb), 0.08) !important;
+  border-color: rgba(var(--color-warning-rgb), 0.15) !important;
   color: var(--warning) !important;
 }
 .badge-grade-d {
-  background-color: rgba(var(--color-danger-rgb), 0.1) !important;
-  border-color: rgba(var(--color-danger-rgb), 0.2) !important;
+  background-color: rgba(var(--color-danger-rgb), 0.08) !important;
+  border-color: rgba(var(--color-danger-rgb), 0.15) !important;
   color: var(--danger) !important;
 }
 
