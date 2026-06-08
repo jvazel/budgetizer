@@ -24,6 +24,7 @@ export const getScheduledTransactions = async (req, res) => {
     })
     .populate('categoryId', 'name icon color type')
     .populate('accountId', 'name color icon')
+    .populate('toAccountId', 'name color icon type')
     .sort({ nextDate: 1 });
 
     res.json(list);
@@ -92,7 +93,8 @@ export const createScheduledTransaction = async (req, res) => {
     
     const populated = await ScheduledTransaction.findById(st._id)
       .populate('categoryId', 'name icon color type')
-      .populate('accountId', 'name color icon');
+      .populate('accountId', 'name color icon')
+      .populate('toAccountId', 'name color icon type');
 
     res.status(201).json(populated);
   } catch (error) {
@@ -146,7 +148,8 @@ export const updateScheduledTransaction = async (req, res) => {
     
     const populated = await ScheduledTransaction.findById(st._id)
       .populate('categoryId', 'name icon color type')
-      .populate('accountId', 'name color icon');
+      .populate('accountId', 'name color icon')
+      .populate('toAccountId', 'name color icon type');
 
     res.json(populated);
   } catch (error) {

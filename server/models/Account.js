@@ -39,6 +39,14 @@ const accountSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
+  creditDetails: {
+    initialAmount: { type: Number, default: null },
+    interestRate: { type: Number, default: null },
+    durationMonths: { type: Number, default: null },
+    startDate: { type: Date, default: null },
+    monthlyPayment: { type: Number, default: null },
+    scheduledTransactionId: { type: mongoose.Schema.Types.ObjectId, ref: 'ScheduledTransaction', default: null }
+  },
   order: {
     type: Number,
     default: 0

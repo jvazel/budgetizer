@@ -50,16 +50,23 @@ Représente les informations de compte et les préférences d'affichage.
 - `createdAt` (Date, default: Date.now).
 
 ### 2.2 Modèle `Account` (Comptes)
-Représente un compte bancaire ou un portefeuille d'actifs.
+Représente un compte bancaire, un portefeuille d'actifs, ou un crédit amortissable.
 - `userId` (ObjectId -> User, requis) : Propriétaire du compte.
 - `name` (String, requis) : Nom du compte.
 - `type` (String, enum: `['checking', 'savings', 'cash', 'credit', 'investment']`, requis).
-- `balance` (Number, default: 0) : Solde en temps réel.
+- `balance` (Number, default: 0) : Solde en temps réel (initialisé à `-creditDetails.initialAmount` si le type est `credit`).
 - `currency` (String, default: "EUR").
 - `color` (String, default: "#4ade80") : Couleur hexadécimale associée.
 - `icon` (String, default: "wallet").
 - `includeInTotal` (Boolean, default: true) : Indique s'il est cumulé dans le solde total net.
-- `creditLimit` (Number, default: null) : Limite autorisée (si type = `credit`).
+- `creditLimit` (Number, default: null) : Limite autorisée (si type = `credit` de l'ancienne spécification).
+- `creditDetails` (Object, default: null) : Contient les détails du crédit si `type = 'credit'` :
+  - `initialAmount` (Number) : Capital initial emprunté.
+  - `interestRate` (Number) : Taux d'intérêt annuel en %.
+  - `durationMonths` (Number) : Durée du prêt en mois.
+  - `startDate` (Date) : Date de début de l'emprunt (première mensualité).
+  - `monthlyPayment` (Number) : Montant de la mensualité calculée.
+  - `scheduledTransactionId` (ObjectId -> ScheduledTransaction) : Référence au virement automatique associé.
 - `order` (Number, default: 0) : Ordre d'affichage dans le carrousel.
 
 ### 2.3 Modèle `Category` (Catégories)
@@ -168,9 +175,10 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 
 ### 3.2 Comptes (`/api/accounts`)
 - `GET /` : Liste tous les comptes de l'utilisateur (ordonnés par `order`).
-- `POST /` : Crée un nouveau compte.
-- `PUT /:id` : Modifie un compte existant.
-- `DELETE /:id` : Supprime un compte (supprime aussi les transactions liées ou réaffecte si nécessaire).
+- `POST /` : Crée un nouveau compte (si le type est `credit`, configure automatiquement la `ScheduledTransaction` de remboursement).
+- `PUT /:id` : Modifie un compte existant (recalcule la mensualité et synchronise le virement si les paramètres du prêt changent).
+- `DELETE /:id` : Supprime un compte (supprime aussi les transactions liées, y compris la planification de remboursement associée).
+- `GET /:id/credit-summary` : Calcule et retourne le plan d'amortissement rétrospectif, l'historique détaillé des paiements, les intérêts payés/restants et les détails de la prochaine mensualité.
 
 ### 3.3 Catégories (`/api/categories`)
 - `GET /` : Liste toutes les catégories de l'utilisateur (incluant les catégories par défaut).
@@ -306,10 +314,12 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
 
 ### 5.4 Expérience Utilisateur & Design System Premium
 - **Tiroir de Navigation (`MenuSheet.jsx`)** : Un menu coulissant moderne est déployé de manière fluide grâce à `framer-motion` (physique de ressort). Il utilise un fond flouté (`backdrop-blur-md`) et deux halos de lumière diffuse (`blur-[60px] bg-accent/5` et `bg-purple/5`) placés de manière asymétrique pour créer un effet de profondeur et de relief. Les liens de menu disposent de micro-animations de translation latérale au survol et d'indicateurs d'état actif.
-- **Liste Optimisée des Transactions (`TransactionList.jsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles :
+- **Liste Optimisée des Transactions (`TransactionList.jsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles et gérer le contexte de filtrage :
   - Sur mobile, le nom du compte bancaire se décale sous le libellé de catégorie (empilement flex-col) afin de libérer la largeur maximale.
   - Les libellés longs sont tronqués proprement (`truncate`) avec affichage d'un attribut de texte au survol (`title`) pour l'accessibilité.
   - Réduction des rembourrages internes (`p-3 sm:p-4`) et de la taille de police pour maximiser le contenu utile.
+  - **Gestion dynamique des signes pour les virements** : Affiche les transferts en débit négatif (`-` et rouge `text-primary`) par défaut ou lorsqu'on filtre sur le compte courant source, mais les affiche en crédit positif (`+` et vert `text-accent`) lorsqu'on filtre sur le compte destinataire (le compte de crédit).
+- **Formatage des flux du Calendrier (`CalendarPage.jsx`)** : Les transferts (incluant les échéances de crédit planifiées ou validées) sont affichés en négatif (`-`) et rouge (`text-primary` pour les réels) pour représenter l'impact de trésorerie sur le compte émetteur. Les indicateurs de jour sous forme de points colorent également ces journées en rouge (`bg-danger`) pour signaler un débit prévu.
 - **Branding Systémique** : Suppression des logos et icônes génériques de portefeuille. Le logo de l'application (`/pwa-192x192.png`) a été standardisé sur les écrans suivants :
   - `Splash.jsx` (Écran de chargement initial).
   - Écrans d'authentification (`Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`).

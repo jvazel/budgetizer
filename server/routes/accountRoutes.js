@@ -6,12 +6,15 @@ import {
   createAccount,
   updateAccount,
   deleteAccount,
-  reorderAccounts
+  reorderAccounts,
+  getCreditSummary
 } from '../controllers/accountController.js';
 
 const router = express.Router();
 
 router.use(protect); // Protect all account routes
+
+router.get('/:id/credit-summary', getCreditSummary);
 
 router.route('/')
   .get(getAccounts)

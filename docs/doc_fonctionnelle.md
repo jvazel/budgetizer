@@ -67,16 +67,38 @@ Chaque compte possède un type spécifique qui influe sur son comportement et so
 - **Checking (Compte Courant)** : Utilisé pour les dépenses quotidiennes.
 - **Savings (Compte d'Épargne)** : Destiné aux réserves et aux projets d'épargne.
 - **Cash (Espèces)** : Suivi du liquide disponible.
-- **Credit (Carte de Crédit)** : Compte avec une limite de crédit et un solde négatif potentiel.
+- **Credit (Compte Crédit / Prêt)** : Représente un crédit ou prêt (immobilier, auto, consommation). Il est initialisé avec un solde négatif correspondant au capital emprunté (`-initialAmount`), modélisant la dette de l'utilisateur.
 - **Investment (Investissement)** : Suivi des portefeuilles boursiers ou placements.
 
 ### 4.2 Options de Configuration des Comptes
-Lors de la création ou de la modification d'un compte, l'utilisateur définit :
-- **Nom du compte** (ex: "Compte Joint", "Livret A").
-- **Solde Initial** (le montant présent au moment du démarrage de l'application).
-- **Couleur et Icône** pour une identification visuelle rapide.
-- **Inclure dans le Total (Oui/Non)** : Permet d'exclure certains comptes (ex: comptes bloqués, investissements long terme) du calcul du solde net affiché sur le Dashboard.
-- **Limite de Crédit** (uniquement pour les comptes de type `Credit`).
+Lors de la création ou de la modification d'un compte, l'utilisateur définit des options dépendant du type de compte :
+- **Pour tous les comptes** :
+  - **Nom du compte** (ex: "Compte Courant Principal", "Livret A").
+  - **Couleur et Icône** pour une identification visuelle rapide.
+  - **Inclure dans le Total (Oui/Non)** : Indique si le solde du compte doit entrer dans le calcul du Net Worth global du tableau de bord.
+- **Pour les comptes courants, épargne, espèces et investissement** :
+  - **Solde Initial** (le montant présent au démarrage).
+- **Pour les comptes de type Crédit / Prêt** :
+  - **Capital emprunté** (capital initial du prêt).
+  - **Taux d'intérêt annuel (%)** (utilisé pour décomposer le capital et les intérêts).
+  - **Durée (mois)** (durée totale du prêt).
+  - **Date de première échéance** (date de début des prélèvements).
+  - **Compte source de prélèvement** (le compte courant ou d'épargne débité chaque mois).
+
+### 4.3 Fonctionnement des Crédits & Amortissement
+Lorsqu'un compte de type Crédit est créé, Budgetizer configure automatiquement les éléments suivants :
+1. **Mensualité fixe** : La mensualité $M$ est calculée automatiquement par la formule d'amortissement standard :
+   $$M = C \times \frac{r/12}{1 - (1 + r/12)^{-n}}$$
+   *(où $C$ est le capital emprunté, $r$ le taux annuel et $n$ la durée en mois)*. Si le taux est de 0%, le calcul linéaire simple $C/n$ est appliqué.
+2. **Transaction Planifiée (Virement automatique)** : Une `ScheduledTransaction` de type `"transfer"` est créée automatiquement entre le compte source (ex: compte courant) et le compte crédit avec confirmation automatique active.
+3. **Double impact des flux (Débit vs Crédit)** :
+   - Sur le **Calendrier** et le **Compte Courant**, la mensualité s'affiche en **négatif** (`-`) et en couleur de débit (`text-primary`), car elle représente un prélèvement de trésorerie.
+   - Sur la fiche de **Détail du Crédit**, le virement apparaît en **positif** (`+`) et vert, car il s'agit d'un remboursement qui réduit la dette du crédit en rapprochant le solde vers zéro.
+4. **Fiche de Détail du Crédit** :
+   - **Graphique d'Amortissement** : Un graphique dynamique en aires (`AreaChart`) présente la baisse historique et projetée de la dette restante jusqu'à son extinction (0 €).
+   - **Widgets Métriques** : Affiche le cumul des intérêts payés à date, les intérêts restants estimés, le taux annuel et la durée restante en mois.
+   - **Prochaine Échéance** : Affiche la date du prochain prélèvement et la répartition exacte entre le **Capital amorti** et les **Intérêts payés** pour cette mensualité précise.
+   - **Tableau d'Historique des Paiements** : Liste exhaustive des mensualités payées avec détail capital/intérêts et solde restant dû après chaque versement.
 
 ---
 

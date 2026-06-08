@@ -1,7 +1,11 @@
 import React from 'react';
 import { Wallet, CreditCard, Landmark, Coins, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import CreditAccountCard from './CreditAccountCard';
 
 const AccountCarousel = ({ accounts, onAddClick, onEditClick }) => {
+  const navigate = useNavigate();
+
   const getIcon = (iconName) => {
     switch (iconName) {
       case 'credit-card': return <CreditCard size={24} className="text-white opacity-80" />;
@@ -18,28 +22,40 @@ const AccountCarousel = ({ accounts, onAddClick, onEditClick }) => {
   return (
     <div className="w-full relative">
       <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-4 no-scrollbar">
-        {accounts.map((account) => (
-          <div 
-            key={account._id}
-            onClick={() => onEditClick && onEditClick(account)}
-            className="snap-center shrink-0 w-[300px] h-[180px] rounded-[24px] p-6 flex flex-col justify-between shadow-lg cursor-pointer transition-transform active:scale-95"
-            style={{ 
-              background: `linear-gradient(135deg, ${account.color} 0%, ${account.color}dd 100%)`,
-            }}
-          >
-            <div className="flex justify-between items-start">
-              <span className="text-white/90 font-medium">{account.name}</span>
-              {getIcon(account.icon)}
+        {accounts.map((account) => {
+          if (account.type === 'credit') {
+            return (
+              <CreditAccountCard 
+                key={account._id}
+                account={account}
+                onClick={() => navigate(`/accounts/${account._id}/credit`)}
+              />
+            );
+          }
+
+          return (
+            <div 
+              key={account._id}
+              onClick={() => onEditClick && onEditClick(account)}
+              className="snap-center shrink-0 w-[300px] h-[180px] rounded-[24px] p-6 flex flex-col justify-between shadow-lg cursor-pointer transition-transform active:scale-95"
+              style={{ 
+                background: `linear-gradient(135deg, ${account.color} 0%, ${account.color}dd 100%)`,
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-white/90 font-medium">{account.name}</span>
+                {getIcon(account.icon)}
+              </div>
+              
+              <div>
+                <p className="text-white/70 text-sm mb-1">Solde actuel</p>
+                <h2 className="text-white font-mono text-3xl font-medium tracking-tight">
+                  {formatCurrency(account.balance, account.currency)}
+                </h2>
+              </div>
             </div>
-            
-            <div>
-              <p className="text-white/70 text-sm mb-1">Solde actuel</p>
-              <h2 className="text-white font-mono text-3xl font-medium tracking-tight">
-                {formatCurrency(account.balance, account.currency)}
-              </h2>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Add new account card */}
         <div 

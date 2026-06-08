@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Pencil } from 'lucide-react';
 
-const TransactionList = ({ transactions, onDelete, onEdit }) => {
+const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) => {
   if (!transactions || transactions.length === 0) {
     return <div className="text-center text-muted p-8">Aucune transaction trouvée.</div>;
   }
@@ -88,8 +88,15 @@ const TransactionList = ({ transactions, onDelete, onEdit }) => {
                 </div>
                 
                 <div className="text-right shrink-0 ml-auto pl-1">
-                  <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
-                    {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount)}
+                  <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${
+                    tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
+                      ? 'text-primary' 
+                      : 'text-accent'
+                  }`}>
+                    {tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
+                      ? '-' 
+                      : '+'
+                    }{formatCurrency(tx.amount)}
                   </p>
                 </div>
               </div>

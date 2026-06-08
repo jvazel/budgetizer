@@ -24,6 +24,7 @@ const SummaryHistory = React.lazy(() => import('./pages/SummaryHistory'));
 const AiInsights = React.lazy(() => import('./pages/AiInsights'));
 const SavingsPage = React.lazy(() => import('./pages/SavingsPage'));
 const AccountsPage = React.lazy(() => import('./pages/AccountsPage'));
+const CreditDetailPage = React.lazy(() => import('./pages/CreditDetailPage'));
 const TransfersPage = React.lazy(() => import('./pages/TransfersPage'));
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
 const MonthlyReportPage = React.lazy(() => import('./pages/MonthlyReportPage'));
@@ -131,6 +132,7 @@ const AppContent = () => {
             <Route path="/categories" element={<Categories />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/accounts/:id/credit" element={<CreditDetailPage />} />
             <Route path="/monthly-report" element={<MonthlyReportPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/summary-history" element={<SummaryHistory />} />

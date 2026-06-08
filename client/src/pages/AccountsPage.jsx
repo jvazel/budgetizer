@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { useAccounts } from '../hooks/useAccounts';
@@ -6,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { Plus, Wallet, CreditCard, EyeOff, AlertCircle } from 'lucide-react';
 
 const AccountsPage = () => {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { accounts, totalBalance, loading, error, addAccount, updateAccount, deleteAccount } = useAccounts();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -87,7 +89,7 @@ const AccountsPage = () => {
                 return (
                   <div 
                     key={acc._id}
-                    onClick={() => handleOpenEdit(acc)}
+                    onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : handleOpenEdit(acc)}
                     className="bg-surface-2 hover:bg-surface-2/80 border border-border/40 p-4 rounded-[24px] flex items-center justify-between transition-all cursor-pointer shadow-sm relative group"
                   >
                     <div className="flex items-center gap-4 min-w-0">

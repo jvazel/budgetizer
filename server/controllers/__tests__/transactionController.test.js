@@ -195,7 +195,10 @@ describe('Transaction Controller', () => {
       expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
         userId: 'user_123',
         isPending: { $ne: true },
-        accountId: 'acc_1',
+        $or: [
+          { accountId: 'acc_1' },
+          { toAccountId: 'acc_1' }
+        ],
         type: 'expense'
       }));
       expect(res.json).toHaveBeenCalledWith({

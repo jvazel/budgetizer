@@ -4,6 +4,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
+import CreditAccountBottomSheet from './CreditAccountBottomSheet';
 
 const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null }) => {
   const [name, setName] = useState('');
@@ -11,6 +12,7 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
   const [balance, setBalance] = useState('');
   const [color, setColor] = useState('#4ade80');
   const [includeInTotal, setIncludeInTotal] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -26,11 +28,15 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
       setColor('#4ade80');
       setIncludeInTotal(true);
     }
+    setSubmitting(false);
   }, [initialData, isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
     try {
+      setSubmitting(true);
       await onSave({
         name,
         type,
@@ -41,10 +47,26 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
       toast.success(initialData ? 'Compte modifié' : 'Compte créé');
     } catch (error) {
       toast.error('Une erreur est survenue');
+      setSubmitting(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const colors = ['#4ade80', '#60a5fa', '#a78bfa', '#f87171', '#fbbf24', '#f472b6', '#2dd4bf'];
+ 
+  if (type === 'credit') {
+    return (
+      <CreditAccountBottomSheet
+        isOpen={isOpen}
+        onClose={onClose}
+        initialData={initialData}
+        onSave={onSave}
+        onDelete={onDelete}
+        onTypeChange={(newType) => setType(newType)}
+      />
+    );
+  }
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -118,8 +140,10 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
         </div>
 
         <div className="pt-4 space-y-3">
-          <Button type="submit" fullWidth>
-            {initialData ? 'Enregistrer les modifications' : 'Créer le compte'}
+          <Button type="submit" fullWidth disabled={submitting}>
+            {submitting 
+              ? (initialData ? 'Enregistrement...' : 'Création...') 
+              : (initialData ? 'Enregistrer les modifications' : 'Créer le compte')}
           </Button>
 
           {initialData && onDelete && (

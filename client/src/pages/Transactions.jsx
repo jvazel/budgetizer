@@ -427,6 +427,7 @@ const Transactions = () => {
             ) : (
               <TransactionList 
                 transactions={transactions} 
+                currentAccountId={accountId}
                 onDelete={(tx) => {
                   setTxToDelete(tx);
                   setConfirmDeleteOpen(true);

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
+import ConfirmModal from '../components/ui/ConfirmModal';
 import { Plus, Clock, HelpCircle, Check, AlertCircle, RefreshCw, Trash2, Edit } from 'lucide-react';
 
 const ScheduledPage = () => {
@@ -18,6 +20,14 @@ const ScheduledPage = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+
+  const handleDeleteConfirm = async () => {
+    if (deleteItemId) {
+      await deleteScheduled(deleteItemId);
+      setDeleteItemId(null);
+    }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -42,10 +52,8 @@ const ScheduledPage = () => {
     setIsFormOpen(false);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Supprimer cette transaction planifiée ainsi que toutes ses occurrences futures ?')) {
-      await deleteScheduled(id);
-    }
+  const handleDelete = (id) => {
+    setDeleteItemId(id);
   };
 
   const handleConfirm = async (id) => {
@@ -175,20 +183,30 @@ const ScheduledPage = () => {
                       >
                         {st.categoryId?.icon || '🔁'}
                       </div>
-                      <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-primary">{st.description}</h4>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
                           {st.isSubscription && (
                             <span className="text-[9px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">
                               Abo
                             </span>
                           )}
+                          {st.type === 'transfer' && (
+                            <span className="text-[9px] font-bold text-info bg-info/10 px-1.5 py-0.5 rounded-full">
+                              🔄 Virement
+                            </span>
+                          )}
+                          {st.type === 'transfer' && st.toAccountId?.type === 'credit' && (
+                            <span className="text-[9px] font-bold text-danger bg-danger/10 px-1.5 py-0.5 rounded-full">
+                              🏦 Crédit
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-muted">
+                        <p className="text-xs text-muted mt-1.5">
                           {frequencyText} · Prochain : {new Date(st.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
-                    </div>
                     
                     <div className="text-right flex items-center gap-2">
                       <span className={`font-mono font-bold ${st.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
@@ -204,20 +222,32 @@ const ScheduledPage = () => {
                       {st.autoConfirm ? 'Confirmation automatique' : 'Validation manuelle requise'}
                     </span>
                     
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleOpenEdit(st)}
-                        className="p-1 text-muted hover:text-accent transition-colors"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(st._id)}
-                        className="p-1 text-muted hover:text-danger transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    {st.type === 'transfer' && st.toAccountId?.type === 'credit' ? (
+                      <span className="text-muted text-[10px]">
+                        Géré depuis le{' '}
+                        <Link 
+                          to={`/accounts/${st.toAccountId._id || st.toAccountId}/credit`} 
+                          className="text-accent hover:underline font-bold"
+                        >
+                          compte crédit
+                        </Link>
+                      </span>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleOpenEdit(st)}
+                          className="p-1 text-muted hover:text-accent transition-colors"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(st._id)}
+                          className="p-1 text-muted hover:text-danger transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -233,6 +263,23 @@ const ScheduledPage = () => {
         initialData={editingSchedule}
       />
 
+      <ConfirmModal
+        isOpen={!!deleteItemId}
+        onClose={() => setDeleteItemId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Supprimer la planification"
+        confirmText="Supprimer"
+        type="danger"
+      >
+        <div className="text-xs text-secondary leading-relaxed space-y-2">
+          <p>
+            Êtes-vous sûr de vouloir supprimer cette transaction planifiée ?
+          </p>
+          <p className="font-semibold text-danger">
+            ATTENTION : Cela supprimera définitivement cette planification ainsi que toutes ses occurrences futures. Cette action est irréversible.
+          </p>
+        </div>
+      </ConfirmModal>
     </>
   );
 };

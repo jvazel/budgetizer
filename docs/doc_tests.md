@@ -161,6 +161,19 @@ Cette page affiche le diagnostic financier automatique généré par l'algorithm
 
 ---
 
+### 1.13 Liste des Transactions (`TransactionList.jsx`)
+Ce composant affiche les transactions sous forme de liste chronologique groupée par date, et calcule dynamiquement les signes et couleurs des montants.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu par date** | Liste de transactions mockées (Dépense, Revenu, Virement) | Rangement chronologique et regroupement par date locale | La structure affiche les titres de dates localisés, et le nom de chaque transaction est visible dans le document. |
+| **Rendu signes Dépense & Revenu** | Une dépense et un revenu réels | Attribution de signe selon le type | La dépense s'affiche précédée de `"-"` et de la classe `text-primary`. Le revenu s'affiche précédé de `"+"` et de la classe `text-accent`. |
+| **Signe Virement par défaut** | Virement, `currentAccountId` non défini | Traitement par défaut du transfert en tant que sortie de fonds | Le virement s'affiche précédé de `"-"` et coloré en `text-primary`. |
+| **Virement sur compte source** | Virement, `currentAccountId` égal à l'émetteur (`acc_checking`) | Identification du compte débité | Le montant s'affiche en négatif (`-`) et rouge `text-primary` pour symboliser le débit. |
+| **Virement sur compte destinataire** | Virement, `currentAccountId` égal au récepteur (`acc_credit`) | Identification du compte crédité | Le montant s'affiche en positif (`+`) et vert `text-accent` pour symboliser l'augmentation de solde (ou remboursement de dette). |
+
+---
+
 ## 2. Tests Backend (Serveur)
 
 Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.
@@ -267,7 +280,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
-| **Filtrage et pagination** | Paramètres de query (accountId, page 2, limit 10) | Construction dynamique de la requête et exécution de `Transaction.find` avec `skip` | Liste de 10 transactions et métadonnées de pagination renvoyées (HTTP 200). |
+| **Filtrage et pagination** | Paramètres de query (`accountId` et/ou `search`, `page 2`, `limit 10`) | Construction dynamique de la requête vérifiant `accountId` OU `toAccountId` en cas de filtrage de compte, et combinaison propre avec le filtre textuel en `$and` | La réponse (HTTP 200) renvoie la liste filtrée contenant les transactions directes ainsi que les virements entrants/sortants du compte, avec les métadonnées de pagination. |
 | **Création de transaction** | Corps avec montant de 50 (dépense) et ID compte | Enregistrement de la transaction et mise à jour du solde du compte (débit) | Transaction créée (HTTP 201), solde du compte débité de 50. |
 | **Virement entre comptes** | Source `acc_1`, destination `acc_2`, montant 100 | Enregistrement de la transaction de virement et double mise à jour de solde | Transaction créée (HTTP 201), `acc_1` débité de 100 et `acc_2` crédité de 100. |
 | **Virement pour objectif d'épargne** | Source `acc_1`, destination `acc_savings`, montant 150, `savingsGoalId` lié | Enregistrement de la transaction de virement, double mise à jour de solde de compte, et mise à jour de la progression de l'objectif d'épargne | Transaction créée (HTTP 201), `acc_1` débité de 150, `acc_savings` crédité de 150, progression de l'objectif augmentée de 150. |

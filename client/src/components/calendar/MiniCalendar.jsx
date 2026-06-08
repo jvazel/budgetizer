@@ -48,7 +48,7 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
       if (t.type === 'income') {
         hasIncome = true;
         totalIncome += t.amount;
-      } else if (t.type === 'expense') {
+      } else if (t.type === 'expense' || t.type === 'transfer') {
         hasExpense = true;
         totalExpense += t.amount;
       }

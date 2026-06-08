@@ -179,7 +179,12 @@ export const getTransactions = async (req, res) => {
 
     let query = { userId: req.user.id, isPending: { $ne: true } };
 
-    if (accountId) query.accountId = accountId;
+    if (accountId) {
+      query.$or = [
+        { accountId: accountId },
+        { toAccountId: accountId }
+      ];
+    }
     if (categoryId) query.categoryId = categoryId;
     if (type) query.type = type;
     if (startDate || endDate) {
@@ -208,7 +213,7 @@ export const getTransactions = async (req, res) => {
       const accountIds = matchingAccounts.map(a => a._id);
       const categoryIds = matchingCategories.map(c => c._id);
 
-      query.$or = [
+      const searchOr = [
         { description: searchRegex },
         { note: searchRegex },
         { accountId: { $in: accountIds } },
@@ -220,7 +225,17 @@ export const getTransactions = async (req, res) => {
       // Also support searching by numeric amount if search query is a number
       const searchNum = parseFloat(search);
       if (!isNaN(searchNum)) {
-        query.$or.push({ amount: searchNum });
+        searchOr.push({ amount: searchNum });
+      }
+
+      if (query.$or) {
+        query.$and = [
+          { $or: query.$or },
+          { $or: searchOr }
+        ];
+        delete query.$or;
+      } else {
+        query.$or = searchOr;
       }
     }
 

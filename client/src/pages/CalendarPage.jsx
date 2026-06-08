@@ -157,9 +157,9 @@ const CalendarPage = () => {
                     <span className={`font-mono font-bold ${
                       isPlanned 
                         ? 'text-purple-400' 
-                        : tx.type === 'expense' ? 'text-primary' : 'text-accent'
+                        : (tx.type === 'expense' || tx.type === 'transfer') ? 'text-primary' : 'text-accent'
                     }`}>
-                      {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount)}
+                      {tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+'}{formatCurrency(tx.amount)}
                     </span>
 
                     {!isPlanned && (

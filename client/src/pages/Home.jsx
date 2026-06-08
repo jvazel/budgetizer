@@ -7,6 +7,7 @@ import { useSavingsGoals } from '../hooks/useSavingsGoals';
 import { useFinancialScore } from '../hooks/useFinancialScore';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
+import toast from 'react-hot-toast';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
@@ -249,11 +250,22 @@ const Home = () => {
           <div className="absolute -right-16 -bottom-16 w-36 h-36 bg-accent/10 rounded-full blur-[40px] pointer-events-none transition-transform duration-1000 group-hover:scale-110" />
           <div className="absolute -left-16 -top-16 w-36 h-36 bg-info/10 rounded-full blur-[40px] pointer-events-none transition-transform duration-1000 group-hover:scale-110" />
           
-          <div className="flex justify-between items-start mb-6 relative z-10">
+          <div 
+            onClick={() => {
+              if (totalCredit < 0) {
+                toast(`Inclut ${formatCurrency(Math.abs(totalCredit), user?.currency?.code)} de dettes (crédits)`, {
+                  icon: 'ℹ️',
+                  id: 'balance-tooltip',
+                  duration: 3000
+                });
+              }
+            }}
+            className={`flex justify-between items-start mb-6 relative z-10 ${totalCredit < 0 ? 'cursor-pointer select-none active:opacity-85 transition-opacity' : ''}`}
+          >
             <div>
-              <p className="text-[10px] text-secondary/80 font-bold tracking-widest uppercase">Solde Disponible</p>
+              <p className="text-[10px] text-secondary/80 font-bold tracking-widest uppercase">Solde Total</p>
               <h2 className="text-3xl font-extrabold text-primary font-premium-numbers tracking-tight mt-1">
-                {formatCurrency(totalAvailable, user?.currency?.code)}
+                {formatCurrency(totalAvailable + totalCredit, user?.currency?.code)}
               </h2>
             </div>
             
@@ -451,7 +463,7 @@ const Home = () => {
               <div key={acc._id}>
                 {index > 0 && <div className="h-[1px] bg-border/20 my-3" />}
                 <div 
-                  onClick={() => handleOpenEdit(acc)}
+                  onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : handleOpenEdit(acc)}
                   className="flex justify-between items-center hover:bg-surface/50 p-2 -mx-2 rounded-xl transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-3 min-w-0">
