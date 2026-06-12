@@ -872,7 +872,7 @@ const ReportsPage = () => {
                   >
                     <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fill: '#6b7280', fontSize: 9 }} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(val) => [`${val.toFixed(2)} €`, 'Montant']} />
+                    <Tooltip formatter={(val) => [`${val.toFixed(2)} €`, 'Montant']} wrapperStyle={{ pointerEvents: 'none' }} />
                     <Bar dataKey="montant" radius={[8, 8, 0, 0]} barSize={40} isAnimationActive={false}>
                       <Cell fill="#10b981" />
                       <Cell fill="#ef4444" />
@@ -912,6 +912,7 @@ const ReportsPage = () => {
                     tick={{ fill: '#6b7280', fontSize: 9 }}
                   />
                   <Tooltip 
+                    wrapperStyle={{ pointerEvents: 'none' }}
                     contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px' }}
                     formatter={(value) => [`${value.toFixed(2)} €`, 'Solde cumulé']}
                   />
@@ -990,6 +991,7 @@ const ReportsPage = () => {
                       tick={{ fill: '#6b7280', fontSize: 9 }}
                     />
                     <Tooltip 
+                      wrapperStyle={{ pointerEvents: 'none' }}
                       formatter={(value) => [`${value.toFixed(2)} €`, 'Projection']}
                     />
                     <Area 

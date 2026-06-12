@@ -405,7 +405,7 @@ const TagChart = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(val) => formatCurrency(val)} />
+                      <Tooltip formatter={(val) => formatCurrency(val)} wrapperStyle={{ pointerEvents: 'none' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </>
@@ -458,6 +458,7 @@ const TagChart = () => {
                       tickLine={false}
                     />
                     <Tooltip 
+                      wrapperStyle={{ pointerEvents: 'none' }}
                       formatter={(val, name) => [
                         formatCurrency(val), 
                         name === 'cumulative' ? 'Cumulé' : 'Montant'
@@ -545,6 +546,7 @@ const TagChart = () => {
                     width={80}
                   />
                   <Tooltip 
+                    wrapperStyle={{ pointerEvents: 'none' }}
                     formatter={(val) => formatCurrency(val)}
                     contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
                   />

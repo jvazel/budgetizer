@@ -303,6 +303,7 @@ const HistogramChart = () => {
                   tickLine={false}
                 />
                 <Tooltip
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   labelFormatter={(lbl) => {
                     // Try to format label in long style
                     if (data.groupBy === 'month' && lbl.includes('-')) {

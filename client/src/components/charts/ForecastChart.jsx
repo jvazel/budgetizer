@@ -255,6 +255,7 @@ const ForecastChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   labelFormatter={formatMonthLabel}
                   formatter={(val, name) => {
                     if (name === 'balance') return [formatCurrency(val), 'Solde Réel'];

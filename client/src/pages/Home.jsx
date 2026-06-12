@@ -562,6 +562,7 @@ const Home = () => {
                 tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
               />
               <Tooltip 
+                wrapperStyle={{ pointerEvents: 'none' }}
                 contentStyle={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
                 labelStyle={{ color: 'var(--text-secondary)' }}
                 itemStyle={{ color: 'var(--danger)' }}

@@ -267,6 +267,7 @@ const CashFlowChart = () => {
                   tickLine={false}
                 />
                 <Tooltip
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   labelFormatter={(lbl) => {
                     const [year, month] = lbl.split('-');
                     const date = new Date(year, parseInt(month) - 1, 1);

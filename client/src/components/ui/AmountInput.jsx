@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 const AmountInput = ({
   value,
@@ -22,6 +23,7 @@ const AmountInput = ({
   }, [autoFocus]);
 
   const handleTextChange = (e) => {
+    triggerHaptic('light');
     let val = e.target.value;
     
     // Replace commas with dots

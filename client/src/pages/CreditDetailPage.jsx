@@ -249,6 +249,7 @@ const CreditDetailPage = () => {
                   tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
                 />
                 <Tooltip 
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   formatter={(val) => [formatCurrency(val), 'Capital restant']}
                   labelFormatter={(lbl, items) => {
                     const item = items[0]?.payload;

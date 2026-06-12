@@ -1,5 +1,7 @@
 import React from 'react';
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) => {
   if (!transactions || transactions.length === 0) {
@@ -30,103 +32,129 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
             {txs.map(tx => (
               <div 
                 key={tx._id} 
-                onClick={onEdit ? () => onEdit(tx) : undefined}
-                className={`p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors ${onEdit ? 'cursor-pointer' : ''}`}
+                className="relative overflow-hidden bg-danger-dim/20 first:rounded-t-[24px] last:rounded-b-[24px]"
               >
-                <div 
-                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
-                  style={{ 
-                    backgroundColor: tx.type === 'transfer' 
-                      ? 'rgba(59, 130, 246, 0.12)' 
-                      : `${tx.categoryId?.color || '#888'}15` 
+                {/* Back Layer: Swipe Delete Action */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('medium');
+                    if (onDelete) onDelete(tx);
                   }}
+                  className="absolute right-0 top-0 bottom-0 w-20 bg-danger text-white flex flex-col items-center justify-center transition-colors hover:bg-danger/90 active:bg-danger/80 select-none z-0"
                 >
-                  {tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p 
-                    className="text-primary font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug" 
-                    title={
-                      tx.type === 'transfer' 
+                  <Trash2 size={16} />
+                  <span className="text-[8px] font-bold mt-1">Supprimer</span>
+                </button>
+
+                {/* Front Layer: Draggable Content */}
+                <motion.div
+                  drag="x"
+                  dragConstraints={{ left: -80, right: 0 }}
+                  dragElastic={{ left: 0.1, right: 0.5 }}
+                  dragMomentum={false}
+                  onDragStart={() => {
+                    triggerHaptic('light');
+                  }}
+                  className="bg-surface-2 relative z-10 p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors cursor-pointer select-none"
+                  onClick={onEdit ? () => onEdit(tx) : undefined}
+                >
+                  <div 
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
+                    style={{ 
+                      backgroundColor: tx.type === 'transfer' 
+                        ? 'rgba(59, 130, 246, 0.12)' 
+                        : `${tx.categoryId?.color || '#888'}15` 
+                    }}
+                  >
+                    {tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <p 
+                      className="text-primary font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug" 
+                      title={
+                        tx.type === 'transfer' 
+                          ? (tx.description || tx.note || 'Virement') 
+                          : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
+                      }
+                    >
+                      {tx.type === 'transfer' 
                         ? (tx.description || tx.note || 'Virement') 
                         : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
-                    }
-                  >
-                    {tx.type === 'transfer' 
-                      ? (tx.description || tx.note || 'Virement') 
-                      : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
-                    }
-                  </p>
-                  
-                  {tx.type === 'transfer' ? (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-secondary">
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
-                        <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
-                      </span>
-                      <span className="text-muted text-[10px] shrink-0">➔</span>
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
-                        <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
-                      </span>
-                      
-                      {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
-                        <span
-                          key={tag._id}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
-                          style={{
-                            backgroundColor: `${tag.color}18`,
-                            color: tag.color,
-                            borderColor: `${tag.color}35`
-                          }}
-                        >
-                          #{tag.name}
+                      }
+                    </p>
+                    
+                    {tx.type === 'transfer' ? (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-secondary">
+                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                          <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                         </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      {tx.categoryId?.name && (
-                        <span className="text-[10px] text-secondary/80 font-medium truncate">
-                          {tx.categoryId.name}
+                        <span className="text-muted text-[10px] shrink-0">➔</span>
+                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
+                          <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
                         </span>
-                      )}
-                      {tx.categoryId?.name && <span className="text-muted text-[8px]">•</span>}
-                      <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate w-fit max-w-full">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
-                        <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
-                      </span>
+                        
+                        {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
+                          <span
+                            key={tag._id}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
+                            style={{
+                              backgroundColor: `${tag.color}18`,
+                              color: tag.color,
+                              borderColor: `${tag.color}35`
+                            }}
+                          >
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {tx.categoryId?.name && (
+                          <span className="text-[10px] text-secondary/80 font-medium truncate">
+                            {tx.categoryId.name}
+                          </span>
+                        )}
+                        {tx.categoryId?.name && <span className="text-muted text-[8px]">•</span>}
+                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate w-fit max-w-full">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                          <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
+                        </span>
 
-                      {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
-                        <span
-                          key={tag._id}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
-                          style={{
-                            backgroundColor: `${tag.color}18`,
-                            color: tag.color,
-                            borderColor: `${tag.color}35`
-                          }}
-                        >
-                          #{tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="text-right shrink-0 ml-auto pl-1">
-                  <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${
-                    tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
-                      ? 'text-primary' 
-                      : 'text-accent'
-                  }`}>
-                    {tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
-                      ? '-' 
-                      : '+'
-                    }{formatCurrency(tx.amount)}
-                  </p>
-                </div>
+                        {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
+                          <span
+                            key={tag._id}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
+                            style={{
+                              backgroundColor: `${tag.color}18`,
+                              color: tag.color,
+                              borderColor: `${tag.color}35`
+                            }}
+                          >
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-right shrink-0 ml-auto pl-1">
+                    <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${
+                      tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
+                        ? 'text-primary' 
+                        : 'text-accent'
+                    }`}>
+                      {tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
+                        ? '-' 
+                        : '+'
+                      }{formatCurrency(tx.amount)}
+                    </p>
+                  </div>
+                </motion.div>
               </div>
             ))}
           </div>

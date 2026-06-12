@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import AmountInput from '../ui/AmountInput';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
 import toast from 'react-hot-toast';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import TagSelector from './TagSelector';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transactionToEdit }) => {
   const [type, setType] = useState('expense');
@@ -16,10 +17,17 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
-  
+  const [categorySearch, setCategorySearch] = useState('');
+
   // Custom sheets visibility states
   const [isAccountSheetOpen, setIsAccountSheetOpen] = useState(false);
   const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isCategorySheetOpen) {
+      setCategorySearch('');
+    }
+  }, [isCategorySheetOpen]);
   
   const { accounts } = useAccounts();
   const { categoriesTree } = useCategories();
@@ -55,10 +63,12 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     if (window.confirm('Supprimer cette transaction ?')) {
       try {
         await deleteTransaction(transactionToEdit._id);
+        triggerHaptic('medium');
         toast.success('Transaction supprimée');
         window.dispatchEvent(new CustomEvent('transaction-changed'));
         onClose();
       } catch (e) {
+        triggerHaptic('error');
         toast.error('Erreur lors de la suppression');
       }
     }
@@ -66,14 +76,17 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
   const handleSubmit = async () => {
     if (!amount || parseFloat(amount) <= 0) {
+      triggerHaptic('error');
       toast.error('Montant invalide');
       return;
     }
     if (!accountId) {
+      triggerHaptic('error');
       toast.error('Sélectionnez un compte');
       return;
     }
     if (!categoryId && type !== 'transfer') {
+      triggerHaptic('error');
       toast.error('Sélectionnez une catégorie');
       return;
     }
@@ -91,20 +104,44 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
       if (transactionToEdit) {
         await updateTransaction(transactionToEdit._id, payload);
+        triggerHaptic('medium');
         toast.success('Transaction modifiée');
       } else {
         await addTransaction(payload);
+        triggerHaptic('medium');
         toast.success('Transaction ajoutée');
       }
       window.dispatchEvent(new CustomEvent('transaction-changed'));
       if (onSuccess) onSuccess();
       onClose();
     } catch (e) {
+      triggerHaptic('error');
       toast.error(transactionToEdit ? "Erreur lors de la modification" : "Erreur lors de l'ajout");
     }
   };
 
   const availableCategories = type === 'expense' ? categoriesTree.expense : categoriesTree.income;
+
+  const filteredAvailableCategories = useMemo(() => {
+    if (!availableCategories) return [];
+    if (!categorySearch.trim()) return availableCategories;
+    const cleanSearch = categorySearch.toLowerCase().trim();
+    
+    return availableCategories.map(parent => {
+      const parentMatches = parent.name.toLowerCase().includes(cleanSearch);
+      const filteredChildren = parent.children?.filter(child => 
+        child.name.toLowerCase().includes(cleanSearch)
+      ) || [];
+      
+      if (parentMatches || filteredChildren.length > 0) {
+        return {
+          ...parent,
+          children: parentMatches ? parent.children : filteredChildren
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  }, [availableCategories, categorySearch]);
 
   const selectedAccount = accounts.find(acc => acc._id === accountId);
 
@@ -365,8 +402,24 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
             <h3 className="text-sm font-extrabold text-primary">Sélectionner une catégorie</h3>
             <p className="text-xs text-muted">Choisissez la catégorie pour cette transaction</p>
           </div>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar py-1">
-            {availableCategories?.map(parent => {
+          
+          {/* Search bar inside sheet */}
+          <div className="relative mb-2">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              type="text"
+              placeholder="Rechercher une catégorie..."
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-surface border border-border rounded-xl text-xs text-primary focus:outline-none focus:border-accent placeholder-muted"
+            />
+          </div>
+
+          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1 no-scrollbar py-1">
+            {filteredAvailableCategories.length === 0 ? (
+              <p className="text-xs text-muted italic text-center py-4">Aucune catégorie trouvée</p>
+            ) : (
+              filteredAvailableCategories.map(parent => {
               const isParentSelected = parent._id === categoryId;
               return (
                 <div key={parent._id} className="space-y-2">
@@ -422,7 +475,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   )}
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
       </BottomSheet>

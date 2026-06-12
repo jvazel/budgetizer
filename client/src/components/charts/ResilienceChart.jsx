@@ -247,7 +247,7 @@ const ResilienceChart = () => {
                         return `${val}€`;
                       }}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ pointerEvents: 'none' }} />
                     
                     {/* Range Area (10th to 90th percentile) */}
                     <Area 

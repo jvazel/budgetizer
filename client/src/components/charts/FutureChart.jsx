@@ -117,6 +117,7 @@ const FutureChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   formatter={(val) => [formatCurrency(val), 'Solde estimé']}
                   labelFormatter={(lbl) => `Le : ${new Date(lbl).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
                   contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
@@ -158,6 +159,7 @@ const FutureChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   formatter={(val) => formatCurrency(val)}
                   contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
                 />

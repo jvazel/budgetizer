@@ -540,6 +540,7 @@ const CategoryChart = () => {
                   </Pie>
                   <Tooltip 
                     formatter={(val) => formatCurrency(val)} 
+                    wrapperStyle={{ pointerEvents: 'none' }}
                     contentStyle={{
                       borderRadius: '16px',
                       background: 'rgba(10, 10, 12, 0.85)',

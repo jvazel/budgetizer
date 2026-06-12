@@ -17,6 +17,7 @@ import {
   calculateFloorBalance, 
   calculateFloorProjection 
 } from '../../utils/floorBalanceHelper';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 const FloorBalanceWidget = ({ actualBalance = 0, upcoming = [], loading = false }) => {
   const { user } = useContext(AuthContext);
@@ -57,6 +58,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, upcoming = [], loading = false 
 
   // Basculer l'état d'une facture (exclure/inclure)
   const toggleExpenseExclusion = (id) => {
+    triggerHaptic('light');
     setExcludedIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
@@ -253,6 +255,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, upcoming = [], loading = false 
                   <Tooltip 
                     formatter={(val) => [formatCurrency(val), 'Solde projeté']}
                     labelFormatter={(lbl) => `Le : ${new Date(lbl).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                    wrapperStyle={{ pointerEvents: 'none' }}
                     contentStyle={{ 
                       borderRadius: '16px', 
                       background: 'var(--bg-elevated)', 

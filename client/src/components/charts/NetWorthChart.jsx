@@ -174,7 +174,8 @@ const NetWorthChart = () => {
                   tickLine={false}
                   tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
                 />
-                <Tooltip 
+                 <Tooltip 
+                  wrapperStyle={{ pointerEvents: 'none' }}
                   formatter={(val, name) => {
                     const labelMap = {
                       checking: 'Compte Courant',
