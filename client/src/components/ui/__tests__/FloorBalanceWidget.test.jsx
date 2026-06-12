@@ -69,7 +69,7 @@ describe('FloorBalanceWidget Component', () => {
     renderComponent();
     
     // Header labels check
-    expect(screen.getByText('Vrai Disponible (Solde Plancher)')).toBeInTheDocument();
+    expect(screen.getByText('Solde disponible')).toBeInTheDocument();
     
     // Floor balance should be actualBalance (1000) - tx1 (150) - tx2 (50) = 800
     // Because paycheck is in 15 days, so tx1 & tx2 are within the window
@@ -99,7 +99,7 @@ describe('FloorBalanceWidget Component', () => {
     renderComponent();
     
     // Accordion header
-    const toggleButton = screen.getByRole('button', { name: /échéances attendues d'ici la paye/i });
+    const toggleButton = screen.getByRole('button', { name: /échéances avant la paye/i });
     
     // Initially not expanded (tx1 should not be in document as description)
     expect(screen.queryByText('Loyer')).not.toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('FloorBalanceWidget Component', () => {
     renderComponent();
     
     // Expand list
-    const toggleButton = screen.getByRole('button', { name: /échéances attendues d'ici la paye/i });
+    const toggleButton = screen.getByRole('button', { name: /échéances avant la paye/i });
     fireEvent.click(toggleButton);
     
     // Loyer item row is clickable
