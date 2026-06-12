@@ -174,6 +174,40 @@ Ce composant affiche les transactions sous forme de liste chronologique groupée
 
 ---
 
+### 1.14 Fonctions d'aide à la vélocité (`velocityHelper.js`)
+Ces fonctions pures calculent les variables mathématiques de vitesse de dépenses.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Jours restants en début de mois** | Date fixe (1er Avril 2026) | Appel à `getDaysRemaining` | Retourne `30`. |
+| **Jours restants en fin de mois** | Date fixe (31 Décembre 2026) | Appel à `getDaysRemaining` | Retourne `1`. |
+| **Février (Année non bissextile)** | Date fixe (15 Février 2025) | Appel à `getDaysRemaining` | Retourne `14`. |
+| **Février (Année bissextile)** | Date fixe (15 Février 2028) | Appel à `getDaysRemaining` | Retourne `15`. |
+| **Calcul vitesse cible** | Budget restant `150`, jours restants `15` | Appel à `getTargetVelocity` | Retourne `10`. |
+| **Budget nul/négatif** | Budget `0` ou `-50` | Appel à `getTargetVelocity` | Retourne `0`. |
+| **Jours restants nuls/négatifs** | Jours restants `0` ou `-5` | Appel à `getTargetVelocity` | Retourne `0`. |
+| **Calcul vitesse réelle** | Dépenses `140`, jours écoulés `7` | Appel à `getActualVelocity` | Retourne `20`. |
+| **Jours écoulés nuls/négatifs** | Jours `0` ou `-2` | Appel à `getActualVelocity` | Retourne `0`. |
+| **Calcul date de crash** | Budget restant `100`, vitesse réelle `25` | Appel à `getDepletionDate` | Retourne une date correspondant à 4 jours après (ex: 14 Juin pour le 10 Juin). |
+| **Date de crash arrondie** | Budget restant `100`, vitesse réelle `30` | Appel à `getDepletionDate` | Arrondit au jour supérieur (100/30 = 3.33 -> 4 jours), retourne 4 jours après. |
+| **Crash avec budget nul/négatif** | Budget `0` ou `-10` | Appel à `getDepletionDate` | Retourne `null`. |
+| **Crash avec vitesse réelle nulle** | Vitesse réelle `0` ou `-5` | Appel à `getDepletionDate` | Retourne `null`. |
+
+---
+
+### 1.15 Indicateur de Vélocité de Dépense (`VelocityChart.jsx`)
+Ce composant affiche le tachymètre et les insights sous forme visuelle réactive.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu en cours de chargement** | Hooks `loading: true` | Rendu initial | Le spinner de chargement (`.animate-spin`) s'affiche. |
+| **État sans budgets** | Liste de budgets vide | Rendu initial | Le message `"Aucun budget défini"` et l'explication s'affichent dans le DOM. |
+| **Vitesse sous contrôle (Cas 1)** | Budget restant avec vitesse réelle < vitesse cible | Calculs et rendu de la jauge | Le titre, la jauge verte, et le badge `"Vitesse sous contrôle"` sont affichés avec les montants formatés. |
+| **Excès de vitesse (Cas 2 & 3)** | Dépenses élevées avec vitesse réelle > vitesse cible | Rendu des alertes et actions | Le badge `"⚠️ Excès de vitesse détecté"` s'affiche avec la date estimée de crash (ex: `"25 juin 2026"`), ainsi que la fiche `"Action corrective proposée"` avec le montant quotidien recalculé. |
+| **Interaction sélecteur** | Clic sur le dropdown, clic sur une catégorie (ex: "Loisirs") | Déclenchement de l'événement et mise à jour de l'état `selectedCategoryId` | Le dropdown affiche le nom de la catégorie sélectionnée et ferme la liste d'options. |
+
+---
+
 ## 2. Tests Backend (Serveur)
 
 Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.

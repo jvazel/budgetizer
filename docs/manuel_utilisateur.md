@@ -12,7 +12,7 @@ Bienvenue dans **Budgetizer**, votre compagnon de gestion financière personnell
 5. [Planification de Budgets (Enveloppes)](#5-planification-de-budgets-enveloppes)
 6. [Transactions Planifiées & Abonnements](#6-transactions-planifiées--abonnements)
 7. [Projets et Objectifs d'Épargne](#7-projets-et-objectifs-dépargne)
-8. [Statistiques & Prévisions à 30 jours](#8-statistiques--prévisions-à-30-jours)
+8. [Statistiques, Prévisions & Vélocité (Tachymètre)](#8-statistiques-prévisions--vélocité-tachymètre)
 9. [IA & Conseils (Insights)](#9-ia--conseils-insights)
 10. [Rapport Mensuel Proactif](#10-rapport-mensuel-proactif)
 11. [Import & Export de Données](#11-import--export-de-données)
@@ -140,9 +140,9 @@ Définissez et alimentez des projets financiers spécifiques dans l'onglet **Ép
 
 ---
 
-## 8. Statistiques & Prévisions à 30 jours
+## 8. Statistiques, Prévisions & Vélocité (Tachymètre)
 
-Analysez le passé et anticipez le futur dans l'onglet **Statistiques**.
+Analysez le passé, anticipez le futur et surveillez votre rythme de dépenses dans l'onglet **Statistiques**.
 
 * **Répartition catégorielle** : Un graphique en secteurs (camembert) présente la répartition de vos dépenses ou revenus.
   * *Interaction* : Cliquez sur un secteur pour faire apparaître le détail chiffré.
@@ -150,6 +150,12 @@ Analysez le passé et anticipez le futur dans l'onglet **Statistiques**.
 * **Prévisions à 30 jours (Forecast)** : Visualisez la courbe de projection combinant votre solde historique et l'évolution estimée sur le mois à venir.
   * *Méthode* : Intègre vos abonnements et prélèvements planifiés ainsi qu'une estimation statistique de vos dépenses courantes. Un corridor flouté représente l'intervalle de confiance (variations possibles).
   * *Drill-down* : Cliquez sur un point de la courbe prévisionnelle pour lister les transactions programmées qui impacteront votre solde ce jour-là.
+* **Tachymètre : Rythme de vos dépenses (Spending Velocity)** : Un widget interactif en forme de speedomètre vous indique en temps réel si vous consommez vos enveloppes budgétaires trop rapidement.
+  * *Geste interactif* : **Sélectionnez une catégorie** dans le menu déroulant (ou laissez "Toutes dépenses confondues"). Les calculs s'adaptent instantanément.
+  * *Lecture de la jauge* :
+    * **Aiguille à gauche (Zone verte)** : Votre vitesse de dépense réelle sur les 7 derniers jours est inférieure ou égale à la limite autorisée par jour pour tenir le mois. Le diagnostic affiche *"Vitesse sous contrôle"*.
+    * **Aiguille à droite (Zone rouge)** : Vous dépensez trop rapidement. Le diagnostic affiche *"⚠️ Excès de vitesse détecté"* et estime précisément la **date d'épuisement complète (crash)** de votre budget si vous maintenez ce rythme.
+  * *Action corrective* : Une fiche d'aide recalcule pour vous en direct la **nouvelle limite quotidienne conseillée** à respecter sur les jours restants pour compenser le retard et terminer le mois dans le vert. Si le budget est déjà épuisé, la jauge s'affiche en rouge et vous conseille une limite de 0 €/jour.
 
 ---
 

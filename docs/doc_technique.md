@@ -432,8 +432,30 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
 - **Encodage d'exclusion** : Lors de l'exclusion des clés existantes dans `getRegistrationOptions`, le serveur fournit l'ID sous forme de chaîne de caractères (`string`) au format Base64URL, ce qui est attendu par les fonctions regex de validation interne de la bibliothèque.
 
 ### 8.3 Résolution des Contraintes de PWA Mobile & Android Credential Manager
-Dans un environnement de Progressive Web App (PWA) standalone sur mobile, l'utilisateur n'a pas accès aux outils de développement (DevTools) pour effacer les cookies ou réinitialiser le `localStorage` de l'application, ni à un accès direct aux réglages fins du navigateur pour révoquer ses clés d'accès.
-- **Gestion d'erreur `InvalidStateError` / Credential Manager** : Si l'utilisateur tente de ré-enregistrer un appareil qui détient déjà la clé WebAuthn (par exemple, synchronisée via Google Password Manager ou iCloud Keychain), le navigateur ou le gestionnaire de clés Android peut lever une exception `InvalidStateError` ou une erreur générique `"An error occurred when talking to the credential manager."`. Notre client intercepte de manière robuste ces erreurs et considère l'appareil comme déjà configuré avec succès au lieu de bloquer l'utilisateur.
-- **Bouton d'urgence de réinitialisation locale** : Un lien d'aide *"Problème avec la biométrie ? Réinitialiser l'appareil"* est disponible sur l'écran de connexion dans [Login.jsx](file:///c:/Projects/budgetizer/client/src/pages/Login.jsx). Il permet de purger instantanément les flags `webauthn_registered_on_device` et `webauthn_dismissed_device` du `localStorage` pour forcer une réactivation biométrique propre lors de la prochaine connexion par mot de passe.
-- **Autonettoyage automatique** : En cas d'échec de validation biométrique (ex: périphérique inconnu), le client supprime automatiquement le flag de configuration locale pour inviter à une réinscription.
-- **Sécurisation du support WebAuthn** : La détection de compatibilité biométrique vérifie l'existence de `navigator.credentials` (en plus de `window.PublicKeyCredential`). Cela évite les plantages sur les environnements PWA non sécurisés (comme les accès en HTTP par adresse IP locale) où l'API d'authentification est bloquée par le navigateur.
+ Dans un environnement de Progressive Web App (PWA) standalone sur mobile, l'utilisateur n'a pas accès aux outils de développement (DevTools) pour effacer les cookies ou réinitialiser le `localStorage` de l'application, ni à un accès direct aux réglages fins du navigateur pour révoquer ses clés d'accès.
+ - **Gestion d'erreur `InvalidStateError` / Credential Manager** : Si l'utilisateur tente de ré-enregistrer un appareil qui détient déjà la clé WebAuthn (par exemple, synchronisée via Google Password Manager ou iCloud Keychain), le navigateur ou le gestionnaire de clés Android peut lever une exception `InvalidStateError` ou une erreur générique `"An error occurred when talking to the credential manager."`. Notre client intercepte de manière robuste ces erreurs et considère l'appareil comme déjà configuré avec succès au lieu de bloquer l'utilisateur.
+ - **Bouton d'urgence de réinitialisation locale** : Un lien d'aide *"Problème avec la biométrie ? Réinitialiser l'appareil"* est disponible sur l'écran de connexion dans [Login.jsx](file:///c:/Projects/budgetizer/client/src/pages/Login.jsx). Il permet de purger instantanément les flags `webauthn_registered_on_device` et `webauthn_dismissed_device` du `localStorage` pour forcer une réactivation biométrique propre lors de la prochaine connexion par mot de passe.
+ - **Autonettoyage automatique** : En cas d'échec de validation biométrique (ex: périphérique inconnu), le client supprime automatiquement le flag de configuration locale pour inviter à une réinscription.
+ - **Sécurisation du support WebAuthn** : La détection de compatibilité biométrique vérifie l'existence de `navigator.credentials` (en plus de `window.PublicKeyCredential`). Cela évite les plantages sur les environnements PWA non sécurisés (comme les accès en HTTP par adresse IP locale) où l'API d'authentification est bloquée par le navigateur.
+ 
+ 
+ ## 9. Architecture Technique de l'Indicateur de Vélocité (Tachymètre) ⚙️
+ 
+ ### 9.1 Organisation des Modules
+ La fonctionnalité est découpée en deux modules principaux réutilisables du côté client :
+ - **Logique pure (`velocityHelper.js`)** : Regroupe l'ensemble des formules mathématiques de calculs de vélocité, de jours restants et de dates d'épuisement. Ce découpage permet de tester la logique algorithmique unitairement sans dépendances DOM ou React.
+ - **Interface Utilisateur (`VelocityChart.jsx`)** : Composant graphique orchestrant le rendu réactif.
+ 
+ ### 9.2 Flux de Données et Hooks
+ Le composant React utilise deux hooks existants de React Query pour consolider les données en temps réel :
+ 1. **`useBudgets({ month })`** : Récupère les enveloppes budgétaires du mois courant avec leur montant total budgété et leur montant réellement consommé (`spent`).
+ 2. **`useTransactions({ startDate, endDate, limit: 1000 })`** : Récupère l'ensemble des dépenses réelles effectuées sur la période d'analyse récente (les 7 derniers jours ou depuis le début du mois).
+ 
+ Les calculs et filtres s'effectuent ensuite entièrement en mémoire (in-memory caching) lorsque l'utilisateur modifie la catégorie sélectionnée via le dropdown de l'interface, évitant ainsi des allers-retours API réseau inutiles et garantissant une réactivité immédiate de l'affichage.
+ 
+ ### 9.3 Rendu Graphique SVG de la Jauge
+ La jauge est dessinée de manière native en SVG pour éviter le chargement d'une bibliothèque lourde et assurer une portabilité parfaite en Mobile-First :
+ - **Cadran semi-circulaire** : Construit à partir d'arcs SVG (`path` de rayon $R = 85$, centre $(120, 110)$). La moitié gauche représente la zone verte de sécurité, et la moitié droite représente la zone rouge d'alerte.
+ - **Calcul des Angles** : La vitesse cible est fixée au centre à la verticale (90 degrés). L'aiguille pivote entre 0 et 180 degrés selon le ratio $\text{vitesseRelle} / (2 \times \text{vitesseCible})$.
+ - **Micro-animation de l'Aiguille** : La rotation de l'aiguille est animée de manière fluide en CSS via une propriété de transition matérielle `transform` combinée à une fonction de transition de type ressort (`cubic-bezier(0.34, 1.56, 0.64, 1)`).
+

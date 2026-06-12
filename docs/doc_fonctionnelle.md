@@ -261,3 +261,30 @@ En complément du texte de diagnostic, une section dédiée **« Dépenses inhab
 - **Affichage** : Pour chaque transaction inhabituelles, la carte affiche la description, la catégorie, la date de la transaction, le montant, et un badge de ratio indiquant combien de fois le montant dépasse la moyenne habituelle (ex : « 8.8x la moyenne »).
 - **Tri** : Les transactions sont triées par ratio décroissant (la plus déviante en premier).
 - **Cette section est masquée** si aucune dépense inhabituelle n'est détectée pour le mois sélectionné.
+
+
+## 15. Indicateur de Vélocité de Dépense (Tachymètre) 🏎️
+
+L'**Indicateur de Vélocité de Dépense** (ou Tachymètre) aide l'utilisateur à comprendre en temps réel s'il consomme ses budgets mensuels trop rapidement.
+
+### 15.1 Sélection de la Catégorie
+Un sélecteur moderne permet de choisir la catégorie à analyser :
+- **Toutes dépenses confondues** : Agrège l'ensemble des budgets et dépenses mensuels.
+- **Catégories individuelles** : Affiche les données associées à une enveloppe budgétaire mensuelle active spécifique (ex: "Alimentation", "Loisirs").
+
+### 15.2 Fonctionnement Mathématique & Logique
+1. **Jours restants (`daysRemaining`)** : Calcule le nombre total de jours restants dans le mois, en incluant la date d'aujourd'hui.
+2. **Vitesse cible (`targetVelocity`)** : Le rythme de dépense conseillé en €/jour pour respecter le budget restant jusqu'à la fin du mois ($remainingBudget / daysRemaining$).
+3. **Vitesse réelle (`actualVelocity`)** : La moyenne des dépenses réelles par jour calculée sur les 7 derniers jours (ou depuis le 1er du mois si nous sommes dans les 7 premiers jours).
+4. **Date de crash estimée (`depletionDate`)** : En cas d'excès de vitesse ($actualVelocity > targetVelocity$ et $remainingBudget > 0$), calcule le nombre de jours avant épuisement du budget ($remainingBudget / actualVelocity$) et l'ajoute à la date du jour pour estimer la date de crash.
+
+### 15.3 Visualisation Graphique & Diagnostic
+- **La Jauge de Vélocité** : Un cadran semi-circulaire (speedomètre) affiche la vitesse réelle actuelle.
+  - **Zone verte** (à gauche) : Vitesse réelle inférieure ou égale à la vitesse cible.
+  - **Zone rouge** (à droite) : Vitesse réelle supérieure à la vitesse cible.
+  - **Ligne pointillée verticale** : Indique la "limite de vitesse" (vitesse cible).
+  - **Aiguille animée** : Indique de manière fluide le rythme réel.
+- **Fiches d'Insights dynamiques** :
+  - *Cas 1 (Sous contrôle)* : Message de félicitations confirmant que le rythme est correct.
+  - *Cas 2 (Excès de vitesse)* : Alerte visuelle estimant la date d'épuisement théorique du budget si le rythme est maintenu.
+  - *Cas 3 (Action corrective)* : Suggestion chiffrée recommandant une nouvelle limite quotidienne conseillée ($remainingBudget / daysRemaining$) à tenir pour le reste du mois pour respecter le budget initial. Si le budget est déjà épuisé, la limite corrective conseillée est fixée à $0$ €/jour.
