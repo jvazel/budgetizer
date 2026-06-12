@@ -176,6 +176,12 @@ Analysez le passé, anticipez le futur et surveillez votre rythme de dépenses d
     * La ligne centrale pleine représente la trajectoire médiane (50e percentile : le scénario le plus probable).
     * La zone verte translucide délimite l'entonnoir d'incertitude compris entre le pire scénario (10e percentile : 90 % de chances de faire mieux) et le meilleur scénario (90e percentile : 10 % de chances de faire mieux).
   * *Rapport de diagnostic* : Un score de résilience (pourcentage de simulations réussies où le capital reste positif au terme de la simulation) vous attribue un diagnostic (*Excellent*, *Correct* ou *Vulnérable*) et affiche le délai de rupture moyen (en années) en cas d'épuisement.
+* **Fixes vs Variables (Anatomie mensuelle des dépenses)** 🔒🎲 : Visualisez, pour un mois donné, la répartition de vos dépenses entre charges incompressibles planifiées et dépenses spontanées.
+  * *Sélection du mois* : Naviguez d'un mois à l'autre via les flèches `←` / `→`, ou cliquez sur le mois affiché pour ouvrir le sélecteur (les 18 derniers mois sont disponibles).
+  * *Indicateurs clés (KPI)* : Trois cartes affichent en un coup d'œil le total de dépenses du mois, le montant et le pourcentage de charges fixes (indigo 🔒) et le montant et le pourcentage de dépenses variables (ambre 🎲).
+  * *Donut interactif* : Un graphique en anneau à deux arcs colore visuellement la répartition — indigo pour les fixes, ambre pour les variables. Survolez ou appuyez sur un arc pour afficher son montant précis au centre. Une barre de progression linéaire en bas du graphique complète la visualisation du ratio.
+  * *Listes par catégorie (pliables)* : Deux sections dépliables (« Charges fixes » et « Dépenses variables ») détaillent chaque catégorie : icône, nom, nombre de transactions, montant total et part en pourcentage.
+  * *Classification automatique* : Une dépense est classée **fixe** si elle provient d'une transaction planifiée (loyer, abonnement, remboursement de crédit configuré dans l'onglet Planifications). Toute autre dépense saisie manuellement est considérée **variable**. Pour classer une dépense récurrente comme fixe, créez simplement une planification correspondante.
 
 ---
 

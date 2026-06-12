@@ -1279,4 +1279,100 @@ export const getTagChartsData = async (req, res) => {
   }
 };
 
+// 9. Fixed vs Variable expenses breakdown for a given month
+export const getFixedVsVariableData = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // Fetch all categories
+    const allCategories = await Category.find({ userId: req.user.id }).lean();
+    const categoryMap = {};
+    allCategories.forEach(cat => {
+      categoryMap[cat._id.toString()] = cat;
+    });
+
+    // Fetch all expense transactions for the period (not pending)
+    const transactions = await Transaction.find({
+      userId: req.user.id,
+      type: 'expense',
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    }).populate('categoryId', 'name icon color parentId').lean();
+
+    // Separate into fixed (isScheduled=true) and variable
+    const fixedTxs = transactions.filter(tx => tx.isScheduled === true);
+    const variableTxs = transactions.filter(tx => !tx.isScheduled);
+
+    const buildGrouped = (txList) => {
+      const grouped = {};
+      txList.forEach(tx => {
+        const cat = tx.categoryId;
+        if (!cat) {
+          const key = '__uncategorized__';
+          if (!grouped[key]) {
+            grouped[key] = { categoryId: key, name: 'Non catégorisé', icon: '❓', color: '#888', amount: 0, count: 0 };
+          }
+          grouped[key].amount += tx.amount;
+          grouped[key].count += 1;
+          return;
+        }
+
+        // Resolve to main category
+        const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+        const mainCat = categoryMap[mainCatId] || { name: cat.name, icon: cat.icon, color: cat.color };
+
+        if (!grouped[mainCatId]) {
+          grouped[mainCatId] = {
+            categoryId: mainCatId,
+            name: mainCat.name,
+            icon: mainCat.icon,
+            color: mainCat.color,
+            amount: 0,
+            count: 0
+          };
+        }
+        grouped[mainCatId].amount += tx.amount;
+        grouped[mainCatId].count += 1;
+      });
+
+      const total = Object.values(grouped).reduce((s, g) => s + g.amount, 0);
+      return Object.values(grouped)
+        .map(g => ({
+          ...g,
+          amount: parseFloat(g.amount.toFixed(2)),
+          percentage: total > 0 ? parseFloat(((g.amount / total) * 100).toFixed(1)) : 0
+        }))
+        .sort((a, b) => b.amount - a.amount);
+    };
+
+    const fixedCategories = buildGrouped(fixedTxs);
+    const variableCategories = buildGrouped(variableTxs);
+
+    const totalFixed = parseFloat(fixedTxs.reduce((s, t) => s + t.amount, 0).toFixed(2));
+    const totalVariable = parseFloat(variableTxs.reduce((s, t) => s + t.amount, 0).toFixed(2));
+    const totalExpenses = parseFloat((totalFixed + totalVariable).toFixed(2));
+
+    res.json({
+      totalExpenses,
+      totalFixed,
+      totalVariable,
+      fixedRatio: totalExpenses > 0 ? parseFloat(((totalFixed / totalExpenses) * 100).toFixed(1)) : 0,
+      variableRatio: totalExpenses > 0 ? parseFloat(((totalVariable / totalExpenses) * 100).toFixed(1)) : 0,
+      fixedCategories,
+      variableCategories
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 

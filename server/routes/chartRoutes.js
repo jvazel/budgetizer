@@ -9,7 +9,8 @@ import {
   getExpenseRanking,
   getHistogramData,
   getBalanceHistory,
-  getTagChartsData
+  getTagChartsData,
+  getFixedVsVariableData
 } from '../controllers/chartController.js';
 
 const router = express.Router();
@@ -25,5 +26,6 @@ router.get('/cash-flow', getCashFlowHistory);
 router.get('/ranking', getExpenseRanking);
 router.get('/histogram', getHistogramData);
 router.get('/balance-history', getBalanceHistory);
+router.get('/fixed-vs-variable', getFixedVsVariableData);
 
 export default router;

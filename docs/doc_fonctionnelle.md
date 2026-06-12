@@ -288,3 +288,61 @@ Un sélecteur moderne permet de choisir la catégorie à analyser :
   - *Cas 1 (Sous contrôle)* : Message de félicitations confirmant que le rythme est correct.
   - *Cas 2 (Excès de vitesse)* : Alerte visuelle estimant la date d'épuisement théorique du budget si le rythme est maintenu.
   - *Cas 3 (Action corrective)* : Suggestion chiffrée recommandant une nouvelle limite quotidienne conseillée ($remainingBudget / daysRemaining$) à tenir pour le reste du mois pour respecter le budget initial. Si le budget est déjà épuisé, la limite corrective conseillée est fixée à $0$ €/jour.
+
+---
+
+## 16. Graphique Fixes vs Variables 🔒🎲
+
+Le graphique **Fixes vs Variables** (accessible dans l'onglet Analyses sous le nom *«\u202fFixes vs Variables\u202f»*) permet à l'utilisateur de visualiser, mois par mois, la répartition de ses dépenses entre charges incompressibles planifiées et dépenses spontanées ou discrétionnaires.
+
+### 16.1 Règle de Classification
+
+La distinction repose sur le champ `isScheduled` de chaque transaction :
+
+| Critère | Type |
+|---|---|
+| `isScheduled === true` | **Charge fixe** — issue d'une transaction planifiée (loyer, abonnement, remboursement crédit) |
+| `isScheduled === false` (ou absent) | **Dépense variable** — saisie manuellement, dépense ponctuelle |
+
+Cette classification est automatique et transparente pour l'utilisateur. Pour qu'une charge récurrente apparaisse dans les fixes, il suffit de la configurer dans l'onglet **Planifications**.
+
+### 16.2 Endpoint API
+
+`GET /charts/fixed-vs-variable?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+
+**Réponse :**
+```json
+{
+  "totalExpenses": 1720.00,
+  "totalFixed": 1240.00,
+  "totalVariable": 480.00,
+  "fixedRatio": 72.1,
+  "variableRatio": 27.9,
+  "fixedCategories": [
+    { "categoryId": "...", "name": "Logement", "icon": "🏠", "color": "#6366f1", "amount": 850.00, "count": 1, "percentage": 68.5 }
+  ],
+  "variableCategories": [
+    { "categoryId": "...", "name": "Alimentation", "icon": "🛒", "color": "#f59e0b", "amount": 240.00, "count": 12, "percentage": 50.0 }
+  ]
+}
+```
+
+Les catégories de chaque groupe sont regroupées par catégorie parente (résolution identique au graphique par catégories) et triées par montant décroissant.
+
+### 16.3 Interface Utilisateur
+
+Le composant `FixedVarChart` est structuré en 5 blocs :
+
+1. **Navigation mensuelle** : Identique au composant `CategoryChart` — flèches `←` / `→` pour changer de mois et sélecteur via `BottomSheet` pour les 18 derniers mois.
+2. **Cartes KPI (3)** :
+   - *Total dépenses* — montant brut toutes catégories.
+   - *Charges fixes* (fond indigo/violet) — montant et ratio en %.
+   - *Dépenses variables* (fond ambre) — montant et ratio en %.
+3. **Donut animé à 2 arcs** (`Recharts PieChart`) :
+   - Arc indigo (`#818cf8`) = fixes.
+   - Arc ambre (`#f59e0b`) = variables.
+   - Au survol d'un arc, son montant s'affiche au centre (via `activeShape` et `activeIndex`).
+   - Barre de progression linéaire en bas du donut pour une lecture immédiate du ratio.
+4. **Listes collapsables** : Deux accordéons dépliés par défaut — *Charges fixes* (icône `Lock`, indigo) et *Dépenses variables* (icône `Shuffle`, ambre) — affichant pour chaque catégorie : icône, nom, nombre de transactions, montant et %.
+5. **Carte explicative** : Bloc informatif rappelant la définition des deux catégories et le lien vers les Planifications pour classer manuellement une charge.
+
