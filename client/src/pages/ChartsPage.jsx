@@ -10,8 +10,10 @@ import CashFlowChart from '../components/charts/CashFlowChart';
 import RankingChart from '../components/charts/RankingChart';
 import HistogramChart from '../components/charts/HistogramChart';
 import TagChart from '../components/charts/TagChart';
+import VelocityChart from '../components/charts/VelocityChart';
 import BottomSheet from '../components/ui/BottomSheet';
-import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag } from 'lucide-react';
+import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge } from 'lucide-react';
+
 
 const ChartsPage = () => {
   const location = useLocation();
@@ -27,6 +29,7 @@ const ChartsPage = () => {
 
   const tabNames = {
     category: 'Catégories',
+    velocity: 'Rythme des dépenses',
     tags: 'Tags & Projets',
     cashflow: 'Cash Flow',
     ranking: 'Classement Dépenses',
@@ -53,6 +56,7 @@ const ChartsPage = () => {
       
       {/* Dynamic Tab view */}
       {activeTab === 'category' && <CategoryChart />}
+      {activeTab === 'velocity' && <VelocityChart />}
       {activeTab === 'tags' && <TagChart />}
       {activeTab === 'cashflow' && <CashFlowChart />}
       {activeTab === 'ranking' && <RankingChart />}
@@ -75,6 +79,7 @@ const ChartsPage = () => {
           <div className="space-y-3">
             {[
               { key: 'category', label: 'Répartition par Catégories', desc: 'Détail de vos dépenses mensuelles par catégorie.', icon: PieChart, color: 'text-purple-400 bg-purple-500/10' },
+              { key: 'velocity', label: 'Rythme des dépenses (Tachymètre)', desc: 'Vérifiez si vous consommez votre budget trop rapidement.', icon: Gauge, color: 'text-rose-400 bg-rose-500/10' },
               { key: 'tags', label: 'Analyses des Tags & Projets', desc: 'Détail et évolution par étiquette personnalisée.', icon: Tag, color: 'text-amber-400 bg-amber-500/10' },
               { key: 'cashflow', label: 'Comparatif Revenus & Dépenses (Cash Flow)', desc: 'Vérifiez si vous vivez au-dessus de vos moyens mensuellement.', icon: ArrowUpDown, color: 'text-emerald-400 bg-emerald-500/10' },
               { key: 'histogram', label: 'Histogramme Personnalisé', desc: 'Analyse sur mesure de vos recettes et dépenses sur une période choisie.', icon: BarChart2, color: 'text-teal-400 bg-teal-500/10' },
