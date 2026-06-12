@@ -148,14 +148,14 @@ const FloorBalanceWidget = ({ actualBalance = 0, upcoming = [], loading = false 
 
           <button 
             onClick={() => setShowSettings(!showSettings)}
-            className={`p-2 rounded-xl border transition-colors ${
+            className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${
               showSettings 
                 ? 'bg-accent/10 border-accent/20 text-accent' 
-                : 'bg-surface border-border/20 text-secondary hover:text-primary'
+                : 'bg-surface border-border/20 text-secondary hover:text-primary active:bg-white/[0.04]'
             }`}
             aria-label="Configurer le jour de paye"
           >
-            <Settings size={14} />
+            <Settings size={18} />
           </button>
         </div>
 
@@ -321,10 +321,10 @@ const FloorBalanceWidget = ({ actualBalance = 0, upcoming = [], loading = false 
                     <div 
                       key={tx._id} 
                       onClick={() => toggleExpenseExclusion(tx._id)}
-                      className={`min-h-[48px] py-2 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
+                      className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
                         isExcluded 
                           ? 'bg-surface/20 border-border/20 opacity-50' 
-                          : 'bg-surface border-border/40 hover:border-border/80'
+                          : 'bg-surface border-border/40 active:scale-[0.99] active:border-border/60'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">

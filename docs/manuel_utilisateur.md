@@ -38,9 +38,10 @@ Budgetizer prend en charge l'authentification biométrique (empreinte digitale, 
 
 Le tableau de bord centralise votre santé financière en un seul coup d'œil.
 
-* **Menu Burger (Tiroir de navigation latéral)** : Cliquez sur l'icône de menu (les trois barres en haut à gauche) pour déployer le tiroir latéral et naviguer vers les autres sections de l'application.
+* **Menu Burger (Tiroir de navigation latéral)** : Cliquez sur l'icône de menu (les trois barres en haut à gauche) pour déployer le tiroir latéral et naviguer vers les sections d'administration (Profil, Catégories, Tags, Déconnexion).
 * **Consulter le Solde Global (Net Worth)** : En haut de l'écran, le total affiche la somme de vos comptes liquides disponibles (moins vos dettes de crédits si incluses).
   * *Geste interactif* : **Tapez sur le montant du Solde Global** pour afficher une infobulle (Toast) détaillant la composition exacte (ex : Disponible vs Dettes crédit).
+* **Raccourcis de Navigation Rapide (Dashboard Hub)** : Situé sur le tableau de bord, ce widget en grille tactile $2 \times 4$ vous permet d'accéder d'un seul clic aux outils et analyses principaux (Budgets, Abonnements, Épargne, Analyses graphiques, Échéances planifiées, Virements, Conseils IA et Scores financiers).
 * **Faire défiler le Carrousel des Comptes** : Faites glisser horizontalement les cartes bancaires colorées. Chaque carte représente un de vos comptes et son solde.
   * *Geste interactif* : **Tapez sur une carte de compte standard** pour ouvrir son formulaire de modification.
   * *Geste interactif* : **Tapez sur une carte de type Crédit (bordeaux)** pour être redirigé vers sa page d'analyse détaillée de prêt.
@@ -86,7 +87,10 @@ Ces comptes modélisent vos emprunts en cours (immobiliers, auto, etc.).
 * **Saisie du Montant** : Tapez sur le champ de saisie du montant.
   * *Sur mobile* : Le clavier numérique décimal natif s'affiche automatiquement.
   * *Règles de saisie* : La virgule `,` est automatiquement convertie en point `.`. Vous êtes limité à 2 décimales après la virgule.
-* **Associer le compte et la catégorie** :
+* **Associer le compte et la catégorie (Sélecteurs Tactiles)** : 
+  * Appuyez sur le sélecteur de compte ou de catégorie pour ouvrir un tiroir interactif (**Bottom Sheet**) dédié.
+  * *Choix du compte* : Le sélecteur affiche le type et le solde en temps réel de chaque compte dans une liste optimisée pour le pouce.
+  * *Choix de la catégorie* : L'interface présente la structure complète avec les catégories parentes (Alimentation, Logement...) et une grille de leurs sous-catégories associées.
   * Pour un virement, sélectionnez le compte de départ (`From`) et le compte de destination (`To`).
 * **Ajouter des métadonnées** : Saisissez une note facultative (ex : "Courses Leclerc") ou ajoutez des tags en tapant `#` (ex : `#vacances`).
 * **Valider** : Cliquez sur **Ajouter la transaction**.

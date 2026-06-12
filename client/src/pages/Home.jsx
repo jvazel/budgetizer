@@ -17,7 +17,7 @@ import CircularScoreGauge from '../components/ui/CircularScoreGauge';
 import { 
   Bell, AlertTriangle, TrendingUp, TrendingDown, MoreVertical, Wallet, 
   CreditCard, Sliders, Download, Clock, Calendar, Sparkles, Target, AlertCircle,
-  BarChart2, Award, Minus
+  BarChart2, Award, Minus, ArrowLeftRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LabelList, PieChart, Pie, Cell } from 'recharts';
@@ -198,12 +198,12 @@ const Home = () => {
   const actions = (
     <button 
       onClick={() => setIsNotificationsOpen(true)}
-      className="hover:text-primary transition-colors p-1 relative animate-none"
+      className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/[0.06] active:scale-95 text-secondary hover:text-primary transition-all p-0 relative -mr-3"
       id="notification-bell-btn"
     >
-      <Bell size={20} />
+      <Bell size={22} />
       {notifications.length > 0 && (
-        <span className="absolute -top-1 -right-1.5 px-1 min-w-[16px] h-4 text-[8px] flex items-center justify-center font-extrabold text-white bg-danger rounded-full ring-2 ring-base">
+        <span className="absolute top-2 right-2 px-1 min-w-[16px] h-4 text-[9px] flex items-center justify-center font-extrabold text-white bg-danger rounded-full ring-2 ring-base animate-none">
           {notifications.length}
         </span>
       )}
@@ -266,14 +266,14 @@ const Home = () => {
             className={`flex justify-between items-start mb-6 relative z-10 ${totalCredit < 0 ? 'cursor-pointer select-none active:opacity-85 transition-opacity' : ''}`}
           >
             <div>
-              <p className="text-[10px] text-secondary/80 font-bold tracking-widest uppercase">Solde Total</p>
+              <p className="text-[11px] text-secondary/80 font-bold tracking-widest uppercase">Solde Total</p>
               <h2 className="text-3xl font-extrabold text-primary font-premium-numbers tracking-tight mt-1">
                 {formatCurrency(totalAvailable + totalCredit, user?.currency?.code)}
               </h2>
             </div>
             
             <div className="flex flex-col items-end gap-1 opacity-70">
-              <span className="text-[9px] font-black text-secondary tracking-widest uppercase">CARD</span>
+              <span className="text-[11px] font-black text-secondary tracking-widest uppercase">CARD</span>
               <div className="w-6 h-4 rounded bg-white/10 border border-white/20 flex items-center justify-center">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent/40" />
               </div>
@@ -282,12 +282,12 @@ const Home = () => {
           
           <div className="flex justify-between items-end border-t border-white/[0.04] pt-4 mt-2 relative z-10">
             <div>
-              <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Titulaire du compte</p>
+              <p className="text-[11px] text-muted font-bold uppercase tracking-wider">Titulaire du compte</p>
               <p className="text-[11px] font-semibold text-secondary mt-0.5 truncate max-w-[150px]">{user?.name || 'Utilisateur'}</p>
             </div>
             {totalCredit > 0 && (
               <div className="text-right">
-                <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Encours cartes</p>
+                <p className="text-[11px] text-muted font-bold uppercase tracking-wider">Encours cartes</p>
                 <p className="text-xs font-bold text-danger font-premium-numbers mt-0.5">
                   -{formatCurrency(totalCredit, user?.currency?.code)}
                 </p>
@@ -304,14 +304,46 @@ const Home = () => {
         loading={scheduledLoading || loading} 
       />
 
+      {/* Raccourcis de Navigation Rapide (Dashboard Hub) */}
+      <section className="mb-6">
+        <div className="grid grid-cols-4 gap-2.5">
+          {[
+            { label: 'Budgets', icon: CreditCard, path: '/budgets', color: 'text-pink-400 bg-pink-500/10 border-pink-500/15' },
+            { label: 'Épargne', icon: Target, path: '/savings', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/15' },
+            { label: 'Analyses', icon: BarChart2, path: '/charts', color: 'text-purple-400 bg-purple-500/10 border-purple-500/15' },
+            { label: 'Abonnements', icon: Wallet, path: '/subscriptions', color: 'text-blue-400 bg-blue-500/10 border-blue-500/15' },
+            { label: 'Scores', icon: Award, path: '/financial-scores', color: 'text-amber-400 bg-amber-500/10 border-amber-500/15' },
+            { label: 'Conseils', icon: Sparkles, path: '/ai-insights', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/15' },
+            { label: 'Échéances', icon: Clock, path: '/scheduled', color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/15' },
+            { label: 'Virements', icon: ArrowLeftRight, path: '/transfers', color: 'text-rose-400 bg-rose-500/10 border-rose-500/15' },
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={idx}
+                onClick={() => navigate(item.path)}
+                className="flex flex-col items-center justify-center p-2.5 rounded-[20px] bg-surface-2 border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-95`}>
+                  <Icon size={16} />
+                </div>
+                <span className="text-[10px] font-bold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Sommaire d'activité Card */}
       <div 
         onClick={() => navigate('/summary-history')}
-        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer active:scale-[0.99] active:border-border/60 transition-all duration-200 group select-none"
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Sommaire d'activité</h3>
-          <span className="text-[10px] font-bold text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+          <span className="text-[10px] font-bold text-accent opacity-0 group-active:opacity-100 transition-opacity flex items-center gap-0.5">
             Historique &rarr;
           </span>
         </div>
@@ -324,15 +356,15 @@ const Home = () => {
               <h4 className="text-xs font-bold text-primary mb-1.5">{currentMonthLabel}</h4>
               <div className="grid grid-cols-3 gap-2 text-[10px] text-secondary font-medium">
                 <div>
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Revenus</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Revenus</span>
                   <span className="font-premium-numbers font-bold text-accent">{formatCurrency(month.income, user?.currency?.code)}</span>
                 </div>
                 <div>
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Dépenses</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Dépenses</span>
                   <span className="font-premium-numbers font-bold text-danger">-{formatCurrency(month.expenses, user?.currency?.code)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Net</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Net</span>
                   <span className={`font-premium-numbers font-bold ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
                     {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
                   </span>
@@ -348,15 +380,15 @@ const Home = () => {
               <h4 className="text-xs font-bold text-secondary mb-1.5">{lastMonthLabel}</h4>
               <div className="grid grid-cols-3 gap-2 text-[10px] text-secondary/80 font-medium">
                 <div>
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Revenus</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Revenus</span>
                   <span className="font-premium-numbers font-bold text-accent/80">{formatCurrency(lastMonth.income, user?.currency?.code)}</span>
                 </div>
                 <div>
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Dépenses</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Dépenses</span>
                   <span className="font-premium-numbers font-bold text-danger/80">-{formatCurrency(lastMonth.expenses, user?.currency?.code)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-muted block text-[9px] uppercase tracking-wider mb-0.5">Net</span>
+                  <span className="text-muted block text-[11px] uppercase tracking-wider mb-0.5">Net</span>
                   <span className={`font-premium-numbers font-bold ${lastMonth.net >= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
                     {lastMonth.net >= 0 ? '+' : ''}{formatCurrency(lastMonth.net, user?.currency?.code)}
                   </span>
@@ -370,7 +402,7 @@ const Home = () => {
       {/* Score Financier Card */}
       <div 
         onClick={() => navigate('/financial-scores')}
-        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer active:scale-[0.99] active:border-border/60 transition-all duration-200 group select-none"
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Score Financier</h3>
@@ -474,7 +506,7 @@ const Home = () => {
                 {index > 0 && <div className="h-[1px] bg-border/20 my-3" />}
                 <div 
                   onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : handleOpenEdit(acc)}
-                  className="flex justify-between items-center hover:bg-surface/50 p-2 -mx-2 rounded-xl transition-all cursor-pointer"
+                  className="flex justify-between items-center active:scale-[0.99] active:bg-white/[0.03] p-2 -mx-2 rounded-xl transition-all cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
@@ -485,7 +517,7 @@ const Home = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-primary truncate leading-tight">{acc.name}</p>
-                      <p className="text-[10px] text-muted">Dernière utilisation: {lastTxDateStr}</p>
+                      <p className="text-[11px] text-muted">Dernière utilisation: {lastTxDateStr}</p>
                     </div>
                   </div>
                   <span className={`font-premium-numbers font-bold shrink-0 ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
@@ -499,7 +531,7 @@ const Home = () => {
 
         <button 
           onClick={handleOpenAdd}
-          className="w-full mt-4 text-xs font-bold text-accent py-2.5 border border-dashed border-accent/30 rounded-xl hover:bg-accent/10 transition-all flex items-center justify-center gap-1.5"
+          className="w-full mt-4 text-xs font-bold text-accent py-3 border border-dashed border-accent/30 rounded-xl active:scale-98 active:bg-accent/5 transition-all flex items-center justify-center gap-1.5 select-none"
         >
           + Ajouter un compte
         </button>
@@ -508,11 +540,11 @@ const Home = () => {
       {/* Dépenses - 7 derniers jours Card */}
       <div 
         onClick={() => navigate('/charts')}
-        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer hover:border-border/80 transition-all duration-300 group"
+        className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer active:scale-[0.99] active:border-border/60 transition-all duration-200 group select-none"
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-bold text-primary">Dépenses - 7 derniers jours</h3>
-          <span className="text-[10px] font-bold text-accent opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+          <span className="text-[11px] font-bold text-accent opacity-0 group-active:opacity-100 transition-opacity flex items-center gap-0.5">
             Analyses &rarr;
           </span>
         </div>
@@ -560,7 +592,7 @@ const Home = () => {
             <div 
               key={alert.id}
               onClick={() => navigate('/budgets')}
-              className="bg-danger/10 border border-danger/20 p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-danger/20 transition-colors"
+              className="bg-danger/10 border border-danger/20 p-4 rounded-2xl flex items-center gap-3 cursor-pointer active:scale-98 active:bg-danger/15 transition-all select-none"
             >
               <AlertTriangle className="text-danger shrink-0" size={24} />
               <div className="flex-1 min-w-0">
@@ -584,7 +616,7 @@ const Home = () => {
             <h3 className="text-sm font-bold text-primary">Top catégories de dépenses</h3>
             <button 
               onClick={() => navigate('/charts')}
-              className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+              className="text-[11px] font-bold text-accent hover:underline flex items-center gap-0.5"
             >
               Détails &rarr;
             </button>
@@ -618,7 +650,7 @@ const Home = () => {
           <h3 className="text-sm font-bold text-primary">Mes budgets</h3>
           <button 
             onClick={() => navigate('/budgets')}
-            className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+            className="text-[11px] font-bold text-accent hover:underline flex items-center gap-0.5 select-none"
           >
             Gérer &rarr;
           </button>
@@ -655,7 +687,7 @@ const Home = () => {
           <h3 className="text-sm font-bold text-primary">Objectifs d'épargne</h3>
           <button 
             onClick={() => navigate('/savings')}
-            className="text-[10px] font-bold text-accent hover:underline flex items-center gap-0.5"
+            className="text-[11px] font-bold text-accent hover:underline flex items-center gap-0.5 select-none"
           >
             Gérer &rarr;
           </button>
@@ -684,7 +716,7 @@ const Home = () => {
                 <div 
                   key={goal._id} 
                   onClick={() => navigate('/savings')}
-                  className="bg-surface p-4 rounded-2xl border border-border/30 hover:border-border/60 transition-all cursor-pointer shadow-sm relative overflow-hidden"
+                  className="bg-surface p-4 rounded-2xl border border-border/30 active:scale-[0.99] active:border-border/60 transition-all cursor-pointer shadow-sm relative overflow-hidden select-none"
                 >
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2.5 min-w-0">
