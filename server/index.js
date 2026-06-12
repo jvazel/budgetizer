@@ -22,6 +22,7 @@ import savingsGoalRoutes from './routes/savingsGoalRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import monthlyReportRoutes from './routes/monthlyReportRoutes.js';
 import webauthnRoutes from './routes/webauthnRoutes.js';
+import tagRoutes from './routes/tagRoutes.js';
 import UserCredential from './models/UserCredential.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
@@ -137,6 +138,7 @@ app.use('/api/savings-goals', savingsGoalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/monthly-reports', monthlyReportRoutes);
 app.use('/api/webauthn', webauthnRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Secure scheduled job endpoint for external trigger
 app.post('/api/jobs/process-scheduled', async (req, res) => {

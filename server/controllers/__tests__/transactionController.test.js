@@ -130,6 +130,12 @@ vi.mock('../../models/ScheduledTransaction.js', () => ({
   }
 }));
 
+vi.mock('../../models/Tag.js', () => ({
+  default: {
+    find: vi.fn()
+  }
+}));
+
 vi.mock('../../models/User.js', () => ({
   default: {
     findById: vi.fn().mockResolvedValue({

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FolderTree, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target, Wallet, ArrowLeftRight, FileText, TrendingUp } from 'lucide-react';
+import { X, FolderTree, Tag, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target, Wallet, ArrowLeftRight, FileText, TrendingUp } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -40,6 +40,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       title: 'Configuration',
       items: [
         { label: 'Gérer les catégories', icon: FolderTree, path: '/categories' },
+        { label: 'Gérer les tags', icon: Tag, path: '/tags' },
         { label: 'Mon Profil & Paramètres', icon: Settings, path: '/settings' },
       ]
     }

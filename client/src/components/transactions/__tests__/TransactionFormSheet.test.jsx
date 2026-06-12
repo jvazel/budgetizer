@@ -27,6 +27,15 @@ vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({ categoriesTree: mockCategoriesTree })
 }));
 
+vi.mock('../../../hooks/useTags', () => ({
+  useTags: () => ({
+    tags: [
+      { _id: 'tag1', name: 'Vacances', color: '#3b82f6' }
+    ],
+    addTag: vi.fn().mockResolvedValue({ _id: 'tag_new', name: 'Nouveau', color: '#10b981' })
+  })
+}));
+
 vi.mock('../../../hooks/useTransactions', () => ({
   useTransactions: () => ({
     addTransaction: mockAddTransaction,
@@ -119,7 +128,8 @@ describe('TransactionFormSheet Component', () => {
         accountId: 'acc1',
         categoryId: 'cat1',
         note: 'Courses hebdomadaires',
-        date: expect.any(Date)
+        date: expect.any(Date),
+        tags: []
       });
       expect(handleSuccess).toHaveBeenCalled();
       expect(handleClose).toHaveBeenCalled();

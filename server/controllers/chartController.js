@@ -2,6 +2,7 @@ import Transaction from '../models/Transaction.js';
 import Category from '../models/Category.js';
 import Account from '../models/Account.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
+import Tag from '../models/Tag.js';
 import mongoose from 'mongoose';
 
 // Helper: Get previous period dates
@@ -1145,4 +1146,137 @@ export const getBalanceHistory = async (req, res) => {
     res.status(500).json({ message: 'Server Error during balance history calculation' });
   }
 };
+
+// 9. Get tag charts analytical data
+export const getTagChartsData = async (req, res) => {
+  try {
+    const { startDate, endDate, tagId, type = 'expense' } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // Fetch all user's tags
+    const allTags = await Tag.find({ userId: req.user.id }).lean();
+    const allCategories = await Category.find({ userId: req.user.id }).lean();
+    const categoryLookup = {};
+    allCategories.forEach(c => {
+      categoryLookup[c._id.toString()] = c;
+    });
+
+    // Query active transactions in the period matching the type
+    const query = {
+      userId: req.user.id,
+      type,
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    };
+
+    const transactions = await Transaction.find(query).populate('tags').lean();
+
+    // 1. Comparison of Tags (Horizontal Bar Chart)
+    const tagMap = {};
+    allTags.forEach(tag => {
+      tagMap[tag._id.toString()] = {
+        _id: tag._id.toString(),
+        name: tag.name,
+        color: tag.color,
+        amount: 0
+      };
+    });
+
+    transactions.forEach(tx => {
+      if (tx.tags && tx.tags.length > 0) {
+        tx.tags.forEach(t => {
+          const tagIdStr = t._id ? t._id.toString() : t.toString();
+          if (tagMap[tagIdStr]) {
+            tagMap[tagIdStr].amount += tx.amount;
+          }
+        });
+      }
+    });
+
+    const tagsComparison = Object.values(tagMap)
+      .filter(t => t.amount > 0)
+      .map(t => ({
+        ...t,
+        amount: parseFloat(t.amount.toFixed(2))
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    // 2. Drilldown for a specific tag
+    let categoryBreakdown = [];
+    let cumulativeEvolution = [];
+
+    if (tagId) {
+      const tagTransactions = transactions.filter(tx => {
+        return tx.tags && tx.tags.some(t => (t._id ? t._id.toString() : t.toString()) === tagId);
+      });
+
+      // A. Category breakdown for selected tag
+      const categoryMap = {};
+      tagTransactions.forEach(tx => {
+        if (!tx.categoryId) return;
+        const catIdStr = tx.categoryId.toString();
+        const cat = categoryLookup[catIdStr];
+        if (!cat) return;
+
+        let mainCatId = cat._id.toString();
+        // If it's a subcategory, group under parent
+        if (cat.parentId) {
+          mainCatId = cat.parentId.toString();
+        }
+
+        const mainCat = categoryLookup[mainCatId] || { name: 'Autre', icon: '❓', color: '#888' };
+
+        if (!categoryMap[mainCatId]) {
+          categoryMap[mainCatId] = {
+            categoryId: mainCatId,
+            name: mainCat.name,
+            icon: mainCat.icon,
+            color: mainCat.color,
+            amount: 0
+          };
+        }
+        categoryMap[mainCatId].amount += tx.amount;
+      });
+
+      categoryBreakdown = Object.values(categoryMap)
+        .map(cat => ({
+          ...cat,
+          amount: parseFloat(cat.amount.toFixed(2))
+        }))
+        .sort((a, b) => b.amount - a.amount);
+
+      // B. Cumulative sum over time
+      const sortedTxs = [...tagTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+      let runningTotal = 0;
+
+      cumulativeEvolution = sortedTxs.map(tx => {
+        runningTotal += tx.amount;
+        return {
+          date: new Date(tx.date).toISOString().split('T')[0],
+          amount: parseFloat(tx.amount.toFixed(2)),
+          cumulative: parseFloat(runningTotal.toFixed(2)),
+          description: tx.description
+        };
+      });
+    }
+
+    res.json({
+      tagsComparison,
+      categoryBreakdown,
+      cumulativeEvolution
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 

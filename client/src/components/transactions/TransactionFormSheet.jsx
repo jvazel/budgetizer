@@ -6,6 +6,7 @@ import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
+import TagSelector from './TagSelector';
 
 const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transactionToEdit }) => {
   const [type, setType] = useState('expense');
@@ -14,6 +15,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [categoryId, setCategoryId] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   
   const { accounts } = useAccounts();
   const { categoriesTree } = useCategories();
@@ -28,11 +30,13 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         setCategoryId(transactionToEdit.categoryId?._id || transactionToEdit.categoryId || '');
         setNote(transactionToEdit.note || '');
         setDate(transactionToEdit.date ? new Date(transactionToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setSelectedTagIds(transactionToEdit.tags?.map(t => t._id || t) || []);
       } else {
         setType('expense');
         setAmount('');
         setNote('');
         setDate(defaultDate ? new Date(defaultDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setSelectedTagIds([]);
         if (accounts.length > 0 && !accountId) setAccountId(accounts[0]._id);
       }
     }
@@ -77,7 +81,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         accountId,
         categoryId: categoryId || null,
         note,
-        date: new Date(date)
+        date: new Date(date),
+        tags: selectedTagIds
       };
 
       if (transactionToEdit) {
@@ -203,6 +208,12 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
             />
           </div>
         </div>
+
+        {/* Tag Selector */}
+        <TagSelector
+          selectedTagIds={selectedTagIds}
+          onChange={setSelectedTagIds}
+        />
 
         {/* Action Button */}
         <div className="mt-auto pt-4">

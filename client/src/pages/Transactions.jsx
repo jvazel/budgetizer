@@ -5,10 +5,13 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
 import { useSavedFilters } from '../hooks/useSavedFilters';
+import { useTags } from '../hooks/useTags';
+import { getContrastColor } from './Tags';
 import toast from 'react-hot-toast';
-import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2 } from 'lucide-react';
+import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import BottomSheet from '../components/ui/BottomSheet';
 
 const Transactions = () => {
   // Navigation / Visibility states
@@ -26,6 +29,9 @@ const Transactions = () => {
   const [type, setType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [period, setPeriod] = useState('month'); // month, YYYY-MM, or all
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
 
   // Saved Filters states
   const { savedFilters, addSavedFilter, updateSavedFilter, deleteSavedFilter } = useSavedFilters();
@@ -39,13 +45,126 @@ const Transactions = () => {
   if (accountId) activeFilters.accountId = accountId;
   if (categoryId) activeFilters.categoryId = categoryId;
   if (type) activeFilters.type = type;
-  if (startDate) activeFilters.startDate = startDate;
-  if (endDate) activeFilters.endDate = endDate;
+  if (selectedTags.length > 0) activeFilters.tags = selectedTags.join(',');
+
+  // Resolve dates based on selected period
+  if (period !== 'all') {
+    let year, month;
+    if (period === 'month') {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    } else {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    }
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0);
+    const formatDate = (d) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+    activeFilters.startDate = formatDate(start);
+    activeFilters.endDate = formatDate(end);
+  } else {
+    if (startDate) activeFilters.startDate = startDate;
+    if (endDate) activeFilters.endDate = endDate;
+  }
+
+  const isCurrentMonth = () => {
+    if (period === 'month') return true;
+    const currentD = new Date();
+    const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+    return period === currentKey;
+  };
+
+  const handlePrevMonth = () => {
+    let year, month;
+    if (period === 'month') {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    } else if (/^\d{4}-\d{2}$/.test(period)) {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    } else {
+      return;
+    }
+
+    month--;
+    if (month < 1) {
+      month = 12;
+      year--;
+    }
+    setPeriod(`${year}-${String(month).padStart(2, '0')}`);
+  };
+
+  const handleNextMonth = () => {
+    if (isCurrentMonth()) return;
+    let year, month;
+    if (period === 'month') {
+      const d = new Date();
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+    } else if (/^\d{4}-\d{2}$/.test(period)) {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    } else {
+      return;
+    }
+
+    month++;
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+    const newPeriod = `${year}-${String(month).padStart(2, '0')}`;
+    const currentD = new Date();
+    const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+    if (newPeriod === currentKey) {
+      setPeriod('month');
+    } else {
+      setPeriod(newPeriod);
+    }
+  };
+
+  const formatPeriodLabel = (p) => {
+    if (p === 'month') return 'Ce mois';
+    if (p === 'all') return 'Toutes les dates';
+    const [year, month] = p.split('-').map(Number);
+    const date = new Date(year, month - 1, 1);
+    const formatted = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const year = d.getFullYear().toString();
+      const key = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ key, label: capitalizedLabel });
+    }
+    return groups;
+  };
 
   // Retrieve data using hooks
   const { transactions, loading, deleteTransaction } = useTransactions(activeFilters);
   const { accounts } = useAccounts();
   const { categories } = useCategories();
+  const { tags } = useTags();
 
   // Load a saved filter
   const handleLoadFilter = (sf) => {
@@ -56,6 +175,12 @@ const Transactions = () => {
     setType(sf.filters.type || '');
     setStartDate(sf.filters.startDate || '');
     setEndDate(sf.filters.endDate || '');
+    setSelectedTags(sf.filters.tags ? sf.filters.tags.split(',') : []);
+    if (sf.filters.startDate || sf.filters.endDate) {
+      setPeriod('all');
+    } else {
+      setPeriod('month');
+    }
   };
 
   // Reset all filters helper
@@ -66,6 +191,8 @@ const Transactions = () => {
     setType('');
     setStartDate('');
     setEndDate('');
+    setSelectedTags([]);
+    setPeriod('month');
     setActiveSavedFilterId(null);
     setNewFilterName('');
     setIsSavingFilter(false);
@@ -144,6 +271,42 @@ const Transactions = () => {
       <HeaderTitle>Transactions</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <div className="mt-4 space-y-4">
+        
+        {/* Month Navigation Bar */}
+        <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-2xl border border-border/40 shadow-sm">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            disabled={period === 'all'}
+            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+              period === 'all' ? 'opacity-30 cursor-not-allowed' : ''
+            }`}
+            title="Mois précédent"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setIsMonthSheetOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs focus:outline-none"
+          >
+            <Calendar size={14} className="text-accent" />
+            <span>{formatPeriodLabel(period)}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            disabled={period === 'all' || isCurrentMonth()}
+            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+              (period === 'all' || isCurrentMonth()) ? 'opacity-30 cursor-not-allowed' : ''
+            }`}
+            title="Mois suivant"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
         
         {/* Dynamic sliding Search Bar */}
         {showSearch && (
@@ -291,6 +454,40 @@ const Transactions = () => {
                 </div>
               )}
 
+              {/* Filter by Tag (Tactile selection pills) */}
+              {tags && tags.length > 0 && (
+                <div className="space-y-1.5 col-span-2 pb-1">
+                  <label className="text-[10px] font-bold text-muted uppercase">Filtrer par Étiquettes</label>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-0.5">
+                    {tags.map(tag => {
+                      const isSelected = selectedTags.includes(tag._id);
+                      const textColor = isSelected ? getContrastColor(tag.color) : 'var(--color-text-secondary)';
+                      return (
+                        <button
+                          key={tag._id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedTags(selectedTags.filter(id => id !== tag._id));
+                            } else {
+                              setSelectedTags([...selectedTags, tag._id]);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95 select-none`}
+                          style={{
+                            backgroundColor: isSelected ? tag.color : 'rgba(255, 255, 255, 0.03)',
+                            color: textColor,
+                            borderColor: isSelected ? 'transparent' : 'rgba(255, 255, 255, 0.08)'
+                          }}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
                {/* Start Date */}
               <div className="space-y-1">
                 <label 
@@ -303,7 +500,10 @@ const Transactions = () => {
                   id="startDateFilter"
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setPeriod('all');
+                  }}
                   onClick={(e) => {
                     try {
                       e.target.showPicker();
@@ -330,7 +530,10 @@ const Transactions = () => {
                   id="endDateFilter"
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setPeriod('all');
+                  }}
                   onClick={(e) => {
                     try {
                       e.target.showPicker();
@@ -479,6 +682,73 @@ const Transactions = () => {
           </p>
         )}
       </ConfirmModal>
+
+      {/* Month Selection Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthSheetOpen}
+        onClose={() => setIsMonthSheetOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="pb-2 border-b border-border/40 flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-extrabold text-primary">Choisir la période</h3>
+              <p className="text-xs text-muted">Filtrer l'historique des transactions</p>
+            </div>
+            <button
+              onClick={() => {
+                setPeriod('all');
+                setIsMonthSheetOpen(false);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                period === 'all'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-surface-2 text-secondary hover:text-primary'
+              }`}
+            >
+              Toutes les dates
+            </button>
+          </div>
+
+          <div className="space-y-4 max-h-80 overflow-y-auto no-scrollbar py-1">
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, months]) => {
+              const currentD = new Date();
+              const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+              
+              return (
+                <div key={year} className="space-y-2">
+                  <div className="text-[10px] font-black text-secondary/80 px-1 border-l-2 border-accent pl-2 mt-3 uppercase tracking-wider">{year}</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {months.map((m) => {
+                      const isActive = period === m.key || (m.key === currentKey && period === 'month');
+                      return (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => {
+                            if (m.key === currentKey) {
+                              setPeriod('month');
+                            } else {
+                              setPeriod(m.key);
+                            }
+                            setIsMonthSheetOpen(false);
+                          }}
+                          className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                            isActive
+                              ? 'bg-accent text-white shadow-sm'
+                              : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </BottomSheet>
     </>
   );
 };

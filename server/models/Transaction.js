@@ -40,7 +40,8 @@ const transactionSchema = new mongoose.Schema({
     default: ""
   },
   tags: [{
-    type: String
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tag'
   }],
   // Transactions planifiées
   isScheduled: {

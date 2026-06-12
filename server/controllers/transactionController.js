@@ -5,6 +5,7 @@ import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import SavingsGoal from '../models/SavingsGoal.js';
 import User from '../models/User.js';
 import Budget from '../models/Budget.js';
+import Tag from '../models/Tag.js';
 import { sendPushNotification } from '../utils/pushNotification.js';
 import { invalidateMonthlyReport } from '../utils/cacheInvalidator.js';
 import mongoose from 'mongoose';
@@ -175,7 +176,7 @@ const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false,
 // @access  Private
 export const getTransactions = async (req, res) => {
   try {
-    const { accountId, categoryId, type, startDate, endDate, search, page = 1, limit = 20 } = req.query;
+    const { accountId, categoryId, type, startDate, endDate, search, tags, page = 1, limit = 20 } = req.query;
 
     let query = { userId: req.user.id, isPending: { $ne: true } };
 
@@ -200,18 +201,26 @@ export const getTransactions = async (req, res) => {
         query.date.$lte = end;
       }
     }
+    if (tags) {
+      const tagIds = tags.split(',').map(id => id.trim()).filter(Boolean);
+      if (tagIds.length > 0) {
+        query.tags = { $in: tagIds };
+      }
+    }
     if (search) {
       const escapedSearch = search.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
       const searchRegex = { $regex: escapedSearch, $options: 'i' };
 
-      // Find matching accounts and categories to allow searching by their names
-      const [matchingAccounts, matchingCategories] = await Promise.all([
+      // Find matching accounts, categories, and tags to allow searching by their names
+      const [matchingAccounts, matchingCategories, matchingTags] = await Promise.all([
         Account.find({ userId: req.user.id, name: searchRegex }),
-        Category.find({ userId: req.user.id, name: searchRegex })
+        Category.find({ userId: req.user.id, name: searchRegex }),
+        Tag.find({ userId: req.user.id, name: searchRegex })
       ]);
 
       const accountIds = matchingAccounts.map(a => a._id);
       const categoryIds = matchingCategories.map(c => c._id);
+      const tagIds = matchingTags.map(t => t._id);
 
       const searchOr = [
         { description: searchRegex },
@@ -219,7 +228,7 @@ export const getTransactions = async (req, res) => {
         { accountId: { $in: accountIds } },
         { toAccountId: { $in: accountIds } },
         { categoryId: { $in: categoryIds } },
-        { tags: searchRegex }
+        { tags: { $in: tagIds } }
       ];
 
       // Also support searching by numeric amount if search query is a number
@@ -243,6 +252,7 @@ export const getTransactions = async (req, res) => {
       .populate('categoryId', 'name icon color type')
       .populate('accountId', 'name color icon')
       .populate('toAccountId', 'name color icon')
+      .populate('tags', 'name color')
       .sort({ date: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -269,7 +279,7 @@ export const createTransaction = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId } = req.body;
+    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId, tags } = req.body;
 
     const transaction = new Transaction({
       userId: req.user.id,
@@ -281,7 +291,8 @@ export const createTransaction = async (req, res) => {
       date,
       note,
       toAccountId,
-      savingsGoalId
+      savingsGoalId,
+      tags: tags || []
     });
 
     await transaction.save({ session });
@@ -314,7 +325,8 @@ export const createTransaction = async (req, res) => {
       .populate('categoryId', 'name icon color type')
       .populate('accountId', 'name color icon')
       .populate('toAccountId', 'name color icon')
-      .populate('savingsGoalId', 'name icon color');
+      .populate('savingsGoalId', 'name icon color')
+      .populate('tags', 'name color');
       
     res.status(201).json(populatedTx);
   } catch (error) {
@@ -713,7 +725,7 @@ export const updateTransaction = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId } = req.body;
+    const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId, tags } = req.body;
     const transaction = await Transaction.findById(req.params.id).session(session);
 
     if (!transaction) return res.status(404).json({ message: 'Transaction non trouvée' });
@@ -759,6 +771,9 @@ export const updateTransaction = async (req, res) => {
     if (req.body.hasOwnProperty('savingsGoalId')) {
       transaction.savingsGoalId = savingsGoalId;
     }
+    if (tags !== undefined) {
+      transaction.tags = tags;
+    }
 
     await transaction.save({ session });
 
@@ -794,7 +809,8 @@ export const updateTransaction = async (req, res) => {
       .populate('categoryId', 'name icon color type')
       .populate('accountId', 'name color icon')
       .populate('toAccountId', 'name color icon')
-      .populate('savingsGoalId', 'name icon color');
+      .populate('savingsGoalId', 'name icon color')
+      .populate('tags', 'name color');
 
     res.json(populatedTx);
   } catch (error) {

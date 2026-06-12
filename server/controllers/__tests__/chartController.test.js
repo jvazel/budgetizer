@@ -1,8 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getChartsByCategory, getForecastCharts } from '../chartController.js';
+import { getChartsByCategory, getForecastCharts, getTagChartsData } from '../chartController.js';
 import Category from '../../models/Category.js';
 import Transaction from '../../models/Transaction.js';
 import Account from '../../models/Account.js';
+import Tag from '../../models/Tag.js';
 
 vi.mock('../../models/Category.js', () => ({
   default: {
@@ -17,6 +18,12 @@ vi.mock('../../models/Transaction.js', () => ({
 }));
 
 vi.mock('../../models/Account.js', () => ({
+  default: {
+    find: vi.fn()
+  }
+}));
+
+vi.mock('../../models/Tag.js', () => ({
   default: {
     find: vi.fn()
   }
@@ -122,6 +129,70 @@ describe('Chart Controller', () => {
       const responseData = res.json.mock.calls[0][0];
       // Should have projected 3 months of data
       expect(responseData.forecast.length).toBe(3);
+    });
+  });
+
+  describe('getTagChartsData', () => {
+    it('should aggregate tags comparison and Drilldown charts correctly', async () => {
+      req.query = {
+        startDate: '2026-06-01',
+        endDate: '2026-06-30',
+        tagId: 'tag_1',
+        type: 'expense'
+      };
+
+      const mockTags = [
+        { _id: 'tag_1', name: 'Vacances', color: 'blue' },
+        { _id: 'tag_2', name: 'Perso', color: 'green' }
+      ];
+
+      const mockCategories = [
+        { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' }
+      ];
+
+      const mockTransactions = [
+        // Transaction containing both tags
+        { 
+          categoryId: 'cat_food', 
+          amount: 50, 
+          type: 'expense', 
+          date: new Date('2026-06-05'),
+          tags: ['tag_1', 'tag_2']
+        },
+        // Transaction containing only tag_1
+        { 
+          categoryId: 'cat_food', 
+          amount: 100, 
+          type: 'expense', 
+          date: new Date('2026-06-15'),
+          tags: ['tag_1']
+        }
+      ];
+
+      Tag.find.mockImplementation(() => mockQuery(mockTags));
+      Category.find.mockImplementation(() => mockQuery(mockCategories));
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getTagChartsData(req, res);
+
+      expect(Tag.find).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(Transaction.find).toHaveBeenCalled();
+
+      // Vacances has 50 + 100 = 150
+      // Perso has 50
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        tagsComparison: [
+          expect.objectContaining({ name: 'Vacances', amount: 150 }),
+          expect.objectContaining({ name: 'Perso', amount: 50 })
+        ],
+        categoryBreakdown: [
+          expect.objectContaining({ name: 'Alimentation', amount: 150 })
+        ],
+        cumulativeEvolution: [
+          expect.objectContaining({ cumulative: 50, amount: 50 }),
+          expect.objectContaining({ cumulative: 150, amount: 100 })
+        ]
+      }));
     });
   });
 });

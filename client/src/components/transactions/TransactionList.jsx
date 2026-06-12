@@ -70,6 +70,20 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
                         <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
                       </span>
+                      
+                      {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
+                        <span
+                          key={tag._id}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
+                          style={{
+                            backgroundColor: `${tag.color}18`,
+                            color: tag.color,
+                            borderColor: `${tag.color}35`
+                          }}
+                        >
+                          #{tag.name}
+                        </span>
+                      ))}
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
@@ -83,6 +97,20 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
                         <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                       </span>
+
+                      {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
+                        <span
+                          key={tag._id}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
+                          style={{
+                            backgroundColor: `${tag.color}18`,
+                            color: tag.color,
+                            borderColor: `${tag.color}35`
+                          }}
+                        >
+                          #{tag.name}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>

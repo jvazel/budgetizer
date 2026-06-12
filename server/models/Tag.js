@@ -1,0 +1,28 @@
+import mongoose from 'mongoose';
+
+const tagSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  color: {
+    type: String,
+    required: true,
+    default: '#3B82F6'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Enforce unique tag names per user
+tagSchema.index({ userId: 1, name: 1 }, { unique: true });
+
+export default mongoose.model('Tag', tagSchema);

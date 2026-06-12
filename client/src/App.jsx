@@ -13,6 +13,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 const Home = React.lazy(() => import('./pages/Home'));
 const Categories = React.lazy(() => import('./pages/Categories'));
+const Tags = React.lazy(() => import('./pages/Tags'));
 const Transactions = React.lazy(() => import('./pages/Transactions'));
 const Budgets = React.lazy(() => import('./pages/Budgets'));
 const CalendarPage = React.lazy(() => import('./pages/CalendarPage'));
@@ -130,6 +131,7 @@ const AppContent = () => {
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/tags" element={<Tags />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/accounts" element={<AccountsPage />} />
             <Route path="/accounts/:id/credit" element={<CreditDetailPage />} />
