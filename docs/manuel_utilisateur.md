@@ -161,6 +161,17 @@ Analysez le passé, anticipez le futur et surveillez votre rythme de dépenses d
     * **Aiguille à gauche (Zone verte)** : Votre vitesse de dépense réelle sur les 7 derniers jours est inférieure ou égale à la limite autorisée par jour pour tenir le mois. Le diagnostic affiche *"Vitesse sous contrôle"*.
     * **Aiguille à droite (Zone rouge)** : Vous dépensez trop rapidement. Le diagnostic affiche *"⚠️ Excès de vitesse détecté"* et estime précisément la **date d'épuisement complète (crash)** de votre budget si vous maintenez ce rythme.
   * *Action corrective* : Une fiche d'aide recalcule pour vous en direct la **nouvelle limite quotidienne conseillée** à respecter sur les jours restants pour compenser le retard et terminer le mois dans le vert. Si le budget est déjà épuisé, la jauge s'affiche en rouge et vous conseille une limite de 0 €/jour.
+* **Stress-test & Résilience (Simulation stochastique de Monte Carlo)** : Projetez la viabilité à long terme de votre patrimoine financier (de 5 à 40 ans) en exécutant localement dans votre navigateur 1 000 trajectoires de simulations aléatoires intégrant la volatilité des marchés, l'inflation et d'éventuels sinistres majeurs.
+  * *Curseurs de configuration (⚙️)* : Vous pouvez ouvrir ou replier le panneau des paramètres pour moduler :
+    * Le **Capital initial** et l'**Épargne mensuelle** (calculés et pré-remplis automatiquement à partir de votre valeur nette globale et de votre capacité d'épargne moyenne, mais modifiables à souhait).
+    * L'**Horizon temporel** de projection (5 à 40 ans).
+    * Le **Profil d'investissement** : Boutons rapides (*Prudent* : rendement 2.5% / volatilité 2%, *Équilibré* : 5% / 8%, *Dynamique* : 8% / 16%) mettant à jour les curseurs de rendement annuel attendu et de volatilité.
+    * Le taux d'**Inflation estimé** pour mesurer l'évolution de votre patrimoine en euros constants (pouvoir d'achat d'aujourd'hui). Vous pouvez choisir d'indexer ou non votre épargne sur celle-ci.
+    * Le **Stress-test de coups durs** : Définissez la probabilité annuelle (fréquence) d'un incident majeur (maladie, sinistre, chômage) et son coût estimé (gravité) pour évaluer la résistance de votre plan financier.
+  * *Interprétation du graphique* :
+    * La ligne centrale solide représente la trajectoire médiane (Percentile 50 : le scénario le plus probable).
+    * L'aire verte translucide délimite l'entonnoir d'incertitude compris entre le pire scénario (Percentile 10 : 90% de chances de faire mieux) et le meilleur scénario (Percentile 90 : 10% de chances de faire mieux).
+  * *Rapport de diagnostic* : Un score de résilience (pourcentage de simulations réussies où le capital final reste positif) vous attribue un diagnostic (*Excellent*, *Correct* ou *Vulnérable*) et affiche le délai de rupture moyen en années en cas d'épuisement du capital.
 
 ---
 

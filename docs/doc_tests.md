@@ -392,6 +392,27 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | **Recherche par fallback rawId** | ID `body.id` introuvable mais `body.rawId` présent en BDD | Recherche alternative dans la collection `UserCredential` | Authentification validée avec succès via la clé correspondante au `rawId`. |
 | **Format du paramètre credential** | Appel à `verifyAuthenticationResponse` | Passage de l'objet contenant id, publicKey, counter et transports | SimpleWebAuthn v13 valide les paramètres sans erreur de type (évite les bugs liés au `counter` indéfini). |
 
+### 2.17 Tests de la Simulation de Monte Carlo & Stress-test (`monteCarloHelper.js` & `ResilienceChart.jsx`)
+
+#### 2.17.1 Tests unitaires mathématiques (`monteCarloHelper.test.js`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Génération Box-Muller** | Nombres aléatoires de `Math.random()` | Transformation Box-Muller en distribution normale standard | Valeurs numériques finies générées. Sur 2000 échantillons, la moyenne est de $0 \pm 0.15$ et l'écart-type est de $1 \pm 0.15$. |
+| **Structure des résultats** | Paramètres par défaut de simulation ($10000$ € initiaux, $300$ €/mois, horizon $10$ ans) | Projection sur 10 ans avec 500 simulations | Retourne un objet contenant `yearlyData` (tableau de longueur 11), `resilienceScore` et `avgRuptureYear`. |
+| **Tri des percentiles** | Paramètres de simulation stochastique | Tri croissant des capitalisations finales | Pour chaque année, vérifie que les percentiles respectent la relation d'ordre : P10 <= P50 <= P90. |
+| **Évaluation de résilience** | Scénarios sécurisé vs à haut risque | Calcul du taux de réussite sur l'horizon | Le scénario sécurisé affiche $100\%$ de résilience. Le scénario risqué (sinistres fréquents et capitaux minimes) affiche un taux $<100\%$ et retourne une valeur d'année moyenne de rupture cohérente. |
+| **Indexation de l'épargne** | Épargne avec vs sans indexation sur l'inflation | Calcul des soldes réels finaux sur 10 ans | Le P50 final avec indexation est strictement supérieur au P50 final sans indexation (perte de pouvoir d'achat). |
+
+#### 2.17.2 Tests de composants UI (`ResilienceChart.test.jsx`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Initialisation & Banner** | Données mockées du Dashboard ($25000$ € solde, $+1000$ € d'épargne nette) | Rendu initial du composant | Le titre s'affiche. Les inputs de capital et d'épargne sont correctement pré-remplis à $25000$ et $1000$. Le score initial de résilience calculé s'affiche à $100\%$. |
+| **Pliage / Dépliage** | Clic sur l'en-tête "Configuration des paramètres" | Bascule de l'état d'affichage local `isConfigOpen` | Les champs de saisie de la simulation sont masqués (première bascule) puis réaffichés (seconde bascule). |
+| **Profils de risque** | Clics sur les boutons de presets "Prudent" et "Dynamique" | Mise à jour automatique des curseurs correspondants | Cliquer sur "Prudent" passe le rendement à $2.5\%$ et la volatilité à $2.0\%$. Cliquer sur "Dynamique" passe le rendement à $8.0\%$ et la volatilité à $16.0\%$. |
+| **Diagnostic réactif** | Saisie d'un capital faible ($100$ €) et coût de coup dur élevé ($30000$ €) | Recalcul instantané du modèle mathématique stochastique | La vue met à jour le diagnostic pour afficher le message d'alerte rouge `"⚠️ Vulnérabilité financière élevée"`. |
+
 ---
 
 ## 3. Exécution des Tests

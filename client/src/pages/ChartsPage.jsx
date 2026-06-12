@@ -11,8 +11,9 @@ import RankingChart from '../components/charts/RankingChart';
 import HistogramChart from '../components/charts/HistogramChart';
 import TagChart from '../components/charts/TagChart';
 import VelocityChart from '../components/charts/VelocityChart';
+import ResilienceChart from '../components/charts/ResilienceChart';
 import BottomSheet from '../components/ui/BottomSheet';
-import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge } from 'lucide-react';
+import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge, ShieldCheck } from 'lucide-react';
 
 
 const ChartsPage = () => {
@@ -34,6 +35,7 @@ const ChartsPage = () => {
     cashflow: 'Cash Flow',
     ranking: 'Classement Dépenses',
     networth: 'Richesse Nette',
+    resilience: 'Stress-test & Résilience',
     budgetactual: 'Budget vs Réel',
     future: 'Trésorerie',
     forecast: 'Prévisions',
@@ -61,6 +63,7 @@ const ChartsPage = () => {
       {activeTab === 'cashflow' && <CashFlowChart />}
       {activeTab === 'ranking' && <RankingChart />}
       {activeTab === 'networth' && <NetWorthChart />}
+      {activeTab === 'resilience' && <ResilienceChart />}
       {activeTab === 'budgetactual' && <BudgetActualChart />}
       {activeTab === 'future' && <FutureChart />}
       {activeTab === 'forecast' && <ForecastChart />}
@@ -85,6 +88,7 @@ const ChartsPage = () => {
               { key: 'histogram', label: 'Histogramme Personnalisé', desc: 'Analyse sur mesure de vos recettes et dépenses sur une période choisie.', icon: BarChart2, color: 'text-teal-400 bg-teal-500/10' },
               { key: 'ranking', label: 'Classement des Dépenses', desc: 'Identifiez vos habitudes et commerçants les plus fréquents.', icon: Award, color: 'text-amber-400 bg-amber-500/10' },
               { key: 'networth', label: 'Évolution Richesse Nette', desc: 'Suivi de vos actifs nets de vos passifs/dettes.', icon: LineChart, color: 'text-sky-400 bg-sky-500/10' },
+              { key: 'resilience', label: 'Stress-test & Résilience (Monte Carlo)', desc: 'Projetez la viabilité à long terme de votre patrimoine face aux aléas de la vie.', icon: ShieldCheck, color: 'text-emerald-400 bg-emerald-500/10' },
               { key: 'budgetactual', label: 'Budget vs Dépenses Réelles', desc: 'Comparatif visuel de vos limites et du réel.', icon: Sliders, color: 'text-pink-400 bg-pink-500/10' },
               { key: 'future', label: 'Prévisions de Trésorerie', desc: 'Projection de votre solde futur à court terme.', icon: Clock, color: 'text-blue-400 bg-blue-500/10' },
               { key: 'forecast', label: 'Tendances & Prévisions (IA)', desc: 'Analyse statistique de vos tendances futures.', icon: TrendingUp, color: 'text-indigo-400 bg-indigo-500/10' }

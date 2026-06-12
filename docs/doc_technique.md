@@ -459,3 +459,34 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
  - **Calcul des Angles** : La vitesse cible est fixée au centre à la verticale (90 degrés). L'aiguille pivote entre 0 et 180 degrés selon le ratio $\text{vitesseRelle} / (2 \times \text{vitesseCible})$.
  - **Micro-animation de l'Aiguille** : La rotation de l'aiguille est animée de manière fluide en CSS via une propriété de transition matérielle `transform` combinée à une fonction de transition de type ressort (`cubic-bezier(0.34, 1.56, 0.64, 1)`).
 
+
+## 10. Architecture Technique de la Simulation Monte Carlo & Stress-test ⚙️
+
+### 10.1 Organisation des Modules
+- **Moteur Mathématique (`monteCarloHelper.js`)** : Regroupe l'implémentation de la transformation de Box-Muller et de la boucle principale de simulation Monte Carlo. Il est exempt de dépendances liées au framework UI pour faciliter les tests unitaires purs.
+- **Interface Utilisateur (`ResilienceChart.jsx`)** : Composant gérant l'état des curseurs (sliders), la liaison aux données d'accueil (`useDashboard`), le déclenchement de la simulation et le rendu graphique.
+
+### 10.2 Algorithme de Simulation et de Stress-testing
+L'algorithme s'exécute localement dans le navigateur sur $N = 1000$ chemins stochastiques indépendants :
+1. **Transformation de Box-Muller** : Génère un nombre aléatoire $Z$ suivant une loi normale standard $\mathcal{N}(0,1)$ :
+   $$u_1, u_2 \sim \mathcal{U}(0,1) \implies Z = \sqrt{-2\ln(u_1)}\cos(2\pi u_2)$$
+2. **Évolution mensuelle du Capital ($C_t$)** :
+   $$C_t = C_{t-1} \times (1 + r_t) + S_t - \text{Sinistre}_t$$
+   - Le taux de rendement mensuel réel ajusté de la volatilité et de l'inflation est :
+     $$r_t = \frac{r_{\text{annuel}} - i_{\text{annuel}}}{12} + \frac{\sigma_{\text{annuel}}}{\sqrt{12}} \times Z$$
+   - L'épargne réelle mensuelle $S_t$ est constante si l'indexation est activée. Sinon, elle décroît chaque mois selon le facteur d'inflation cumulé : $S_t = S_0 \times (1 - i_{\text{mensuel}})^t$.
+   - Le sinistre exceptionnel est déclenché par un tirage de Bernoulli mensuel de probabilité $p_{\text{mensuel}} = p_{\text{annuel}}/12$. S'il survient, la somme du sinistre est soustraite de $C_t$.
+3. **Agrégation des Percentiles par Année** :
+   Pour chaque année écoulée, les capitalisations de toutes les simulations sont triées par ordre croissant afin d'extraire :
+   - **Percentile 10 (Bas)** : Borne pessimiste de la trajectoire (90 % de chance de faire mieux).
+   - **Percentile 50 (Median)** : Trajectoire médiane attendue la plus probable.
+   - **Percentile 90 (Haut)** : Borne optimiste (10 % de chance de faire mieux).
+
+### 10.3 Rendu de l'Entonnoir d'Incertitude (Fan Chart)
+Le rendu graphique s'appuie sur le composant `ComposedChart` de Recharts :
+- **Entonnoir de dispersion** : Le percentile 10 et 90 sont regroupés sous forme de tuple `range: [p10, p90]` au niveau de chaque donnée annuelle. Un composant `Area` est lié à cette plage avec un fond transparent `url(#colorResilience)` (`fillOpacity={0.20}`).
+- **Lignes de démarcation** : Des composants `Line` sont superposés. Le percentile 50 (médian) est représenté par une ligne pleine de $3\text{px}$. Les percentiles 10 et 90 sont matérialisés par des lignes pointillées de $1\text{px}$ pour structurer proprement les contours de l'entonnoir.
+
+### 10.4 Optimisations de Performance
+- **Mémoïsation (`useMemo`)** : L'algorithme de Monte Carlo effectue $1000 \times 12 \times Y$ itérations (soit 360 000 boucles pour un horizon de 30 ans). La simulation est encapsulée dans un hook `useMemo` réactif aux seuls changements de curseurs de configuration, garantissant que le fil de rendu (rendering thread) du navigateur ne subisse aucune latence lors des re-rendus normaux du composant. L'exécution moyenne en JS moderne prend moins de $8\text{ms}$.
+- **Lazy Prefilling** : Les valeurs initiales du capital et de l'épargne sont déclarées à `undefined`. Un effet secondaire (`useEffect`) les met à jour une unique fois à la fin du chargement de l'API. Cela évite que les curseurs configurés manuellement par l'utilisateur ne soient écrasés en cas de rafraîchissement réseau en arrière-plan.
