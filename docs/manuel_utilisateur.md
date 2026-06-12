@@ -45,6 +45,11 @@ Le tableau de bord centralise votre santé financière en un seul coup d'œil.
   * *Geste interactif* : **Tapez sur une carte de compte standard** pour ouvrir son formulaire de modification.
   * *Geste interactif* : **Tapez sur une carte de type Crédit (bordeaux)** pour être redirigé vers sa page d'analyse détaillée de prêt.
 * **Ajout rapide de transaction** : Cliquez sur le bouton d'action flottant `+` en bas au centre. Cela ouvre la bottom sheet de saisie instantanée.
+* **Le Solde Plancher (Vrai Disponible) 📉** : Situé juste sous le Solde Global, il affiche votre disponible réel après déduction des factures et charges programmées d'ici votre prochaine paye.
+  * *Indicateur visuel* : Une pastille verte signale un solde confortable (> 20% du solde réel), tandis qu'un indicateur orange ou rouge signale un risque de découvert ou de trésorerie tendue.
+  * *Graphique de tendance interactif* : Glissez le doigt sur le mini-graphique (Sparkline) à 30 jours pour inspecter votre solde futur projeté au jour le jour. Une ligne pointillée rouge matérialise le seuil critique de `0 €` (Zone Rouge) en cas de risque de solde négatif.
+  * *Configuration de la paye* : Cliquez sur l'icône d'engrenage pour fixer manuellement le jour récurrent de versement de votre paye (ou conservez la détection automatique via votre échéancier).
+  * *Liste d'échéances pliable* : Déroulez l'accordéon en bas de la carte pour inspecter les factures attendues d'ici la paye. Vous pouvez cocher une facture pour l'exclure du calcul si vous l'avez déjà payée par un autre canal, ce qui réajuste instantanément votre Vrai Disponible.
 
 ---
 

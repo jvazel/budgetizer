@@ -5,7 +5,9 @@ import { useDashboard } from '../hooks/useDashboard';
 import { useBudgets } from '../hooks/useBudgets';
 import { useSavingsGoals } from '../hooks/useSavingsGoals';
 import { useFinancialScore } from '../hooks/useFinancialScore';
+import { useScheduled } from '../hooks/useScheduled';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
+import FloorBalanceWidget from '../components/ui/FloorBalanceWidget';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import toast from 'react-hot-toast';
 import BudgetCard from '../components/budgets/BudgetCard';
@@ -138,6 +140,7 @@ const Home = () => {
   const { user } = useContext(AuthContext);
   const { addAccount, updateAccount, deleteAccount } = useAccounts(false);
   const { data: db, loading, refreshDashboard } = useDashboard();
+  const { upcoming = [], loading: scheduledLoading } = useScheduled();
   
   const today = new Date();
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -293,6 +296,13 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Widget Vrai Disponible (Solde Plancher) */}
+      <FloorBalanceWidget 
+        actualBalance={totalAvailable + totalCredit} 
+        upcoming={upcoming} 
+        loading={scheduledLoading || loading} 
+      />
 
       {/* Sommaire d'activité Card */}
       <div 

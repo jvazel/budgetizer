@@ -23,7 +23,7 @@ vi.mock('../../hooks/useDashboard', () => ({
   useDashboard: () => ({
     data: {
       totalAvailable: 1500,
-      totalCredit: 0,
+      totalCredit: -300,
       accounts: [
         { _id: 'acc1', name: 'Compte Courant', balance: 1500, type: 'checking', currency: 'EUR' }
       ],
@@ -52,6 +52,15 @@ vi.mock('../../hooks/useSavingsGoals', () => ({
   useSavingsGoals: () => ({
     savingsGoals: mockSavingsGoals,
     loading: mockSavingsLoading
+  })
+}));
+
+vi.mock('../../hooks/useScheduled', () => ({
+  useScheduled: () => ({
+    upcoming: [
+      { _id: 'tx1', type: 'expense', amount: 100, date: new Date() }
+    ],
+    loading: false
   })
 }));
 
@@ -88,6 +97,14 @@ vi.mock('../../components/accounts/AccountFormSheet', () => ({
 
 vi.mock('../../components/ui/InstallPromptBanner', () => ({
   default: () => <div data-testid="install-prompt-banner" />
+}));
+
+vi.mock('../../components/ui/FloorBalanceWidget', () => ({
+  default: ({ actualBalance, upcoming, loading }) => (
+    <div data-testid="floor-balance-widget">
+      Floor Balance: {actualBalance} | Upcoming: {upcoming.length} | Loading: {String(loading)}
+    </div>
+  )
 }));
 
 describe('Home Page Dashboard - Savings Goals preview card', () => {
@@ -178,5 +195,12 @@ describe('Home Page Dashboard - Savings Goals preview card', () => {
     // The Gérer buttons should be visible
     const manageBtns = screen.getAllByRole('button', { name: /Gérer/ });
     expect(manageBtns.length).toBeGreaterThan(0);
+  });
+
+  it('renders the FloorBalanceWidget on the dashboard', () => {
+    renderComponent();
+    expect(screen.getByTestId('floor-balance-widget')).toBeInTheDocument();
+    expect(screen.getByText(/Floor Balance: 1200/)).toBeInTheDocument();
+    expect(screen.getByText(/Upcoming: 1/)).toBeInTheDocument();
   });
 });
