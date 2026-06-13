@@ -55,7 +55,7 @@ const FutureChart = () => {
   });
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       
       {/* 1. Filters */}
       <div className="flex gap-4 items-center justify-between">

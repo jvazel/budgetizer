@@ -118,7 +118,7 @@ const MonthlyReportPage = () => {
     <>
       <HeaderTitle>Rapport Mensuel</HeaderTitle>
       <HeaderBackButton to="/" />
-      <div className="space-y-6 pb-24">
+      <div className="space-y-6 mb-6">
         
         {/* Month & Year Selectors Card */}
         <div className="bg-surface-2 p-4 rounded-[28px] border border-border/40 space-y-3">
@@ -193,9 +193,13 @@ const MonthlyReportPage = () => {
             </button>
           </div>
         ) : !report ? (
-          <div className="text-center py-12 bg-surface-2 rounded-[28px] border border-dashed p-6">
-            <Info className="text-muted mx-auto mb-2" size={32} />
-            <p className="text-secondary text-xs">Aucune donnée disponible pour générer le rapport.</p>
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-surface-2/40 rounded-[28px] border border-border/20 shadow-inner">
+            <div className="w-12 h-12 rounded-full bg-surface border border-border/40 flex items-center justify-center text-muted mb-4 shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+              <Info className="text-accent relative z-10" size={24} />
+            </div>
+            <p className="text-primary text-xs font-bold mb-1">Rapport indisponible</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Aucune donnée disponible pour générer le rapport de cette période.</p>
           </div>
         ) : (!report.financialStats || (report.financialStats.income === 0 && report.financialStats.expenses === 0)) ? (
           <div className="bg-surface-2 p-6 rounded-[28px] border border-border/40 text-center space-y-4 shadow-sm">

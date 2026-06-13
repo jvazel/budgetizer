@@ -123,7 +123,7 @@ const CashFlowChart = () => {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Filters (Horizon + Account Selector) */}
       <div className="flex gap-4 items-center justify-between">
         {/* Horizon selector */}

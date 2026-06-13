@@ -323,6 +323,10 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
 - **Branding Systémique** : Suppression des logos et icônes génériques de portefeuille. Le logo de l'application (`/pwa-192x192.png`) a été standardisé sur les écrans suivants :
   - `Splash.jsx` (Écran de chargement initial).
   - Écrans d'authentification (`Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`).
+- **Titres de Page Collapsibles (`AppShell.jsx` / `Home.jsx`)** : Intégration d'un écouteur de défilement (`window.scrollY`) pour basculer dynamiquement l'opacité et l'affichage des titres de page dans le header collant.
+- **Sélecteur d'Analyses Catégorisé en Grille (`ChartsPage.jsx`)** : Restructuration du tiroir de sélection d'analyses en regroupant les 12 graphiques sous forme de grille compacte sur 2 colonnes avec des icônes de couleur, pour une meilleure ergonomie sur mobile.
+- **Harmonisation des Bordures et États Vides** : Standardisation du rayon de courbure à `rounded-[16px]` pour les composants internes et squelettes de chargement. Remplacement des bordures tiretées (`border-dashed`) des états vides par des cartes solides structurées intégrant des halos lumineux et des boutons d'actions nets.
+- **Système d'Interaction Tactile Haptique** : Définition des classes d'utilitaires CSS `.active-scale-sm`, `.active-scale-md`, et `.active-scale-lg` et de l'animation `@keyframes shimmer` pour des retours physiques instantanés de pressions tactiles sur les boutons, cartes et icônes.
 
 ---
 

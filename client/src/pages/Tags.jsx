@@ -47,7 +47,7 @@ const Tags = () => {
       <HeaderBackButton to="/" />
       <HeaderActions>{actions}</HeaderActions>
 
-      <div className="mt-4 pb-24">
+      <div className="mt-4 mb-6">
         <p className="text-xs text-muted mb-6 leading-relaxed">
           Les étiquettes (tags) vous permettent de suivre des projets ou des événements spécifiques transversaux (ex: "Voyage Corse 2026") indépendamment des catégories classiques.
         </p>
@@ -60,16 +60,18 @@ const Tags = () => {
             <div className="h-14 bg-surface-2 rounded-2xl animate-pulse" />
           </div>
         ) : tags.length === 0 ? (
-          <div className="bg-surface-2 border border-border/40 rounded-[28px] p-8 text-center text-muted">
-            <div className="w-12 h-12 rounded-full bg-border/20 flex items-center justify-center mx-auto mb-3 text-secondary">
-              <TagIcon size={20} />
+          <div className="flex flex-col items-center justify-center text-center py-10 px-4 bg-surface-2/40 rounded-[24px] border border-border/20 shadow-inner">
+            <div className="w-12 h-12 rounded-full bg-surface border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+              <TagIcon className="text-accent relative z-10" size={20} />
             </div>
-            <p className="text-xs font-medium">Vous n'avez pas encore créé d'étiquettes.</p>
-            <button
+            <p className="text-primary text-xs font-bold mb-1">Aucune étiquette</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Créez des tags pour suivre des projets ou événements transversaux.</p>
+            <button 
               onClick={handleAddTag}
-              className="mt-3 text-xs font-bold text-accent hover:underline focus:outline-none"
+              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all focus:outline-none"
             >
-              Créer ma première étiquette
+              Créer une étiquette
             </button>
           </div>
         ) : (

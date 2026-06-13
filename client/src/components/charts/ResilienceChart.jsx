@@ -144,7 +144,7 @@ const ResilienceChart = () => {
   const loading = dashboardLoading || initialCapital === undefined || monthlySavings === undefined;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* Header Info Banner */}
       <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm flex flex-col items-center justify-between text-center relative overflow-hidden">
         <div>

@@ -155,7 +155,7 @@ const VelocityChart = () => {
   }, [data.depletionDate]);
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Sélecteur de catégorie */}
       <div className="relative">
         <label className="text-[10px] text-secondary font-bold uppercase tracking-wider block mb-1.5">

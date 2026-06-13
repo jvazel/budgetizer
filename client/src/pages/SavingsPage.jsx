@@ -73,17 +73,17 @@ const SavingsPage = () => {
       <HeaderTitle>Objectifs d'épargne</HeaderTitle>
       <HeaderBackButton to="/" />
       <HeaderActions>{actions}</HeaderActions>
-      <div className="pb-24 px-1">
+      <div className="mb-6 px-1">
         
         {error && (
           <div className="bg-danger/10 border border-danger/20 text-danger p-4 rounded-2xl mb-6 text-xs font-semibold">
-            {error}
+             {error}
           </div>
         )}
 
         {/* Global Progress Header Widget */}
         {savingsGoals.length > 0 && !showSkeleton && (
-          <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm mb-6 relative overflow-hidden">
+          <div className="bg-surface-2 p-5 rounded-[16px] border border-border/40 shadow-sm mb-6 relative overflow-hidden">
             <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
             
             <div className="flex justify-between items-center mb-3">
@@ -119,13 +119,14 @@ const SavingsPage = () => {
         {/* Goals List / Empty State */}
         {showSkeleton ? (
           <div className="space-y-4">
-            <div className="h-[180px] bg-surface-2/60 rounded-[28px] animate-pulse border border-border/20" />
-            <div className="h-[180px] bg-surface-2/60 rounded-[28px] animate-pulse border border-border/20" />
+            <div className="h-[180px] bg-surface-2/60 rounded-[16px] animate-pulse border border-border/20" />
+            <div className="h-[180px] bg-surface-2/60 rounded-[16px] animate-pulse border border-border/20" />
           </div>
         ) : savingsGoals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-surface-2/20 rounded-[28px] border border-dashed border-border/60">
-            <div className="w-16 h-16 rounded-full bg-surface-3 border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner">
-              <Target size={28} />
+          <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner">
+            <div className="w-16 h-16 rounded-full bg-surface border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+              <Target size={28} className="text-accent relative z-10" />
             </div>
             <h3 className="text-sm font-bold text-primary mb-1">Aucun objectif d'épargne</h3>
             <p className="text-xs text-muted max-w-[240px] leading-relaxed mb-6">
@@ -133,7 +134,7 @@ const SavingsPage = () => {
             </p>
             <button
               onClick={handleOpenAdd}
-              className="py-3 px-6 bg-accent text-white font-bold text-xs rounded-2xl shadow-[0_8px_16px_rgba(74,222,128,0.25)] hover:brightness-110 active:scale-95 transition-all"
+              className="py-3 px-6 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
             >
               Créer mon premier objectif
             </button>

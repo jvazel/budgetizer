@@ -99,7 +99,7 @@ describe('MonthlyReportPage Component - Robustness Tests', () => {
     });
 
     renderComponent();
-    expect(screen.getByText('Aucune donnée disponible pour générer le rapport.')).toBeInTheDocument();
+    expect(screen.getByText('Aucune donnée disponible pour générer le rapport de cette période.')).toBeInTheDocument();
   });
 
   it('handles zero transactions state correctly by showing Données insuffisantes', () => {

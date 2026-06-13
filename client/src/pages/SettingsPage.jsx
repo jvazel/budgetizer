@@ -45,7 +45,7 @@ const SettingsPage = () => {
     <>
       <HeaderTitle>Paramètres</HeaderTitle>
       <HeaderBackButton to="/" />
-      <div className="space-y-8 pb-24">
+      <div className="space-y-8 mb-6">
         
         {/* Profile Card Summary & Form */}
         <ProfileForm user={user} setUser={setUser} />

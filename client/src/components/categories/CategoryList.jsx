@@ -78,7 +78,7 @@ const CategoryList = ({ categories, onEdit, onDelete, onAddSub }) => {
   }
 
   return (
-    <div className="pb-24">
+    <div>
       {categories.map(category => (
         <CategoryItem 
           key={category._id} 

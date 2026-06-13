@@ -139,9 +139,9 @@ describe('Home Page Dashboard - Savings Goals preview card', () => {
     // Check title section
     expect(screen.getByText("Objectifs d'épargne")).toBeInTheDocument();
     // Check empty message
-    expect(screen.getByText("Aucun objectif d'épargne défini.")).toBeInTheDocument();
+    expect(screen.getByText("Aucun objectif d'épargne")).toBeInTheDocument();
     // Check call-to-action button
-    expect(screen.getByRole('button', { name: "Créer mon premier objectif" })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Créer un objectif" })).toBeInTheDocument();
   });
 
   it('renders listed active savings goals correctly', () => {

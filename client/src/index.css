@@ -119,3 +119,47 @@ body {
   color: var(--danger) !important;
 }
 
+/* === Premium Shimmer loading effect === */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-loader {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-2) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* === Standard Active scale classes for haptic tactile feedbacks === */
+.active-scale-sm {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.active-scale-sm:active {
+  transform: scale(0.98);
+}
+
+.active-scale-md {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.active-scale-md:active {
+  transform: scale(0.95);
+}
+
+.active-scale-lg {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.active-scale-lg:active {
+  transform: scale(0.9);
+}
+
+

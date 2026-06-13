@@ -125,10 +125,10 @@ const TransfersPage = () => {
     <>
       <HeaderTitle>Virements Instantanés</HeaderTitle>
       <HeaderBackButton to="/" />
-      <div className="space-y-6 pb-24 px-1">
+      <div className="space-y-6 mb-6 px-1">
         
         {/* Main interactive transfer card */}
-        <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm relative overflow-hidden">
+        <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm relative overflow-hidden">
           <div className="absolute -top-12 -left-12 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
           
           <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider mb-4">
@@ -261,15 +261,20 @@ const TransfersPage = () => {
               <div className="h-16 bg-surface-2 rounded-2xl animate-pulse" />
             </div>
           ) : transfers.length === 0 ? (
-            <div className="text-center py-8 bg-surface-2/30 rounded-[28px] border border-dashed border-border/40">
-              <p className="text-muted text-xs">Aucun virement récent trouvé.</p>
+            <div className="flex flex-col items-center justify-center text-center py-8 px-4 bg-surface-2/40 rounded-[24px] border border-border/20 shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-surface border border-border/40 flex items-center justify-center text-accent mb-3 relative overflow-hidden">
+                <div className="absolute inset-0 bg-accent/5 rounded-xl blur-md" />
+                <ArrowLeftRight size={18} className="text-accent relative z-10" />
+              </div>
+              <p className="text-primary text-xs font-bold mb-1">Aucun virement</p>
+              <p className="text-muted text-[10px] max-w-[200px] mb-1">Aucun virement récent trouvé sur cette période.</p>
             </div>
           ) : (
             <div className="space-y-2.5">
               {transfers.map(tx => (
                 <div
                   key={tx._id}
-                  className="bg-surface-2 border border-border/40 p-4 rounded-[22px] flex items-center justify-between transition-all shadow-sm"
+                  className="bg-surface-2 border border-border/40 p-4 rounded-[16px] flex items-center justify-between transition-all shadow-sm"
                 >
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center shrink-0">

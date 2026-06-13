@@ -82,7 +82,7 @@ const SubscriptionsPage = () => {
       
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
-        <div className="bg-gradient-to-br from-accent to-emerald-600 p-6 rounded-[28px] text-white shadow-xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-accent to-emerald-600 p-6 rounded-[24px] text-white shadow-xl relative overflow-hidden">
           {/* Subtle light bubble background */}
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
           
@@ -105,7 +105,7 @@ const SubscriptionsPage = () => {
       </section>
 
       {/* 2. Subscriptions List */}
-      <section className="space-y-4 pb-24">
+      <section className="space-y-4 mb-6">
         <h3 className="text-sm font-extrabold text-secondary px-1">Liste des abonnements</h3>
 
         {loading ? (
@@ -114,14 +114,18 @@ const SubscriptionsPage = () => {
             <div className="h-20 bg-surface-2 rounded-2xl animate-pulse" />
           </div>
         ) : activeSubscriptions.length === 0 ? (
-          <div className="text-center py-12 text-muted bg-surface-2/40 rounded-3xl border border-dashed border-border/40 space-y-2">
-            <HelpCircle size={32} className="mx-auto text-muted/60" />
-            <p className="text-sm">Aucun abonnement enregistré.</p>
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-surface-2/40 rounded-[24px] border border-border/20 shadow-inner">
+            <div className="w-12 h-12 rounded-full bg-surface border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+              <CreditCard className="text-accent relative z-10" size={24} />
+            </div>
+            <p className="text-primary text-xs font-bold mb-1">Aucun abonnement</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Ajoutez un abonnement pour suivre vos coûts récurrents.</p>
             <button 
               onClick={handleOpenAdd}
-              className="text-xs text-accent font-bold underline"
+              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
             >
-              Ajouter un abonnement récurrent
+              Ajouter un abonnement
             </button>
           </div>
         ) : (

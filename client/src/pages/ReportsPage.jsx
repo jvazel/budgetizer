@@ -637,7 +637,7 @@ const ReportsPage = () => {
         }
       `}</style>
 
-      <div className="space-y-6 pb-24">
+      <div className="space-y-6 mb-6">
         
         {/* Parameters Form - Hidden during printing */}
         <section className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm print:hidden">

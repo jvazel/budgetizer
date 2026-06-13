@@ -145,7 +145,7 @@ const ScheduledPage = () => {
       )}
 
       {/* 2. Active Scheduled items list */}
-      <section className="space-y-4 pb-24">
+      <section className="space-y-4 mb-6">
         <h3 className="text-sm font-extrabold text-secondary px-1">Planifications actives</h3>
 
         {loading ? (
@@ -154,12 +154,16 @@ const ScheduledPage = () => {
             <div className="h-24 bg-surface-2 rounded-2xl animate-pulse" />
           </div>
         ) : scheduled.length === 0 ? (
-          <div className="text-center py-12 text-muted bg-surface-2/40 rounded-3xl border border-dashed border-border/40 space-y-2">
-            <HelpCircle size={32} className="mx-auto text-muted/60" />
-            <p className="text-sm">Aucune transaction planifiée pour le moment.</p>
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-surface-2/40 rounded-[24px] border border-border/20 shadow-inner">
+            <div className="w-12 h-12 rounded-full bg-surface border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+              <Clock className="text-accent relative z-10" size={24} />
+            </div>
+            <p className="text-primary text-xs font-bold mb-1">Aucune planification</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Planifiez des factures récurrentes ou virements automatiques.</p>
             <button 
               onClick={handleOpenAdd}
-              className="text-xs text-accent font-bold underline"
+              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
             >
               Ajouter une planification
             </button>

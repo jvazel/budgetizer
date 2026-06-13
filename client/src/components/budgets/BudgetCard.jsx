@@ -142,7 +142,7 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   return (
     <div 
       onClick={onEdit ? () => onEdit(budget) : undefined}
-      className={`bg-surface-2 p-5 rounded-[20px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${onEdit ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+      className={`bg-surface-2 p-5 rounded-[16px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${onEdit ? 'cursor-pointer active-scale-sm' : ''}`}
     >
       <div className="flex gap-4 items-start">
         

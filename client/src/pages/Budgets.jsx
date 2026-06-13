@@ -139,7 +139,7 @@ const Budgets = () => {
       <HeaderTitle>Budgets</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <HeaderBackButton to="/" />
-      <section className="pb-24">
+      <section className="mb-6">
         {/* Weekly Budgets Section */}
         <div className="mb-6">
           {renderSectionHeader("Budgets hebdomadaires", prevWeek, nextWeek)}
@@ -148,9 +148,15 @@ const Budgets = () => {
               <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
             </div>
           ) : weeklyBudgets.length === 0 ? (
-            <div className="text-center py-6 bg-surface-2/40 rounded-2xl border border-dashed border-border/60 mb-5">
-              <p className="text-xs text-muted mb-2">Aucun budget hebdomadaire défini.</p>
-              <button onClick={handleOpenAdd} className="text-xs text-accent font-bold hover:underline">Créer un budget hebdomadaire</button>
+            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
+              <p className="text-primary text-xs font-bold mb-1">Aucun budget hebdomadaire</p>
+              <p className="text-muted text-[10px] mb-3">Suivez vos dépenses sur un cycle de 7 jours.</p>
+              <button
+                onClick={handleOpenAdd}
+                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
+              >
+                Créer un budget hebdomadaire
+              </button>
             </div>
           ) : (
             weeklyBudgets.map(budget => (
@@ -173,9 +179,15 @@ const Budgets = () => {
               <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
             </div>
           ) : monthlyBudgets.length === 0 ? (
-            <div className="text-center py-6 bg-surface-2/40 rounded-2xl border border-dashed border-border/60 mb-5">
-              <p className="text-xs text-muted mb-2">Aucun budget mensuel défini.</p>
-              <button onClick={handleOpenAdd} className="text-xs text-accent font-bold hover:underline">Créer un budget mensuel</button>
+            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
+              <p className="text-primary text-xs font-bold mb-1">Aucun budget mensuel</p>
+              <p className="text-muted text-[10px] mb-3">Définissez une limite de dépenses pour le mois.</p>
+              <button
+                onClick={handleOpenAdd}
+                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
+              >
+                Créer un budget mensuel
+              </button>
             </div>
           ) : (
             monthlyBudgets.map(budget => (
@@ -198,9 +210,15 @@ const Budgets = () => {
               <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
             </div>
           ) : yearlyBudgets.length === 0 ? (
-            <div className="text-center py-6 bg-surface-2/40 rounded-2xl border border-dashed border-border/60 mb-5">
-              <p className="text-xs text-muted mb-2">Aucun budget annuel défini.</p>
-              <button onClick={handleOpenAdd} className="text-xs text-accent font-bold hover:underline">Créer un budget annuel</button>
+            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
+              <p className="text-primary text-xs font-bold mb-1">Aucun budget annuel</p>
+              <p className="text-muted text-[10px] mb-3">Projetez vos limites financières sur l'année.</p>
+              <button
+                onClick={handleOpenAdd}
+                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
+              >
+                Créer un budget annuel
+              </button>
             </div>
           ) : (
             yearlyBudgets.map(budget => (

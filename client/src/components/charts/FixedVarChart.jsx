@@ -217,7 +217,7 @@ const FixedVarChart = () => {
   const hoveredSlice = activeIndex !== null && pieData[activeIndex] ? pieData[activeIndex] : null;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
 
       {/* ── 1. Month navigation ── */}
       <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-xl border border-border/40">

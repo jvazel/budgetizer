@@ -228,7 +228,7 @@ const TagChart = () => {
     : 0;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Date and Type Selectors */}
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-full">

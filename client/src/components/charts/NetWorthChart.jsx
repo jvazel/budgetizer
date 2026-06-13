@@ -51,7 +51,7 @@ const NetWorthChart = () => {
   const lowestNetWorth = history.length > 0 ? Math.min(...history.map(h => h.netWorth)) : 0;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Period Selector */}
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
         {[

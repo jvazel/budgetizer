@@ -114,7 +114,7 @@ const HistogramChart = () => {
   const { history = [], metrics = {} } = data;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Filters Card */}
       <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
         <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase flex items-center gap-1.5">

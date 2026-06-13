@@ -138,7 +138,7 @@ const CreditDetailPage = () => {
       <>
         <HeaderTitle>Chargement...</HeaderTitle>
         <HeaderBackButton to="/accounts" />
-        <div className="space-y-6 mt-4 pb-24 animate-pulse">
+        <div className="space-y-6 mt-4 mb-6 animate-pulse">
           {/* Main Card Skeleton */}
           <div className="h-48 bg-surface-2 rounded-[28px] border border-border/40" />
           {/* Secondary Details Skeleton */}
@@ -175,7 +175,7 @@ const CreditDetailPage = () => {
         initial={{ x: '30px', opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: 'spring', damping: 20, stiffness: 150 }}
-        className="space-y-6 pb-24 mt-2"
+        className="space-y-6 mb-6 mt-2"
       >
         {/* Main Capital Overview Card */}
         <div className="bg-surface-2 border border-border/40 p-6 rounded-[28px] shadow-sm relative overflow-hidden">

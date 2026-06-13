@@ -68,7 +68,7 @@ const AiInsights = () => {
     <>
       <HeaderTitle>Conseils</HeaderTitle>
       <HeaderBackButton to="/" />
-      <div className="space-y-6 pb-24">
+      <div className="space-y-6 mb-6">
         
         {/* Header Introduction Card */}
         <div className="relative overflow-hidden bg-gradient-to-br from-accent/20 to-purple/20 p-5 rounded-[28px] border border-accent/20 shadow-md">

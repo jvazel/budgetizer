@@ -106,7 +106,7 @@ const CalendarPage = () => {
       </section>
 
       {/* Selected Day Transactions Panel */}
-      <section className="pb-24">
+      <section className="mb-6">
         <div className="flex justify-between items-center mb-4 px-1">
           <h3 className="font-bold text-secondary text-sm">
             Transactions du {selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}

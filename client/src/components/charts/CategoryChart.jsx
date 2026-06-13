@@ -341,7 +341,7 @@ const CategoryChart = () => {
       }));
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Selectors */}
       <div className="space-y-4">
         {/* Toggle between Monthly and Cumulative views */}

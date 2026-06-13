@@ -21,7 +21,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
   }, {});
 
   return (
-    <div className="pb-24">
+    <div>
       {Object.entries(grouped).map(([date, txs]) => (
         <div key={date} className="mb-6">
           <div className="sticky top-[56px] bg-base/95 backdrop-blur-sm z-10 py-2 mb-2 flex justify-between items-center px-1">

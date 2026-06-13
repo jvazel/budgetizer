@@ -73,14 +73,14 @@ const getGradeClass = (grade) => {
 
 // ─── Quick shortcuts ──────────────────────────────────────────────────────────
 const SHORTCUTS = [
-  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-pink-400 bg-pink-500/10 border-pink-500/15' },
-  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/15' },
-  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-purple-400 bg-purple-500/10 border-purple-500/15' },
-  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-blue-400 bg-blue-500/10 border-blue-500/15' },
-  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-amber-400 bg-amber-500/10 border-amber-500/15' },
-  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/15' },
-  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/15' },
-  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-rose-400 bg-rose-500/10 border-rose-500/15' },
+  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -177,9 +177,16 @@ const Home = () => {
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
-      <HeaderTitle>{title}</HeaderTitle>
-      <HeaderActions>{actions}</HeaderActions>
+      <HeaderTitle collapsible={true}>{title}</HeaderTitle>
       <InstallPromptBanner />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">
+          {title}
+        </h1>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Voici un aperçu de vos finances ce mois-ci.</p>
+      </div>
 
       {/* ── Hero — Vrai Disponible (FloorBalanceWidget est maintenant le hero) ── */}
       <FloorBalanceWidget
@@ -244,7 +251,7 @@ const Home = () => {
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="flex flex-col items-center justify-center py-3 px-1 rounded-[20px] bg-surface-2 border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-2 group select-none shadow-sm"
+                className="flex flex-col items-center justify-center py-3 px-1 rounded-[16px] bg-surface-2 border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-2 group select-none shadow-sm"
               >
                 {/* Icon container min 44px pour conformité mobile HIG */}
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
@@ -447,14 +454,22 @@ const Home = () => {
 
         {budgetsLoading ? (
           <div className="space-y-4">
-            <div className="h-[120px] bg-surface-2/50 rounded-[28px] animate-pulse" />
-            <div className="h-[120px] bg-surface-2/50 rounded-[28px] animate-pulse" />
+            <div className="h-[120px] bg-surface-2/50 rounded-[16px] animate-pulse" />
+            <div className="h-[120px] bg-surface-2/50 rounded-[16px] animate-pulse" />
           </div>
         ) : budgets.length === 0 ? (
-          <div className="text-center py-8 bg-surface rounded-[28px] border border-dashed border-border/40">
-            <p className="text-muted text-xs mb-3">Aucun budget défini pour ce mois.</p>
-            <button onClick={() => navigate('/budgets')} className="text-accent text-xs font-bold hover:underline">
-              Créer mon premier budget
+          <div className="flex flex-col items-center justify-center text-center py-8 px-4 bg-surface/40 rounded-[16px] border border-border/20 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-surface border border-border/40 flex items-center justify-center text-muted mb-3 relative overflow-hidden">
+              <div className="absolute inset-0 bg-accent/5 rounded-xl blur-md" />
+              <CreditCard size={18} className="text-accent/70 relative z-10" />
+            </div>
+            <p className="text-primary text-xs font-bold mb-1">Aucun budget défini</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Fixez des limites de dépenses pour garder le contrôle.</p>
+            <button
+              onClick={() => navigate('/budgets')}
+              className="py-2.5 px-4 bg-accent text-white font-bold text-[10px] rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
+            >
+              Créer un budget
             </button>
           </div>
         ) : (
@@ -483,10 +498,18 @@ const Home = () => {
             <div className="h-[80px] bg-surface-2/50 rounded-2xl animate-pulse" />
           </div>
         ) : savingsGoals.length === 0 ? (
-          <div className="text-center py-8 bg-surface rounded-[28px] border border-dashed border-border/40">
-            <p className="text-muted text-xs mb-3">Aucun objectif d'épargne défini.</p>
-            <button onClick={() => navigate('/savings')} className="text-accent text-xs font-bold hover:underline">
-              Créer mon premier objectif
+          <div className="flex flex-col items-center justify-center text-center py-8 px-4 bg-surface/40 rounded-[16px] border border-border/20 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-surface border border-border/40 flex items-center justify-center text-muted mb-3 relative overflow-hidden">
+              <div className="absolute inset-0 bg-purple/5 rounded-xl blur-md" />
+              <Target size={18} className="text-purple/70 relative z-10" />
+            </div>
+            <p className="text-primary text-xs font-bold mb-1">Aucun objectif d'épargne</p>
+            <p className="text-muted text-[10px] max-w-[200px] mb-3">Planifiez un projet (fonds d'urgence, voyage, achat...).</p>
+            <button
+              onClick={() => navigate('/savings')}
+              className="py-2.5 px-4 bg-purple text-white font-bold text-[10px] rounded-xl shadow-md shadow-purple/20 active:scale-95 transition-all"
+            >
+              Créer un objectif
             </button>
           </div>
         ) : (
@@ -500,7 +523,7 @@ const Home = () => {
                 <div
                   key={goal._id}
                   onClick={() => navigate('/savings')}
-                  className="bg-surface p-4 rounded-2xl border border-border/30 active:scale-[0.99] active:border-border/60 transition-all cursor-pointer shadow-sm select-none"
+                  className="bg-surface p-4 rounded-[16px] border border-border/30 active:scale-[0.99] active:border-border/60 transition-all cursor-pointer shadow-sm select-none"
                 >
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2.5 min-w-0">

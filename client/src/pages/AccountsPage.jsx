@@ -42,7 +42,7 @@ const AccountsPage = () => {
       <HeaderTitle>Comptes</HeaderTitle>
       <HeaderBackButton to="/" />
       <HeaderActions>{actions}</HeaderActions>
-      <div className="space-y-6 pb-24">
+      <div className="space-y-6 mb-6">
         
         {/* Total Balance Card */}
         <div className="bg-surface-2 p-6 rounded-[28px] border border-border/40 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
@@ -74,13 +74,18 @@ const AccountsPage = () => {
               <span>{error}</span>
             </div>
           ) : accounts.length === 0 ? (
-            <div className="text-center py-10 bg-surface-2/40 rounded-[28px] border border-dashed border-border/40">
-              <p className="text-muted text-xs mb-3">Aucun compte bancaire configuré.</p>
+            <div className="flex flex-col items-center justify-center text-center py-10 px-4 bg-surface-2/40 rounded-[24px] border border-border/20 shadow-inner">
+              <div className="w-12 h-12 rounded-full bg-surface border border-border/40 flex items-center justify-center text-accent mb-4 shadow-inner relative overflow-hidden">
+                <div className="absolute inset-0 bg-accent/5 rounded-full blur-md" />
+                <Wallet size={24} className="text-accent relative z-10" />
+              </div>
+              <p className="text-primary text-xs font-bold mb-1">Aucun compte bancaire</p>
+              <p className="text-muted text-[10px] max-w-[200px] mb-3">Ajoutez un compte pour suivre vos revenus et dépenses.</p>
               <button 
                 onClick={handleOpenAdd}
-                className="text-xs font-bold text-accent hover:underline"
+                className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
               >
-                Créer votre premier compte
+                Créer un compte
               </button>
             </div>
           ) : (
@@ -144,7 +149,7 @@ const AccountsPage = () => {
 
         <button 
           onClick={handleOpenAdd}
-          className="w-full text-xs font-bold text-accent py-3.5 border border-dashed border-accent/30 rounded-2xl hover:bg-accent/10 transition-all flex items-center justify-center gap-1.5"
+          className="w-full text-xs font-bold text-accent py-3.5 border border-border/40 hover:bg-accent/5 active:scale-[0.99] rounded-[16px] transition-all flex items-center justify-center gap-1.5 bg-surface-2"
         >
           + Ajouter un compte
         </button>

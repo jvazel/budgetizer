@@ -204,7 +204,7 @@ const RankingChart = () => {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* 1. Date Period Selectors */}
       <div className="space-y-4">
         {/* Toggle between Monthly and Cumulative views */}

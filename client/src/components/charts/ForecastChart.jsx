@@ -161,7 +161,7 @@ const ForecastChart = () => {
   const confidenceMargin = data.forecast.length > 0 ? (data.forecast[data.forecast.length - 1].confidenceInterval.high - finalProjectedBalance) : 0;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
 
       {/* 1. Method Selector Grid */}
       <div className="space-y-3">

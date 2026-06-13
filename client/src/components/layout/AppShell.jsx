@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Menu, ChevronLeft } from 'lucide-react';
@@ -12,10 +12,20 @@ export const HeaderPortalContext = createContext({
   actionsTarget: null,
   backTarget: null,
   openMenu: () => {},
+  isScrolled: false,
+  setCollapsible: () => {},
 });
 
-export const HeaderTitle = ({ children }) => {
-  const { titleTarget } = useContext(HeaderPortalContext);
+export const HeaderTitle = ({ children, collapsible = false }) => {
+  const { titleTarget, setCollapsible } = useContext(HeaderPortalContext);
+  
+  useEffect(() => {
+    if (collapsible && setCollapsible) {
+      setCollapsible(true);
+      return () => setCollapsible(false);
+    }
+  }, [collapsible, setCollapsible]);
+
   if (!titleTarget) return null;
   return createPortal(children, titleTarget);
 };
@@ -59,12 +69,31 @@ const AppShell = () => {
   const [actionsTarget, setActionsTarget] = useState(null);
   const [backTarget, setBackTarget] = useState(null);
 
+  // Collapsible header states & listener
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [collapsible, setCollapsible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <HeaderPortalContext.Provider value={{ titleTarget, actionsTarget, backTarget, openMenu: () => setIsMenuOpen(true) }}>
+    <HeaderPortalContext.Provider value={{ 
+      titleTarget, 
+      actionsTarget, 
+      backTarget, 
+      openMenu: () => setIsMenuOpen(true),
+      isScrolled,
+      setCollapsible
+    }}>
       <div className="min-h-screen bg-base pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
         
         {/* Header Centralisé */}
-        <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top,0px)] h-[calc(56px+env(safe-area-inset-top,0px))] flex items-center px-4 max-w-md mx-auto justify-between">
+        <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top,0px)] h-[calc(56px+env(safe-area-inset-top,0px))] flex items-center px-4 max-w-md mx-auto justify-between pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]">
           <div className="flex items-center gap-2 min-w-0">
             {/* Back Target Portal */}
             <div ref={setBackTarget} className="peer flex items-center shrink-0" />
@@ -77,8 +106,15 @@ const AppShell = () => {
               <Menu size={24} />
             </button>
 
-            {/* Title Target Portal */}
-            <div ref={setTitleTarget} className="text-sm font-bold text-primary truncate leading-tight flex items-center min-w-0" />
+            {/* Title Target Portal with collapsible transition */}
+            <div 
+              ref={setTitleTarget} 
+              className={`text-sm font-bold text-primary truncate leading-tight flex items-center min-w-0 transition-all duration-300 ${
+                collapsible 
+                  ? (isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none') 
+                  : 'opacity-100 translate-y-0'
+              }`} 
+            />
           </div>
 
           {/* Actions Target Portal */}
@@ -86,7 +122,7 @@ const AppShell = () => {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-md mx-auto p-4">
+        <main className="max-w-md mx-auto p-4 pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]">
           <Outlet />
         </main>
 
@@ -109,6 +145,7 @@ const AppShell = () => {
     </HeaderPortalContext.Provider>
   );
 };
+
 
 export default AppShell;
 
