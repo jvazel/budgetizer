@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Calendar,
   Sparkles,
+  Wallet,
+  CreditCard,
 } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import {
@@ -19,7 +21,7 @@ import {
 } from '../../utils/floorBalanceHelper';
 import { triggerHaptic } from '../../utils/hapticHelper';
 
-const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [], loading = false }) => {
+const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) => {
   const { user } = useContext(AuthContext);
   const currencyCode = user?.currency?.code || 'EUR';
 
@@ -29,6 +31,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
   });
 
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('accounts'); // 'accounts' | 'paycheck'
 
   const [excludedIds, setExcludedIds] = useState(() => {
     try {
@@ -36,6 +39,15 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
+    }
+  });
+
+  const [selectedAccountIds, setSelectedAccountIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('budgetizer_floor_selected_accounts');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
     }
   });
 
@@ -57,6 +69,78 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
+
+  // ─── Resolved active selected accounts IDs ───────────────────────────────────
+  const activeSelectedIds = useMemo(() => {
+    if (selectedAccountIds && Array.isArray(selectedAccountIds) && selectedAccountIds.length > 0) {
+      const existingIds = selectedAccountIds.filter(id => accounts.some(acc => acc._id === id));
+      if (existingIds.length > 0) return existingIds;
+    }
+
+    // Default: select checking accounts
+    const checkingAccounts = accounts.filter(acc => acc.type === 'checking');
+    if (checkingAccounts.length > 0) {
+      return checkingAccounts.map(acc => acc._id);
+    }
+    // Fallback: select non-credit accounts
+    const nonCreditAccounts = accounts.filter(acc => acc.type !== 'credit');
+    if (nonCreditAccounts.length > 0) {
+      return nonCreditAccounts.map(acc => acc._id);
+    }
+    return accounts.map(acc => acc._id);
+  }, [accounts, selectedAccountIds]);
+
+  const handleAccountToggle = (id) => {
+    triggerHaptic('light');
+    let nextIds;
+    if (activeSelectedIds.includes(id)) {
+      if (activeSelectedIds.length === 1) return; // Keep at least one account
+      nextIds = activeSelectedIds.filter(item => item !== id);
+    } else {
+      nextIds = [...activeSelectedIds, id];
+    }
+    setSelectedAccountIds(nextIds);
+    localStorage.setItem('budgetizer_floor_selected_accounts', JSON.stringify(nextIds));
+  };
+
+  const handleSelectAllAccounts = () => {
+    triggerHaptic('light');
+    const allIds = accounts.map(acc => acc._id);
+    setSelectedAccountIds(allIds);
+    localStorage.setItem('budgetizer_floor_selected_accounts', JSON.stringify(allIds));
+  };
+
+  const handleSelectOnlyCheckingAccounts = () => {
+    triggerHaptic('light');
+    const checkingIds = accounts.filter(acc => acc.type === 'checking').map(acc => acc._id);
+    if (checkingIds.length > 0) {
+      setSelectedAccountIds(checkingIds);
+      localStorage.setItem('budgetizer_floor_selected_accounts', JSON.stringify(checkingIds));
+    }
+  };
+
+  // ─── Dynamic Balances ────────────────────────────────────────────────────────
+  const { actualBalance, creditBalance } = useMemo(() => {
+    let actualSum = 0;
+    let creditSum = 0;
+
+    accounts.forEach(acc => {
+      if (activeSelectedIds.includes(acc._id)) {
+        if (acc.type === 'credit') {
+          creditSum += acc.balance;
+        } else {
+          actualSum += acc.balance;
+        }
+      }
+    });
+
+    return {
+      actualBalance: actualSum,
+      creditBalance: creditSum
+    };
+  }, [accounts, activeSelectedIds]);
+
+  const baseBalance = actualBalance + creditBalance;
 
   // ─── Derived data ────────────────────────────────────────────────────────────
   const upcomingIncomes = useMemo(() => upcoming.filter((tx) => tx.type === 'income'), [upcoming]);
@@ -89,16 +173,16 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
   }, [pendingRecurringExpenses, excludedIds]);
 
   const floorBalance = useMemo(
-    () => calculateFloorBalance(actualBalance, new Date(), upcoming, nextPaycheckDate, excludedIds),
-    [actualBalance, upcoming, nextPaycheckDate, excludedIds]
+    () => calculateFloorBalance(baseBalance, new Date(), upcoming, nextPaycheckDate, excludedIds),
+    [baseBalance, upcoming, nextPaycheckDate, excludedIds]
   );
 
   const comfortRatio = actualBalance > 0 ? floorBalance / actualBalance : 0;
   const isComfortable = floorBalance > 0 && comfortRatio > 0.2;
 
   const projectionData = useMemo(
-    () => calculateFloorProjection(actualBalance, new Date(), upcoming, excludedIds),
-    [actualBalance, upcoming, excludedIds]
+    () => calculateFloorProjection(baseBalance, new Date(), upcoming, excludedIds),
+    [baseBalance, upcoming, excludedIds]
   );
 
   const hasRiskOfNegative = useMemo(
@@ -209,11 +293,10 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="relative z-10 bg-surface/50 border border-border/20 rounded-2xl p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <label htmlFor="paycheck-select" className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Calendar size={14} className="text-accent" /> Jour récurrent de paye
-              </label>
+          <div className="relative z-[9999] bg-surface/50 border border-border/20 rounded-2xl p-4 space-y-4 animate-fade-in">
+            {/* Header Settings */}
+            <div className="flex justify-between items-center pb-2 border-b border-border/20">
+              <span className="text-xs font-extrabold uppercase tracking-wide text-primary">Configuration du solde</span>
               <button
                 onClick={() => setShowSettings(false)}
                 className="text-[10px] font-bold text-accent hover:underline"
@@ -221,27 +304,108 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
                 Fermer
               </button>
             </div>
-            <p className="text-[10px] text-muted leading-relaxed">
-              Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
-            </p>
-            <Select
-              id="paycheck-select"
-              value={paycheckDayConfig}
-              onChange={(e) => handlePaycheckDayChange(e.target.value)}
-              className="w-full bg-surface border border-border/40 px-3 py-2.5 rounded-xl text-xs font-bold text-primary focus:outline-none"
-            >
-              <option value="auto">Automatique (Détecter via les revenus)</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                <option key={day} value={day}>
-                  Le {day === 1 ? '1er' : day} du mois
-                </option>
-              ))}
-            </Select>
+
+            {/* Section 1: Accounts */}
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <label className="text-xs font-bold text-primary flex items-center gap-1.5">
+                  <Wallet size={14} className="text-accent" /> Comptes inclus
+                </label>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllAccounts}
+                    className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                  >
+                    Tous
+                  </button>
+                  {accounts.some(acc => acc.type === 'checking') && (
+                    <button
+                      type="button"
+                      onClick={handleSelectOnlyCheckingAccounts}
+                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                    >
+                      Courants
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-[9px] text-muted leading-relaxed">
+                Sélectionnez les comptes à inclure dans le calcul du solde disponible.
+              </p>
+              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-border/10 rounded-xl p-1.5 bg-surface/25">
+                {accounts.length === 0 ? (
+                  <p className="text-[9px] text-muted text-center py-4">Aucun compte disponible.</p>
+                ) : (
+                  accounts.map((acc) => {
+                    const isSelected = activeSelectedIds.includes(acc._id);
+                    return (
+                      <div
+                        key={acc._id}
+                        onClick={() => handleAccountToggle(acc._id)}
+                        className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer select-none ${
+                          isSelected
+                            ? 'bg-surface border-border/50 shadow-sm'
+                            : 'bg-transparent border-transparent opacity-50 hover:opacity-85'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="text-secondary shrink-0">
+                            {isSelected ? (
+                              <CheckCircle2 size={14} className="text-accent" />
+                            ) : (
+                              <Circle size={14} className="text-muted" />
+                            )}
+                          </div>
+                          <div
+                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[9px] border border-border/10 shrink-0"
+                            style={{ backgroundColor: `${acc.color || '#10b981'}15`, color: acc.color }}
+                          >
+                            {acc.type === 'credit' ? <CreditCard size={11} /> : <Wallet size={11} />}
+                          </div>
+                          <span className="text-[11px] font-bold text-primary truncate max-w-[130px]">{acc.name}</span>
+                        </div>
+                        <span className="font-premium-numbers font-bold text-[10px] text-secondary shrink-0">
+                          {formatCurrency(acc.balance)}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="h-[1px] bg-border/20" />
+
+            {/* Section 2: Paycheck Day */}
+            <div className="space-y-2.5">
+              <label htmlFor="paycheck-select" className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <Calendar size={14} className="text-accent" /> Jour récurrent de paye
+              </label>
+              <p className="text-[9px] text-muted leading-relaxed">
+                Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
+              </p>
+              <div className="relative z-[9999]">
+                <Select
+                  id="paycheck-select"
+                  value={paycheckDayConfig}
+                  onChange={(e) => handlePaycheckDayChange(e.target.value)}
+                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                >
+                  <option value="auto">Automatique (Détecter via les revenus)</option>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day}>
+                      Le {day === 1 ? '1er' : day} du mois
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Sparkline — Projection 30 jours */}
-        <div className="relative z-10">
+        <div className="relative z-0">
           <div className="flex justify-between items-center mb-1 px-0.5">
             <span className="text-[9px] font-bold text-muted uppercase tracking-wider">Projection 30 jours</span>
             {hasRiskOfNegative && (
@@ -318,7 +482,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
         </div>
 
         {/* Accordion — Échéances avant la paye */}
-        <div className="relative z-10 border-t border-white/[0.04] pt-3">
+        <div className="relative z-0 border-t border-white/[0.04] pt-3">
           <button
             onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
             className="w-full flex justify-between items-center py-1.5 text-xs font-bold text-primary focus:outline-none"

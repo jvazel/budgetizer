@@ -190,8 +190,7 @@ const Home = () => {
 
       {/* ── Hero — Vrai Disponible (FloorBalanceWidget est maintenant le hero) ── */}
       <FloorBalanceWidget
-        actualBalance={totalAvailable + totalCredit}
-        creditBalance={totalCredit}
+        accounts={accounts}
         upcoming={upcoming}
         loading={scheduledLoading || loading}
       />

@@ -100,11 +100,14 @@ vi.mock('../../components/ui/InstallPromptBanner', () => ({
 }));
 
 vi.mock('../../components/ui/FloorBalanceWidget', () => ({
-  default: ({ actualBalance, upcoming, loading }) => (
-    <div data-testid="floor-balance-widget">
-      Floor Balance: {actualBalance} | Upcoming: {upcoming.length} | Loading: {String(loading)}
-    </div>
-  )
+  default: ({ accounts = [], upcoming, loading }) => {
+    const checking = accounts.filter(a => a.type === 'checking').reduce((sum, a) => sum + a.balance, 0);
+    return (
+      <div data-testid="floor-balance-widget">
+        Floor Balance: {checking} | Upcoming: {upcoming.length} | Loading: {String(loading)}
+      </div>
+    );
+  }
 }));
 
 describe('Home Page Dashboard - Savings Goals preview card', () => {
@@ -200,7 +203,7 @@ describe('Home Page Dashboard - Savings Goals preview card', () => {
   it('renders the FloorBalanceWidget on the dashboard', () => {
     renderComponent();
     expect(screen.getByTestId('floor-balance-widget')).toBeInTheDocument();
-    expect(screen.getByText(/Floor Balance: 1200/)).toBeInTheDocument();
+    expect(screen.getByText(/Floor Balance: 1500/)).toBeInTheDocument();
     expect(screen.getByText(/Upcoming: 1/)).toBeInTheDocument();
   });
 });

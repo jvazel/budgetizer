@@ -52,11 +52,15 @@ describe('FloorBalanceWidget Component', () => {
     vi.clearAllMocks();
   });
 
+  const mockAccounts = [
+    { _id: 'acc1', name: 'Compte Courant', balance: 1000, type: 'checking', currency: 'EUR' }
+  ];
+
   const renderComponent = (props = {}) => {
     return render(
       <AuthContext.Provider value={{ user: mockUser }}>
         <FloorBalanceWidget 
-          actualBalance={1000} 
+          accounts={mockAccounts} 
           upcoming={mockUpcoming} 
           loading={false} 
           {...props} 
