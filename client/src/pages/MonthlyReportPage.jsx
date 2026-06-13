@@ -3,6 +3,7 @@ import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
 import { useMonthlyReport } from '../hooks/useMonthlyReport';
+import Select from '../components/ui/Select';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
@@ -134,42 +135,37 @@ const MonthlyReportPage = () => {
 
           <div className="grid grid-cols-2 gap-3">
             {/* Year selector */}
-            <div className="relative">
-              <select
-                value={selectedYear}
-                onChange={(e) => {
-                  setSelectedYear(Number(e.target.value));
-                }}
-                className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary appearance-none focus:outline-none focus:border-accent"
-              >
-                {Array.isArray(availableYears) && availableYears.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-            </div>
+            <Select
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(Number(e.target.value));
+              }}
+              className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+            >
+              {Array.isArray(availableYears) && availableYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </Select>
 
             {/* Month selector */}
-            <div className="relative">
-              <select
-                value={selectedMonthIdx}
-                onChange={(e) => {
-                  setSelectedMonthIdx(Number(e.target.value));
-                }}
-                className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary appearance-none focus:outline-none focus:border-accent"
-              >
-                {monthLabels.map((label, idx) => {
-                  // Only allow selecting months that are present in the summaries or current/past months
-                  const isFuture = selectedYear === currentYear && idx > currentMonthIdx;
-                  return (
-                    <option key={idx} value={idx} disabled={isFuture}>
-                      {label}
-                    </option>
-                  );
-                })}
-              </select>
-              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-            </div>
+            <Select
+              value={selectedMonthIdx}
+              onChange={(e) => {
+                setSelectedMonthIdx(Number(e.target.value));
+              }}
+              align="right"
+              className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+            >
+              {monthLabels.map((label, idx) => {
+                // Only allow selecting months that are present in the summaries or current/past months
+                const isFuture = selectedYear === currentYear && idx > currentMonthIdx;
+                return (
+                  <option key={idx} value={idx} disabled={isFuture}>
+                    {label}
+                  </option>
+                );
+              })}
+            </Select>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import Button from '../ui/Button';
 import { useCategories } from '../../hooks/useCategories';
 import toast from 'react-hot-toast';
@@ -93,38 +94,34 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
             />
           </div>
           <div className="flex-1">
-            <label className="mb-2 text-sm text-secondary font-medium block">Période</label>
-            <select 
+            <Select 
+              label="Période"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
             >
               <option value="weekly">Hebdomadaire</option>
               <option value="monthly">Mensuelle</option>
               <option value="yearly">Annuelle</option>
-            </select>
+            </Select>
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <label className="mb-2 text-sm text-secondary font-medium">Catégorie associée</label>
-          <select 
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
-            required
-          >
-            <option value="">-- Choisir une catégorie --</option>
-            {expenseCategories.map(parent => (
-              <optgroup key={parent._id} label={`${parent.icon} ${parent.name}`}>
-                <option value={parent._id}>{parent.name}</option>
-                {parent.children?.map(child => (
-                  <option key={child._id} value={child._id}>↳ {child.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
+        <Select 
+          label="Catégorie associée"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          required
+        >
+          <option value="">-- Choisir une catégorie --</option>
+          {expenseCategories.map(parent => (
+            <optgroup key={parent._id} label={`${parent.icon} ${parent.name}`}>
+              <option value={parent._id}>{parent.name}</option>
+              {parent.children?.map(child => (
+                <option key={child._id} value={child._id}>↳ {child.name}</option>
+              ))}
+            </optgroup>
+          ))}
+        </Select>
 
         <div className="flex flex-col">
           <label className="mb-2 text-sm text-secondary font-medium">Couleur d'identification</label>

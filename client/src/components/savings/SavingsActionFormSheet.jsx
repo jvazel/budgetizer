@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import api from '../../services/api';
@@ -144,64 +145,56 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         </div>
 
         {/* Account Selection */}
-        <div>
-          <label className="mb-2 text-sm text-secondary font-medium block">
-            {goal.accountId ? (
+        <Select 
+          label={
+            goal.accountId ? (
               isDeposit 
                 ? `Débiter du compte d'origine` 
                 : `Créditer sur le compte de destination`
             ) : (
               isDeposit ? 'Débiter du compte' : 'Créditer sur le compte'
+            )
+          }
+          value={accountId}
+          onChange={e => setAccountId(e.target.value)}
+          required
+        >
+          <option value="">-- Sélectionner un compte --</option>
+          {accounts
+            .filter(acc => !goal.accountId || (acc._id !== (goal.accountId._id || goal.accountId)))
+            .map(acc => (
+              <option key={acc._id} value={acc._id}>
+                {acc.name} ({new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(acc.balance)})
+              </option>
+            ))}
+        </Select>
+        {goal.accountId && (
+          <span className="text-[10px] text-muted mt-1 leading-normal block px-1">
+            {isDeposit ? (
+              <>Le versement sera crédité sur le compte lié à cet objectif : <strong>{goal.accountId.name || 'Compte associé'}</strong></>
+            ) : (
+              <>Le retrait sera débité du compte lié à cet objectif : <strong>{goal.accountId.name || 'Compte associé'}</strong></>
             )}
-          </label>
-          <select 
-            value={accountId}
-            onChange={e => setAccountId(e.target.value)}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
-            required
-          >
-            <option value="">-- Sélectionner un compte --</option>
-            {accounts
-              .filter(acc => !goal.accountId || (acc._id !== (goal.accountId._id || goal.accountId)))
-              .map(acc => (
-                <option key={acc._id} value={acc._id}>
-                  {acc.name} ({new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(acc.balance)})
-                </option>
-              ))}
-          </select>
-          {goal.accountId && (
-            <span className="text-[10px] text-muted mt-1 leading-normal block">
-              {isDeposit ? (
-                <>Le versement sera crédité sur le compte lié à cet objectif : <strong>{goal.accountId.name || 'Compte associé'}</strong></>
-              ) : (
-                <>Le retrait sera débité du compte lié à cet objectif : <strong>{goal.accountId.name || 'Compte associé'}</strong></>
-              )}
-            </span>
-          )}
-        </div>
+          </span>
+        )}
 
         {/* Optional Category */}
         {!goal.accountId && (
-          <div>
-            <label className="mb-2 text-sm text-secondary font-medium block">
-              Catégorie (optionnel)
-            </label>
-            <select 
-              value={categoryId}
-              onChange={e => setCategoryId(e.target.value)}
-              className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
-            >
-              <option value="">-- Aucune catégorie --</option>
-              {(isDeposit ? categoriesTree.expense : categoriesTree.income)?.map(parent => (
-                <optgroup key={parent._id} label={`${parent.icon} ${parent.name}`}>
-                  <option value={parent._id}>{parent.name}</option>
-                  {parent.children?.map(child => (
-                    <option key={child._id} value={child._id}>↳ {child.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </div>
+          <Select 
+            label="Catégorie (optionnel)"
+            value={categoryId}
+            onChange={e => setCategoryId(e.target.value)}
+          >
+            <option value="">-- Aucune catégorie --</option>
+            {(isDeposit ? categoriesTree.expense : categoriesTree.income)?.map(parent => (
+              <optgroup key={parent._id} label={`${parent.icon} ${parent.name}`}>
+                <option value={parent._id}>{parent.name}</option>
+                {parent.children?.map(child => (
+                  <option key={child._id} value={child._id}>↳ {child.name}</option>
+                ))}
+              </optgroup>
+            ))}
+          </Select>
         )}
 
         {/* Date and Note */}

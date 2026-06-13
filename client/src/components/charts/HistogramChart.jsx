@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, R
 import { AlertCircle, AlertTriangle, Wallet, Scale, Calendar, Sliders, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import Select from '../ui/Select';
 
 const HistogramChart = () => {
   const { accounts } = useAccounts();
@@ -185,29 +186,30 @@ const HistogramChart = () => {
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] font-bold text-muted uppercase">Compte ciblé</label>
-            <select
+            <Select
               value={selectedAccountId}
               onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+              className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
             >
               <option value="">Tous les comptes</option>
               {accounts.map(a => (
                 <option key={a._id} value={a._id}>{a.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] font-bold text-muted uppercase">Pas de regroupement</label>
-            <select
+            <Select
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value)}
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+              align="right"
+              className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
             >
               <option value="">Automatique (selon période)</option>
               <option value="day">Par jour</option>
               <option value="week">Par semaine</option>
               <option value="month">Par mois</option>
-            </select>
+            </Select>
           </div>
         </div>
       </div>

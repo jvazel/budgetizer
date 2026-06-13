@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, R
 import { AlertCircle, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Wallet, Scale, Activity, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import Select from '../ui/Select';
 
 const CashFlowChart = () => {
   const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
@@ -141,16 +142,17 @@ const CashFlowChart = () => {
         </div>
 
         {/* Account selector */}
-        <select
+        <Select
           value={selectedAccountId}
           onChange={(e) => setSelectedAccountId(e.target.value)}
+          align="right"
           className="bg-surface-2 border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
         >
           <option value="">Tous les comptes</option>
           {accounts.map(a => (
             <option key={a._id} value={a._id}>{a.name}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* 2. Dynamic Diagnostic Banner */}

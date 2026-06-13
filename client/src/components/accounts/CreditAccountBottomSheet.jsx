@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import ConfirmModal from '../ui/ConfirmModal';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
@@ -153,21 +154,18 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1 no-scrollbar pb-6">
-        <div className="flex flex-col">
-          <label className="mb-2 text-sm text-secondary font-medium">Type de compte</label>
-          <select 
-            value="credit" 
-            onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
-            disabled={!!initialData}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent disabled:opacity-50"
-          >
-            <option value="checking">Courant</option>
-            <option value="savings">Épargne</option>
-            <option value="cash">Espèces</option>
-            <option value="credit">Crédit</option>
-            <option value="investment">Investissement</option>
-          </select>
-        </div>
+        <Select 
+          label="Type de compte"
+          value="credit" 
+          onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
+          disabled={!!initialData}
+        >
+          <option value="checking">Courant</option>
+          <option value="savings">Épargne</option>
+          <option value="cash">Espèces</option>
+          <option value="credit">Crédit</option>
+          <option value="investment">Investissement</option>
+        </Select>
 
         <Input
           label="Nom du crédit"
@@ -249,22 +247,19 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
           />
         </div>
 
-        <div className="flex flex-col">
-          <label className="mb-2 text-sm text-secondary font-medium">Compte source des prélèvements</label>
-          <select 
-            value={sourceAccountId} 
-            onChange={(e) => setSourceAccountId(e.target.value)}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent"
-            required
-          >
-            <option value="">Sélectionner un compte courant</option>
-            {sourceAccounts.map(acc => (
-              <option key={acc._id} value={acc._id}>
-                {acc.name} ({formatCurrency(acc.balance)})
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select 
+          label="Compte source des prélèvements"
+          value={sourceAccountId} 
+          onChange={(e) => setSourceAccountId(e.target.value)}
+          required
+        >
+          <option value="">Sélectionner un compte courant</option>
+          {sourceAccounts.map(acc => (
+            <option key={acc._id} value={acc._id}>
+              {acc.name} ({formatCurrency(acc.balance)})
+            </option>
+          ))}
+        </Select>
 
         {C > 0 && n > 0 && (
           <div className="bg-surface-2 p-4 rounded-2xl border border-border/40 mt-4">

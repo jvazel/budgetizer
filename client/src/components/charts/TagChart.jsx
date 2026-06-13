@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector, AreaChart, A
 import { ChevronRight, ChevronLeft, Calendar, HelpCircle, Target, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import Select from '../ui/Select';
 
 const TagChart = () => {
   const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
@@ -310,7 +311,7 @@ const TagChart = () => {
 
         {/* Tag Selector & Flow Type */}
         <div className="flex gap-3 items-center justify-between">
-          <select
+          <Select
             value={selectedTagId}
             onChange={(e) => {
               setSelectedTagId(e.target.value);
@@ -323,7 +324,7 @@ const TagChart = () => {
             {tags.map(tag => (
               <option key={tag._id} value={tag._id}>{tag.name}</option>
             ))}
-          </select>
+          </Select>
 
           <div className="grid grid-cols-2 gap-0.5 bg-surface-2 p-0.5 rounded-xl w-36">
             <button

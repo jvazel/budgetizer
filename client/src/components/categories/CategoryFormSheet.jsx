@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
@@ -114,19 +115,16 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
         </div>
 
         {!initialParentId && !initialData?.parentId && (
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm text-secondary font-medium">Type</label>
-            <select 
-              value={type} 
-              onChange={(e) => setType(e.target.value)}
-              className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent"
-              disabled={initialData?.isDefault}
-            >
-              <option value="expense">Dépense</option>
-              <option value="income">Revenu</option>
-              <option value="both">Les deux</option>
-            </select>
-          </div>
+          <Select 
+            label="Type"
+            value={type} 
+            onChange={(e) => setType(e.target.value)}
+            disabled={initialData?.isDefault}
+          >
+            <option value="expense">Dépense</option>
+            <option value="income">Revenu</option>
+            <option value="both">Les deux</option>
+          </Select>
         )}
 
         <div className="flex flex-col">

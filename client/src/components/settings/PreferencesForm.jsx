@@ -3,6 +3,7 @@ import { Settings, Bell, Smartphone, CheckCircle, Download } from 'lucide-react'
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { usePwa } from '../../context/PwaContext';
+import Select from '../ui/Select';
 
 const PreferencesForm = ({ user, setUser }) => {
   const { 
@@ -102,9 +103,10 @@ const PreferencesForm = ({ user, setUser }) => {
               <h4 className="text-xs font-bold text-primary">Devise par défaut</h4>
               <p className="text-[10px] text-muted">Devise utilisée pour vos budgets et affichages.</p>
             </div>
-            <select
+            <Select
               value={currencyCode}
               onChange={handleCurrencyChange}
+              align="right"
               className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
             >
               <option value="EUR">Euro (€)</option>
@@ -112,7 +114,7 @@ const PreferencesForm = ({ user, setUser }) => {
               <option value="GBP">Livre Sterling (£)</option>
               <option value="CHF">Franc Suisse (CHF)</option>
               <option value="JPY">Yen Japonais (¥)</option>
-            </select>
+            </Select>
           </div>
 
           <hr className="border-border/30" />
@@ -123,19 +125,20 @@ const PreferencesForm = ({ user, setUser }) => {
               <h4 className="text-xs font-bold text-primary">Format de date</h4>
               <p className="text-[10px] text-muted">Format utilisé pour afficher les dates dans l'app.</p>
             </div>
-            <select
+            <Select
               value={dateFormat}
               onChange={(e) => {
                 const val = e.target.value;
                 setDateFormat(val);
                 handleSavePreferences({ dateFormat: val });
               }}
+              align="right"
               className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
             >
               <option value="DD/MM/YYYY">JJ/MM/AAAA</option>
               <option value="YYYY-MM-DD">AAAA-MM-JJ</option>
               <option value="MM/DD/YYYY">MM/JJ/AAAA</option>
-            </select>
+            </Select>
           </div>
 
           <hr className="border-border/30" />
@@ -146,18 +149,19 @@ const PreferencesForm = ({ user, setUser }) => {
               <h4 className="text-xs font-bold text-primary">Premier jour de la semaine</h4>
               <p className="text-[10px] text-muted">Jour de démarrage pour les vues calendrier et hebdomadaires.</p>
             </div>
-            <select
+            <Select
               value={firstDayOfWeek}
               onChange={(e) => {
                 const val = Number(e.target.value);
                 setFirstDayOfWeek(val);
                 handleSavePreferences({ firstDayOfWeek: val });
               }}
+              align="right"
               className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
             >
               <option value={1}>Lundi</option>
               <option value={0}>Dimanche</option>
-            </select>
+            </Select>
           </div>
 
           <hr className="border-border/30" />
@@ -168,20 +172,21 @@ const PreferencesForm = ({ user, setUser }) => {
               <h4 className="text-xs font-bold text-primary">Sensibilité d'anomalie (IA)</h4>
               <p className="text-[10px] text-muted">Seuil de dépassement par défaut pour vos alertes.</p>
             </div>
-            <select
+            <Select
               value={anomalyThreshold}
               onChange={(e) => {
                 const val = Number(e.target.value);
                 setAnomalyThreshold(val);
                 handleSavePreferences({ anomalyThreshold: val });
               }}
+              align="right"
               className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
             >
               <option value={30}>+30% (Sensible)</option>
               <option value={40}>+40%</option>
               <option value={50}>+50%</option>
               <option value={60}>+60% (Modéré)</option>
-            </select>
+            </Select>
           </div>
 
           <hr className="border-border/30" />

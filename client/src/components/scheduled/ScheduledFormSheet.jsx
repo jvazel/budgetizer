@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import AmountInput from '../ui/AmountInput';
+import Select from '../ui/Select';
 import { X, Calendar, Repeat, ShieldCheck, CreditCard, ChevronRight, Check } from 'lucide-react';
 
 const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSubscription = false }) => {
@@ -163,36 +164,32 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             </div>
 
             {/* Account Selector */}
-            <div className="space-y-1.5">
-              <label htmlFor="accountId-select" className="text-xs font-bold text-secondary">Compte bancaire</label>
-              <select
-                id="accountId-select"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
-              >
-                {accounts.map(acc => (
-                  <option key={acc._id} value={acc._id}>{acc.name} ({acc.balance.toFixed(2)} €)</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="accountId-select"
+              label="Compte bancaire"
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+              className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
+            >
+              {accounts.map(acc => (
+                <option key={acc._id} value={acc._id}>{acc.name} ({acc.balance.toFixed(2)} €)</option>
+              ))}
+            </Select>
 
             {/* To Account Selector (Only for Transfers) */}
             {type === 'transfer' && (
-              <div className="space-y-1.5">
-                <label htmlFor="toAccountId-select" className="text-xs font-bold text-secondary">Vers le compte</label>
-                <select
-                  id="toAccountId-select"
-                  value={toAccountId}
-                  onChange={(e) => setToAccountId(e.target.value)}
-                  className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
-                >
-                  <option value="">Sélectionner un compte destinataire</option>
-                  {accounts.filter(a => a._id !== accountId).map(acc => (
-                    <option key={acc._id} value={acc._id}>{acc.name}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="toAccountId-select"
+                label="Vers le compte"
+                value={toAccountId}
+                onChange={(e) => setToAccountId(e.target.value)}
+                className="w-full bg-surface-2 border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
+              >
+                <option value="">Sélectionner un compte destinataire</option>
+                {accounts.filter(a => a._id !== accountId).map(acc => (
+                  <option key={acc._id} value={acc._id}>{acc.name}</option>
+                ))}
+              </Select>
             )}
 
             {/* Category Selector (Only for income/expense) */}
@@ -305,7 +302,7 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
                 onChange={(e) => setFrequencyEvery(Math.max(1, parseInt(e.target.value) || 1))}
                 className="w-16 bg-surface border border-border/40 text-center py-2 rounded-xl text-sm font-bold text-primary focus:outline-none"
               />
-              <select
+              <Select
                 value={frequencyUnit}
                 onChange={(e) => setFrequencyUnit(e.target.value)}
                 className="bg-surface border border-border/40 py-2 px-3 rounded-xl text-sm font-bold text-primary focus:outline-none flex-1"
@@ -314,7 +311,7 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
                 <option value="week">Semaine(s)</option>
                 <option value="month">Mois</option>
                 <option value="year">An(s)</option>
-              </select>
+              </Select>
             </div>
 
             {/* Start Date picker */}

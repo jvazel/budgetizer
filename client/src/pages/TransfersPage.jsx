@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { ArrowLeftRight, ArrowRight, AlertCircle, Calendar, Trash2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import Select from '../components/ui/Select';
 
 const TransfersPage = () => {
   const { user } = useContext(AuthContext);
@@ -146,7 +147,7 @@ const TransfersPage = () => {
                 {/* Source Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
                   <label htmlFor="fromAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source)</label>
-                  <select
+                  <Select
                     id="fromAccountId-select"
                     value={fromAccountId}
                     onChange={(e) => setFromAccountId(e.target.value)}
@@ -157,7 +158,7 @@ const TransfersPage = () => {
                         {acc.name} ({formatCurrency(acc.balance, acc.currency)})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {activeFromAccount && (
                     <div className="text-[10px] text-muted font-medium mt-2">
                       Disponible : <span className="font-mono font-bold text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
@@ -173,7 +174,7 @@ const TransfersPage = () => {
                 {/* Destination Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
                   <label htmlFor="toAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination)</label>
-                  <select
+                  <Select
                     id="toAccountId-select"
                     value={toAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
@@ -184,7 +185,7 @@ const TransfersPage = () => {
                         {acc.name} ({formatCurrency(acc.balance, acc.currency)})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {activeToAccount && (
                     <div className="text-[10px] text-muted font-medium mt-2">
                       Disponible : <span className="font-mono font-bold text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>

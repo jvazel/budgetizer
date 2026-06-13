@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContai
 import { AlertCircle, TrendingUp, TrendingDown, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import Select from '../ui/Select';
 
 const ForecastChart = () => {
   const [method, setMethod] = useState('regression'); // regression, weighted, mobile, mean
@@ -207,16 +208,17 @@ const ForecastChart = () => {
         </div>
 
         {/* Account Selector */}
-        <select
+        <Select
           value={selectedAccountId}
           onChange={(e) => setSelectedAccountId(e.target.value)}
+          align="right"
           className="bg-surface-2 border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
         >
           <option value="">Tous les comptes</option>
           {accounts.map(a => (
             <option key={a._id} value={a._id}>{a.name}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* 3. Explanation card */}

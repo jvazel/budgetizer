@@ -4,6 +4,7 @@ import { useAccounts } from '../../hooks/useAccounts';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { HelpCircle, Calendar, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Select from '../ui/Select';
 
 const FutureChart = () => {
   const [horizon, setHorizon] = useState(3); // 1, 3, 6, 12 months
@@ -76,16 +77,17 @@ const FutureChart = () => {
         </div>
 
         {/* Account Selector */}
-        <select
+        <Select
           value={selectedAccountId}
           onChange={(e) => setSelectedAccountId(e.target.value)}
+          align="right"
           className="bg-surface-2 border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
         >
           <option value="">Tous les comptes</option>
           {accounts.map(a => (
             <option key={a._id} value={a._id}>{a.name}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* 2. Cumulative Projected AreaChart */}

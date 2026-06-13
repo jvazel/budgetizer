@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import Select from './Select';
 import {
   ChevronDown,
   ChevronUp,
@@ -223,7 +224,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
             <p className="text-[10px] text-muted leading-relaxed">
               Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
             </p>
-            <select
+            <Select
               id="paycheck-select"
               value={paycheckDayConfig}
               onChange={(e) => handlePaycheckDayChange(e.target.value)}
@@ -235,7 +236,7 @@ const FloorBalanceWidget = ({ actualBalance = 0, creditBalance = 0, upcoming = [
                   Le {day === 1 ? '1er' : day} du mois
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
 

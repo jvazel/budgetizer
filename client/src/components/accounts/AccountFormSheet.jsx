@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
+import Select from '../ui/Select';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
@@ -88,20 +89,17 @@ const AccountFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nul
           required
         />
 
-        <div className="flex flex-col">
-          <label className="mb-2 text-sm text-secondary font-medium">Type de compte</label>
-          <select 
-            value={type} 
-            onChange={(e) => setType(e.target.value)}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent"
-          >
-            <option value="checking">Courant</option>
-            <option value="savings">Épargne</option>
-            <option value="cash">Espèces</option>
-            <option value="credit">Crédit</option>
-            <option value="investment">Investissement</option>
-          </select>
-        </div>
+        <Select 
+          label="Type de compte"
+          value={type} 
+          onChange={(e) => setType(e.target.value)}
+        >
+          <option value="checking">Courant</option>
+          <option value="savings">Épargne</option>
+          <option value="cash">Espèces</option>
+          <option value="credit">Crédit</option>
+          <option value="investment">Investissement</option>
+        </Select>
 
         <Input
           label="Solde initial"

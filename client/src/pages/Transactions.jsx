@@ -12,6 +12,7 @@ import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2, 
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BottomSheet from '../components/ui/BottomSheet';
+import Select from '../components/ui/Select';
 
 const Transactions = () => {
   // Navigation / Visibility states
@@ -355,7 +356,7 @@ const Transactions = () => {
                   <Bookmark size={10} className="text-accent" /> Charger un filtre enregistré
                 </label>
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={activeSavedFilterId || ''}
                     onChange={(e) => {
                       const id = e.target.value;
@@ -378,7 +379,7 @@ const Transactions = () => {
                         </option>
                       ))
                     }
-                  </select>
+                  </Select>
                   
                   {activeSavedFilterId && (
                     <button
@@ -402,7 +403,7 @@ const Transactions = () => {
               {/* Filter by Type */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
-                <select
+                <Select
                   value={type}
                   onChange={(e) => {
                     setType(e.target.value);
@@ -414,29 +415,30 @@ const Transactions = () => {
                   <option value="expense">Dépenses 🔴</option>
                   <option value="income">Revenus 🟢</option>
                   <option value="transfer">Virements 🔵</option>
-                </select>
+                </Select>
               </div>
 
               {/* Filter by Account */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted uppercase">Compte bancaire</label>
-                <select
+                <Select
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
+                  align="right"
                   className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
                 >
                   <option value="">Tous les comptes</option>
                   {accounts.map(acc => (
                     <option key={acc._id} value={acc._id}>{acc.name}</option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Filter by Category */}
               {type !== 'transfer' && (
                 <div className="space-y-1 col-span-2">
                   <label className="text-[10px] font-bold text-muted uppercase">Catégorie</label>
-                  <select
+                  <Select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
@@ -450,7 +452,7 @@ const Transactions = () => {
                         </option>
                       ))
                     }
-                  </select>
+                  </Select>
                 </div>
               )}
 
