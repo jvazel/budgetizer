@@ -56,6 +56,7 @@ describe('Scheduled Processor', () => {
       amount: 600,
       description: 'Loyer mensuel',
       note: '',
+      startDate: new Date('2026-06-01T00:00:00.000Z'),
       nextDate: new Date('2026-06-01T00:00:00.000Z'),
       frequency: { every: 1, unit: 'month' },
       autoConfirm: true,
@@ -116,6 +117,7 @@ describe('Scheduled Processor', () => {
       type: 'expense',
       amount: 30,
       description: 'Abonnement Mobile',
+      startDate: new Date('2026-06-01T00:00:00.000Z'),
       nextDate: new Date('2026-06-01T00:00:00.000Z'),
       frequency: { every: 1, unit: 'month' },
       autoConfirm: false, // requires manual confirmation

@@ -302,6 +302,7 @@ describe('Scheduled Controller', () => {
           type: 'expense',
           amount: 20,
           description: 'Abo',
+          startDate: new Date(new Date().setDate(new Date().getDate() + 5)),
           nextDate: new Date(new Date().setDate(new Date().getDate() + 5)),
           frequency: { every: 1, unit: 'week' },
           numberOfTimes: 0,

@@ -2,6 +2,7 @@ import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import mongoose from 'mongoose';
+import { calculateNextDate } from '../utils/dateHelper.js';
 
 const updateAccountBalance = async (accountId, amount, type, session) => {
   const numericAmount = Number(amount);
@@ -256,6 +257,7 @@ export const getUpcomingTransactions = async (req, res) => {
     scheduledTxs.forEach(st => {
       let curr = new Date(st.nextDate);
       let timesLeft = st.numberOfTimes > 0 ? (st.numberOfTimes - st.timesExecuted) : Infinity;
+      let tempTimesExecuted = st.timesExecuted;
 
       while (curr <= futureLimit && timesLeft > 0) {
         if (st.endDate && curr > st.endDate) break;
@@ -275,12 +277,9 @@ export const getUpcomingTransactions = async (req, res) => {
           autoConfirm: st.autoConfirm
         });
 
-        // Move to next date (UTC)
-        const { every, unit } = st.frequency;
-        if (unit === 'day') curr.setUTCDate(curr.getUTCDate() + every);
-        else if (unit === 'week') curr.setUTCDate(curr.getUTCDate() + every * 7);
-        else if (unit === 'month') curr.setUTCMonth(curr.getUTCMonth() + every);
-        else if (unit === 'year') curr.setUTCFullYear(curr.getUTCFullYear() + every);
+        // Move to next date deterministically using calculateNextDate
+        tempTimesExecuted++;
+        curr = calculateNextDate(st.startDate, tempTimesExecuted, st.frequency.every, st.frequency.unit);
 
         timesLeft--;
       }

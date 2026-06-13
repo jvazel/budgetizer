@@ -2,15 +2,7 @@ import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import mongoose from 'mongoose';
-
-const calculateNextDate = (currentDate, every, unit) => {
-  const next = new Date(currentDate);
-  if (unit === 'day') next.setUTCDate(next.getUTCDate() + every);
-  else if (unit === 'week') next.setUTCDate(next.getUTCDate() + every * 7);
-  else if (unit === 'month') next.setUTCMonth(next.getUTCMonth() + every);
-  else if (unit === 'year') next.setUTCFullYear(next.getUTCFullYear() + every);
-  return next;
-};
+import { calculateNextDate } from './dateHelper.js';
 
 const updateAccountBalance = async (accountId, amount, type, session) => {
   const numericAmount = Number(amount);
@@ -85,8 +77,8 @@ export const processScheduledTransactions = async () => {
         // Update the scheduled transaction execution state
         st.timesExecuted += 1;
         
-        // Calculate next occurrence date
-        const nextDate = calculateNextDate(st.nextDate, st.frequency.every, st.frequency.unit);
+        // Calculate next occurrence date relative to the original startDate and new timesExecuted
+        const nextDate = calculateNextDate(st.startDate, st.timesExecuted, st.frequency.every, st.frequency.unit);
         st.nextDate = nextDate;
 
         // Check if limit is now reached
