@@ -8,14 +8,17 @@ import { X } from 'lucide-react';
 const TagFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null }) => {
   const [name, setName] = useState('');
   const [color, setColor] = useState('#3b82f6');
+  const [isArchived, setIsArchived] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
       setColor(initialData.color);
+      setIsArchived(initialData.isArchived || false);
     } else {
       setName('');
       setColor('#3b82f6'); // Default color
+      setIsArchived(false);
     }
   }, [initialData, isOpen]);
 
@@ -28,7 +31,8 @@ const TagFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null })
     try {
       await onSave({
         name: name.trim(),
-        color
+        color,
+        isArchived
       });
       toast.success(initialData ? 'Tag modifié' : 'Tag créé');
       onClose();
@@ -80,6 +84,30 @@ const TagFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null })
             ))}
           </div>
         </div>
+
+        {initialData && (
+          <div className="flex items-center justify-between p-4 bg-surface-2 border border-border rounded-2xl">
+            <div className="flex flex-col pr-4">
+              <span className="text-sm font-semibold text-primary">Archiver l'étiquette</span>
+              <span className="text-[11px] text-muted leading-relaxed mt-0.5">
+                Masque cette étiquette lors de la saisie de dépenses. L'historique reste intact.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsArchived(!isArchived)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isArchived ? 'bg-accent' : 'bg-border/60'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  isArchived ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        )}
 
         <div className="pt-4 space-y-3">
           <Button type="submit" fullWidth>

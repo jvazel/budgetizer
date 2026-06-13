@@ -24,7 +24,7 @@ export const createTag = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, color } = req.body;
+  const { name, color, isArchived } = req.body;
 
   try {
     const cleanName = name.trim();
@@ -41,7 +41,8 @@ export const createTag = async (req, res) => {
     const newTag = new Tag({
       userId: req.user.id,
       name: cleanName,
-      color: color || '#3B82F6'
+      color: color || '#3B82F6',
+      isArchived: isArchived === true
     });
 
     const tag = await newTag.save();
@@ -61,7 +62,7 @@ export const updateTag = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, color } = req.body;
+  const { name, color, isArchived } = req.body;
 
   try {
     let tag = await Tag.findById(req.params.id);
@@ -90,6 +91,10 @@ export const updateTag = async (req, res) => {
 
     if (color) {
       tag.color = color;
+    }
+
+    if (typeof isArchived === 'boolean') {
+      tag.isArchived = isArchived;
     }
 
     await tag.save();

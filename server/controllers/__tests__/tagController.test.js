@@ -111,6 +111,22 @@ describe('Tag Controller', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ message: 'Un tag avec ce nom existe déjà.' });
     });
+
+    it('should create a new tag with isArchived if specified', async () => {
+      req.body = { name: 'Vacances', color: '#3B82F6', isArchived: true };
+      Tag.findOne.mockResolvedValue(null);
+
+      await createTag(req, res);
+
+      expect(Tag.findOne).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Vacances',
+        color: '#3B82F6',
+        userId: 'user_123',
+        isArchived: true
+      }));
+    });
   });
 
   describe('updateTag', () => {
@@ -154,6 +170,29 @@ describe('Tag Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ message: 'Non autorisé.' });
+    });
+
+    it('should update isArchived successfully', async () => {
+      req.params.id = 'tag_id_1';
+      req.body = { isArchived: true };
+
+      const mockTag = {
+        _id: 'tag_id_1',
+        userId: 'user_123',
+        name: 'Voyage',
+        color: '#3B82F6',
+        isArchived: false,
+        save: vi.fn().mockResolvedValue(true)
+      };
+
+      Tag.findById.mockResolvedValue(mockTag);
+      Tag.findOne.mockResolvedValue(null);
+
+      await updateTag(req, res);
+
+      expect(mockTag.isArchived).toBe(true);
+      expect(mockTag.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(mockTag);
     });
   });
 

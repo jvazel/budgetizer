@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTags } from '../../hooks/useTags';
 import { getContrastColor } from '../../pages/Tags';
-import { Search, Plus, Check } from 'lucide-react';
+import { Search, Plus, Check, Archive } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const TagSelector = ({ selectedTagIds = [], onChange }) => {
@@ -48,9 +48,11 @@ const TagSelector = ({ selectedTagIds = [], onChange }) => {
     }
   };
 
-  const filteredTags = tags.filter(tag =>
-    tag.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTags = tags.filter(tag => {
+    const isSelected = selectedTagIds.includes(tag._id);
+    const matchesSearch = tag.name.toLowerCase().includes(search.toLowerCase());
+    return matchesSearch && (!tag.isArchived || isSelected);
+  });
 
   const exactMatch = tags.some(tag =>
     tag.name.toLowerCase() === search.trim().toLowerCase()
@@ -92,7 +94,9 @@ const TagSelector = ({ selectedTagIds = [], onChange }) => {
               key={tag._id}
               type="button"
               onClick={() => handleToggleTag(tag._id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 select-none"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all active:scale-95 select-none ${
+                tag.isArchived ? 'opacity-60 hover:opacity-80' : ''
+              }`}
               style={{
                 backgroundColor: bgColor,
                 borderColor: borderColor,
@@ -107,6 +111,7 @@ const TagSelector = ({ selectedTagIds = [], onChange }) => {
                 />
               )}
               {tag.name}
+              {tag.isArchived && <Archive size={9} className="shrink-0 text-current" />}
             </button>
           );
         })}

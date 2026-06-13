@@ -105,6 +105,16 @@ Rendez-vous dans la rubrique **Transactions** pour consulter et filtrer vos écr
 * **Éditer/Modifier** : Cliquez sur une transaction dans la liste pour rouvrir son formulaire.
 * **Supprimer** : Survolez la transaction sur ordinateur pour cliquer sur l'icône de corbeille, ou balayez vers la gauche sur mobile pour révéler le bouton de suppression rouge. Confirmez ensuite votre choix.
 
+### 4.3 Gestion des étiquettes (Tags) et archivage
+Pour suivre des dépenses liées à des événements ou projets transversaux (ex. : `#vacances 2026`, `#noel`), Budgetizer vous permet de gérer vos étiquettes (tags) de manière flexible.
+* **Créer ou modifier un tag** : Rendez-vous dans le menu latéral (tiroir de navigation) et sélectionnez **Tags**. Vous pouvez y créer un tag avec un nom et une couleur personnalisée.
+* **Archiver un tag obsolète** : Si un projet est terminé (ex. : après vos vacances), modifiez le tag et activez l'option **Archiver l'étiquette**. 
+  * *Effet de l'archivage* : Le tag n'apparaîtra plus dans la liste des suggestions lors de la saisie de nouvelles dépenses pour éviter l'encombrement visuel. Toutefois, l'historique de vos dépenses passées et vos graphiques d'analyses restent entièrement inchangés.
+* **Filtrer la liste des tags** : Sur la page de gestion des tags, utilisez la barre d'onglets de filtrage en haut de l'écran pour afficher :
+  * **Tous** : L'ensemble de vos tags avec séparation claire entre tags actifs et archivés.
+  * **Actifs** : Uniquement vos tags utilisables en saisie.
+  * **Archivés** : Uniquement vos tags obsolètes archivés (vous pouvez modifier un tag archivé pour le réactiver à tout moment).
+
 ---
 
 ## 5. Planification de budgets (Enveloppes)

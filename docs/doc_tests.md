@@ -392,9 +392,27 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | **Recherche par fallback rawId** | ID `body.id` introuvable mais `body.rawId` présent en BDD | Recherche alternative dans la collection `UserCredential` | Authentification validée avec succès via la clé correspondante au `rawId`. |
 | **Format du paramètre credential** | Appel à `verifyAuthenticationResponse` | Passage de l'objet contenant id, publicKey, counter et transports | SimpleWebAuthn v13 valide les paramètres sans erreur de type (évite les bugs liés au `counter` indéfini). |
 
-### 2.17 Tests de la Simulation de Monte Carlo & Stress-test (`monteCarloHelper.js` & `ResilienceChart.jsx`)
+---
 
-#### 2.17.1 Tests unitaires mathématiques (`monteCarloHelper.test.js`)
+### 2.17 Contrôleur des Étiquettes (`tagController.js`)
+Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archivage) et la suppression en cascade des étiquettes (tags) de l'utilisateur.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Récupération des tags (getTags)** | Requête avec ID utilisateur `"user_123"` | Interrogation de `Tag.find` trié par nom | Liste des tags de l'utilisateur renvoyée triée par nom (HTTP 200). |
+| **Création de tag (createTag)** | Corps `{ name: "Vacances", color: "#3B82F6" }` | Recherche d'existence (insensible à la casse) et sauvegarde du nouveau modèle | Tag créé avec succès et renvoyé (HTTP 201). |
+| **Doublon de création** | Corps `{ name: "Vacances" }` avec tag existant | Recherche via `Tag.findOne` | La création échoue avec le code HTTP 400 (`Un tag avec ce nom existe déjà.`). |
+| **Création avec archivage** | Corps `{ name: "Vacances", isArchived: true }` | Instanciation du modèle avec le paramètre `isArchived` | Tag créé avec l'état `isArchived` à `true` (HTTP 201). |
+| **Mise à jour (updateTag)** | ID de tag, corps `{ name: "Voyage Pro", color: "#9333EA" }` | Recherche et mise à jour de l'étiquette | Les champs nom et couleur sont modifiés en base de données (HTTP 200). |
+| **Mise à jour de l'archivage** | ID de tag, corps `{ isArchived: true }` | Modification du booléen d'archivage | Le tag est marqué archivé en base de données (HTTP 200). |
+| **Mise à jour interdite** | ID de tag, utilisateur non propriétaire | Comparaison de propriété | Modification rejetée avec code HTTP 401. |
+| **Suppression propre (deleteTag)** | ID de tag, utilisateur propriétaire | Suppression physique de l'étiquette et nettoyage en cascade des transactions | Le tag est supprimé. Les transactions contenant le tag voient sa référence retirée via `$pull` (HTTP 200). |
+
+---
+
+### 2.18 Tests de la Simulation de Monte Carlo & Stress-test (`monteCarloHelper.js` & `ResilienceChart.jsx`)
+
+#### 2.18.1 Tests unitaires mathématiques (`monteCarloHelper.test.js`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -404,7 +422,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 | **Évaluation de résilience** | Scénarios sécurisé vs à haut risque | Calcul du taux de réussite sur l'horizon | Le scénario sécurisé affiche $100\%$ de résilience. Le scénario risqué (sinistres fréquents et capitaux minimes) affiche un taux $<100\%$ et retourne une valeur d'année moyenne de rupture cohérente. |
 | **Indexation de l'épargne** | Épargne avec vs sans indexation sur l'inflation | Calcul des soldes réels finaux sur 10 ans | Le P50 final avec indexation est strictement supérieur au P50 final sans indexation (perte de pouvoir d'achat). |
 
-#### 2.17.2 Tests de composants UI (`ResilienceChart.test.jsx`)
+#### 2.18.2 Tests de composants UI (`ResilienceChart.test.jsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |

@@ -16,7 +16,8 @@ router.route('/')
   .get(getTags)
   .post(
     [
-      body('name', 'Le nom du tag est obligatoire.').not().isEmpty()
+      body('name', 'Le nom du tag est obligatoire.').not().isEmpty(),
+      body('isArchived', 'isArchived doit être un booléen.').optional().isBoolean()
     ],
     createTag
   );
@@ -24,7 +25,8 @@ router.route('/')
 router.route('/:id')
   .put(
     [
-      body('name', 'Le nom du tag ne peut pas être vide si fourni.').optional().not().isEmpty()
+      body('name', 'Le nom du tag ne peut pas être vide si fourni.').optional().not().isEmpty(),
+      body('isArchived', 'isArchived doit être un booléen.').optional().isBoolean()
     ],
     updateTag
   )

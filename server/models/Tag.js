@@ -16,6 +16,11 @@ const tagSchema = new mongoose.Schema({
     required: true,
     default: '#3B82F6'
   },
+  isArchived: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

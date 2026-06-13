@@ -162,6 +162,14 @@ Défis aléatoires cryptographiques à usage unique munis d'un index TTL d'auto-
 - `userId` (ObjectId -> User, default: null) : Optionnel (rempli uniquement lors de l'enregistrement).
 - `createdAt` (Date, default: Date.now, expires: 300) : Expiration automatique de l'enregistrement en BDD après 5 minutes (300 secondes).
 
+### 2.11 Modèle `Tag` (Étiquettes / Tags)
+Représente des étiquettes transversales de suivi budgétaire ou de projets.
+- `userId` (ObjectId -> User, requis) : Propriétaire de l'étiquette.
+- `name` (String, requis) : Nom de l'étiquette (unique par utilisateur).
+- `color` (String, default: '#3B82F6', requis) : Couleur du badge.
+- `isArchived` (Boolean, default: false, requis) : Indique si le tag est archivé et masqué des nouveaux formulaires de saisie de transactions.
+- `createdAt` (Date, default: Date.now).
+
 ---
 
 ## 3. Spécification de l'API REST
@@ -238,6 +246,12 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `POST /login/verify` : Valide la signature de l'assertion avec la clé stockée, incrémente le compteur, et génère un jeton de session JWT.
 - `GET /credentials` (protégé) : Liste l'ensemble des clés d'accès configurées par l'utilisateur.
 - `DELETE /credentials/:id` (protégé) : Supprime une clé d'accès (révoque l'accès biométrique d'un appareil).
+
+### 3.12 Étiquettes / Tags (`/api/tags`)
+- `GET /` : Liste tous les tags de l'utilisateur (actifs et archivés, triés par nom).
+- `POST /` : Crée un nouveau tag (nom, couleur optionnelle, archivage optionnel).
+- `PUT /:id` : Modifie un tag existant (nom, couleur, état d'archivage `isArchived`).
+- `DELETE /:id` : Supprime définitivement un tag. Cette action supprime également la référence du tag sur toutes les transactions associées de l'utilisateur (nettoyage en cascade via `$pull`).
 
 ---
 
