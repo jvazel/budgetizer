@@ -268,8 +268,9 @@ Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la b
      - Si `autoConfirm = true` : Modifie les soldes des comptes correspondants (`balance -= amount` pour dépense, `+= amount` pour revenu, et les deux pour un transfert).
      - Si `autoConfirm = false` : La transaction est créée avec `isPending: true`, aucun solde n'est modifié tant que l'utilisateur n'approuve pas via l'API `/confirm`.
    - **Calcul de la récurrence suivante** :
-     La fonction `calculateNextDate` détermine le prochain point de passage :
-     $$\text{nextDate} = \text{nextDate} + (\text{every} \times \text{unit})$$
+     Pour éviter la dérive temporelle liée aux longueurs inégales de mois (28/29/30/31 jours) et aux années bissextiles, la fonction `calculateNextDate` (du fichier helper [dateHelper.js](file:///c:/Projects/budgetizer/server/utils/dateHelper.js)) calcule chaque occurrence suivante de manière absolue et déterministe à partir de la date de début d'origine (`startDate`) et du nombre d'exécutions accumulé (`timesExecuted`) :
+     $$\text{nextDate} = \text{startDate} + (\text{timesExecuted} \times \text{every} \times \text{unit})$$
+     Un ajustement intelligent est appliqué pour plafonner le jour calculé au dernier jour réel du mois cible si le jour de début déborde (ex : une récurrence le 31 janvier donnera le 28 ou 29 février, puis se rétablira automatiquement au 31 mars).
    - **Vérification des limites** :
      - Si le compteur `timesExecuted` atteint `numberOfTimes` ou si `nextDate` dépasse `endDate`, la planification est marquée `isActive = false`.
     - `Validation` : Validation de la session (`commitTransaction()`).

@@ -433,6 +433,18 @@ Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archi
 
 ---
 
+### 2.19 Tests des Utilitaires Calendaires (`dateHelper.js`)
+Ces tests valident les fonctions mathématiques de calcul d'échéances pour prévenir les dérives de dates.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Fréquences journalières** | Date de départ, pas de 3 jours, 5 répétitions | Ajout linéaire de jours | Calcul exact de la date future. |
+| **Fréquences hebdomadaires** | Date de départ, pas de 2 semaines | Ajout linéaire de semaines | Calcul exact avec franchissement de mois. |
+| **Fins de mois récurrentes (31)** | Date de départ au 31 Janvier, pas de 1 mois | Plafonnement dynamique au dernier jour de Février puis retour au 31 Mars | Le 1er mois renvoie le 28/29 Février. Le 2e mois renvoie le 31 Mars. Le 3e mois renvoie le 30 Avril. |
+| **Bissextiles (29 Février)** | Date de départ le 29 Février 2024, pas de 1 an | Plafonnement en année ordinaire puis retour au 29 Février lors de la prochaine année bissextile | Le 1er an renvoie le 28 Février 2025. Le 4e an renvoie le 29 Février 2028. |
+
+---
+
 ## 3. Exécution des Tests
 
 ### Lancer tous les tests (Racine)

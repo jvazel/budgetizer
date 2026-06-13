@@ -137,6 +137,7 @@ Automatisez vos factures, salaires ou abonnements récurrents dans l'onglet **Pl
 
 ### 6.1 Configuration des répétitions
 * **Créer une planification** : Définissez la fréquence (ex. : toutes les 2 semaines, tous les mois) et la date de début.
+* **Gestion intelligente des fins de mois** : Si vous configurez une récurrence mensuelle le 31 d'un mois, Budgetizer s'adapte automatiquement aux mois plus courts (le prélèvement aura lieu le 30 avril ou le 28/29 février) tout en revenant automatiquement au 31 lors des mois suivants, évitant ainsi tout décalage temporel progressif.
 * **Mode de validation** :
   * **Auto-confirmer = OUI** : Dès que l'échéance arrive, Budgetizer insère automatiquement la transaction et met à jour les soldes sans intervention de votre part.
   * **Auto-confirmer = NON** : La transaction apparaît dans la section **"À confirmer"**. Vous devez la valider manuellement (avec possibilité d'ajuster le montant), la modifier ou la passer (l'ignorer).
