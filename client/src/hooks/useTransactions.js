@@ -7,7 +7,7 @@ export const useTransactions = (filters = {}) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['transactions', filters],
     queryFn: async () => {
-      const params = new URLSearchParams(filters);
+      const params = new URLSearchParams({ limit: 1000, ...filters });
       const res = await api.get(`/transactions?${params.toString()}`);
       return res.data.transactions;
     },
