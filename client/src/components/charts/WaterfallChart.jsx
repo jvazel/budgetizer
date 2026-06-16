@@ -126,9 +126,9 @@ const WaterfallChart = () => {
 
   // Process data for waterfall chart rendering
   const prepareWaterfallData = () => {
-    if (!data) return [];
+    if (!data) return { chartData: [], processedCats: [] };
     const chartData = [];
-    const { totalIncome, categories, netSavings } = data;
+    const { totalIncome, totalExpenses, categories, netSavings } = data;
 
     // 1. Income (revenues) - block start at 0
     chartData.push({
@@ -140,8 +140,31 @@ const WaterfallChart = () => {
 
     let currentAccumulator = totalIncome;
 
-    // 2. Add each category expense (decreases)
+    // Group categories representing less than 5% of total expenses to keep graph readable
+    const threshold = (totalExpenses || 0) * 0.05;
+    const processedCats = [];
+    let otherAmount = 0;
+
     categories.forEach(cat => {
+      if (categories.length > 6 && cat.amount < threshold) {
+        otherAmount += cat.amount;
+      } else {
+        processedCats.push(cat);
+      }
+    });
+
+    if (otherAmount > 0) {
+      processedCats.push({
+        categoryId: 'others',
+        name: 'Autres',
+        icon: '📁',
+        color: '#71717a',
+        amount: otherAmount
+      });
+    }
+
+    // 2. Add each category expense (decreases)
+    processedCats.forEach(cat => {
       const nextAccumulator = currentAccumulator - cat.amount;
       chartData.push({
         name: cat.name,
@@ -160,10 +183,10 @@ const WaterfallChart = () => {
       color: netSavings >= 0 ? '#a855f7' : '#f43f5e' // purple-500 or rose-500
     });
 
-    return chartData;
+    return { chartData, processedCats };
   };
 
-  const chartData = prepareWaterfallData();
+  const { chartData, processedCats } = prepareWaterfallData();
 
   return (
     <div className="space-y-6">
@@ -256,8 +279,14 @@ const WaterfallChart = () => {
         </p>
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center min-h-[220px]">
-            <div className="w-10 h-10 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
+          <div className="w-full h-60 flex items-end justify-between gap-4 pt-10 px-2">
+            {[60, 40, 80, 55, 75].map((h, i) => (
+              <div
+                key={i}
+                className="w-full rounded-t-lg shimmer-loader"
+                style={{ height: `${h}%` }}
+              />
+            ))}
           </div>
         ) : chartData.length <= 2 && data?.totalIncome === 0 && data?.totalExpenses === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[200px] text-center">
@@ -301,13 +330,13 @@ const WaterfallChart = () => {
       </div>
 
       {/* ── 4. Detailed categories list ── */}
-      {!loading && data && data.categories && data.categories.length > 0 && (
+      {!loading && processedCats && processedCats.length > 0 && (
         <div className="space-y-2.5">
           <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase px-1">
             Détail des flux
           </h3>
           <div className="bg-surface-2 rounded-[24px] border border-border/40 overflow-hidden divide-y divide-border/10 shadow-sm">
-            {data.categories.map((cat, idx) => {
+            {processedCats.map((cat, idx) => {
               const percentage = data.totalExpenses > 0
                 ? parseFloat(((cat.amount / data.totalExpenses) * 100).toFixed(1))
                 : 0;

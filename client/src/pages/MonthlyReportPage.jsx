@@ -171,9 +171,18 @@ const MonthlyReportPage = () => {
 
         {/* Global Loading Spinner */}
         {reportLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3">
-            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-secondary font-bold">Analyse en cours...</p>
+          <div className="space-y-6">
+            {/* Stats grid skeleton */}
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-20 w-full rounded-[22px] shimmer-loader" />
+              ))}
+            </div>
+            
+            {/* Sections skeleton */}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-[140px] w-full rounded-[28px] shimmer-loader" />
+            ))}
           </div>
         ) : error ? (
           /* Error State Card */

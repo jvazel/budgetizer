@@ -92,6 +92,7 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
         const spentAfter = spentResult[0]?.totalSpent || 0;
         
         let spentBefore = spentAfter - amount;
+
         if (oldTransaction && oldTransaction.categoryId && oldTransaction.categoryId.toString() === transaction.categoryId.toString() && oldTransaction.type === 'expense') {
           spentBefore = spentAfter - amount + oldTransaction.amount;
         }
@@ -111,9 +112,63 @@ const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction
             url: '/budgets'
           });
         }
-      }
+
+        // Proactive Velocity Alert
+        if (budget.period === 'monthly' || !budget.period) {
+          const today = transaction.date || new Date();
+          const currentDay = today.getDate();
+
+          if (currentDay < 20) {
+            const daysCount = currentDay >= 7 ? 7 : currentDay;
+            const startOfRecentPeriod = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysCount + 1, 0, 0, 0, 0);
+
+            const recentSpentResult = await Transaction.aggregate([
+              {
+                $match: {
+                  userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
+                  type: 'expense',
+                  accountId: { $in: includedAccountIds },
+                  isPending: { $ne: true },
+                  categoryId: mongoose.Types.ObjectId.isValid(budget.categoryId) ? new mongoose.Types.ObjectId(budget.categoryId) : budget.categoryId,
+                  date: { $gte: startOfRecentPeriod, $lte: end }
+                }
+              },
+              {
+                $group: {
+                  _id: null,
+                  totalSpent: { $sum: '$amount' }
+                }
+              }
+            ]);
+            const recentSpent = recentSpentResult[0]?.totalSpent || 0;
+            const actualVelocity = recentSpent / daysCount;
+
+            const remainingBudget = budget.amount - spentAfter;
+            const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const daysRemaining = totalDaysInMonth - currentDay + 1;
+            const targetVelocity = remainingBudget > 0 && daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
+
+            if (actualVelocity > targetVelocity && remainingBudget > 0) {
+              const daysToDepletion = remainingBudget / actualVelocity;
+              const depletionDate = new Date(today);
+              depletionDate.setDate(today.getDate() + Math.ceil(daysToDepletion));
+
+              if (depletionDate.getMonth() === today.getMonth() &&
+                  depletionDate.getFullYear() === today.getFullYear() &&
+                  depletionDate.getDate() < 20) {
+                
+                sendPushNotification(userId, {
+                  title: 'Alerte Vélocité Proactive ⚠️',
+                  body: `Attention : au rythme actuel de dépenses (${actualVelocity.toFixed(2)} €/j au lieu de ${targetVelocity.toFixed(2)} €/j), votre budget "${budget.name}" sera épuisé le ${depletionDate.toLocaleDateString('fr-FR')}, soit avant le 20 du mois.`,
+                  url: '/charts'
+                });
+              }
+            }
+          }
+        }
       }
     }
+  }
   } catch (err) {
     console.error('Error triggering alerts:', err);
   }

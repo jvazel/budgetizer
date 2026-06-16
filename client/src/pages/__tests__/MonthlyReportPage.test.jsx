@@ -60,7 +60,7 @@ describe('MonthlyReportPage Component - Robustness Tests', () => {
     });
 
     renderComponent();
-    expect(screen.getByText('Analyse en cours...')).toBeInTheDocument();
+    expect(document.querySelector('.shimmer-loader')).toBeInTheDocument();
   });
 
   it('handles error state correctly without crashing', () => {

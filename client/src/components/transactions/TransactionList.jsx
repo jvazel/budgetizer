@@ -4,6 +4,37 @@ import { motion } from 'framer-motion';
 import { triggerHaptic } from '../../utils/hapticHelper';
 
 const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) => {
+  const [visibleCount, setVisibleCount] = React.useState(30);
+  const observerTarget = React.useRef(null);
+
+  // Reset pagination when the global list of transactions changes (e.g., when applying filters)
+  React.useEffect(() => {
+    setVisibleCount(30);
+  }, [transactions]);
+
+  // Load more when user scrolls to bottom
+  React.useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < transactions.length) {
+          triggerHaptic('light');
+          setVisibleCount((prev) => Math.min(prev + 30, transactions.length));
+        }
+      },
+      { threshold: 0.05, rootMargin: '100px' }
+    );
+
+    observer.observe(target);
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [visibleCount, transactions.length]);
+
   if (!transactions || transactions.length === 0) {
     return <div className="text-center text-muted p-8">Aucune transaction trouvée.</div>;
   }
@@ -12,13 +43,19 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
-  // Group by date
-  const grouped = transactions.reduce((acc, curr) => {
-    const date = new Date(curr.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(curr);
-    return acc;
-  }, {});
+  // Only slice and group what is currently visible
+  const slicedTransactions = React.useMemo(() => {
+    return transactions.slice(0, visibleCount);
+  }, [transactions, visibleCount]);
+
+  const grouped = React.useMemo(() => {
+    return slicedTransactions.reduce((acc, curr) => {
+      const date = new Date(curr.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(curr);
+      return acc;
+    }, {});
+  }, [slicedTransactions]);
 
   return (
     <div>
@@ -63,7 +100,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   <div 
                     className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
                     style={{ 
-                      backgroundColor: tx.type === 'transfer' 
+                       backgroundColor: tx.type === 'transfer' 
                         ? 'rgba(59, 130, 246, 0.12)' 
                         : `${tx.categoryId?.color || '#888'}15` 
                     }}
@@ -160,6 +197,13 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
           </div>
         </div>
       ))}
+      
+      {/* Target for intersection observer to trigger loading more */}
+      {visibleCount < transactions.length && (
+        <div ref={observerTarget} className="h-12 flex items-center justify-center py-4">
+          <div className="w-5 h-5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+        </div>
+      )}
     </div>
   );
 };

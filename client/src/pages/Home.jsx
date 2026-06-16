@@ -17,6 +17,7 @@ import {
   Bell, AlertTriangle, TrendingUp, TrendingDown, Wallet,
   CreditCard, Target, AlertCircle,
   BarChart2, Award, Minus, ArrowLeftRight, Clock, Sparkles, Calendar,
+  PiggyBank, Coins, Flame
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from 'recharts';
@@ -37,6 +38,7 @@ const NotificationIcon = ({ type, name, size = 20 }) => {
     case 'CreditCard':    return <CreditCard {...iconProps} />;
     case 'Target':        return <Target {...iconProps} />;
     case 'AlertCircle':   return <AlertCircle {...iconProps} />;
+    case 'Flame':         return <Flame {...iconProps} />;
     default:
       switch (type) {
         case 'budget':    return <AlertTriangle {...iconProps} />;
@@ -68,6 +70,18 @@ const getGradeClass = (grade) => {
     case 'C': return 'badge-grade-c';
     case 'D': return 'badge-grade-d';
     default:  return 'bg-surface-2 border-border/40 text-muted';
+  }
+};
+
+const getAccountIcon = (type, size = 18) => {
+  const props = { size, className: 'shrink-0 text-primary opacity-80' };
+  switch (type) {
+    case 'checking':   return <Wallet {...props} />;
+    case 'savings':    return <PiggyBank {...props} />;
+    case 'credit':     return <CreditCard {...props} />;
+    case 'cash':       return <Coins {...props} />;
+    case 'investment': return <TrendingUp {...props} />;
+    default:           return <Wallet {...props} />;
   }
 };
 
@@ -178,6 +192,7 @@ const Home = () => {
   return (
     <>
       <HeaderTitle collapsible={true}>{title}</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       <InstallPromptBanner />
 
       {/* Large Collapsible Header Title on Page */}
@@ -292,8 +307,8 @@ const Home = () => {
       )}
 
       {/* ── Comptes ──────────────────────────────────────────────────────────── */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-3 px-1">
           <h3 className="text-sm font-bold text-primary">Comptes</h3>
           <button
             onClick={() => navigate('/accounts')}
@@ -303,52 +318,95 @@ const Home = () => {
           </button>
         </div>
 
-        <div className="space-y-3">
-          {accounts.map((acc, index) => {
+        {/* Horizontal scrollable carrousel */}
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-3 -mx-4 px-4">
+          {accounts.map((acc) => {
             const lastTxDateStr = acc.lastTransactionDate
               ? new Date(acc.lastTransactionDate).toLocaleDateString('fr-FR', {
                   day: '2-digit', month: '2-digit', year: 'numeric',
                 })
               : 'Aucune transaction';
+            const isNegative = acc.balance < 0;
 
             return (
-              <div key={acc._id}>
-                {index > 0 && <div className="h-[1px] bg-border/20 my-3" />}
-                <div
-                  onClick={() =>
-                    acc.type === 'credit'
-                      ? navigate(`/accounts/${acc._id}/credit`)
-                      : handleOpenEdit(acc)
-                  }
-                  className="flex justify-between items-center active:scale-[0.99] active:bg-white/[0.03] p-2 -mx-2 rounded-xl transition-all cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/10 shrink-0"
-                      style={{ backgroundColor: `${acc.color || '#10b981'}15`, color: acc.color }}
-                    >
-                      {acc.type === 'credit' ? <CreditCard size={18} /> : <Wallet size={18} />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-primary truncate leading-tight">{acc.name}</p>
-                      <p className="text-[11px] text-muted">Dernière utilisation : {lastTxDateStr}</p>
+              <div
+                key={acc._id}
+                onClick={() =>
+                  acc.type === 'credit'
+                    ? navigate(`/accounts/${acc._id}/credit`)
+                    : handleOpenEdit(acc)
+                }
+                className="snap-center shrink-0 w-[256px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active:scale-[0.97] transition-all cursor-pointer select-none bg-surface"
+                style={{
+                  background: `linear-gradient(135deg, ${acc.color || '#10b981'}15 0%, ${acc.color || '#10b981'}03 100%), var(--bg-surface)`,
+                  borderColor: `${acc.color || '#10b981'}35`,
+                  boxShadow: '0 8px 30px -4px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
+                }}
+              >
+                {/* Background glow orb */}
+                <div 
+                  className="absolute -right-10 -bottom-10 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20"
+                  style={{ backgroundColor: acc.color || '#10b981' }}
+                />
+
+                {/* Card Top: Name & Chip */}
+                <div className="flex justify-between items-start gap-2 relative z-10">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold text-primary truncate leading-tight">{acc.name}</p>
+                    <div className="mt-1">
+                      <span className="inline-block text-[9.5px] font-semibold text-secondary bg-surface-2 border border-border/40 px-1.5 py-0.5 rounded-[6px] uppercase tracking-wider">
+                        {acc.type === 'checking' ? 'Courant' :
+                         acc.type === 'savings' ? 'Épargne' :
+                         acc.type === 'credit' ? 'Crédit' :
+                         acc.type === 'cash' ? 'Espèces' :
+                         acc.type === 'investment' ? 'Bourse' : acc.type}
+                      </span>
                     </div>
                   </div>
-                  <span className={`font-premium-numbers font-bold shrink-0 ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
-                    {formatCurrency(acc.balance, acc.currency)}
-                  </span>
+                  {/* Account Type Icon */}
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center border backdrop-blur-md relative z-10 shrink-0"
+                    style={{
+                      backgroundColor: `${acc.color || '#10b981'}15`,
+                      borderColor: `${acc.color || '#10b981'}30`
+                    }}
+                  >
+                    {getAccountIcon(acc.type, 16)}
+                  </div>
+                </div>
+
+                {/* Card Middle/Bottom: Balance */}
+                <div className="relative z-10 mt-auto">
+                  <span className="text-[9px] text-muted font-extrabold uppercase tracking-widest block leading-none">Solde Actuel</span>
+                  <div className="mt-1">
+                    <span className={`font-mono font-extrabold text-xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
+                      {formatCurrency(acc.balance, acc.currency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1.5 text-secondary">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: acc.color || '#10b981' }} />
+                    <span className="text-[10px] font-medium tracking-tight truncate">
+                      {lastTxDateStr !== 'Aucune transaction' ? `Màj : ${lastTxDateStr}` : 'Aucune transaction'}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
           })}
-        </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="w-full mt-4 text-xs font-bold text-accent py-3 border border-dashed border-accent/30 rounded-xl active:scale-[0.99] active:bg-accent/5 transition-all flex items-center justify-center gap-1.5 select-none"
-        >
-          + Ajouter un compte
-        </button>
+          {/* "+ Ajouter un compte" Card at the end of the carousel */}
+          <div
+            onClick={handleOpenAdd}
+            className="snap-center shrink-0 w-[256px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active:scale-[0.97] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
+          >
+            <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
+              <span className="text-lg font-bold">+</span>
+            </div>
+            <span className="text-xs font-bold text-secondary group-hover:text-accent transition-all">
+              Ajouter un compte
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ── Dépenses 7 derniers jours — Sparkline ────────────────────────────── */}

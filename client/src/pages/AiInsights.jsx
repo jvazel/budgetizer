@@ -92,9 +92,23 @@ const AiInsights = () => {
 
         {/* Global Loading Spinner */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3">
-            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-secondary font-bold">Génération des insights en cours...</p>
+          <div className="space-y-6">
+            {/* Sensibilité shimmer */}
+            <div className="h-16 w-full rounded-[24px] shimmer-loader" />
+            
+            {/* Section Anomalies title shimmer */}
+            <div className="space-y-3">
+              <div className="h-4 w-48 rounded bg-surface-2 shimmer-loader" />
+              <div className="h-[96px] w-full rounded-[28px] shimmer-loader" />
+            </div>
+
+            {/* Section Suggestions title shimmer */}
+            <div className="space-y-3">
+              <div className="h-4 w-48 rounded bg-surface-2 shimmer-loader" />
+              {[1, 2].map(i => (
+                <div key={i} className="h-[200px] w-full rounded-[28px] shimmer-loader" />
+              ))}
+            </div>
           </div>
         ) : error ? (
           /* Error State Card */

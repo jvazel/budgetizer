@@ -57,7 +57,7 @@ describe('WaterfallChart Component', () => {
     renderComponent();
 
     expect(screen.getByText('Analyse mensuelle')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(document.querySelector('.shimmer-loader')).toBeInTheDocument();
   });
 
   it('renders waterfall chart data and KPIs successfully', async () => {

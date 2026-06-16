@@ -46,11 +46,12 @@ Afin de concilier une sécurité maximale et une expérience utilisateur fluide,
 Le tableau de bord est la page d'accueil principale après connexion. Il regroupe les informations de synthèse financière indispensables :
 
 - **Solde Net Global** : Affiche la somme des soldes de tous les comptes actifs inclus dans le total.
-- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée. Chaque carte affiche :
+- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée premium avec défilement fluide et recentrage automatique (snap scroll). Chaque carte affiche :
   - Le nom du compte.
-  - Le solde actuel.
-  - La couleur personnalisée associée.
-  - Un indicateur visuel du type de compte (carte, coffre-fort, etc.).
+  - Le solde actuel mis en valeur avec un contraste maximal (couleur neutre `text-primary` si positif/nul, rouge `text-danger` si négatif) en chiffres tabulaires `font-premium-numbers`.
+  - Un fond dégradé premium translucide superposant la couleur thématique du compte à la couleur de fond du thème, s'adaptant parfaitement aux modes clair et sombre.
+  - Une icône visuelle moderne et dynamique représentant graphiquement le type de compte (Tirelire 🐷 pour l'Épargne, Carte 💳 pour les Crédits, Pièces 🪙 pour le Cash, Tendance 📈 pour les Investissements, Portefeuille 💼 pour le Courant) enveloppée dans un badge circulaire en verre poli (`backdrop-blur-md`).
+  - La date de dernière mise à jour des transactions positionnée sur sa propre ligne sous le solde, accompagnée d'une pastille thématique clignotante (`animate-pulse`).
 - **Formulaire d'ajout rapide (Action Sheet)** : Un bouton d'action flottant central permet d'ouvrir instantanément un panneau de saisie rapide (Bottom Sheet) pour ajouter une transaction (Dépense, Revenu ou Virement interne) sans quitter l'écran d'accueil.
 - **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules (Accueil, Transactions, Catégories, Budgets, Échéances, Abonnements, Statistiques, Conseils, Paramètres) et intègre des effets de halo lumineux (glow flares) et des flous (backdrop-blur) pour un design premium sombre et immersif.
 - **Aperçu des Transactions Récentes** : Liste chronologique des dernières transactions saisies ou confirmées.
@@ -288,6 +289,11 @@ Un sélecteur moderne permet de choisir la catégorie à analyser :
   - *Cas 1 (Sous contrôle)* : Message de félicitations confirmant que le rythme est correct.
   - *Cas 2 (Excès de vitesse)* : Alerte visuelle estimant la date d'épuisement théorique du budget si le rythme est maintenu.
   - *Cas 3 (Action corrective)* : Suggestion chiffrée recommandant une nouvelle limite quotidienne conseillée ($remainingBudget / daysRemaining$) à tenir pour le reste du mois pour respecter le budget initial. Si le budget est déjà épuisé, la limite corrective conseillée est fixée à $0$ €/jour.
+
+### 15.4 Alertes de Vélocité Proactives 🚨
+Pour aider proactivement l’utilisateur à anticiper les fins de mois difficiles, le système effectue une analyse de vélocité en temps réel (lors de l'ajout/modification d'une dépense et lors de la consultation du dashboard). Si la projection d'épuisement complète du budget d'une catégorie (`depletionDate`) tombe **avant le 20 du mois en cours** (et que la date du jour est elle-même antérieure au 20), une double alerte est émise :
+1. **Alerte dans l’application** : Une notification ornée d'une icône de flamme (`Flame`) rouge est poussée dans la cloche de notifications du tableau de bord.
+2. **Notification Push PWA native** : Une notification Push native en arrière-plan est immédiatement envoyée sur l'appareil de l'utilisateur (si les notifications PWA ont été autorisées) afin d’offrir un avertissement instantané et engageant.
 
 ---
 

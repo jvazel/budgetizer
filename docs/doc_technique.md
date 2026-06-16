@@ -478,6 +478,10 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
  - **Calcul des Angles** : La vitesse cible est fixée au centre à la verticale (90 degrés). L'aiguille pivote entre 0 et 180 degrés selon le ratio $\text{vitesseRelle} / (2 \times \text{vitesseCible})$.
  - **Micro-animation de l'Aiguille** : La rotation de l'aiguille est animée de manière fluide en CSS via une propriété de transition matérielle `transform` combinée à une fonction de transition de type ressort (`cubic-bezier(0.34, 1.56, 0.64, 1)`).
 
+### 9.4 Alertes Proactives et Flux Push Backend
+- **Agrégation Optimisée en Parallèle (`getDashboardSummary`)** : Afin de calculer la vélocité sans dégrader les temps de réponse, une agrégation stochastique est ajoutée en parallèle (`Promise.all`) dans `dashboardController.js`. Elle filtre les dépenses réelles sur la période récente (7 jours ou depuis le 1er du mois) par catégorie en s'appuyant sur l'index `{ userId: 1, type: 1, date: -1 }`.
+- **Calcul et Projection en Temps Réel** : Le serveur calcule la projection d'épuisement complète du budget mensuel. Si l'utilisateur est en excès de vitesse et que `depletionDate` est estimée avant le 20 du mois en cours, l'alerte est insérée dans la liste des notifications du tableau de bord.
+- **Déclenchement Push Instantané** : Lors de chaque ajout ou modification de dépense (méthode `checkAndTriggerAlerts` de `transactionController.js`), le rythme de dépenses est recalculé. En cas d'anomalie de vélocité projetant une rupture avant le 20, une notification Push PWA native est immédiatement émise via la bibliothèque `web-push`.
 
 ## 10. Architecture Technique de la Simulation Monte Carlo & Stress-test ⚙️
 

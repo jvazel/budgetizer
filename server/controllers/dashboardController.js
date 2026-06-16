@@ -206,6 +206,11 @@ export const getDashboardSummary = async (req, res) => {
     const includedAccountIds = rawAccounts.filter(acc => acc.includeInTotal !== false).map(acc => acc._id);
     const checkingAccountIds = rawAccounts.filter(acc => acc.type === 'checking').map(acc => acc._id);
 
+    // Days count and start of period for velocity calculation
+    const currentDay = now.getDate();
+    const daysCount = currentDay >= 7 ? 7 : currentDay;
+    const startOfRecentPeriod = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - daysCount + 1, 0, 0, 0, 0));
+
     // 2. Fetch other collections and perform database-level calculations in parallel
     const [
       currentMonthStats,
@@ -219,7 +224,8 @@ export const getDashboardSummary = async (req, res) => {
       upcomingSchedules,
       savingsGoals,
       oldestTx,
-      recentTransactions
+      recentTransactions,
+      recentExpensesByCategory
     ] = await Promise.all([
       aggregatePeriodStats(userId, checkingAccountIds, startOfCurrentMonth, endOfCurrentMonth),
       aggregatePeriodStats(userId, checkingAccountIds, startOfLastMonth, endOfLastMonth),
@@ -316,7 +322,25 @@ export const getDashboardSummary = async (req, res) => {
       .populate('categoryId', 'name icon color type')
       .sort({ date: -1 })
       .limit(5)
-      .lean()
+      .lean(),
+      // 13. Recent expenses by category for proactive velocity alert
+      Transaction.aggregate([
+        {
+          $match: {
+            userId: toObjectId(userId),
+            type: 'expense',
+            accountId: { $in: includedAccountIds.map(toObjectId) },
+            isPending: { $ne: true },
+            date: { $gte: startOfRecentPeriod, $lte: now }
+          }
+        },
+        {
+          $group: {
+            _id: '$categoryId',
+            totalSpent: { $sum: '$amount' }
+          }
+        }
+      ])
     ]);
 
     // 3. Fetch latest transaction date per account in a single aggregation query
@@ -490,6 +514,15 @@ export const getDashboardSummary = async (req, res) => {
       };
     });
 
+    const recentCategoryMap = {};
+    if (recentExpensesByCategory && Array.isArray(recentExpensesByCategory)) {
+      recentExpensesByCategory.forEach(item => {
+        if (item._id) {
+          recentCategoryMap[item._id.toString()] = item.totalSpent;
+        }
+      });
+    }
+
     // 9. Notifications Aggregation
     const prefs = req.user.preferences || {};
     const enableBudgetAlerts = prefs.enableBudgetAlerts !== false;
@@ -532,6 +565,42 @@ export const getDashboardSummary = async (req, res) => {
             percentage: percentage,
             action: { label: 'Gérer les budgets', path: '/budgets' }
           });
+        }
+      }
+
+      // Proactive Velocity Alert
+      if (budget.period === 'monthly' || !budget.period) {
+        if (catId && currentDay < 20) {
+          const remainingBudget = budget.amount - spent;
+          const recentSpent = recentCategoryMap[catId] || 0;
+          const actualVelocity = recentSpent / daysCount;
+          
+          const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const daysRemaining = totalDaysInMonth - currentDay + 1;
+          const targetVelocity = remainingBudget > 0 && daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
+
+          if (actualVelocity > targetVelocity && remainingBudget > 0) {
+            const daysToDepletion = remainingBudget / actualVelocity;
+            const depletionDate = new Date(now);
+            depletionDate.setDate(now.getDate() + Math.ceil(daysToDepletion));
+
+            if (depletionDate.getMonth() === now.getMonth() &&
+                depletionDate.getFullYear() === now.getFullYear() &&
+                depletionDate.getDate() < 20) {
+              
+              if (enableBudgetAlerts) {
+                notifications.push({
+                  id: `velocity-${budget._id}`,
+                  type: 'budget',
+                  title: `Alerte Vélocité Proactive ⚠️`,
+                  message: `Au rythme actuel de dépenses (${actualVelocity.toFixed(2)} €/j au lieu de ${targetVelocity.toFixed(2)} €/j), votre budget "${budget.name}" sera épuisé le ${depletionDate.toLocaleDateString('fr-FR')}, soit avant le 20 du mois.`,
+                  icon: 'Flame',
+                  color: 'danger',
+                  action: { label: 'Voir le rythme', path: '/charts' }
+                });
+              }
+            }
+          }
         }
       }
     });

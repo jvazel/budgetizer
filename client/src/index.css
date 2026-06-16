@@ -28,9 +28,9 @@
   /* === LIGHT MODE Premium (Clean & Minimalist) === */
   --bg-base: #f9fafb;          /* Blanc cassé Gray-50 */
   --bg-surface: #ffffff;
-  --bg-surface-2: #f3f4f6;     /* Gray-100 */
+  --bg-surface-2: #f1f5f9;     /* Slate-100 (au lieu de Gray-100 pour plus de fraîcheur) */
   --bg-elevated: #ffffff;
-  --border: rgba(0, 0, 0, 0.04);
+  --border: rgba(0, 0, 0, 0.08); /* Augmentation du contraste (0.04 -> 0.08) */
   --text-primary: #0f172a;     /* Slate-900 */
   --text-secondary: #475569;   /* Slate-600 */
   --text-muted: #94a3b8;       /* Slate-400 */

@@ -106,7 +106,12 @@ const CategoryChart = () => {
       const res = await api.get(`/transactions?startDate=${startDate}&endDate=${endDate}&limit=1000`);
       const list = res.data.transactions || res.data || [];
       const filtered = list.filter(
-        tx => (tx.categoryId?._id === cat.categoryId || tx.categoryId?.name === cat.name) && tx.type === type
+        tx => {
+          if (cat.categoryId === 'others') {
+            return cat.subcategories.some(sub => tx.categoryId?.name === sub.name) && tx.type === type;
+          }
+          return (tx.categoryId?._id === cat.categoryId || tx.categoryId?.name === cat.name) && tx.type === type;
+        }
       );
       setCategoryTransactions(filtered);
     } catch (err) {
@@ -327,6 +332,60 @@ const CategoryChart = () => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
+  // Aggregate small categories (< 5%) under "Autres" to keep charts clean and readable
+  const processedCategories = React.useMemo(() => {
+    if (!data.categories || data.categories.length === 0) return [];
+    
+    // If <= 6 categories, don't aggregate
+    if (data.categories.length <= 6) return data.categories;
+
+    const threshold = data.total * 0.05; // 5% of total
+    const mainCategories = [];
+    let otherAmount = 0;
+    const otherSubcategories = [];
+
+    data.categories.forEach(cat => {
+      if (cat.amount < threshold) {
+        otherAmount += cat.amount;
+        if (cat.subcategories && cat.subcategories.length > 0) {
+          otherSubcategories.push(...cat.subcategories);
+        } else {
+          otherSubcategories.push({
+            name: cat.name,
+            amount: cat.amount,
+            icon: cat.icon || '📁',
+            color: cat.color || '#71717a',
+            percentage: data.total > 0 ? parseFloat(((cat.amount / data.total) * 100).toFixed(1)) : 0
+          });
+        }
+      } else {
+        mainCategories.push(cat);
+      }
+    });
+
+    if (otherAmount > 0) {
+      // Sort subcategories of Autres by amount
+      otherSubcategories.sort((a, b) => b.amount - a.amount);
+      const totalOtherSubAmount = otherSubcategories.reduce((sum, s) => sum + s.amount, 0) || 1;
+      const otherSubWithPct = otherSubcategories.map(s => ({
+        ...s,
+        percentage: parseFloat(((s.amount / totalOtherSubAmount) * 100).toFixed(1))
+      }));
+
+      mainCategories.push({
+        categoryId: 'others',
+        name: 'Autres',
+        icon: '📁',
+        color: '#71717a',
+        amount: otherAmount,
+        percentage: data.total > 0 ? parseFloat(((otherAmount / data.total) * 100).toFixed(1)) : 0,
+        subcategories: otherSubWithPct
+      });
+    }
+
+    return mainCategories.sort((a, b) => b.amount - a.amount);
+  }, [data.categories, data.total]);
+
   // Determine what list & pie data to show (drilldown vs normal)
   const pieData = selectedCategory
     ? selectedCategory.subcategories.map(sub => ({
@@ -334,7 +393,7 @@ const CategoryChart = () => {
         value: sub.amount,
         color: selectedCategory.color || '#3b82f6'
       }))
-    : data.categories.map(cat => ({
+    : processedCategories.map(cat => ({
         name: cat.name,
         value: cat.amount,
         color: cat.color || '#10b981'
@@ -489,7 +548,7 @@ const CategoryChart = () => {
 
         <div className="w-full h-56 relative flex items-center justify-center">
           {loading ? (
-            <div className="w-32 h-32 rounded-full border-4 border-accent/10 border-t-accent animate-spin" />
+            <div className="w-36 h-36 rounded-full border-[12px] border-surface-2 shimmer-loader" />
           ) : pieData.length === 0 ? (
             <div className="text-center text-muted text-xs space-y-1">
               <HelpCircle size={28} className="mx-auto opacity-60" />
@@ -567,8 +626,8 @@ const CategoryChart = () => {
 
         {loading ? (
           <div className="space-y-3">
-            <div className="h-16 bg-surface-2 rounded-2xl animate-pulse" />
-            <div className="h-16 bg-surface-2 rounded-2xl animate-pulse" />
+            <div className="h-16 bg-surface-2 rounded-2xl shimmer-loader" />
+            <div className="h-16 bg-surface-2 rounded-2xl shimmer-loader" />
           </div>
         ) : pieData.length === 0 ? (
           null
@@ -598,7 +657,7 @@ const CategoryChart = () => {
         ) : (
           /* Main Categories List */
           <div className="space-y-2">
-            {data.categories.map((cat, idx) => (
+            {processedCategories.map((cat, idx) => (
               <div 
                 key={idx}
                 onClick={() => cat.subcategories?.length > 0 ? setSelectedCategory(cat) : handleOpenDetailSheet(cat)}
