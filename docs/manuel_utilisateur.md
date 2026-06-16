@@ -193,6 +193,10 @@ Analysez le passé, anticipez le futur et surveillez votre rythme de dépenses d
   * *Donut interactif* : Un graphique en anneau à deux arcs colore visuellement la répartition — indigo pour les fixes, ambre pour les variables. Survolez ou appuyez sur un arc pour afficher son montant précis au centre. Une barre de progression linéaire en bas du graphique complète la visualisation du ratio.
   * *Listes par catégorie (pliables)* : Deux sections dépliables (« Charges fixes » et « Dépenses variables ») détaillent chaque catégorie : icône, nom, nombre de transactions, montant total et part en pourcentage.
   * *Classification automatique* : Une dépense est classée **fixe** si elle provient d'une transaction planifiée (loyer, abonnement, remboursement de crédit configuré dans l'onglet Planifications). Toute autre dépense saisie manuellement est considérée **variable**. Pour classer une dépense récurrente comme fixe, créez simplement une planification correspondante.
+* **Analyse mensuelle (Graphique en cascade / Waterfall)** 📊 : Visualisez l'allocation de vos revenus perçus vers vos dépenses par catégorie pour le mois sélectionné.
+  * *Déroulement de la cascade* : Le graphique commence par la barre verte représentant vos revenus totaux, suivie par des marches descendantes de couleur rose pour chaque catégorie de dépenses (triées de la plus importante à la moins importante), et se termine par le solde restant (violet pour une épargne nette positive, rose/rouge pour un déficit net).
+  * *Détail des flux* : Un tableau au bas du graphique récapitule les montants exacts et le pourcentage de chaque catégorie par rapport à l'enveloppe globale de dépenses.
+
 
 ---
 

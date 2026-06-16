@@ -1375,4 +1375,89 @@ export const getFixedVsVariableData = async (req, res) => {
   }
 };
 
+// 12. Get waterfall chart data (income, grouped expenses, net savings)
+export const getWaterfallData = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // Fetch all categories for reference
+    const allCategories = await Category.find({ userId: req.user.id }).lean();
+    const categoryMap = {};
+    allCategories.forEach(cat => {
+      categoryMap[cat._id.toString()] = cat;
+    });
+
+    // Query active transactions (not pending) for the current period
+    const transactions = await Transaction.find({
+      userId: req.user.id,
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    }).select('categoryId amount type').lean();
+
+    let totalIncome = 0;
+    let totalExpenses = 0;
+
+    // Group expenses by parent category
+    const groupedExpenses = {};
+
+    transactions.forEach(tx => {
+      if (tx.type === 'income') {
+        totalIncome += tx.amount;
+      } else if (tx.type === 'expense') {
+        totalExpenses += tx.amount;
+        if (!tx.categoryId) return;
+        const catIdStr = tx.categoryId.toString();
+        const cat = categoryMap[catIdStr];
+        if (!cat) return;
+
+        let mainCatId = cat._id.toString();
+
+        // If it's a subcategory, group under parent
+        if (cat.parentId) {
+          mainCatId = cat.parentId.toString();
+        }
+
+        if (!groupedExpenses[mainCatId]) {
+          const mainCat = categoryMap[mainCatId] || { name: 'Autre', icon: '❓', color: '#888888' };
+          groupedExpenses[mainCatId] = {
+            categoryId: mainCatId,
+            name: mainCat.name,
+            icon: mainCat.icon,
+            color: mainCat.color,
+            amount: 0
+          };
+        }
+        groupedExpenses[mainCatId].amount += tx.amount;
+      }
+    });
+
+    // Convert grouped expenses to list, format, and sort by amount descending
+    const expensesList = Object.values(groupedExpenses).map(cat => ({
+      ...cat,
+      amount: parseFloat(cat.amount.toFixed(2))
+    })).sort((a, b) => b.amount - a.amount);
+
+    const netSavings = parseFloat((totalIncome - totalExpenses).toFixed(2));
+
+    res.json({
+      totalIncome: parseFloat(totalIncome.toFixed(2)),
+      totalExpenses: parseFloat(totalExpenses.toFixed(2)),
+      netSavings,
+      categories: expensesList
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+
 

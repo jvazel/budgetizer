@@ -292,10 +292,14 @@ const BudgetActualChart = () => {
               processedTransactions.map(tx => (
                 <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
                   <div className="min-w-0 pr-2">
-                    <p className="text-xs font-bold text-primary truncate">{tx.description || 'Sans description'}</p>
+                    <p className="text-xs font-bold text-primary truncate">
+                      {tx.description || tx.note || (tx.type === 'transfer' ? 'Virement' : tx.categoryId?.name) || 'Sans description'}
+                    </p>
                     <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
                       <Calendar size={10} /> {tx.formattedDate}
-                      {tx.note && <span className="truncate max-w-[120px] italic">({tx.note})</span>}
+                      {tx.description && tx.note && (
+                        <span className="truncate max-w-[120px] italic">({tx.note})</span>
+                      )}
                     </p>
                   </div>
                   <span className="font-mono text-xs font-black text-danger shrink-0">

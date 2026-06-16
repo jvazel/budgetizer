@@ -13,6 +13,7 @@ import TagChart from '../components/charts/TagChart';
 import VelocityChart from '../components/charts/VelocityChart';
 import ResilienceChart from '../components/charts/ResilienceChart';
 import FixedVarChart from '../components/charts/FixedVarChart';
+import WaterfallChart from '../components/charts/WaterfallChart';
 import BottomSheet from '../components/ui/BottomSheet';
 import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge, ShieldCheck, Lock } from 'lucide-react';
 
@@ -41,7 +42,8 @@ const ChartsPage = () => {
     future: 'Trésorerie',
     forecast: 'Prévisions',
     histogram: 'Histogramme personnalisé',
-    fixedvar: 'Fixes vs Variables'
+    fixedvar: 'Fixes vs Variables',
+    waterfall: 'Analyse mensuelle'
   };
 
   const titleElement = (
@@ -70,6 +72,7 @@ const ChartsPage = () => {
         {activeTab === 'forecast' && <ForecastChart />}
         {activeTab === 'histogram' && <HistogramChart />}
         {activeTab === 'fixedvar' && <FixedVarChart />}
+        {activeTab === 'waterfall' && <WaterfallChart />}
       </div>
 
       {/* Select Category Drawer */}
@@ -88,6 +91,7 @@ const ChartsPage = () => {
                 title: 'Activité Mensuelle',
                 items: [
                   { key: 'category', label: 'Catégories', icon: PieChart, color: 'text-purple-400 bg-purple-500/10' },
+                  { key: 'waterfall', label: 'Analyse mensuelle', icon: TrendingUp, color: 'text-emerald-400 bg-emerald-500/10' },
                   { key: 'velocity', label: 'Rythme Dépenses', icon: Gauge, color: 'text-rose-400 bg-rose-500/10' },
                   { key: 'fixedvar', label: 'Fixes vs Var.', icon: Lock, color: 'text-indigo-400 bg-indigo-500/10' },
                   { key: 'tags', label: 'Tags & Projets', icon: Tag, color: 'text-amber-400 bg-amber-500/10' }

@@ -346,3 +346,50 @@ Le composant `FixedVarChart` est structuré en 5 blocs :
 4. **Listes collapsables** : Deux accordéons dépliés par défaut — *Charges fixes* (icône `Lock`, indigo) et *Dépenses variables* (icône `Shuffle`, ambre) — affichant pour chaque catégorie : icône, nom, nombre de transactions, montant et %.
 5. **Carte explicative** : Bloc informatif rappelant la définition des deux catégories et le lien vers les Planifications pour classer manuellement une charge.
 
+
+## 17. Graphique d'Analyse Mensuelle (Waterfall / Cascade) 📊
+
+Le graphique **Analyse mensuelle** (accessible dans l'onglet Analyses sous le nom *« Analyse mensuelle »*) permet de visualiser l'allocation des revenus perçus sur le mois vers les dépenses par catégorie, aboutissant à l'épargne ou au déficit net du mois.
+
+### 17.1 Règle de calcul et d'allocation
+
+La cascade représente le flux financier du mois de la manière suivante :
+- **Point de départ (Ascendant) :** Somme de tous les revenus enregistrés sur le mois (`type === 'income'`).
+- **Flux intermédiaires (Descendants) :** Sommation des dépenses par catégories parentes triées par montant décroissant. Chaque bloc commence à la hauteur résiduelle après déduction de la catégorie précédente.
+- **Point d'arrivée (Final) :** Épargne Nette (si revenus > dépenses) ou Déficit Net (si dépenses > revenus).
+
+### 17.2 Endpoint API
+
+`GET /charts/waterfall?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+
+**Réponse :**
+```json
+{
+  "totalIncome": 3000.00,
+  "totalExpenses": 1200.00,
+  "netSavings": 1800.00,
+  "categories": [
+    { "categoryId": "...", "name": "Logement", "icon": "🏠", "color": "#6366f1", "amount": 800.00 },
+    { "categoryId": "...", "name": "Alimentation", "icon": "🛒", "color": "#f59e0b", "amount": 400.00 }
+  ]
+}
+```
+
+### 17.3 Interface Utilisateur
+
+Le composant `WaterfallChart` est structuré en 5 blocs :
+
+1. **Navigation mensuelle** : Flèches `←` / `→` et sélecteur via `BottomSheet` pour les 18 derniers mois.
+2. **Cartes KPI (3)** :
+   - *Revenus* — montant brut global (fond émeraude).
+   - *Dépenses* — montant brut global (fond rose).
+   - *Épargne / Déficit Net* — résultat net du mois (fond violet si excédentaire, rouge si déficitaire).
+3. **Graphique de type Cascade (`Recharts BarChart`)** :
+   - Colonne verte à gauche (`#10b981`) pour les revenus.
+   - Colonnes suspendues (floating bars) descendantes pour chaque catégorie de dépenses, reprenant la couleur de la catégorie ou rouge/rose par défaut.
+   - Colonne finale à droite pour le solde restant (violette `#a855f7` si épargne, rose `#f43f5e` si déficit).
+   - Ligne horizontale pointillée à $0\text{ €}$ pour indiquer le seuil d'équilibre.
+4. **Liste détaillée des flux** : Liste affichant pour chaque catégorie de dépenses : l'icône, le nom, le pourcentage qu'elle représente par rapport aux dépenses totales et le montant négatif.
+5. **Carte d'interprétation** : Bloc d'aide expliquant le fonctionnement de la cascade et le code couleur.
+
+

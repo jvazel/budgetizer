@@ -10,7 +10,8 @@ import {
   getHistogramData,
   getBalanceHistory,
   getTagChartsData,
-  getFixedVsVariableData
+  getFixedVsVariableData,
+  getWaterfallData
 } from '../controllers/chartController.js';
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.get('/ranking', getExpenseRanking);
 router.get('/histogram', getHistogramData);
 router.get('/balance-history', getBalanceHistory);
 router.get('/fixed-vs-variable', getFixedVsVariableData);
+router.get('/waterfall', getWaterfallData);
+
 
 export default router;

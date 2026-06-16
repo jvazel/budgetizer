@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getChartsByCategory, getForecastCharts, getTagChartsData } from '../chartController.js';
+import { getChartsByCategory, getForecastCharts, getTagChartsData, getWaterfallData } from '../chartController.js';
 import Category from '../../models/Category.js';
 import Transaction from '../../models/Transaction.js';
 import Account from '../../models/Account.js';
@@ -195,4 +195,71 @@ describe('Chart Controller', () => {
       }));
     });
   });
+
+  describe('getWaterfallData', () => {
+    it('should aggregate income and expenses by parent category and calculate net savings', async () => {
+      req.query = {
+        startDate: '2026-06-01',
+        endDate: '2026-06-30'
+      };
+
+      const mockCategories = [
+        { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' },
+        { _id: 'cat_rent', name: 'Loyer', icon: '🏠', color: 'blue' }
+      ];
+
+      const mockTransactions = [
+        { categoryId: 'cat_food', amount: 150, type: 'expense', date: new Date('2026-06-05') },
+        { categoryId: 'cat_rent', amount: 850, type: 'expense', date: new Date('2026-06-01') },
+        { amount: 3000, type: 'income', date: new Date('2026-06-10') }
+      ];
+
+      Category.find.mockImplementation(() => mockQuery(mockCategories));
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getWaterfallData(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        totalIncome: 3000,
+        totalExpenses: 1000,
+        netSavings: 2000,
+        categories: [
+          expect.objectContaining({ categoryId: 'cat_rent', amount: 850 }),
+          expect.objectContaining({ categoryId: 'cat_food', amount: 150 })
+        ]
+      });
+    });
+
+    it('should aggregate subcategory transactions under their parent category', async () => {
+      req.query = {
+        startDate: '2026-06-01',
+        endDate: '2026-06-30'
+      };
+
+      const mockCategories = [
+        { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' },
+        { _id: 'sub_rest', name: 'Resto', icon: '🍷', color: 'orange', parentId: 'cat_food' }
+      ];
+
+      const mockTransactions = [
+        { categoryId: 'cat_food', amount: 100, type: 'expense', date: new Date('2026-06-05') },
+        { categoryId: 'sub_rest', amount: 50, type: 'expense', date: new Date('2026-06-06') }
+      ];
+
+      Category.find.mockImplementation(() => mockQuery(mockCategories));
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getWaterfallData(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        totalIncome: 0,
+        totalExpenses: 150,
+        netSavings: -150,
+        categories: [
+          expect.objectContaining({ categoryId: 'cat_food', amount: 150 })
+        ]
+      });
+    });
+  });
 });
+
