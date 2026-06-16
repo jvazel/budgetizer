@@ -513,3 +513,43 @@ Le rendu graphique s'appuie sur le composant `ComposedChart` de Recharts :
 ### 10.4 Optimisations de Performance
 - **Mémoïsation (`useMemo`)** : L'algorithme de Monte Carlo effectue $1000 \times 12 \times Y$ itérations (soit 360 000 boucles pour un horizon de 30 ans). La simulation est encapsulée dans un hook `useMemo` réactif aux seuls changements de curseurs de configuration, garantissant que le fil de rendu (rendering thread) du navigateur ne subisse aucune latence lors des re-rendus normaux du composant. L'exécution moyenne en JS moderne prend moins de $8\text{ms}$.
 - **Lazy Prefilling** : Les valeurs initiales du capital et de l'épargne sont déclarées à `undefined`. Un effet secondaire (`useEffect`) les met à jour une unique fois à la fin du chargement de l'API. Cela évite que les curseurs configurés manuellement par l'utilisateur ne soient écrasés en cas de rafraîchissement réseau en arrière-plan.
+
+## 11. Architecture Technique de la Génération de Rapports et Export PDF ⚙️📄
+
+### 11.1 Organisation des Modules
+Le module est principalement implémenté dans le composant [ReportsPage.jsx](file:///c:/Projects/budgetizer/client/src/pages/ReportsPage.jsx) (route `/reports`), qui prend en charge à la fois l'interface de filtrage, la récupération des données agrégées et la zone de rendu masquée pour l'exportation PDF.
+
+### 11.2 Parallélisation de la Récupération des Données
+Lors de la génération du rapport (`handleGenerateReport`), le client interroge les API du serveur de manière concurrente (`Promise.all`) pour minimiser le temps d'attente :
+1. `GET /api/transactions` : Liste brute des transactions à filtrer.
+2. `GET /api/charts/balance-history` : Historique d'évolution journalière du solde global.
+3. `GET /api/charts/waterfall` (Conditionnel) : Données structurées pour le graphique cascade.
+4. `GET /api/charts/fixed-vs-variable` (Conditionnel) : Répartition des charges fixes et variables.
+
+### 11.3 Encodage Dynamique du Logo en Base64
+Pour assurer le rendu parfait du logo de l'application dans le PDF généré (évitant l'effet "carré vert" causé par le report de chargement des images relatives par le navigateur dans un DOM masqué) :
+- Un effet de montage (`useEffect`) charge l'image `/pwa-192x192.png` en mémoire via l'API `new Image()`.
+- Une fois chargée, l'image est dessinée sur un élément `<canvas>` masqué temporaire.
+- Le canvas convertit le rendu en Data URL via `canvas.toDataURL('image/png')` stocké dans l'état local `logoBase64`.
+- L'image du PDF utilise directement cet URI Base64, contournant tout problème de CORS, de résolutions de chemins relatifs ou de latence réseau lors du scan par `html2canvas`.
+
+### 11.4 Structuration A4 et Sauts de Page CSS
+- **Conteneur Invisible** : Pour ne pas gêner la navigation de l'utilisateur, la zone de rendu `#print-report-area` est positionnée de manière absolue hors de l'écran (`left: '0px', top: '0px', width: '1px', height: '1px', overflow: 'hidden'`) avant la capture.
+- **Dimensions fixes A4** : Chaque page est balisée par la classe `.pdf-page` avec une largeur stricte de `794px` (équivalent A4 portrait à 96 DPI) et un padding interne de `45px 50px`.
+- **Sauts de page dynamiques** : Pour éliminer les pages blanches intercalaires et terminales, la règle `@media print` et les styles intégrés appliquent la transition suivante :
+  ```css
+  .pdf-page:not(:last-child) {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  ```
+  Toute classe de saut forcé (`force-page-break` ou `page-break-before`) a été retirée afin de déléguer proprement la pagination au flux HTML standard de `html2pdf.js`.
+
+### 11.5 Gestion de la Description des Transactions
+Dans les tableaux du rapport PDF, le champ description est déterminé à la volée selon le type de la transaction :
+- **Virement** (`type === 'transfer'`) : `tx.description || tx.note || 'Virement'` (priorité à la description de virement).
+- **Transaction classique** (`type !== 'transfer'`) : `tx.note || tx.description || 'Transaction'` (priorité à la note personnelle saisie par l'utilisateur).
+
+### 11.6 Export PDF et Fallback d'Impression
+Le processus d'exportation dynamique importe à la volée `html2pdf.js` pour alléger le bundle d'initialisation de l'application. En cas d'échec de chargement de la bibliothèque sur le terminal client, une capture d'exception robuste redirige l'utilisateur vers la boîte de dialogue d'impression système du navigateur via `window.print()`.
+

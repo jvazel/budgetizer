@@ -398,4 +398,53 @@ Le composant `WaterfallChart` est structuré en 5 blocs :
 4. **Liste détaillée des flux** : Liste affichant pour chaque catégorie de dépenses : l'icône, le nom, le pourcentage qu'elle représente par rapport aux dépenses totales et le montant négatif.
 5. **Carte d'interprétation** : Bloc d'aide expliquant le fonctionnement de la cascade et le code couleur.
 
+## 18. Rapports d'Activité et Export PDF Premium 📊📄
+
+La page **Rapports d'Activité** permet à l'utilisateur de configurer, de générer et de télécharger un rapport de synthèse financière sous format PDF premium, prêt pour l'impression (format A4).
+
+### 18.1 Configuration de l'Exportation
+L'utilisateur peut définir :
+1. **La période d'analyse** : Saisie d'une date de début et d'une date de fin personnalisées.
+2. **Les sections à inclure** dans le PDF via 4 cases à cocher :
+   - *Graphique Cascade (Waterfall)* : Visualisation des flux financiers.
+   - *Charges Fixes vs Variables* : Analyse des charges incompressibles vs dépenses discrétionnaires.
+   - *Prévisions à 30 jours* : Projection stochastique de l'évolution de la trésorerie.
+   - *Journal des transactions* : Liste exhaustive de toutes les écritures de la période (à cocher facultativement).
+
+### 18.2 Contenu et Structure du Rapport Premium (Format A4)
+Le rapport PDF est découpé en pages A4 bien distinctes, reprenant le code visuel de l'application :
+
+* **Page 1 : Page de garde**
+  - Barre de dégradé supérieure de couleur verte et bleue.
+  - Logo officiel de l'application (affiché via encodage Base64 dynamique pour éviter tout carré vert ou erreur de rendu lié aux DOMs invisibles).
+  - Titre majeur "BUDGETIZER" et sous-titre de la catégorie.
+  - Dates précises de début et de fin de la période d'analyse.
+  - Encadré contenant le nom du propriétaire, la date de génération du rapport et le nombre de transactions comptabilisées.
+  - Mention de confidentialité en pied de page.
+
+* **Page 2 : Bilan Financier & Cascade**
+  - En-tête courante de page reprenant le logo et le titre du chapitre.
+  - Score de santé financière affiché dans une jauge circulaire avec son libellé associé (Excellent, Bon, Satisfaisant, Vigilance, Critique).
+  - Récapitulatif global des Revenus (+), Dépenses (-) et Épargne Nette cumulée avec le taux d'épargne.
+  - Graphique en cascade (Waterfall Chart) montrant la répartition des revenus.
+  - Tableau des 4 postes de dépenses majeurs avec barres de progression.
+
+* **Page 3 : Analyses & Tendances**
+  - En-tête de page.
+  - Graphique en anneau (Donut Chart) détaillant la proportion de charges fixes (🔒) vs variables (🎲).
+  - Diagnostic conseil répertoriant jusqu'à 3 alertes ou succès financiers automatisés.
+  - Graphique d'évolution journalière du solde cumulé de tous les comptes bancaires.
+  - Graphique de projection de solde à 30 jours (courbe en pointillés verts).
+
+* **Page 4 : Annexes & Dépenses Inhabituelles**
+  - En-tête de page.
+  - Tableau listant les anomalies détectées (dépenses supérieures à 3 fois la moyenne habituelle ou supérieures à 200 €) contenant la date, la note/description, la catégorie, le compte émetteur et le montant exact.
+
+* **Page 5 : Journal détaillé des flux (Optionnel)**
+  - En-tête de page.
+  - Liste exhaustive de toutes les transactions de la période avec pour chacune d'elles : la date, la description (affiche la **note en priorité** pour les dépenses/revenus classiques et la **description** pour les virements), la catégorie, le compte et le montant formaté selon le code couleur de son type.
+
+### 18.3 Gestion des Sauts de Page
+Le document utilise le sélecteur CSS `.pdf-page:not(:last-child)` pour appliquer dynamiquement `page-break-after: always`. Ceci élimine toute génération de pages blanches intermédiaires ou de pages vides à la fin du document.
+
 

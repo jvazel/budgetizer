@@ -242,3 +242,26 @@ Personnalisez l'application dans l'onglet **Paramètres**.
 * **Zone de danger (Danger Zone)** :
   * **Effacer les données** : Réinitialise tous vos comptes, transactions et budgets, vous permettant de recommencer à zéro tout en conservant votre compte utilisateur.
   * **Supprimer le compte** : Supprime définitivement et sans recours toutes vos données de la base de données Budgetizer (conformité RGPD).
+
+---
+
+## 13. Rapports d'Activité et Export PDF Premium 📊📄
+
+L'onglet **Rapports** vous permet de générer des rapports d'activité financière personnalisés sous format PDF haute définition, parfaits pour l'impression ou l'archivage.
+
+### 13.1 Personnalisation de votre Rapport
+Avant de lancer l'exportation, configurez vos préférences :
+* **Période d'analyse** : Déterminez la date de début et la date de fin à l'aide des calendriers. Vous pouvez analyser une semaine, un mois, un trimestre ou une période libre.
+* **Sections optionnelles** : Cochez ou décochez les cases selon vos besoins :
+  * **Graphique Cascade (Waterfall)** : Affiche la décomposition visuelle et progressive de vos flux (Revenus ➔ Dépenses par poste ➔ Épargne nette).
+  * **Charges Fixes vs Variables** : Compare vos frais obligatoires/abonnements aux dépenses discrétionnaires quotidiennes.
+  * **Prévisions à 30 jours** : Affiche une estimation de l'évolution future de votre solde en fonction de votre rythme actuel.
+  * **Journal des transactions** (désactivé par défaut) : Liste l'intégralité des écritures enregistrées sur la période sous forme de tableau au format A4.
+
+### 13.2 Rendu Premium et Impression Propre
+Le PDF généré intègre des optimisations visuelles exclusives :
+* **Page de garde automatique** : Comprend le logo officiel de l'application, les métadonnées de votre session (votre nom d'utilisateur, la date de génération, le volume de transactions) et le rappel des dates.
+* **Priorité aux notes personnelles** : Pour vos dépenses et revenus du quotidien, le tableau affiche votre **note personnelle** (ex. : *"Courses Leclerc"*, *"Resto avec Marie"*) plutôt que la description technique brute. Pour les virements internes, le libellé du transfert est privilégié.
+* **Sans pages blanches superflues** : La mise en page intelligente adapte dynamiquement la hauteur des sections et évite l'apparition de pages blanches intermédiaires ou d'une page blanche finale vide.
+* **Compatibilité mobile** : Si vous utilisez l'application sur un smartphone ou une tablette (PWA installée), le PDF s'ouvre automatiquement dans un nouvel onglet de votre navigateur mobile pour faciliter son enregistrement ou son envoi.
+
