@@ -165,7 +165,7 @@ describe('Auth Controller', () => {
       await loginUser(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Invalid credentials' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Adresse e-mail ou mot de passe incorrect.' });
     });
 
     it('should return 401 status when email is not registered', async () => {
@@ -179,7 +179,7 @@ describe('Auth Controller', () => {
       await loginUser(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Invalid credentials' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Adresse e-mail ou mot de passe incorrect.' });
     });
   });
 });

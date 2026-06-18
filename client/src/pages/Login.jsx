@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Mail, Lock, Eye, EyeOff, Fingerprint } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Fingerprint, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Input from '../components/ui/Input';
@@ -11,6 +11,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+  const [shouldShake, setShouldShake] = useState(false);
   const { login, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -118,16 +120,32 @@ const Login = () => {
     toast.success("Les paramètres biométriques de cet appareil ont été réinitialisés. Connectez-vous avec votre mot de passe pour les réactiver.");
   };
 
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (error) setError(null);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (error) setError(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setShouldShake(false);
     try {
       sessionStorage.setItem('just_logged_in', 'true');
       await login(email, password);
       toast.success('Connexion réussie !');
       navigate('/');
-    } catch (error) {
+    } catch (err) {
       sessionStorage.removeItem('just_logged_in');
-      toast.error(error.response?.data?.message || 'Erreur de connexion');
+      const msg = err.response?.data?.message || 'Adresse e-mail ou mot de passe incorrect.';
+      setError(msg);
+      setShouldShake(true);
+      setTimeout(() => setShouldShake(false), 400);
+      toast.error(msg);
     }
   };
 
@@ -145,14 +163,25 @@ const Login = () => {
           <p className="text-secondary">Entrez vos identifiants pour continuer</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className={`space-y-4 ${shouldShake ? 'animate-shake' : ''}`}>
+          {error && (
+            <div className="bg-danger-dim border border-danger/20 text-danger rounded-2xl p-4 text-sm flex items-start gap-3 shadow-[0_0_20px_rgba(244,63,94,0.03)] transition-all">
+              <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-danger" />
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-primary">Échec de la connexion</p>
+                <p className="text-xs text-secondary mt-0.5">{error}</p>
+              </div>
+            </div>
+          )}
+
           <Input
             id="email"
             type="email"
             placeholder="Adresse email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             icon={Mail}
+            error={!!error}
             required
           />
           
@@ -161,10 +190,11 @@ const Login = () => {
             type={showPassword ? 'text' : 'password'}
             placeholder="Mot de passe"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             icon={Lock}
             rightIcon={showPassword ? EyeOff : Eye}
             onRightIconClick={() => setShowPassword(!showPassword)}
+            error={!!error}
             required
           />
 

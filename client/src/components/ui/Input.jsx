@@ -53,7 +53,7 @@ const Input = ({
           </button>
         )}
       </div>
-      {error && (
+      {typeof error === 'string' && error && (
         <span className="mt-1 text-sm text-danger">{error}</span>
       )}
     </div>

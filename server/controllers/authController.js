@@ -114,7 +114,7 @@ export const loginUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Adresse e-mail ou mot de passe incorrect.' });
     }
   } catch (error) {
     console.error(error.message);
