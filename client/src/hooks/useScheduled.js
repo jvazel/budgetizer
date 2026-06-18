@@ -1,132 +1,127 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 export const useScheduled = () => {
   const queryClient = useQueryClient();
-  const [scheduled, setScheduled] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const fetchScheduledData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [sRes, pRes, uRes] = await Promise.all([
-        api.get('/scheduled'),
-        api.get('/scheduled/pending'),
-        api.get('/scheduled/upcoming?days=30')
-      ]);
-      setScheduled(sRes.data);
-      setPending(pRes.data);
-      setUpcoming(uRes.data);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching scheduled transactions');
-    } finally {
-      setLoading(false);
+  const { data: scheduledData, isLoading: isAllLoading, error: allError } = useQuery({
+    queryKey: ['scheduled', 'all'],
+    queryFn: async () => {
+      const res = await api.get('/scheduled');
+      return res.data;
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchScheduledData();
+  const { data: pendingData, isLoading: isPendingLoading, error: pendingError } = useQuery({
+    queryKey: ['scheduled', 'pending'],
+    queryFn: async () => {
+      const res = await api.get('/scheduled/pending');
+      return res.data;
+    }
+  });
 
-    // Listen to transaction changes to update pending counts or lists
-    const handleRefresh = () => fetchScheduledData();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => window.removeEventListener('transaction-changed', handleRefresh);
-  }, [fetchScheduledData]);
+  const { data: upcomingData, isLoading: isUpcomingLoading, error: upcomingError } = useQuery({
+    queryKey: ['scheduled', 'upcoming'],
+    queryFn: async () => {
+      const res = await api.get('/scheduled/upcoming?days=30');
+      return res.data;
+    }
+  });
 
-  const addScheduled = async (data) => {
-    try {
-      const res = await api.post('/scheduled', data);
+  const scheduled = scheduledData || [];
+  const pending = pendingData || [];
+  const upcoming = upcomingData || [];
+  const loading = isAllLoading || isPendingLoading || isUpcomingLoading;
+  const error = allError || pendingError || upcomingError;
+
+  const invalidateScheduledQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['scheduled'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+  };
+
+  const addMutation = useMutation({
+    mutationFn: async (newData) => {
+      const res = await api.post('/scheduled', newData);
+      return res.data;
+    },
+    onSuccess: () => {
       toast.success('Planification créée');
-      fetchScheduledData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
-      return res.data;
-    } catch (err) {
+      invalidateScheduledQueries();
+    },
+    onError: (err) => {
       toast.error(err.response?.data?.message || 'Erreur lors de la création');
-      throw err;
     }
-  };
+  });
 
-  const updateScheduled = async (id, data) => {
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
       const res = await api.put(`/scheduled/${id}`, data);
-      toast.success('Planification modifiée');
-      fetchScheduledData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
       return res.data;
-    } catch (err) {
+    },
+    onSuccess: () => {
+      toast.success('Planification modifiée');
+      invalidateScheduledQueries();
+    },
+    onError: (err) => {
       toast.error(err.response?.data?.message || 'Erreur lors de la modification');
-      throw err;
     }
-  };
+  });
 
-  const deleteScheduled = async (id) => {
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
       await api.delete(`/scheduled/${id}`);
+    },
+    onSuccess: () => {
       toast.success('Planification supprimée');
-      fetchScheduledData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la suppression');
-      throw err;
-    }
-  };
-
-  const confirmPending = async (id, customAmount) => {
-    try {
-      await api.post(`/scheduled/${id}/confirm`, { amount: customAmount });
-      toast.success('Transaction confirmée et enregistrée !');
-      fetchScheduledData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur de confirmation');
-      throw err;
-    }
-  };
-
-  const skipPending = async (id) => {
-    try {
-      await api.post(`/scheduled/${id}/skip`);
-      toast.success('Échéance ignorée');
-      fetchScheduledData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
-    } catch (err) {
+      invalidateScheduledQueries();
+    },
+    onError: (err) => {
       toast.error(err.response?.data?.message || 'Erreur lors du saut');
-      throw err;
     }
-  };
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: async ({ id, customAmount }) => {
+      const res = await api.post(`/scheduled/${id}/confirm`, { amount: customAmount });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Transaction confirmée et enregistrée !');
+      invalidateScheduledQueries();
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Erreur de confirmation');
+    }
+  });
+
+  const skipMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await api.post(`/scheduled/${id}/skip`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Échéance ignorée');
+      invalidateScheduledQueries();
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Erreur lors du saut');
+    }
+  });
 
   return {
     scheduled,
     pending,
     upcoming,
     loading,
-    error,
-    refreshScheduled: fetchScheduledData,
-    addScheduled,
-    updateScheduled,
-    deleteScheduled,
-    confirmPending,
-    skipPending
+    error: error ? (error.response?.data?.message || 'Erreur lors de la récupération des données planifiées') : null,
+    refreshScheduled: () => queryClient.invalidateQueries({ queryKey: ['scheduled'] }),
+    addScheduled: addMutation.mutateAsync,
+    updateScheduled: (id, data) => updateMutation.mutateAsync({ id, data }),
+    deleteScheduled: deleteMutation.mutateAsync,
+    confirmPending: (id, customAmount) => confirmMutation.mutateAsync({ id, customAmount }),
+    skipPending: skipMutation.mutateAsync
   };
 };

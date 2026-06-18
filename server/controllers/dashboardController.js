@@ -5,6 +5,15 @@ import SavingsGoal from '../models/SavingsGoal.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import mongoose from 'mongoose';
 
+// Simple In-Memory Cache for User Dashboards
+const dashboardCache = new Map();
+
+export const invalidateDashboardCache = (userId) => {
+  if (userId) {
+    dashboardCache.delete(userId.toString());
+  }
+};
+
 const toObjectId = (id) => {
   if (mongoose.Types.ObjectId.isValid(id)) {
     return new mongoose.Types.ObjectId(id);
@@ -182,6 +191,13 @@ const aggregateExpensesByCategory = async (userId, checkingAccountIds, startDate
 export const getDashboardSummary = async (req, res) => {
   try {
     const userId = req.user.id;
+    
+    // Check cache first (2 minutes TTL)
+    const cached = dashboardCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+      return res.json(cached.data);
+    }
+
     const now = new Date();
     
     // Dates for current month (UTC)
@@ -211,6 +227,18 @@ export const getDashboardSummary = async (req, res) => {
     const daysCount = currentDay >= 7 ? 7 : currentDay;
     const startOfRecentPeriod = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - daysCount + 1, 0, 0, 0, 0));
 
+    // Weekly range for budgets (Monday to Sunday) (UTC)
+    const day = now.getUTCDay();
+    const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1);
+    const wStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0));
+    const wEnd = new Date(wStart.getTime());
+    wEnd.setUTCDate(wEnd.getUTCDate() + 6);
+    wEnd.setUTCHours(23, 59, 59, 999);
+
+    // Yearly range for budgets (Jan 1st to Dec 31st) (UTC)
+    const yStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+    const yEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
+
     // 2. Fetch other collections and perform database-level calculations in parallel
     const [
       currentMonthStats,
@@ -219,13 +247,14 @@ export const getDashboardSummary = async (req, res) => {
       last7DaysDailyMap,
       expensesByCategory,
       dailyAccountDeltas,
-      budgets,
+      rawBudgets,
       pendingTxs,
       upcomingSchedules,
       savingsGoals,
       oldestTx,
       recentTransactions,
-      recentExpensesByCategory
+      recentExpensesByCategory,
+      budgetTransactions
     ] = await Promise.all([
       aggregatePeriodStats(userId, checkingAccountIds, startOfCurrentMonth, endOfCurrentMonth),
       aggregatePeriodStats(userId, checkingAccountIds, startOfLastMonth, endOfLastMonth),
@@ -340,8 +369,56 @@ export const getDashboardSummary = async (req, res) => {
             totalSpent: { $sum: '$amount' }
           }
         }
-      ])
+      ]),
+      Transaction.find({
+        userId,
+        type: 'expense',
+        accountId: { $in: includedAccountIds },
+        isPending: { $ne: true },
+        $or: [
+          { date: { $gte: wStart, $lte: wEnd } },
+          { date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth } },
+          { date: { $gte: yStart, $lte: yEnd } }
+        ]
+      }).lean()
     ]);
+
+    // Enrich budgets with spent, remaining and percentage calculations
+    const budgets = rawBudgets.map(budget => {
+      const period = budget.period || 'monthly';
+      let start, end;
+      if (period === 'weekly') {
+        start = wStart;
+        end = wEnd;
+      } else if (period === 'yearly') {
+        start = yStart;
+        end = yEnd;
+      } else {
+        start = startOfCurrentMonth;
+        end = endOfCurrentMonth;
+      }
+
+      const catId = budget.categoryId?._id?.toString() || budget.categoryId?.toString();
+      const spent = budgetTransactions
+        .filter(t => 
+          t.categoryId && 
+          catId &&
+          t.categoryId.toString() === catId &&
+          t.date >= start &&
+          t.date <= end
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const remaining = budget.amount - spent;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+
+      return {
+        ...budget,
+        spent: parseFloat(spent.toFixed(2)),
+        remaining: parseFloat(remaining.toFixed(2)),
+        percentage: parseFloat(percentage.toFixed(2))
+      };
+    });
 
     // 3. Fetch latest transaction date per account in a single aggregation query
     const latestTxDates = await Transaction.aggregate([
@@ -539,8 +616,8 @@ export const getDashboardSummary = async (req, res) => {
     // a. Budgets
     budgets.forEach(budget => {
       const catId = budget.categoryId?._id?.toString() || budget.categoryId?.toString();
-      const spent = catId ? (categoryMap[catId]?.amount || 0) : 0;
-      const percentage = (spent / budget.amount) * 100;
+      const spent = budget.spent;
+      const percentage = budget.percentage;
       
       if (percentage >= budget.alertAt) {
         const alertItem = {
@@ -752,11 +829,13 @@ export const getDashboardSummary = async (req, res) => {
     }
 
     // 10. Compile final payload
-    res.json({
+    const dashboardPayload = {
       totalBalance,
       totalAvailable,
       totalCredit,
       accounts,
+      budgets,
+      savingsGoals,
       month: {
         income: currentIncome,
         expenses: currentExpenses,
@@ -783,7 +862,15 @@ export const getDashboardSummary = async (req, res) => {
       recentTransactions,
       budgetAlerts,
       notifications
+    };
+
+    // Store in cache (2 minutes TTL)
+    dashboardCache.set(userId, {
+      data: dashboardPayload,
+      expiresAt: Date.now() + 120000
     });
+
+    res.json(dashboardPayload);
 
   } catch (error) {
     console.error(error);

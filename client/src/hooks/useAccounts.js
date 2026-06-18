@@ -28,7 +28,6 @@ export const useAccounts = (fetchOnMount = true) => {
       queryClient.setQueryData(['accounts'], (old = []) => [...old, newAcc]);
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -43,7 +42,6 @@ export const useAccounts = (fetchOnMount = true) => {
       );
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -58,7 +56,6 @@ export const useAccounts = (fetchOnMount = true) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -73,5 +70,3 @@ export const useAccounts = (fetchOnMount = true) => {
     deleteAccount: deleteMutation.mutateAsync
   };
 };
-
-

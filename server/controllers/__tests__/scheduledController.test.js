@@ -22,11 +22,16 @@ const mockSession = {
   endSession: vi.fn()
 };
 
-vi.mock('mongoose', () => ({
-  default: {
-    startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
-  }
-}));
+vi.mock('mongoose', async () => {
+  const actual = await vi.importActual('mongoose');
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
+    }
+  };
+});
 
 // Helper for Mongoose chain mocking
 const mockChain = (value) => {

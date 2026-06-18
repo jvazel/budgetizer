@@ -23,11 +23,16 @@ const mockSession = {
   endSession: vi.fn()
 };
 
-vi.mock('mongoose', () => ({
-  default: {
-    startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
-  }
-}));
+vi.mock('mongoose', async () => {
+  const actual = await vi.importActual('mongoose');
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
+    }
+  };
+});
 
 // Helper for Mongoose chain mocking
 const mockChain = (value) => {
@@ -399,7 +404,8 @@ describe('Transaction Controller', () => {
           amount: 85.5,
           type: 'expense',
           categoryId: { name: 'Alimentation' },
-          accountId: { name: 'Compte Courant' }
+          accountId: { name: 'Compte Courant' },
+          toAccountId: null
         }
       ];
 
@@ -409,13 +415,13 @@ describe('Transaction Controller', () => {
 
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
       expect(res.setHeader).toHaveBeenCalledWith('Content-Disposition', expect.stringContaining('transactions_export.csv'));
-      expect(res.send).toHaveBeenCalledWith(expect.stringContaining('date,description,amount,type,category,account\n2026-06-01,"Courses",85.5,expense,"Alimentation","Compte Courant"\n'));
+      expect(res.send).toHaveBeenCalledWith(expect.stringContaining('date,description,amount,type,category,account,toAccount\n2026-06-01,"Courses",85.5,expense,"Alimentation","Compte Courant",\n'));
     });
   });
 
   describe('importTransactions', () => {
     it('should import transactions from a CSV file buffer and create account/category if needed', async () => {
-      const csvData = `date,description,amount,type,category,account
+      const csvData = `date,description,amount,type,category,account,toAccount
 2026-06-01,Test CSV Import,30,expense,Loisirs,ImportedAcc`;
 
       req.file = {
@@ -436,6 +442,33 @@ describe('Transaction Controller', () => {
         success: true,
         importedCount: 1,
         failedCount: 0
+      }));
+    });
+
+    it('should import a transfer transaction and deduct from source account and add to dest account', async () => {
+      const csvData = `date,description,amount,type,category,account,toAccount
+2026-06-01,Internal Transfer,150,transfer,,Compte Source,Compte Cible`;
+
+      req.file = {
+        buffer: Buffer.from(csvData, 'utf-8')
+      };
+
+      const mockAccSource = { _id: 'source_id', name: 'Compte Source', balance: 500 };
+      const mockAccDest = { _id: 'dest_id', name: 'Compte Cible', balance: 100 };
+
+      // Mock Account.find to return existing accounts in DB
+      Account.find.mockReturnValue(mockChain([mockAccSource, mockAccDest]));
+      Category.find.mockReturnValue(mockChain([]));
+      Transaction.insertMany.mockResolvedValue([]);
+
+      await importTransactions(req, res);
+
+      expect(mockAccSource.balance).toBe(350); // 500 - 150
+      expect(mockAccDest.balance).toBe(250);  // 100 + 150
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        success: true,
+        importedCount: 1
       }));
     });
   });

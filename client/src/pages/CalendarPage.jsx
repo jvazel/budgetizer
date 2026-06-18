@@ -1,45 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import MiniCalendar from '../components/calendar/MiniCalendar';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
-import { ChevronLeft, ChevronRight, Trash2, CalendarRange } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const CalendarPage = () => {
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [txToDelete, setTxToDelete] = useState(null);
 
   const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
-  const fetchCalendarData = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: transactions = [], isLoading } = useQuery({
+    queryKey: ['transactions', 'calendar', monthStr],
+    queryFn: async () => {
       const res = await api.get(`/transactions/calendar?month=${monthStr}`);
-      setTransactions(res.data);
-    } catch (e) {
-      toast.error('Erreur lors du chargement du calendrier');
-    } finally {
-      setLoading(false);
+      return res.data;
     }
-  }, [monthStr]);
+  });
 
-  useEffect(() => {
-    fetchCalendarData();
-
-    // Sync on transaction changes
-    const handleRefresh = () => fetchCalendarData();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => {
-      window.removeEventListener('transaction-changed', handleRefresh);
-    };
-  }, [fetchCalendarData]);
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/transactions/${id}`);
+    },
+    onSuccess: () => {
+      toast.success('Transaction supprimée');
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: () => {
+      toast.error('Erreur lors de la suppression');
+    }
+  });
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -55,16 +55,6 @@ const CalendarPage = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  const deleteTransaction = async (tx) => {
-    try {
-      await api.delete(`/transactions/${tx._id}`);
-      toast.success('Transaction supprimée');
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
-    } catch (e) {
-      toast.error('Erreur lors de la suppression');
-    }
   };
 
   // Get transactions for selected date
@@ -93,7 +83,7 @@ const CalendarPage = () => {
       
       {/* Calendar Grid */}
       <section className="mb-6 mt-2">
-        {loading ? (
+        {isLoading ? (
           <div className="h-64 bg-surface-2 rounded-3xl animate-pulse" />
         ) : (
           <MiniCalendar 
@@ -181,13 +171,15 @@ const CalendarPage = () => {
         </div>
       </section>
 
-
       {/* Local form Sheet with selected date default */}
       <TransactionFormSheet 
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         defaultDate={selectedDate}
-        onSuccess={fetchCalendarData}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['transactions'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        }}
       />
 
       <ConfirmModal
@@ -198,7 +190,7 @@ const CalendarPage = () => {
         }}
         onConfirm={async () => {
           if (txToDelete) {
-            await deleteTransaction(txToDelete);
+            await deleteMutation.mutateAsync(txToDelete._id);
           }
           setConfirmDeleteOpen(false);
           setTxToDelete(null);

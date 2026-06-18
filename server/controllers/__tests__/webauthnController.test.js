@@ -290,6 +290,23 @@ describe('WebAuthn Controller', () => {
         }
       }));
     });
+
+    it('should return 400 with a generic message if credential is not found in DB', async () => {
+      req.body = {
+        challenge: 'mockAuthChallengeBase64',
+        body: { id: 'unknownCredId' }
+      };
+
+      WebauthnChallenge.findOne.mockResolvedValue({ _id: 'chal456', challenge: 'mockAuthChallengeBase64' });
+      UserCredential.findOne.mockReturnValue({
+        populate: vi.fn().mockResolvedValue(null)
+      });
+
+      await verifyAuthentication(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Périphérique biométrique inconnu.' });
+    });
   });
 
   describe('getCredentials', () => {

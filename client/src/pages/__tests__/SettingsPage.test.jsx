@@ -33,7 +33,8 @@ vi.mock('../../components/layout/AppShell', () => ({
   ),
   HeaderTitle: ({ children }) => <h1>{children}</h1>,
   HeaderActions: ({ children }) => <div>{children}</div>,
-  HeaderBackButton: () => <button>Back</button>
+  HeaderBackButton: () => <button>Back</button>,
+  HeaderPortalContext: React.createContext({ isScrolled: false })
 }));
 
 vi.mock('react-hot-toast', () => ({

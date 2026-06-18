@@ -3,6 +3,7 @@ import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 // @desc    Get user budgets with calculated spent and remaining
 // @route   GET /api/budgets
@@ -133,6 +134,7 @@ export const createBudget = async (req, res) => {
     // Populate to return immediately
     const populated = await Budget.findById(budget._id).populate('categoryId', 'name icon type');
     
+    invalidateDashboardCache(req.user.id);
     res.status(201).json({
       ...populated.toObject(),
       spent: 0,
@@ -161,6 +163,7 @@ export const updateBudget = async (req, res) => {
       { new: true }
     ).populate('categoryId', 'name icon type');
 
+    invalidateDashboardCache(req.user.id);
     res.json(budget); // Note: frontend might need to re-fetch to get correct spent amount if category changed
   } catch (error) {
     console.error(error.message);
@@ -180,6 +183,7 @@ export const deleteBudget = async (req, res) => {
 
     await Budget.findByIdAndDelete(req.params.id);
     
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Budget removed' });
   } catch (error) {
     console.error(error.message);

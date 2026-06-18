@@ -36,9 +36,6 @@ export const getRegistrationOptions = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Clean up corrupt credentials containing commas (legacy bug)
-    await UserCredential.deleteMany({ userId: user._id, credentialID: { $regex: /,/ } });
-
     // Retrieve existing credentials to exclude them from registration
     const userCredentials = await UserCredential.find({ userId: user._id });
     const excludeCredentials = userCredentials.map(cred => ({
@@ -149,8 +146,6 @@ export const getAuthenticationOptions = async (req, res) => {
       const user = await User.findOne({ email: email.toLowerCase() });
       if (user) {
         userId = user._id;
-        // Clean up corrupt credentials containing commas (legacy bug)
-        await UserCredential.deleteMany({ userId: user._id, credentialID: { $regex: /,/ } });
         const userCredentials = await UserCredential.find({ userId: user._id });
         allowCredentials = userCredentials.map(cred => ({
           id: cred.credentialID,
@@ -204,10 +199,8 @@ export const verifyAuthentication = async (req, res) => {
     }
 
     if (!credential) {
-      const allCreds = await UserCredential.find({}).select('credentialID');
-      const credList = allCreds.map(c => c.credentialID).join(', ');
       return res.status(400).json({ 
-        message: `Périphérique biométrique inconnu. (Recherché: ${body.id}, rawId: ${body.rawId}, En DB: [${credList}])` 
+        message: 'Périphérique biométrique inconnu.' 
       });
     }
 
@@ -265,8 +258,6 @@ export const verifyAuthentication = async (req, res) => {
 // @access  Private
 export const getCredentials = async (req, res) => {
   try {
-    // Clean up corrupt credentials containing commas (legacy bug)
-    await UserCredential.deleteMany({ userId: req.user.id, credentialID: { $regex: /,/ } });
     const credentials = await UserCredential.find({ userId: req.user.id })
       .select('deviceName transports createdAt')
       .sort({ createdAt: -1 });

@@ -2,8 +2,6 @@ import React, { useContext, useState, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import { useDashboard } from '../hooks/useDashboard';
-import { useBudgets } from '../hooks/useBudgets';
-import { useSavingsGoals } from '../hooks/useSavingsGoals';
 import { useFinancialScore } from '../hooks/useFinancialScore';
 import { useScheduled } from '../hooks/useScheduled';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
@@ -111,8 +109,10 @@ const Home = () => {
   const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
   const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
-  const { budgets = [], loading: budgetsLoading } = useBudgets(currentMonthStr);
-  const { savingsGoals = [], loading: savingsLoading } = useSavingsGoals();
+  const budgets = db?.budgets || [];
+  const savingsGoals = db?.savingsGoals || [];
+  const budgetsLoading = loading;
+  const savingsLoading = loading;
   const { score: currentScore, loading: currentScoreLoading } = useFinancialScore(currentMonthStr);
   const { score: prevScore, loading: prevScoreLoading } = useFinancialScore(prevMonthStr);
 

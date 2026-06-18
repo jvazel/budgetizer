@@ -1,72 +1,64 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useSavingsGoals = () => {
-  const [savingsGoals, setSavingsGoals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const fetchSavingsGoals = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['savings-goals'],
+    queryFn: async () => {
       const res = await api.get('/savings-goals');
-      setSavingsGoals(res.data);
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la récupération des objectifs d\'épargne');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return res.data;
+    },
+  });
 
-  useEffect(() => {
-    fetchSavingsGoals();
+  const savingsGoals = data || [];
 
-    const handleRefresh = () => fetchSavingsGoals();
-    window.addEventListener('transaction-changed', handleRefresh);
-    return () => {
-      window.removeEventListener('transaction-changed', handleRefresh);
-    };
-  }, [fetchSavingsGoals]);
+  const addMutation = useMutation({
+    mutationFn: async (newData) => {
+      const res = await api.post('/savings-goals', newData);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 
-  const addSavingsGoal = async (data) => {
-    const res = await api.post('/savings-goals', data);
-    setSavingsGoals([...savingsGoals, res.data]);
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['accounts'] });
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    window.dispatchEvent(new CustomEvent('transaction-changed'));
-    return res.data;
-  };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const res = await api.put(`/savings-goals/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 
-  const updateSavingsGoal = async (id, data) => {
-    const res = await api.put(`/savings-goals/${id}`, data);
-    setSavingsGoals(savingsGoals.map(g => g._id === id ? res.data : g));
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['accounts'] });
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    window.dispatchEvent(new CustomEvent('transaction-changed'));
-    return res.data;
-  };
-
-  const deleteSavingsGoal = async (id) => {
-    await api.delete(`/savings-goals/${id}`);
-    setSavingsGoals(savingsGoals.filter(g => g._id !== id));
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['accounts'] });
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    window.dispatchEvent(new CustomEvent('transaction-changed'));
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/savings-goals/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
 
   return {
     savingsGoals,
-    loading,
-    error,
-    fetchSavingsGoals,
-    addSavingsGoal,
-    updateSavingsGoal,
-    deleteSavingsGoal
+    loading: isLoading,
+    error: error ? (error.response?.data?.message || "Erreur de chargement des objectifs d'épargne") : null,
+    fetchSavingsGoals: () => queryClient.invalidateQueries({ queryKey: ['savings-goals'] }),
+    addSavingsGoal: addMutation.mutateAsync,
+    updateSavingsGoal: (id, data) => updateMutation.mutateAsync({ id, data }),
+    deleteSavingsGoal: deleteMutation.mutateAsync
   };
 };

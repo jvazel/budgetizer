@@ -2,6 +2,7 @@ import Account from '../models/Account.js';
 import Transaction from '../models/Transaction.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import { validationResult } from 'express-validator';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 // @desc    Get all accounts for a user
 // @route   GET /api/accounts
@@ -98,6 +99,7 @@ export const createAccount = async (req, res) => {
       await account.save();
     }
 
+    invalidateDashboardCache(req.user.id);
     res.status(201).json(account);
   } catch (error) {
     console.error(error.message);
@@ -181,6 +183,7 @@ export const updateAccount = async (req, res) => {
       { new: true }
     );
 
+    invalidateDashboardCache(req.user.id);
     res.json(account);
   } catch (error) {
     console.error(error.message);
@@ -223,6 +226,7 @@ export const deleteAccount = async (req, res) => {
       ]
     });
 
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Account removed' });
   } catch (error) {
     console.error(error.message);
@@ -253,6 +257,7 @@ export const reorderAccounts = async (req, res) => {
 
     await Promise.all(updates);
 
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Accounts reordered successfully' });
   } catch (error) {
     console.error(error.message);

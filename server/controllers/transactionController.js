@@ -8,6 +8,7 @@ import Budget from '../models/Budget.js';
 import Tag from '../models/Tag.js';
 import { sendPushNotification } from '../utils/pushNotification.js';
 import { invalidateMonthlyReport } from '../utils/cacheInvalidator.js';
+import { invalidateDashboardCache } from './dashboardController.js';
 import mongoose from 'mongoose';
 
 // Helper for budget dates (UTC)
@@ -374,6 +375,7 @@ export const createTransaction = async (req, res) => {
     
     // Invalidate monthly report cache
     invalidateMonthlyReport(req.user.id, transaction.date).catch(err => console.error('Cache invalidation error:', err));
+    invalidateDashboardCache(req.user.id);
 
     // Fetch with populated fields to return
     const populatedTx = await Transaction.findById(transaction._id)
@@ -432,6 +434,7 @@ export const deleteTransaction = async (req, res) => {
     
     // Invalidate monthly report cache
     invalidateMonthlyReport(req.user.id, transaction.date).catch(err => console.error('Cache invalidation error:', err));
+    invalidateDashboardCache(req.user.id);
 
     res.json({ message: 'Transaction removed' });
   } catch (error) {
@@ -563,9 +566,10 @@ export const exportTransactions = async (req, res) => {
     const txs = await Transaction.find(query)
       .populate('categoryId', 'name')
       .populate('accountId', 'name')
+      .populate('toAccountId', 'name')
       .sort({ date: -1 });
 
-    let csvContent = 'date,description,amount,type,category,account\n';
+    let csvContent = 'date,description,amount,type,category,account,toAccount\n';
     txs.forEach(tx => {
       const d = tx.date ? new Date(tx.date).toISOString().split('T')[0] : '';
       const desc = tx.description ? `"${tx.description.replace(/"/g, '""')}"` : '';
@@ -573,7 +577,8 @@ export const exportTransactions = async (req, res) => {
       const t = tx.type;
       const cat = tx.categoryId ? `"${tx.categoryId.name.replace(/"/g, '""')}"` : '';
       const acc = tx.accountId ? `"${tx.accountId.name.replace(/"/g, '""')}"` : '';
-      csvContent += `${d},${desc},${amt},${t},${cat},${acc}\n`;
+      const toAcc = tx.toAccountId ? `"${tx.toAccountId.name.replace(/"/g, '""')}"` : '';
+      csvContent += `${d},${desc},${amt},${t},${cat},${acc},${toAcc}\n`;
     });
 
     res.setHeader('Content-Type', 'text/csv');
@@ -646,14 +651,14 @@ export const importTransactions = async (req, res) => {
     // Skip headers
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVRow(lines[i]);
-      // Columns structure: date, description, amount, type, category, account
+      // Columns structure: date, description, amount, type, category, account, toAccount
       if (cols.length < 6) {
         failedCount++;
         errors.push(`Ligne ${i + 1}: Manque de colonnes requis (min. 6 colonnes).`);
         continue;
       }
 
-      const [dateRaw, description, amountRaw, typeRaw, categoryName, accountName] = cols;
+      const [dateRaw, description, amountRaw, typeRaw, categoryName, accountName, toAccountName] = cols;
 
       const date = new Date(dateRaw);
       if (isNaN(date.getTime())) {
@@ -693,7 +698,27 @@ export const importTransactions = async (req, res) => {
         accountsMap.set(accKey, account);
       }
 
-      // 2. Resolve Category
+      // 2. Resolve toAccount if transfer
+      let toAccount = null;
+      if (type === 'transfer' && toAccountName) {
+        const toAccKey = toAccountName.trim().toLowerCase();
+        toAccount = accountsMap.get(toAccKey);
+        
+        if (!toAccount) {
+          toAccount = new Account({
+            userId: req.user.id,
+            name: toAccountName.trim(),
+            type: 'checking',
+            balance: 0,
+            color: '#10b981',
+            icon: '💳'
+          });
+          newAccountsToInsert.push(toAccount);
+          accountsMap.set(toAccKey, toAccount);
+        }
+      }
+
+      // 3. Resolve Category
       let category = null;
       if (type !== 'transfer') {
         const catKey = `${categoryName.trim().toLowerCase()}_${type}`;
@@ -717,6 +742,7 @@ export const importTransactions = async (req, res) => {
         userId: req.user.id,
         accountId: account._id,
         categoryId: category ? category._id : undefined,
+        toAccountId: toAccount ? toAccount._id : undefined,
         type,
         amount,
         description: description || categoryName || 'Transaction CSV',
@@ -729,6 +755,11 @@ export const importTransactions = async (req, res) => {
         account.balance -= amount;
       } else if (type === 'income') {
         account.balance += amount;
+      } else if (type === 'transfer') {
+        account.balance -= amount;
+        if (toAccount) {
+          toAccount.balance += amount;
+        }
       }
       importedCount++;
     }
@@ -753,10 +784,13 @@ export const importTransactions = async (req, res) => {
         return !newAccountsToInsert.includes(acc) && (typeof acc.isModified === 'function' ? acc.isModified('balance') : true);
       });
       for (const acc of modifiedAccounts) {
-        await acc.save({ session });
+        if (typeof acc.save === 'function') {
+          await acc.save({ session });
+        }
       }
 
       await session.commitTransaction();
+      invalidateDashboardCache(req.user.id);
     res.json({
       success: true,
       importedCount,
@@ -859,6 +893,7 @@ export const updateTransaction = async (req, res) => {
     if (date && new Date(date).getTime() !== new Date(oldTransactionCopy.date).getTime()) {
       invalidateMonthlyReport(req.user.id, date).catch(err => console.error('Cache invalidation error:', err));
     }
+    invalidateDashboardCache(req.user.id);
 
     const populatedTx = await Transaction.findById(transaction._id)
       .populate('categoryId', 'name icon color type')

@@ -25,7 +25,6 @@ export const useTransactions = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -39,7 +38,6 @@ export const useTransactions = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -52,7 +50,6 @@ export const useTransactions = (filters = {}) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -66,4 +63,3 @@ export const useTransactions = (filters = {}) => {
     deleteTransaction: deleteMutation.mutateAsync
   };
 };
-

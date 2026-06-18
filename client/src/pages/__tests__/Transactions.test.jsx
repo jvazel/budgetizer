@@ -102,7 +102,8 @@ vi.mock('../../hooks/useSavedFilters', () => ({
 vi.mock('../../components/layout/AppShell', () => ({
   default: ({ children }) => <div data-testid="app-shell">{children}</div>,
   HeaderTitle: ({ children }) => <h1>{children}</h1>,
-  HeaderActions: ({ children }) => <div data-testid="header-actions">{children}</div>
+  HeaderActions: ({ children }) => <div data-testid="header-actions">{children}</div>,
+  HeaderPortalContext: React.createContext({ isScrolled: false })
 }));
 
 vi.mock('react-hot-toast', () => ({
@@ -130,7 +131,7 @@ describe('Transactions Page', () => {
   it('renders the transactions page and lists mock transactions', () => {
     renderComponent();
 
-    expect(screen.getByRole('heading', { name: 'Transactions' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Transactions' })[0]).toBeInTheDocument();
     expect(screen.getByText('Course alimentaire')).toBeInTheDocument();
     expect(screen.getAllByText('Salaire').length).toBeGreaterThan(0);
     expect(screen.getByText('Ce mois')).toBeInTheDocument();

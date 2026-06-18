@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Select from '../ui/Select';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
+import { useTransactions } from '../../hooks/useTransactions';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
@@ -17,6 +18,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
 
   const { accounts } = useAccounts();
   const { categoriesTree } = useCategories();
+  const { addTransaction } = useTransactions();
 
   useEffect(() => {
     if (isOpen) {
@@ -93,11 +95,8 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         };
       }
 
-      await api.post('/transactions', payload);
+      await addTransaction(payload);
       toast.success(isDeposit ? 'Versement enregistré' : 'Retrait enregistré');
-      
-      // Dispatch events to notify other components
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
       
       if (onSuccess) onSuccess();
       onClose();

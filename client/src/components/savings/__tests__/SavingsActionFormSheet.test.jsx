@@ -27,6 +27,12 @@ vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({ categoriesTree: mockCategoriesTree })
 }));
 
+vi.mock('../../../hooks/useTransactions', () => ({
+  useTransactions: () => ({
+    addTransaction: (data) => api.post('/transactions', data)
+  })
+}));
+
 vi.mock('../../../services/api', () => ({
   default: {
     post: vi.fn()

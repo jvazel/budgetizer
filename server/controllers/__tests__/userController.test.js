@@ -33,11 +33,16 @@ const mockChain = (val) => {
   return obj;
 };
 
-vi.mock('mongoose', () => ({
-  default: {
-    startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
-  }
-}));
+vi.mock('mongoose', async () => {
+  const actual = await vi.importActual('mongoose');
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      startSession: vi.fn().mockImplementation(() => Promise.resolve(mockSession))
+    }
+  };
+});
 
 vi.mock('../../models/User.js', () => ({
   default: {

@@ -3,6 +3,7 @@ import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 import { calculateNextDate } from '../utils/dateHelper.js';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 const updateAccountBalance = async (accountId, amount, type, session) => {
   const numericAmount = Number(amount);
@@ -97,6 +98,7 @@ export const createScheduledTransaction = async (req, res) => {
       .populate('accountId', 'name color icon')
       .populate('toAccountId', 'name color icon type');
 
+    invalidateDashboardCache(req.user.id);
     res.status(201).json(populated);
   } catch (error) {
     console.error(error);
@@ -152,6 +154,7 @@ export const updateScheduledTransaction = async (req, res) => {
       .populate('accountId', 'name color icon')
       .populate('toAccountId', 'name color icon type');
 
+    invalidateDashboardCache(req.user.id);
     res.json(populated);
   } catch (error) {
     console.error(error);
@@ -178,6 +181,7 @@ export const deleteScheduledTransaction = async (req, res) => {
     await ScheduledTransaction.findByIdAndDelete(st._id).session(session);
 
     await session.commitTransaction();
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Scheduled transaction and upcoming occurrences removed successfully' });
   } catch (error) {
     await session.abortTransaction();
@@ -214,6 +218,7 @@ export const confirmPendingTransaction = async (req, res) => {
     }
 
     await session.commitTransaction();
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Transaction confirmed successfully', transaction: tx });
   } catch (error) {
     await session.abortTransaction();
@@ -232,6 +237,7 @@ export const skipPendingTransaction = async (req, res) => {
 
     // Just delete the pending transaction. NextDate is already advanced by scheduledProcessor
     await Transaction.findByIdAndDelete(tx._id);
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Occurrence skipped successfully' });
   } catch (error) {
     console.error(error);

@@ -2,6 +2,7 @@ import Category from '../models/Category.js';
 import Transaction from '../models/Transaction.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import { validationResult } from 'express-validator';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 // @desc    Get all categories for a user
 // @route   GET /api/categories
@@ -36,6 +37,7 @@ export const createCategory = async (req, res) => {
     });
 
     const category = await newCategory.save();
+    invalidateDashboardCache(req.user.id);
     res.status(201).json(category);
   } catch (error) {
     console.error(error.message);
@@ -69,6 +71,7 @@ export const updateCategory = async (req, res) => {
       { new: true }
     );
 
+    invalidateDashboardCache(req.user.id);
     res.json(category);
   } catch (error) {
     console.error(error.message);
@@ -118,6 +121,7 @@ export const deleteCategory = async (req, res) => {
 
     await Category.findByIdAndDelete(req.params.id);
     
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Category removed' });
   } catch (error) {
     console.error(error.message);

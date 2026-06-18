@@ -406,7 +406,6 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         await deleteTransaction(transactionToEdit._id);
         triggerHaptic('medium');
         toast.success('Transaction supprimée');
-        window.dispatchEvent(new CustomEvent('transaction-changed'));
         onClose();
       } catch (e) {
         triggerHaptic('error');
@@ -463,7 +462,6 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         }
       }
 
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
       if (onSuccess) onSuccess();
       onClose();
     } catch (e) {

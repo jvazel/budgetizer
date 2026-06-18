@@ -34,7 +34,9 @@ vi.mock('../../hooks/useDashboard', () => ({
       expensesByCategory: [],
       recentTransactions: [],
       budgetAlerts: [],
-      notifications: []
+      notifications: [],
+      savingsGoals: mockSavingsGoals,
+      budgets: []
     },
     loading: false,
     refreshDashboard: vi.fn()
@@ -88,7 +90,8 @@ vi.mock('../../components/layout/AppShell', () => ({
   ),
   HeaderTitle: ({ children }) => <h1>{children}</h1>,
   HeaderActions: ({ children }) => <div>{children}</div>,
-  HeaderBackButton: () => <button>Back</button>
+  HeaderBackButton: () => <button>Back</button>,
+  HeaderPortalContext: React.createContext({ isScrolled: false })
 }));
 
 vi.mock('../../components/accounts/AccountFormSheet', () => ({

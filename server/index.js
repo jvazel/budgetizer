@@ -197,6 +197,18 @@ const migrateDoubleEncodedCredentials = async () => {
   }
 };
 
+// Migration: Clean up legacy corrupt credentials containing commas
+const cleanLegacyCorruptCredentials = async () => {
+  try {
+    const result = await UserCredential.deleteMany({ credentialID: { $regex: /,/ } });
+    if (result.deletedCount > 0) {
+      console.log(`[Migration] Supprimé ${result.deletedCount} credentials WebAuthn corrompus contenant des virgules.`);
+    }
+  } catch (error) {
+    console.error('[Migration] Erreur lors du nettoyage des credentials corrompus:', error);
+  }
+};
+
 let server;
 const mongoOptions = {
   maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE, 10) || 10,
@@ -208,6 +220,7 @@ mongoose.connect(process.env.MONGODB_URI, mongoOptions)
     
     // Run WebAuthn credential migration asynchronously
     migrateDoubleEncodedCredentials();
+    cleanLegacyCorruptCredentials();
 
     const PORT = process.env.PORT || 5000;
     server = app.listen(PORT, () => {

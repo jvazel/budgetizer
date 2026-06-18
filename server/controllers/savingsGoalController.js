@@ -1,6 +1,7 @@
 import SavingsGoal from '../models/SavingsGoal.js';
 import Transaction from '../models/Transaction.js';
 import { validationResult } from 'express-validator';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 // @desc    Get all user savings goals
 // @route   GET /api/savings-goals
@@ -42,6 +43,7 @@ export const createSavingsGoal = async (req, res) => {
 
     const goal = await newGoal.save();
     const populatedGoal = await SavingsGoal.findById(goal._id).populate('accountId', 'name type balance color icon');
+    invalidateDashboardCache(req.user.id);
     res.status(201).json(populatedGoal);
   } catch (error) {
     console.error(error.message);
@@ -70,6 +72,7 @@ export const updateSavingsGoal = async (req, res) => {
       { new: true }
     ).populate('accountId', 'name type balance color icon');
 
+    invalidateDashboardCache(req.user.id);
     res.json(goal);
   } catch (error) {
     console.error(error.message);
@@ -94,6 +97,7 @@ export const deleteSavingsGoal = async (req, res) => {
     );
 
     await SavingsGoal.findByIdAndDelete(req.params.id);
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Savings goal removed and associated transactions unlinked.' });
   } catch (error) {
     console.error(error.message);

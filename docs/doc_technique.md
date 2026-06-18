@@ -219,7 +219,7 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `POST /api/jobs/process-scheduled` (Déclencheur Global) : Déclenche manuellement le processeur de transactions planifiées. En production, cet appel requiert un en-tête `x-job-key` correspondant au secret `SCHEDULED_JOBS_SECRET`.
 
 ### 3.7 Tableau de bord & Statistiques (`/api/dashboard` & `/api/charts`)
-- `GET /api/dashboard` : Synthèse des soldes, comptes, mini-calendrier hebdomadaire et dernières transactions.
+- `GET /api/dashboard/summary` : Synthèse complète de l'application contenant les soldes cumulés (solde total, solde disponible, solde crédit), la liste des comptes avec date de dernière transaction, les enveloppes budgétaires enrichies avec calculs stochastiques de dépenses à la volée, les objectifs d'épargne récents, l'historique des soldes sur 180 jours, les dernières transactions, les alertes de budgets et les notifications (transactions planifiées, alertes de vélocité de dépenses et anomalies).
 - `GET /api/charts/category` : Répartition catégorielle sur une période.
 - `GET /api/charts/forecast` : Calcul de la projection de solde à 30 jours.
 

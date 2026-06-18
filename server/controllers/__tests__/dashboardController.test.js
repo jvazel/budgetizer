@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getDashboardSummary, getMonthlySummaries } from '../dashboardController.js';
+import { getDashboardSummary, getMonthlySummaries, invalidateDashboardCache } from '../dashboardController.js';
 import Account from '../../models/Account.js';
 import Transaction from '../../models/Transaction.js';
 import Budget from '../../models/Budget.js';
@@ -56,6 +56,7 @@ describe('Dashboard Controller', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    invalidateDashboardCache('user_123');
     Transaction.aggregate.mockResolvedValue([
       { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') },
       { _id: 'acc2', lastTransactionDate: new Date('2026-06-01') }
@@ -148,6 +149,9 @@ describe('Dashboard Controller', () => {
         if (query.isPending === true) {
           return mockChain([]);
         }
+        if (query.type === 'expense') {
+          return mockChain(mockCurrentMonthTxs);
+        }
         if (query.date && query.date.$gte && query.date.$lte) {
           return mockChain(mockCurrentMonthTxs);
         }
@@ -212,6 +216,11 @@ describe('Dashboard Controller', () => {
 
       Transaction.find.mockImplementation((query) => {
         if (query.isPending === true) return mockChain([]);
+        if (query.type === 'expense') {
+          return mockChain([
+            { _id: 'tx_b1', type: 'expense', amount: 120, categoryId: 'cat_food', date: new Date() }
+          ]);
+        }
         return mockChain([]);
       });
 

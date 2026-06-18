@@ -10,6 +10,7 @@ import UserCredential from '../models/UserCredential.js';
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
+import { invalidateDashboardCache } from './dashboardController.js';
 
 // 1. Update Profile (Name & Email)
 export const updateProfile = async (req, res) => {
@@ -144,6 +145,7 @@ export const updatePreferences = async (req, res) => {
 
     await user.save();
 
+    invalidateDashboardCache(req.user.id);
     res.json({
       _id: user._id,
       name: user.name,
@@ -202,6 +204,7 @@ export const clearMyData = async (req, res) => {
     await UserCredential.deleteMany({ userId }).session(session);
 
     await session.commitTransaction();
+    invalidateDashboardCache(req.user.id);
     res.json({ message: 'Toutes les données financières ont été effacées avec succès' });
   } catch (error) {
     await session.abortTransaction();

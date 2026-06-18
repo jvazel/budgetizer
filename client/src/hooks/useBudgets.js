@@ -37,7 +37,6 @@ export const useBudgets = (params) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -49,7 +48,6 @@ export const useBudgets = (params) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -60,7 +58,6 @@ export const useBudgets = (params) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.dispatchEvent(new CustomEvent('transaction-changed'));
     },
   });
 
@@ -74,4 +71,3 @@ export const useBudgets = (params) => {
     deleteBudget: deleteMutation.mutateAsync
   };
 };
-
