@@ -1,267 +1,349 @@
-# Manuel d'utilisation — Budgetizer 💰
+# Manuel d'Utilisation Complet et Exhaustif — Budgetizer 💰
 
-Bienvenue dans **Budgetizer**, votre compagnon de gestion financière personnelle. Ce manuel a été conçu pour guider les nouveaux utilisateurs à travers toutes les fonctionnalités de l'application et lister l'intégralité des gestes et interactions possibles.
+Bienvenue dans **Budgetizer**, votre plateforme de gestion financière personnelle. Que vous souhaitiez simplement suivre vos dépenses au jour le jour, planifier vos futurs projets d'épargne, maîtriser vos budgets par enveloppes ou modéliser la résilience à long terme de votre patrimoine, ce manuel est conçu pour vous accompagner pas à pas.
+
+Ce guide adopte une approche **chronologique et pédagogique** pensée pour un nouvel utilisateur. Il détaille l'intégralité des fonctionnalités, la signification de chaque indicateur ou graphique, ainsi que chaque interaction tactile et raccourci disponible.
 
 ---
 
 ## Sommaire
-1. [Premiers pas : authentification et biométrie](#1-premiers-pas--authentification-et-biométrie)
-2. [Le tableau de bord (Dashboard)](#2-le-tableau-de-bord-dashboard)
-3. [Gestion des comptes bancaires](#3-gestion-des-comptes-bancaires)
-4. [Saisie et historique des transactions](#4-saisie-et-historique-des-transactions)
-5. [Planification de budgets (Enveloppes)](#5-planification-de-budgets-enveloppes)
-6. [Transactions planifiées et abonnements](#6-transactions-planifiées-et-abonnements)
-7. [Projets et objectifs d'épargne](#7-projets-et-objectifs-dépargne)
-8. [Statistiques, prévisions et vélocité (Tachymètre)](#8-statistiques-prévisions-et-vélocité-tachymètre)
-9. [IA et conseils (Insights)](#9-ia-et-conseils-insights)
-10. [Rapport mensuel proactif](#10-rapport-mensuel-proactif)
-11. [Import et export de données](#11-import-et-export-de-données)
-12. [Configuration des paramètres](#12-configuration-des-paramètres)
+
+1. [Premiers pas : Authentification, Sécurité et Installation](#1-premiers-pas--authentification-sécurité-et-installation)
+2. [Découverte du Tableau de Bord (Dashboard)](#2-découverte-du-tableau-de-bord-dashboard)
+3. [Mise en place de votre structure financière (Comptes, Catégories, Tags)](#3-mise-en-place-de-votre-structure-financière-comptes-catégories-tags)
+4. [Saisie et suivi des mouvements au quotidien](#4-saisie-et-suivi-des-mouvements-au-quotidien)
+5. [Planification : Budgets (Enveloppes) et Abonnements](#5-planification--budgets-enveloppes-et-abonnements)
+6. [Épargne et Réalisation de Projets](#6-épargne-et-réalisation-de-projets)
+7. [Analyses Graphiques Avancées](#7-analyses-graphiques-avancées)
+8. [Pilotage Proactif : Rapports Mensuels & Tachymètre de Vélocité](#8-pilotage-proactif--rapports-mensuels--tachymètre-de-vélocité)
+9. [Sauvegarde, Export PDF Premium et Paramètres Généraux](#9-sauvegarde-export-pdf-premium-et-paramètres-généraux)
 
 ---
 
-## 1. Premiers pas : authentification et biométrie
+## 1. Premiers pas : Authentification, Sécurité et Installation
 
-### 1.1 Inscription et connexion
-* **Créer un compte** : Renseignez votre nom complet, votre adresse e-mail et un mot de passe (6 caractères minimum). Lors de la création, vos catégories par défaut et vos préférences initiales sont automatiquement générées.
-* **Se connecter** : Saisissez vos identifiants classiques pour ouvrir une session sécurisée.
+### 1.1 Inscription et première configuration
+Lorsque vous lancez l'application pour la première fois :
+* **Créer un compte** : Cliquez sur *"S'inscrire"*. Renseignez votre nom complet, votre adresse e-mail et un mot de passe sécurisé (6 caractères minimum).
+* **Initialisation automatique** : Dès la validation de votre inscription, Budgetizer génère automatiquement un jeu de catégories par défaut (Alimentation, Logement, Transports, Loisirs, etc.) et configure vos préférences initiales (devise en Euro `€`, thème sombre premium, et premier jour de la semaine fixé au lundi) afin que vous puissiez utiliser l'application immédiatement.
 
-### 1.2 Activation et connexion par biométrie (Passkeys)
-Budgetizer prend en charge l'authentification biométrique (empreinte digitale, reconnaissance faciale ou code PIN système) pour une connexion rapide et sécurisée.
-* **Enregistrement de l'appareil (automatique)** : Juste après votre première connexion par mot de passe, une fenêtre s'affiche pour vous proposer d'activer la connexion biométrique. Cliquez sur **Activer** puis validez auprès de votre système d'exploitation.
-* **Se connecter d'un clic** : Lors des connexions futures, cliquez simplement sur le bouton **Se connecter avec la biométrie** situé sous le formulaire de connexion.
-* **Bouton d'urgence de réinitialisation** : Si vous rencontrez un problème avec la biométrie (appareil non reconnu ou clé supprimée), cliquez sur le lien *"Problème avec la biométrie ? Réinitialiser l'appareil"* pour vider l'état local et réinitialiser la configuration.
+### 1.2 Authentification Biométrique (Passkeys / Clés d'accès)
+Budgetizer utilise la technologie standard **WebAuthn (Passkeys)** pour vous permettre de vous connecter de manière ultra-sécurisée sans saisir de mot de passe.
+* **Invite proactive à l'activation** : Juste après votre première connexion réussie par mot de passe, si votre navigateur ou appareil supporte la biométrie (Touch ID, Face ID, Windows Hello, code PIN système), une boîte de dialogue (Modal) s'affiche à l'écran pour vous proposer d'activer la connexion biométrique. 
+* **Enregistrement de l'appareil** : Si vous acceptez, validez via le capteur d'empreinte ou de reconnaissance faciale de votre système. Budgetizer enregistre votre appareil sous un nom convivial détecté automatiquement (ex. : *"Windows (Chrome)"* ou *"iOS (Safari)"*). Vous pouvez gérer vos appareils de confiance à tout moment dans les Paramètres.
+* **Connexion en un clic** : Lors de vos visites ultérieures, cliquez simplement sur le bouton **Se connecter avec la biométrie** situé sous le formulaire. Votre session s'ouvrira instantanément après confirmation biométrique locale.
+* **Bouton d'urgence (Réinitialisation de l'appareil)** : Si un dysfonctionnement survient (Passkey supprimé sur l'appareil mais toujours attendu par le serveur), cliquez sur le lien sous le formulaire : *"Problème avec la biométrie ? Réinitialiser l'appareil"*. Cela nettoiera l'état local du périphérique pour vous permettre de vous reconnecter par mot de passe classique et de réenregistrer proprement votre clé.
 
----
-
-## 2. Le tableau de bord (Dashboard)
-
-Le tableau de bord centralise votre santé financière en un seul clin d'œil.
-
-* **Menu Burger (tiroir latéral de navigation)** : Cliquez sur l'icône de menu (les trois barres en haut à gauche) pour déployer le tiroir latéral et naviguer vers les sections d'administration (Profil, Catégories, Tags, Déconnexion).
-* **Consulter le solde global (Net Worth)** : En haut de l'écran, le total affiche la somme de vos comptes liquides disponibles (moins vos dettes de crédits si incluses).
-  * *Geste interactif* : **Tapez sur le montant du solde global** pour afficher une infobulle (Toast) détaillant la composition exacte (ex. : Disponible vs Dettes de crédit).
-* **Raccourcis de navigation rapide (Dashboard Hub)** : Ce widget sous forme de grille tactile $2 \times 4$, situé sur le tableau de bord, vous permet d'accéder en un seul clic aux outils et analyses principaux (budgets, abonnements, épargne, analyses graphiques, échéances planifiées, virements, conseils IA et scores financiers).
-* **Faire défiler le carrousel des comptes** : Faites glisser horizontalement les cartes bancaires colorées. Chaque carte représente l'un de vos comptes et son solde.
-  * *Geste interactif* : **Tapez sur une carte de compte standard** pour ouvrir son formulaire de modification.
-  * *Geste interactif* : **Tapez sur une carte de type Crédit (bordeaux)** pour être redirigé vers sa page d'analyse détaillée de prêt.
-* **Ajout rapide de transaction** : Cliquez sur le bouton d'action flottant `+` en bas au centre pour ouvrir le tiroir inférieur (Bottom Sheet) de saisie instantanée.
-* **Le solde plancher (Vrai Disponible) 📉** : Situé juste sous le solde global, il affiche votre disponible réel après déduction des factures et charges programmées d'ici votre prochaine paie.
-  * *Indicateur visuel* : Une pastille verte signale un solde confortable (> 20 % du solde réel), tandis qu'un indicateur orange ou rouge signale un risque de découvert ou de trésorerie tendue.
-  * *Graphique de tendance interactif* : Glissez votre doigt sur le mini-graphique (Sparkline) à 30 jours pour inspecter votre solde futur projeté au jour le jour. Une ligne pointillée rouge matérialise le seuil critique de `0 €` (zone rouge) en cas de risque de solde négatif.
-  * *Configuration de la paie* : Cliquez sur l'icône d'engrenage pour fixer manuellement le jour récurrent de versement de votre paie (ou conservez la détection automatique via votre échéancier).
-  * *Liste d'échéances pliable* : Déroulez l'accordéon en bas de la carte pour inspecter les factures attendues d'ici la paie. Vous pouvez cocher une facture pour l'exclure du calcul si vous l'avez déjà payée par un autre canal, ce qui réajuste instantanément votre Vrai Disponible.
+### 1.3 Installation PWA (Progressive Web App) et mode Hors Ligne
+Budgetizer est conçu comme une application web progressive, ce qui signifie qu'elle peut s'installer sur votre téléphone ou votre ordinateur comme une application native.
+* **Bannière d'installation dynamique** : 
+  * *Sur Google Chrome / Microsoft Edge (PC et Android)* : Un bandeau s'affiche automatiquement en bas de l'écran ou dans les paramètres pour installer l'application. Cliquez sur "Installer".
+  * *Sur Apple iOS (Safari sur iPhone/iPad)* : En raison des contraintes d'Apple, la bannière d'installation affiche des instructions explicites. Appuyez sur l'icône de partage de Safari (le carré avec une flèche vers le haut), faites défiler vers le bas et sélectionnez **Sur l'écran d'accueil**.
+* **Détection automatique de connexion réseau** :
+  * Si vous perdez votre connexion internet (tunnel, zone blanche), un **Toast rouge** glisse depuis le haut de l'écran : *"Mode hors ligne — Utilisation des données en cache"*. L'application reste pleinement consultable.
+  * Dès que le réseau est de retour, un **Toast vert** apparaît : *"Connexion rétablie — Synchronisation réussie"*. Les données sont instantanément rafraîchies depuis le serveur de manière transparente.
 
 ---
 
-## 3. Gestion des comptes bancaires
+## 2. Découverte du Tableau de Bord (Dashboard)
 
-Allez dans le menu **Comptes** pour configurer vos comptes physiques ou vos prêts.
+Le tableau de bord centralise toutes les informations cruciales concernant votre santé financière.
 
-### 3.1 Création et modification de comptes standards
-Vous pouvez créer 4 types de comptes standards : **Courant (Checking)**, **Épargne (Savings)**, **Espèces (Cash)** ou **Investissement (Investment)**.
-* **Ajouter un compte** : Cliquez sur l'icône `+` en haut à droite.
-* **Remplir les champs** : Nom, solde de départ, couleur et icône représentatives de votre choix.
-* **Option d'inclusion** : Cochez ou décochez *"Inclure dans le Total"*. Les comptes exclus (ex. : investissements bloqués) n'affecteront pas le solde net du Dashboard.
-* **Ordonner les comptes** : Maintenez le clic ou votre doigt appuyé et réorganisez l'ordre d'affichage des comptes dans le carrousel pour mettre en avant vos comptes favoris.
-* **Supprimer un compte** : Cliquez sur le bouton de suppression en bas du formulaire d'édition, puis validez dans la fenêtre de confirmation.
+```mermaid
+graph TD
+    Dashboard[Tableau de Bord] --> Sidebar[Menu Burger Latéral]
+    Dashboard --> NetWorth[Solde Net Global]
+    Dashboard --> Carousel[Carrousel des Comptes]
+    Dashboard --> FloorBalance[Solde Plancher / Vrai Disponible]
+    Dashboard --> QuickAdd[Bouton d'Ajout Rapide +]
+    Dashboard --> Hub[Dashboard Hub / Raccourcis]
+```
+
+### 2.1 Le Menu de Navigation Latéral (Tiroir Burger)
+* **Accès** : Cliquez sur les trois lignes horizontales (Menu Burger) en haut à gauche de l'écran.
+* **Esthétique & Navigation** : Ce tiroir borderless glisse sur le côté gauche, appliquant un flou d'arrière-plan (`backdrop-blur`) et intégrant des reflets lumineux discrets (glow flares). Il structure les modules en 4 grands blocs : *Opérations*, *Planification*, *Analyses & IA* et *Configuration*. Cliquez sur une rubrique pour y naviguer ; le tiroir se referme automatiquement.
+
+### 2.2 Consulter le Solde Global (Net Worth)
+* **Affichage** : Tout en haut, le montant principal représente votre valeur nette globale (la somme des soldes de vos comptes actifs inclus dans le calcul).
+* **Geste interactif** : **Tapez ou cliquez sur ce montant global** pour déclencher une infobulle (Toast) détaillant la composition exacte de cette somme (ex. : la part d'argent disponible liquide vs le montant total de vos dettes de crédits).
+
+### 2.3 Le Carrousel tactile des Comptes
+* **Affichage** : Une bande horizontale présente vos comptes bancaires sous forme de cartes colorées premium.
+* **Geste interactif (Snap Scroll)** : Faites glisser horizontalement les cartes avec votre doigt. Elles se recentrent automatiquement (snap scroll).
+* **Codes visuels des cartes** :
+  * Les soldes positifs s'affichent dans une police de chiffres tabulaires à fort contraste. S'ils sont négatifs, ils passent automatiquement en rouge vif.
+  * Chaque carte arbore une icône en verre poli (`backdrop-blur-md`) adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements).
+  * Une pastille thématique clignotante (`animate-pulse`) en bas à gauche de chaque carte indique la date de dernière mise à jour.
+* **Gestes interactifs sur les cartes** :
+  * **Tapez sur une carte standard** (courant, épargne, espèces) pour ouvrir le formulaire de modification de ce compte ou consulter son détail de transactions.
+  * **Tapez sur une carte de crédit (bordeaux / rouge foncé)** pour être automatiquement redirigé vers sa page d'analyse de prêt dédiée.
+
+### 2.4 Le Solde Plancher (Vrai Disponible) 📉
+Situé juste sous le solde global de votre compte courant principal, cet indicateur recalcule la somme réellement utilisable après déduction de vos factures et charges à venir d'ici votre prochaine rentrée d'argent.
+* **Pastille de diagnostic** : Elle s'affiche en **Vert** si votre disponible réel représente plus de 20% de votre solde réel. Elle passe à l'**Orange** ou au **Rouge** si le risque de découvert d'ici la paie est avéré.
+* **Mini-graphique interactif (Sparkline)** : Glissez votre doigt sur la courbe pour inspecter l'évolution projetée de votre solde jour après jour sur les 30 prochains jours. Une ligne pointillée rouge horizontale matérialise le seuil critique de `0 €`.
+* **Configuration (icône d'engrenage)** : Cliquez dessus pour définir manuellement le jour de versement récurrent de votre salaire mensuel (ou laissez le système le détecter automatiquement depuis votre échéancier).
+* **Accordéon pliable des charges** : Dépliez la liste au bas de la carte pour voir le détail des factures attendues. **Cochez ou décochez une charge** : si vous l'avez payée en avance ou par un autre moyen, son exclusion réajuste instantanément et dynamiquement le montant de votre Vrai Disponible.
+
+### 2.5 Raccourcis tactiles (Dashboard Hub)
+Située au cœur du tableau de bord, cette grille de widgets tactiles au format $2 \times 4$ vous offre des boutons d'accès rapide vers les sections clés : budgets, abonnements, objectifs d'épargne, simulateur de crédit, analyses de graphiques, calendrier des échéances, virements instantanés et scores financiers.
+
+---
+
+## 3. Mise en place de votre structure financière (Comptes, Catégories, Tags)
+
+Avant de saisir des écritures, vous devez configurer vos structures financières.
+
+### 3.1 Création et édition de Comptes Standards
+Rendez-vous dans la rubrique **Comptes** du menu latéral :
+* **Ajouter un compte** : Cliquez sur le bouton `+` en haut à droite.
+* **Champs requis** : Saisissez son nom, le solde initial réel, et sélectionnez une couleur thématique ainsi qu'une icône représentative.
+* **Option d'inclusion** : La case à cocher *"Inclure dans le Total"* détermine si le solde de ce compte impacte le Net Worth global du Dashboard. Décochez-la pour les comptes d'investissements bloqués ou d'épargne long terme afin de ne pas fausser votre trésorerie courante.
+* **Geste interactif (Tri par Glisser-Déposer / Drag & Drop)** : Sur l'écran de liste des comptes, **maintenez votre doigt appuyé** sur les deux lignes horizontales d'une ligne de compte et faites-la glisser vers le haut ou le bas. Cette réorganisation change instantanément l'ordre d'affichage des cartes dans le carrousel du Dashboard.
+* **Suppression** : Ouvrez le formulaire de modification du compte et cliquez sur le bouton de suppression rouge.
   > [!WARNING]
-  > La suppression d'un compte entraîne la suppression définitive de toutes les transactions et planifications qui lui sont associées.
+  > Confirmez avec précaution. La suppression d'un compte efface définitivement toutes les transactions, abonnements et échéances qui lui sont associés.
 
-### 3.2 Gestion des comptes de type Crédit / Prêt 🏦
-Ces comptes modélisent vos emprunts en cours (immobiliers, auto, etc.).
-* **Créer un crédit** : Choisissez le type **Crédit** dans le formulaire.
-* **Renseigner les caractéristiques** : Saisissez le capital emprunté (ex. : 150 000 €), le taux d'intérêt annuel (ex. : 3,5 %), la durée du prêt (ex. : 240 mois), la date de première échéance et le compte source de prélèvement (le compte courant sur lequel sera prélevée la mensualité).
-* **Consulter l'amortissement** : Appuyez sur la carte du crédit depuis le tableau de bord ou la page des comptes :
-  * **Graphique d'amortissement** : Visualisez la courbe de réduction progressive de votre dette (qui tend vers 0 €).
-  * **Widgets d'intérêts** : Consultez le cumul des intérêts déjà payés et le reste à payer estimé.
-  * **Prochaine échéance** : Visualisez la décomposition exacte de votre prochain prélèvement (part amortissement de capital vs part d'intérêts).
-  * **Historique des mensualités** : Parcourez le tableau récapitulatif des versements passés.
+### 3.2 Configuration avancée des Comptes de Crédit / Prêt 🏦
+Si vous avez contracté un emprunt (immobilier, automobile ou à la consommation) :
+1. Créez un compte et sélectionnez le type **Crédit**. Le système l'initialisera avec un solde négatif correspondant au capital emprunté restant dû.
+2. Remplissez les paramètres :
+   * **Capital emprunté** (ex. : `200 000 €`).
+   * **Taux d'intérêt annuel (%)** (ex. : `3.5 %`).
+   * **Durée en mois** (ex. : `240 mois`).
+   * **Date de première mensualité** et **Compte source de prélèvement** (le compte courant sur lequel le prélèvement automatique sera effectué).
 
----
+#### Calcul de la mensualité et amortissement
+Budgetizer calcule automatiquement la mensualité hors assurance $M$ selon la formule financière standard :
+$$M = C \times \frac{r/12}{1 - (1 + r/12)^{-n}}$$
+*(où $C$ est le capital emprunté, $r$ le taux annuel décimal, et $n$ la durée en mois. Si le taux est de 0 %, la mensualité est calculée via une simple division linéaire $C/n$)*.
 
-## 4. Saisie et historique des transactions
+#### Interactions avec la fiche de crédit
+En cliquant sur une carte de crédit depuis le tableau de bord ou la page des comptes, vous ouvrez une interface de pilotage complète :
+* **Graphique d'amortissement** : Une courbe d'aire colorée présente la réduction progressive de votre dette historique et projetée jusqu'à sa liquidation complète (retour à 0 €).
+* **Widget d'échéance dynamique** : Visualisez la décomposition exacte de votre prochain prélèvement, indiquant précisément la part allouée au remboursement du capital amorti et la part absorbée par les intérêts payés.
+* **Tableau d'amortissement complet** : Dépliez cet accordéon pour inspecter, ligne par ligne pour chaque mois du prêt, le montant de la mensualité, la part d'intérêt, la part de capital remboursé, la cotisation d'assurance et le capital restant dû.
 
-### 4.1 Saisie rapide (Bottom Sheet)
-* **Sélectionner le type** : Choisissez entre **Dépense** (rouge), **Revenu** (vert) ou **Virement** (bleu).
-* **Saisie du montant** : Tapez sur le champ de saisie du montant.
-  * *Sur mobile* : Le clavier numérique décimal natif s'affiche automatiquement.
-  * *Règles de saisie* : La virgule `,` est automatiquement convertie en point `.`. Le montant est limité à 2 décimales.
-* **Associer le compte et la catégorie (sélecteurs tactiles)** : 
-  * Appuyez sur le sélecteur de compte ou de catégorie pour ouvrir un tiroir interactif (**Bottom Sheet**) dédié.
-  * *Choix du compte* : Le sélecteur affiche le type et le solde en temps réel de chaque compte dans une liste optimisée pour le pouce.
-  * *Choix de la catégorie* : L'interface présente la structure complète avec les catégories parentes (Alimentation, Logement, etc.) et une grille de leurs sous-catégories associées.
-  * Pour un virement, sélectionnez le compte de départ (`From`) et le compte de destination (`To`).
-* **Ajouter des métadonnées** : Saisissez une note facultative (ex. : "Courses Leclerc") ou ajoutez des tags en insérant le symbole `#` (ex. : `#vacances`).
-* **Valider** : Cliquez sur **Ajouter la transaction**.
+```
+Visualisation de la décomposition d'un versement de mensualité de crédit :
+┌─────────────────────────────────────────────────────────┐
+│ Mensualité Totale : 1 200,00 €                          │
+├────────────────────────────┬────────────────────────────┤
+│ Part Capital Remboursé     │ Part Intérêts Bancaires    │
+│ (Réduit votre dette)       │ (Frais perdus)             │
+│ 850,00 € [Vert]            │ 350,00 € [Orange]          │
+└────────────────────────────┴────────────────────────────┘
+```
 
-### 4.2 Historique complet
-Rendez-vous dans la rubrique **Transactions** pour consulter et filtrer vos écritures.
-* **Rechercher** : Appuyez sur la loupe et saisissez un mot-clé ou un tag.
-* **Filtrer par compte** : Sélectionnez un compte dans le menu déroulant.
-  * *Comportement des signes de virements* :
-    * Si vous filtrez sur votre **compte courant**, le virement lié au crédit s'affiche en négatif (`-350,00 €` en gris) pour représenter le prélèvement.
-    * Si vous filtrez sur le **compte de crédit**, ce même virement s'affiche en positif (`+350,00 €` en vert) car il représente le remboursement de la dette.
-* **Éditer/Modifier** : Cliquez sur une transaction dans la liste pour rouvrir son formulaire.
-* **Supprimer** : Survolez la transaction sur ordinateur pour cliquer sur l'icône de corbeille, ou balayez vers la gauche sur mobile pour révéler le bouton de suppression rouge. Confirmez ensuite votre choix.
+> [!NOTE]
+> Le remboursement de prêt a un **double impact comptable** : dans votre historique de compte courant, il s'affiche comme une dépense en négatif (prélèvement). Sur votre compte de crédit, il s'affiche en positif et en vert, car il s'agit d'un versement d'amortissement qui vient réduire le montant de votre dette.
 
-### 4.3 Gestion des étiquettes (Tags) et archivage
-Pour suivre des dépenses liées à des événements ou projets transversaux (ex. : `#vacances 2026`, `#noel`), Budgetizer vous permet de gérer vos étiquettes (tags) de manière flexible.
-* **Créer ou modifier un tag** : Rendez-vous dans le menu latéral (tiroir de navigation) et sélectionnez **Tags**. Vous pouvez y créer un tag avec un nom et une couleur personnalisée.
-* **Archiver un tag obsolète** : Si un projet est terminé (ex. : après vos vacances), modifiez le tag et activez l'option **Archiver l'étiquette**. 
-  * *Effet de l'archivage* : Le tag n'apparaîtra plus dans la liste des suggestions lors de la saisie de nouvelles dépenses pour éviter l'encombrement visuel. Toutefois, l'historique de vos dépenses passées et vos graphiques d'analyses restent entièrement inchangés.
-* **Filtrer la liste des tags** : Sur la page de gestion des tags, utilisez la barre d'onglets de filtrage en haut de l'écran pour afficher :
-  * **Tous** : L'ensemble de vos tags avec séparation claire entre tags actifs et archivés.
-  * **Actifs** : Uniquement vos tags utilisables en saisie.
-  * **Archivés** : Uniquement vos tags obsolètes archivés (vous pouvez modifier un tag archivé pour le réactiver à tout moment).
+### 3.3 Catégories et Sous-catégories
+Les catégories classifient vos flux financiers.
+* Associez-leur une couleur et une icône.
+* Définissez si elles s'appliquent aux dépenses, aux revenus ou aux deux.
+* Vous pouvez créer des sous-catégories enfants (ex. : *"Supermarché"* et *"Restaurant"* rattachés à la catégorie parente *"Alimentation"*).
+
+### 3.4 Étiquettes (Tags) et archivage intelligent
+Pour les projets transversaux (ex. : `#vacances 2026`, `#travaux`), créez des tags de couleur personnalisée dans la section **Tags**.
+* **Archivage intelligent** : Une fois vos vacances terminées, ouvrez les paramètres du tag et cochez **Archiver l'étiquette**. 
+* *Comportement* : Le tag n'apparaîtra plus dans les suggestions de saisie rapide au quotidien pour ne pas encombrer l'interface. Néanmoins, l'ensemble de votre historique passé et vos analyses graphiques restent parfaitement inchangés et complets.
 
 ---
 
-## 5. Planification de budgets (Enveloppes)
+## 4. Saisie et suivi des mouvements au quotidien
 
-Suivez la méthode éprouvée des enveloppes budgétaires dans l'onglet **Budgets**.
+### 4.1 La Saisie Rapide (Bottom Sheet)
+* **Ouverture** : Cliquez sur le bouton flottant d'action central `+` au bas de l'écran. Un tiroir interactif se déploie depuis le bas.
+* **Gestes et saisie de montant sur mobile** :
+  * Appuyez sur le champ du montant. Sur smartphone, l'application force l'affichage du **clavier décimal numérique natif** de votre système (`inputMode="decimal"`).
+  * La saisie est sécurisée contre les erreurs de frappe : les virgules `,` sont automatiquement converties en points `.`, les zéros initiaux superflus sont nettoyés et la saisie est bridée à deux chiffres après la décimale.
+* **Sélection tactile simplifiée** :
+  * **Sélection du compte** : Un panneau tactile s'ouvre, vous présentant la liste des comptes avec leurs soldes réels mis à jour.
+  * **Sélection de la catégorie** : Choisissez d'abord la catégorie parente, puis une grille de sous-catégories apparaît pour affiner votre choix d'un simple toucher du pouce.
+* **Tags et Notes** : Saisissez une note rapide et ajoutez des tags en insérant le caractère `#`.
 
-* **Créer une enveloppe** : Cliquez sur le bouton `+` et choisissez une catégorie (ex. : "Alimentation"), un montant alloué pour la période et la périodicité (hebdomadaire, mensuelle ou annuelle).
-* **Option de report (Rollover)** : Activez cette option pour que le solde restant (économies) ou le dépassement (déficit) soit reporté sur le budget du mois suivant.
-* **Suivi en temps réel** : La barre de progression colorée indique la part consommée du budget.
-  * **Vert** : Moins de 80 % du budget consommé.
-  * **Orange** : Entre 80 % et 100 % consommés.
-  * **Rouge** : Budget dépassé.
-* **Détail des transactions (Drill-down)** : Cliquez sur une barre de budget pour ouvrir instantanément la liste des transactions réelles ayant consommé cette enveloppe durant le mois.
+### 4.2 Le Journal des Transactions (Historique)
+Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.
+* **Aperçu optimisé mobile** : Sur les petits écrans, Budgetizer empile verticalement le badge coloré de la catégorie et du compte bancaire sous l'intitulé de la transaction. Cela libère de l'espace horizontal pour éviter que vos descriptions ou vos montants ne soient tronqués.
+* **Gestes de modification et de suppression** :
+  * *Sur ordinateur (PC/Mac)* : Survolez la ligne de la transaction avec votre souris pour faire apparaître l'icône de corbeille rouge.
+  * *Sur smartphone/tablette* : **Faites glisser votre doigt vers la gauche (Swipe Left)** sur la ligne de transaction pour révéler instantanément le bouton de suppression rapide.
+* **Filtres** : Filtrez par période, catégorie, tag ou compte bancaire.
 
----
+### 4.3 Virements Instantanés Internes (Transfers)
+Pour déplacer de l'argent entre vos propres comptes physiques (ex. : alimenter votre Livret d'épargne depuis votre Compte Courant) :
+1. Accédez à la page **Virements instantanés**.
+2. Sélectionnez le compte à débiter et le compte à créditer.
+3. Saisissez le montant et une note descriptive facultative.
+4. **Validation sécurisée** : Cliquez sur *"Confirmer le virement"*. Une boîte de dialogue s'affiche pour vous montrer un **aperçu comparatif avant/après** de vos soldes bancaires sur les deux comptes concernés pour éliminer tout risque d'erreur de transfert.
+5. Cliquez sur *"Valider"* pour exécuter le mouvement de fonds. Vous pouvez l'annuler à tout moment dans l'historique des virements récents pour restaurer instantanément les soldes précédents.
 
-## 6. Transactions planifiées et abonnements
+```
+Aperçu interactif avant virement de 500 € :
+Compte Courant : 2 500 € ───[Débit de 500 €]───> Nouveau Solde : 2 000 € [Rouge]
+Compte Épargne : 5 000 € ───[Crédit de 500 €]───> Nouveau Solde : 5 500 € [Vert]
+```
 
-Automatisez vos factures, salaires ou abonnements récurrents dans l'onglet **Planifications**.
-
-### 6.1 Configuration des répétitions
-* **Créer une planification** : Définissez la fréquence (ex. : toutes les 2 semaines, tous les mois) et la date de début.
-* **Gestion intelligente des fins de mois** : Si vous configurez une récurrence mensuelle le 31 d'un mois, Budgetizer s'adapte automatiquement aux mois plus courts (le prélèvement aura lieu le 30 avril ou le 28/29 février) tout en revenant automatiquement au 31 lors des mois suivants, évitant ainsi tout décalage temporel progressif.
-* **Mode de validation** :
-  * **Auto-confirmer = OUI** : Dès que l'échéance arrive, Budgetizer insère automatiquement la transaction et met à jour les soldes sans intervention de votre part.
-  * **Auto-confirmer = NON** : La transaction apparaît dans la section **"À confirmer"**. Vous devez la valider manuellement (avec possibilité d'ajuster le montant), la modifier ou la passer (l'ignorer).
-
-### 6.2 Suivi des abonnements (Subscriptions)
-* **Visualiser les coûts fixes** : L'écran affiche la somme mensuelle et annuelle cumulée de tous vos abonnements actifs (Netflix, électricité, loyer, etc.).
-* **Abonnements liés à un crédit** : Les remboursements de crédit portent un badge `"🏦 Crédit"`. Ils ne peuvent pas être modifiés ou supprimés depuis cet écran : cliquez sur le lien fourni pour être redirigé vers la gestion du compte de crédit.
-
----
-
-## 7. Projets et objectifs d'épargne
-
-Définissez et alimentez des projets financiers spécifiques dans l'onglet **Épargne**.
-
-* **Ajouter un projet** : Renseignez le nom (ex. : "Apport immo", "Fonds d'urgence"), le montant cible et la date limite.
-* **Liaison bancaire** : Associez (facultativement) un compte d'épargne (ex. : Livret A) à l'objectif.
-* **Faire un versement ou un retrait** :
-  * **Si un compte réel est lié** : Budgetizer génère un virement réel depuis le compte courant sélectionné vers le compte d'épargne cible. La progression de l'objectif et le solde des comptes réels sont synchronisés en temps réel.
-  * **Si aucun compte n'est lié (virtuel)** : Le versement est traité comme une dépense virtuelle pour isoler fictivement la somme de votre solde disponible.
-
----
-
-## 8. Statistiques, prévisions et vélocité (Tachymètre)
-
-Analysez le passé, anticipez le futur et surveillez votre rythme de dépenses dans l'onglet **Statistiques**.
-
-* **Répartition catégorielle** : Un graphique en secteurs (camembert) présente la répartition de vos dépenses ou revenus.
-  * *Interaction* : Cliquez sur un secteur pour faire apparaître le détail chiffré.
-* **Évolution de trésorerie** : Suivez l'historique de votre solde cumulé global.
-* **Prévisions à 30 jours (Forecast)** : Visualisez la courbe de projection combinant votre solde historique et l'évolution estimée sur le mois à venir.
-  * *Méthode* : Elle intègre vos abonnements, vos prélèvements planifiés et une estimation statistique de vos dépenses courantes. Un corridor flouté représente l'intervalle de confiance (variations possibles).
-  * *Détail des prévisions* : Cliquez sur un point de la courbe prévisionnelle pour lister les transactions programmées qui impacteront votre solde ce jour-là.
-* **Tachymètre : Rythme des dépenses (Spending Velocity)** : Un indicateur interactif sous forme de jauge (compteur de vitesse) vous indique en temps réel si vous consommez vos enveloppes budgétaires trop rapidement.
-  * *Geste tactile* : Sélectionnez une catégorie dans le menu déroulant (ou conservez "Toutes dépenses confondues"). Les calculs s'adaptent instantanément.
-  * *Lecture de la jauge* :
-    * **Zone verte** : Votre vitesse de dépense réelle sur les 7 derniers jours est inférieure ou égale à la limite quotidienne autorisée pour tenir le mois. Le diagnostic indique *"Vitesse sous contrôle"* et l'aiguille se situe à gauche.
-    * **Zone rouge** : Vous dépensez trop rapidement. Le diagnostic indique *"⚠️ Excès de vitesse détecté"* et l'aiguille bascule vers la droite, estimant la date précise d'épuisement complet (crash) du budget si vous maintenez ce rythme.
-  * *Action corrective* : Une fiche d'aide calcule en temps réel la nouvelle limite quotidienne conseillée à respecter pour le reste du mois afin de compenser les écarts et finir dans le vert. Si le budget est déjà épuisé, la jauge affiche une limite conseillée de 0 €/jour.
-* **Stress-test & Résilience (Simulation de Monte-Carlo)** : Projetez la viabilité à long terme de votre patrimoine financier (de 5 à 40 ans) en exécutant localement dans votre navigateur 1 000 trajectoires de simulations aléatoires (processus stochastique) intégrant la volatilité des marchés, l'inflation et d'éventuels sinistres majeurs.
-  * *Curseurs de configuration (⚙️)* : Vous pouvez déplier ou replier le panneau des paramètres pour moduler :
-    * Le **Capital initial** et l'**Épargne mensuelle** (calculés et préremplis automatiquement à partir de votre valeur nette globale et de votre capacité d'épargne moyenne, mais modifiables à souhait).
-    * L'**Horizon temporel** de projection (5 à 40 ans).
-    * Le **Profil d'investissement** : Boutons de sélection rapide (*Prudent* : rendement 2,5 % / volatilité 2 %, *Équilibré* : 5 % / 8 %, *Dynamique* : 8 % / 16 %) qui mettent à jour automatiquement les curseurs de rendement annuel attendu et de volatilité.
-    * Le taux d'**inflation estimé** pour mesurer l'évolution de votre patrimoine en euros constants (pouvoir d'achat d'aujourd'hui). Vous pouvez choisir d'indexer ou non votre épargne sur celle-ci.
-    * Le **Stress-test "coups durs"** : Définissez la probabilité annuelle (fréquence) d'un incident majeur (maladie, sinistre, chômage) et son coût estimé (gravité) pour évaluer la résistance de votre plan financier.
-  * *Interprétation du graphique* :
-    * La ligne centrale pleine représente la trajectoire médiane (50e percentile : le scénario le plus probable).
-    * La zone verte translucide délimite l'entonnoir d'incertitude compris entre le pire scénario (10e percentile : 90 % de chances de faire mieux) et le meilleur scénario (90e percentile : 10 % de chances de faire mieux).
-  * *Rapport de diagnostic* : Un score de résilience (pourcentage de simulations réussies où le capital reste positif au terme de la simulation) vous attribue un diagnostic (*Excellent*, *Correct* ou *Vulnérable*) et affiche le délai de rupture moyen (en années) en cas d'épuisement.
-* **Fixes vs Variables (Anatomie mensuelle des dépenses)** 🔒🎲 : Visualisez, pour un mois donné, la répartition de vos dépenses entre charges incompressibles planifiées et dépenses spontanées.
-  * *Sélection du mois* : Naviguez d'un mois à l'autre via les flèches `←` / `→`, ou cliquez sur le mois affiché pour ouvrir le sélecteur (les 18 derniers mois sont disponibles).
-  * *Indicateurs clés (KPI)* : Trois cartes affichent en un coup d'œil le total de dépenses du mois, le montant et le pourcentage de charges fixes (indigo 🔒) et le montant et le pourcentage de dépenses variables (ambre 🎲).
-  * *Donut interactif* : Un graphique en anneau à deux arcs colore visuellement la répartition — indigo pour les fixes, ambre pour les variables. Survolez ou appuyez sur un arc pour afficher son montant précis au centre. Une barre de progression linéaire en bas du graphique complète la visualisation du ratio.
-  * *Listes par catégorie (pliables)* : Deux sections dépliables (« Charges fixes » et « Dépenses variables ») détaillent chaque catégorie : icône, nom, nombre de transactions, montant total et part en pourcentage.
-  * *Classification automatique* : Une dépense est classée **fixe** si elle provient d'une transaction planifiée (loyer, abonnement, remboursement de crédit configuré dans l'onglet Planifications). Toute autre dépense saisie manuellement est considérée **variable**. Pour classer une dépense récurrente comme fixe, créez simplement une planification correspondante.
-* **Analyse mensuelle (Graphique en cascade / Waterfall)** 📊 : Visualisez l'allocation de vos revenus perçus vers vos dépenses par catégorie pour le mois sélectionné.
-  * *Déroulement de la cascade* : Le graphique commence par la barre verte représentant vos revenus totaux, suivie par des marches descendantes de couleur rose pour chaque catégorie de dépenses (triées de la plus importante à la moins importante), et se termine par le solde restant (violet pour une épargne nette positive, rose/rouge pour un déficit net).
-  * *Détail des flux* : Un tableau au bas du graphique récapitule les montants exacts et le pourcentage de chaque catégorie par rapport à l'enveloppe globale de dépenses.
-
+### 4.4 Le Calendrier des Transactions (Calendar)
+Le module **Calendrier** offre une vision temporelle globale de vos finances.
+* Sélectionnez un mois à l'aide des flèches directionnelles `←` et `→` en haut de page.
+* Les jours contenant des flux sont marqués d'indicateurs visuels.
+* Tapez sur un jour pour voir s'afficher la liste des transactions de cette date spécifique au bas du calendrier.
+* Les **transactions planifiées récurrentes** (échéances à venir) s'affichent avec un fond violet distinctif et un badge `"Planifié"`.
 
 ---
 
-## 9. IA et conseils (Insights)
+## 5. Planification : Budgets (Enveloppes) et Abonnements
 
-Optimisez vos finances grâce aux analyses automatiques fournies dans l'onglet **Conseils**.
+### 5.1 La Méthode des Enveloppes Budgétaires
+Cette technique éprouvée consiste à allouer une somme limite mensuelle, hebdomadaire ou annuelle à une catégorie spécifique (ex. : `400 € / mois` pour l'Alimentation).
+* **Création** : Dans la section **Budgets**, cliquez sur `+` et définissez la catégorie, le montant limite et la périodicité.
+* **Option de report (Rollover)** : Activez le report pour que le solde restant non consommé (économie) s'ajoute au budget du mois suivant. Si vous êtes en dépassement (déficit), le montant du dépassement sera déduit de votre enveloppe du mois suivant pour compenser l'écart.
+* **Lecture visuelle de la barre de progression** :
+  * **Vert** : Moins de 80 % du budget consommé. Tout est sous contrôle.
+  * **Orange** : Entre 80 % et 100 % consommé. Vigilance requise.
+  * **Rouge** : Budget dépassé. L'enveloppe est vide.
+* **Geste interactif (Drill-down)** : Cliquez ou tapez directement sur la barre de progression d'un budget pour ouvrir instantanément la liste détaillée de toutes les transactions réelles qui ont consommé cette enveloppe depuis le début de la période.
 
-* **Détection d'anomalies de dépenses** : Budgetizer analyse vos dépenses du mois en cours et les compare à votre moyenne historique des 3 derniers mois.
-  * **Alerte Orange** : Dépassement de plus de 30 % par rapport à l'habitude.
-  * **Alerte Rouge** : Dépassement critique de plus de 60 %.
-* **Suggestions d'économies** : L'outil isole votre Top 3 des catégories les plus dépensières.
-  * *Chips de simulation* : Cliquez sur les puces **-10 %**, **-20 %** ou **-30 %** pour projeter l'économie annuelle correspondante.
+### 5.2 Planifications et Échéancier
+Pour anticiper vos dépenses et revenus récurrents (loyer, abonnements, salaire), configurez une planification :
+* **Fréquence** : Indiquez l'intervalle (ex. : toutes les 2 semaines, tous les mois).
+* **Gestion intelligente des fins de mois** : Si vous configurez une récurrence le 31 du mois, Budgetizer ajuste automatiquement la date lors des mois plus courts (le 30 avril ou le 28/29 février) et repasse automatiquement au 31 dès que le mois le permet, évitant ainsi les décalages progressifs de date.
+* **Mode d'exécution** :
+  * **Auto-confirmer = Activé** : Dès que l'échéance arrive, la transaction est enregistrée en historique et vos soldes sont ajustés automatiquement.
+  * **Auto-confirmer = Désactivé** : La transaction apparaît sous le statut **"À confirmer"**. Vous devez valider manuellement son prélèvement effectif en ajustant le montant si nécessaire, ou choisir de l'ignorer.
 
----
-
-## 10. Rapport mensuel proactif
-
-Consultez le bilan financier personnalisé de vos mois passés dans l'onglet **Rapports**.
-
-* **Bilan narratif** : Analyse automatisée de vos revenus, dépenses, taux d'épargne et variations.
-* **Victoires et vigilances** : Liste de vos bons comportements (budgets respectés) et des dérives (nouveaux abonnements).
-* **Dépenses inhabituelles** : Fiches détaillées des transactions au montant anormal (ex. : une dépense unitaire qui dépasse de 3 fois la moyenne habituelle de la catégorie). Affiche le ratio d'écart (ex. : `"4.5x la moyenne"`).
-
----
-
-## 11. Import et export de données
-
-Garantissez la portabilité de vos données financières depuis l'onglet **Paramètres**.
-
-* **Exporter** : Sélectionnez le format souhaité (**CSV** ou **JSON**) pour télécharger l'intégralité de vos écritures sur votre appareil.
-* **Importer** : Glissez-déposez ou sélectionnez un fichier CSV d'historique de transactions pour l'importer dans l'application.
+### 5.3 Suivi des Abonnements (Subscriptions)
+Le panneau **Abonnements** regroupe tous vos contrats et charges récurrentes actives (Netflix, électricité, salle de sport).
+* **Indicateur de charge fixe** : Il affiche en haut de page le cumul de vos abonnements traduits en **coût mensuel total** et **coût annuel total** pour vous faire prendre conscience du poids de vos charges contractuelles.
+* **Lien avec les Crédits** : Les abonnements créés automatiquement suite à la configuration d'un compte de type Crédit affichent un badge spécial `"🏦 Crédit"`. Ces planifications ne sont pas modifiables directement ici : cliquez sur le lien associé pour être automatiquement redirigé vers les paramètres de votre compte de crédit.
 
 ---
 
-## 12. Configuration des paramètres
+## 6. Épargne et Réalisation de Projets
 
-Personnalisez l'application dans l'onglet **Paramètres**.
-
-* **Profil et mot de passe** : Modifiez votre nom d'affichage ou mettez à jour votre mot de passe.
-* **Préférences visuelles** :
-  * **Thème** : Basculez entre le mode Sombre, Clair, ou l'alignement Système.
-  * **Devise** : Modifiez la devise par défaut de vos saisies (€, $, £, etc.).
-* **Zone de danger (Danger Zone)** :
-  * **Effacer les données** : Réinitialise tous vos comptes, transactions et budgets, vous permettant de recommencer à zéro tout en conservant votre compte utilisateur.
-  * **Supprimer le compte** : Supprime définitivement et sans recours toutes vos données de la base de données Budgetizer (conformité RGPD).
+L'onglet **Épargne** vous aide à concrétiser vos projets financiers (ex. : "Apport immobilier", "Fonds d'urgence").
+* **Créer un objectif** : Renseignez le nom du projet, son montant cible, sa date limite et associez-lui une icône et une couleur. Budgetizer calculera automatiquement l'effort d'épargne mensuel nécessaire pour atteindre le but dans les temps.
+* **Association bancaire (Réelle vs Virtuelle)** :
+  * **Compte d'épargne physique lié** : Associez votre objectif à un compte d'épargne réel (ex. : votre Livret A). Les versements effectués vers cet objectif déclencheront de vrais virements bancaires internes depuis votre compte courant vers ce Livret A. Vos progressions d'objectifs et vos soldes réels sont synchronisés.
+  * **Objectif virtuel (sans compte lié)** : Le versement d'épargne est traité comme une dépense virtuelle. L'argent est comptabilisé comme "bloqué" pour masquer ce montant de votre solde disponible et simuler l'épargne sans ouvrir de compte réel.
 
 ---
 
-## 13. Rapports d'Activité et Export PDF Premium 📊📄
+## 7. Analyses Graphiques Avancées
 
-L'onglet **Rapports** vous permet de générer des rapports d'activité financière personnalisés sous format PDF haute définition, parfaits pour l'impression ou l'archivage.
+Les graphiques interactifs transforment vos données financières brutes en informations stratégiques.
 
-### 13.1 Personnalisation de votre Rapport
-Avant de lancer l'exportation, configurez vos préférences :
-* **Période d'analyse** : Déterminez la date de début et la date de fin à l'aide des calendriers. Vous pouvez analyser une semaine, un mois, un trimestre ou une période libre.
-* **Sections optionnelles** : Cochez ou décochez les cases selon vos besoins :
-  * **Graphique Cascade (Waterfall)** : Affiche la décomposition visuelle et progressive de vos flux (Revenus ➔ Dépenses par poste ➔ Épargne nette).
-  * **Charges Fixes vs Variables** : Compare vos frais obligatoires/abonnements aux dépenses discrétionnaires quotidiennes.
-  * **Prévisions à 30 jours** : Affiche une estimation de l'évolution future de votre solde en fonction de votre rythme actuel.
-  * **Journal des transactions** (désactivé par défaut) : Liste l'intégralité des écritures enregistrées sur la période sous forme de tableau au format A4.
+### 7.1 Répartition catégorielle (Pie Chart)
+* **Visualisation** : Un camembert dynamique présente le pourcentage de vos dépenses par catégorie.
+* **Geste interactif** : Cliquez ou tapez sur un secteur du camembert pour centrer le secteur et afficher son montant exact en euros au milieu du graphique.
 
-### 13.2 Rendu Premium et Impression Propre
-Le PDF généré intègre des optimisations visuelles exclusives :
-* **Page de garde automatique** : Comprend le logo officiel de l'application, les métadonnées de votre session (votre nom d'utilisateur, la date de génération, le volume de transactions) et le rappel des dates.
-* **Priorité aux notes personnelles** : Pour vos dépenses et revenus du quotidien, le tableau affiche votre **note personnelle** (ex. : *"Courses Leclerc"*, *"Resto avec Marie"*) plutôt que la description technique brute. Pour les virements internes, le libellé du transfert est privilégié.
-* **Sans pages blanches superflues** : La mise en page intelligente adapte dynamiquement la hauteur des sections et évite l'apparition de pages blanches intermédiaires ou d'une page blanche finale vide.
-* **Compatibilité mobile** : Si vous utilisez l'application sur un smartphone ou une tablette (PWA installée), le PDF s'ouvre automatiquement dans un nouvel onglet de votre navigateur mobile pour faciliter son enregistrement ou son envoi.
+### 7.2 Graphique de Cascade (Waterfall) 📊
+Accessible dans l'onglet Analyses sous le nom *"Analyse mensuelle"*, ce graphique présente les flux financiers du mois sous forme de cascade.
 
+```
+Illustration du graphique en cascade (Waterfall) :
+  Revenus (+ 3 000 €)  ───┐ [Vert]
+                          ├─── Logement (- 1 200 €) ───┐ [Rose]
+                                                       ├─── Alimentation (- 400 €) ───┐ [Rose]
+                                                                                      └─── Solde Restant : Épargne Nette (+ 1 400 €) [Violet]
+```
+
+* **Lecture de gauche à droite** :
+  1. La première colonne à gauche (Verte) démarre à 0 et grimpe pour représenter vos **revenus totaux**.
+  2. Les colonnes suivantes (Roses) sont "suspendues" et descendent marche par marche, représentant les dépenses de chaque catégorie (classées par ordre d'importance).
+  3. La dernière colonne à droite représente le **solde net restant** (Violette pour une épargne positive, Rouge pour un déficit net).
+* **Utilité** : Visualiser instantanément comment vos revenus sont absorbés par vos différents postes de dépenses pour finir le mois.
+
+### 7.3 Graphique Fixes vs Variables 🔒🎲
+Ce graphique segmente vos dépenses pour identifier la part sur laquelle vous pouvez agir.
+* **Règle de classification automatique** :
+  * **Charges Fixes (🔒 / Indigo)** : Dépenses programmées incompressibles (loyer, abonnements, impôts, crédits configurés dans l'échéancier).
+  * **Dépenses Variables (🎲 / Ambre)** : Dépenses spontanées ou discrétionnaires saisies manuellement (sorties, courses courantes, shopping).
+* **Interactions** : 
+  * Un Donut animé à deux arcs (Indigo et Ambre) affiche le ratio en %. Glissez votre souris ou tapez sur un arc pour révéler le montant absolu.
+  * Dépliez les listes collapsables au bas du graphique pour inspecter quelles catégories consomment le plus de frais fixes ou de dépenses variables.
+
+### 7.4 Simulation de Monte-Carlo (Stress-Test de Résilience)
+Ce module mathématique avancé projette la viabilité de votre patrimoine sur le long terme (de 5 à 40 ans) en exécutant en local dans votre navigateur **1 000 trajectoires de simulation aléatoires** (processus stochastique). Chaque scénario injecte de la volatilité de marché, de l'inflation et d'éventuels coups durs financiers.
+
+* **Curseurs de configuration (⚙️)** : Dépliez le panneau pour ajuster vos paramètres :
+  * **Capital initial** et **Épargne mensuelle** (calculés automatiquement sur votre situation réelle, mais modifiables).
+  * **Profil d'investissement** : Boutons de sélection rapide :
+    * *Prudent* (rendement moyen de 2,5 % / volatilité de 2 %).
+    * *Équilibré* (rendement moyen de 5 % / volatilité de 8 %).
+    * *Dynamique* (rendement moyen de 8 % / volatilité de 16 %).
+  * **Inflation estimée** et indexation de votre épargne.
+  * **Stress-test "coups durs"** : Spécifiez la probabilité annuelle d'un incident majeur (maladie, sinistre, perte d'emploi) et son coût financier moyen.
+* **Interprétation des résultats et du graphique** :
+  * **La ligne centrale pleine** représente la trajectoire médiane (50e percentile : le scénario le plus probable).
+  * **La zone translucide verte** représente l'entonnoir d'incertitude délimité par le pire scénario (10e percentile : vous avez 90 % de chances de faire mieux) et le meilleur scénario (90e percentile : vous avez 10 % de chances de l'atteindre).
+  * **Score de résilience** : Indique le pourcentage de trajectoires simulées où votre capital reste positif à l'échéance. Un diagnostic est attribué (*Excellent*, *Correct* ou *Vulnérable*) avec une estimation du nombre moyen d'années avant rupture financière en cas de vulnérabilité.
+
+---
+
+## 8. Pilotage Proactif : Rapports Mensuels & Tachymètre de Vélocité
+
+### 8.1 Le Rapport Mensuel Proactif (Déterministe)
+Chaque début de mois, Budgetizer génère un rapport d'analyse complet et objectif, disponible dans l'onglet **Rapports**. Il fonctionne entièrement hors ligne sans outil d'IA externe.
+* **Bilan Général** : Affiche vos revenus, vos dépenses, votre taux d'épargne et compare le volume global de vos dépenses avec le mois précédent en %.
+* **Les Victoires 🎉** : Met en avant vos bons comportements (ex. : enveloppe budgétaire respectée, baisse significative des dépenses sur une catégorie d'au moins 15 % par rapport à l'historique, objectif d'épargne complété).
+* **Les Points de Vigilance ⚠️** : Identifie les dérives (ex. : dépassement de budget de catégorie, hausse catégorielle de plus de 30 % ou souscription à un nouvel abonnement).
+* **Dépenses Inhabituelles Détectées** : L'algorithme liste toutes les dépenses unitaires qui sortent de vos habitudes de consommation.
+  * *Règles de détection* : Une transaction est signalée comme "inhabituelle" si son montant est **supérieur ou égal à 50 €** et qu'il dépasse **au moins 3 fois** la moyenne historique mensuelle de sa catégorie sur les 3 derniers mois.
+  * *Affichage* : Les transactions suspectes sont présentées sous forme de cartes affichant un badge de ratio d'écart (ex. : `"4.5x la moyenne"`), triées de la plus déviante à la moins déviante.
+
+### 8.2 Le Tachymètre : Vitesse de Dépense (Spending Velocity) 🏎️
+Cet indicateur en forme de compteur de vitesse de voiture (jauge) vous indique en temps réel si vous consommez vos budgets mensuels trop rapidement par rapport aux jours restants dans le mois.
+
+```
+Tachymètre de Vélocité Budgétaire :
+               [  Aiguille Animée  ]
+                      /
+        Zone Verte   /    Zone Rouge
+      (Sous Contrôle)    (Excès de vitesse !)
+      [ 0 € ───────── 🚗 ───────── 150 € / jour ]
+```
+
+* **Méthode de calcul** :
+  1. **Vitesse Cible** : La limite quotidienne conseillée ($BudgetRestant / JoursRestants$).
+  2. **Vitesse Réelle** : La moyenne de vos dépenses réelles par jour sur les 7 derniers jours.
+  3. **Estimation du crash** : Si votre vitesse réelle dépasse la vitesse cible, le système estime la date précise d'épuisement complet de votre budget.
+* **Lecture de la jauge** :
+  * **Zone verte** (à gauche) : Votre vitesse réelle est inférieure à la limite. Le diagnostic indique *"Vitesse sous contrôle"*.
+  * **Zone rouge** (à droite) : L'aiguille bascule vers la droite. Le diagnostic affiche *"⚠️ Excès de vitesse détecté"* et calcule la date d'épuisement théorique.
+  * **Conseil correctif** : Une fiche d'aide recalcule en direct la nouvelle limite quotidienne à ne pas dépasser pour le reste du mois pour redresser la barre et finir dans le vert. Si le budget est déjà épuisé, la limite corrective conseillée passe à `0 € / jour`.
+* **Alerte Proactive de fin de mois difficile 🚨** :
+  Si l'analyse de vélocité détecte que votre budget d'enveloppe sera entièrement épuisé **avant le 20 du mois en cours** :
+  1. Une alerte ornée d'une icône de flamme rouge (`Flame`) est poussée dans le centre de notifications de votre tableau de bord.
+  2. Si vous utilisez l'application PWA installée, une **Notification Push native** est directement envoyée sur l'appareil de l'utilisateur pour le prévenir instantanément.
+
+---
+
+## 9. Sauvegarde, Export PDF Premium et Paramètres Généraux
+
+### 9.1 Import et Export de données
+Pour vous assurer de garder le contrôle total de vos données financières personnelles :
+* **Exporter** : Dans les paramètres, choisissez le format **CSV** ou **JSON** pour télécharger l'intégralité de vos écritures bancaires et paramétrages sur votre appareil.
+* **Importer** : Glissez-déposez ou sélectionnez un fichier CSV de transactions pour peupler instantanément vos comptes et graphiques.
+
+### 9.2 Génération de Rapports PDF Premium 📊📄
+Depuis l'onglet **Rapports**, configurez et exportez des rapports d'activité au format PDF A4 haute définition, parfaits pour l'impression ou l'archivage.
+* **Options de personnalisation** : Cochez ou décochez les modules à inclure (graphique en cascade, ratio fixes vs variables, prévisions à 30 jours, journal complet des transactions).
+* **Mise en page Premium (A4)** :
+  * **Page de garde automatique** intégrant le logo officiel en Base64 pour éviter les erreurs d'affichage, vos métadonnées personnelles (nom, volume d'écritures) et les dates d'analyse.
+  * **Priorité aux notes personnelles** : Les tableaux du PDF privilégient vos notes personnelles et explicites (ex. : *"Restaurant avec Marie"*) plutôt que la catégorie brute ou l'intitulé technique.
+  * **Zéro page blanche** : L'algorithme de Budgetizer gère dynamiquement la hauteur des composants et force les sauts de page CSS (`page-break-after: always`) uniquement entre les chapitres pour garantir un rendu propre, sans page finale vide.
+  * **Compatibilité Mobile** : Le PDF généré s'ouvre automatiquement dans un nouvel onglet de votre navigateur mobile pour faciliter sa sauvegarde ou son partage.
+
+### 9.3 Configuration Générale & Profil
+Dans la rubrique **Paramètres**, personnalisez vos options courantes :
+* **Profil** : Modifiez votre nom d'affichage ou mettez à jour votre mot de passe d'accès.
+* **Préférences** : Thème d'affichage (Clair, Sombre ou Système), devise par défaut, format de date et premier jour de la semaine (lundi ou dimanche).
+* **Sensibilité de détection des anomalies** : Réglez le curseur de sensibilité (par défaut fixé à +30 %). C'est ce seuil qui déclenchera les alertes d'anomalies de dépenses sur votre espace *Conseils*.
+
+### 9.4 La Zone de Danger (Danger Zone)
+Au bas des paramètres se trouvent les options irréversibles :
+* **Effacer les données** : Supprime l'ensemble de vos comptes bancaires, transactions, budgets et objectifs pour vous permettre de repartir de zéro, tout en conservant vos identifiants de connexion et votre profil.
+* **Supprimer le compte** : Supprime définitivement votre compte utilisateur ainsi que l'ensemble des données associées de la base de données de Budgetizer (conformité totale RGPD). Cette action est définitive et irréversible.
