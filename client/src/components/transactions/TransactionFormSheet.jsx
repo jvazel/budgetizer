@@ -510,7 +510,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col h-full space-y-6">
+      <div className="flex flex-col h-full space-y-4">
         
         {/* PANEL 1: MAIN FORM */}
         {activePanel === 'form' && (
@@ -681,6 +681,23 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               </div>
             </div>
 
+            {/* Autocomplete Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 select-none w-full max-w-sm mx-auto animate-fadeIn">
+                {suggestions.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleApplySuggestion(s)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/25 active:scale-95 transition-all text-xs font-bold text-secondary hover:text-primary shrink-0 select-none"
+                  >
+                    <span>{s.icon}</span>
+                    <span className="font-bold">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Date and Note Inputs */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col">
@@ -715,23 +732,6 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                 />
               </div>
             </div>
-
-            {/* Autocomplete Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 select-none w-full max-w-sm mx-auto animate-fadeIn">
-                {suggestions.map((s, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleApplySuggestion(s)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
-                  >
-                    <span>{s.icon}</span>
-                    <span className="font-bold">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Tag Selector */}
             <TagSelector
