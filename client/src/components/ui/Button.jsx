@@ -12,11 +12,11 @@ const Button = ({
   const baseStyles = 'flex items-center justify-center font-medium rounded-2xl transition-all duration-200';
   
   const variants = {
-    primary: 'bg-accent text-white hover:bg-accent-dim shadow-sm',
-    secondary: 'bg-surface-2 text-primary hover:bg-elevated',
-    danger: 'bg-danger text-white hover:bg-danger-dim',
-    ghost: 'bg-transparent text-primary hover:bg-surface-2',
-    icon: 'p-3 bg-surface-2 text-primary hover:bg-elevated rounded-full',
+    primary: 'bg-accent text-white hover:opacity-95 active:scale-[0.98] shadow-sm',
+    secondary: 'bg-surface-2 text-primary hover:bg-elevated active:scale-[0.98]',
+    danger: 'bg-danger text-white hover:opacity-95 active:scale-[0.98]',
+    ghost: 'bg-transparent text-primary hover:bg-surface-2 active:opacity-80',
+    icon: 'p-3 bg-surface-2 text-primary hover:bg-elevated rounded-full active:scale-95',
   };
 
   const sizes = {

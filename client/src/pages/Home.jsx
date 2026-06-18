@@ -8,7 +8,7 @@ import { useFinancialScore } from '../hooks/useFinancialScore';
 import { useScheduled } from '../hooks/useScheduled';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import FloorBalanceWidget from '../components/ui/FloorBalanceWidget';
-import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
@@ -100,6 +100,7 @@ const SHORTCUTS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 const Home = () => {
   const navigate = useNavigate();
+  const { isScrolled } = useContext(HeaderPortalContext);
   const { user } = useContext(AuthContext);
   const { addAccount, updateAccount, deleteAccount } = useAccounts(false);
   const { data: db, loading, refreshDashboard } = useDashboard();
@@ -196,11 +197,15 @@ const Home = () => {
       <InstallPromptBanner />
 
       {/* Large Collapsible Header Title on Page */}
-      <div className="mb-5 mt-2 px-1">
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
         <h1 className="text-2xl font-extrabold text-primary tracking-tight">
           {title}
         </h1>
-        <p className="text-[11px] text-secondary mt-0.5 font-medium">Voici un aperçu de vos finances ce mois-ci.</p>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Voici un aperçu de vos finances ce mois-ci.</p>
       </div>
 
       {/* ── Hero — Vrai Disponible (FloorBalanceWidget est maintenant le hero) ── */}
@@ -216,39 +221,39 @@ const Home = () => {
         className="bg-surface-2 px-5 py-4 rounded-[22px] border border-border/40 mb-6 shadow-sm cursor-pointer active:scale-[0.99] active:border-border/60 transition-all duration-200 select-none"
       >
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-bold text-primary">{currentMonthLabel}</h3>
-          <span className="text-[10px] font-bold text-accent flex items-center gap-0.5">
+          <h3 className="text-sm font-semibold text-primary">{currentMonthLabel}</h3>
+          <span className="text-xs font-semibold text-accent flex items-center gap-0.5">
             Historique →
           </span>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {/* Revenus */}
           <div>
-            <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Revenus</p>
+            <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Revenus</p>
             <p className="font-bold text-accent text-sm font-premium-numbers leading-tight">
               {formatCurrency(month.income, user?.currency?.code)}
             </p>
             {incomeGrowth !== null && (
-              <p className={`text-[9px] mt-0.5 font-bold ${incomeGrowth >= 0 ? 'text-accent/70' : 'text-danger/70'}`}>
+              <p className={`text-[11px] mt-0.5 font-medium ${incomeGrowth >= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
                 {incomeGrowth >= 0 ? '▲' : '▼'} {Math.abs(incomeGrowth)}%
               </p>
             )}
           </div>
           {/* Dépenses */}
           <div>
-            <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Dépenses</p>
+            <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Dépenses</p>
             <p className="font-bold text-danger text-sm font-premium-numbers leading-tight">
               {formatCurrency(month.expenses, user?.currency?.code)}
             </p>
             {expenseGrowth !== null && (
-              <p className={`text-[9px] mt-0.5 font-bold ${expenseGrowth <= 0 ? 'text-accent/70' : 'text-danger/70'}`}>
+              <p className={`text-[11px] mt-0.5 font-medium ${expenseGrowth <= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
                 {expenseGrowth <= 0 ? '▼' : '▲'} {Math.abs(expenseGrowth)}%
               </p>
             )}
           </div>
           {/* Net */}
           <div>
-            <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Net</p>
+            <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Net</p>
             <p className={`font-bold text-sm font-premium-numbers leading-tight ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
               {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
             </p>
@@ -271,7 +276,7 @@ const Home = () => {
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
                   <Icon size={18} />
                 </div>
-                <span className="text-[10px] font-bold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
+                <span className="text-[11px] font-semibold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
                   {item.label}
                 </span>
               </button>
@@ -336,7 +341,7 @@ const Home = () => {
                     ? navigate(`/accounts/${acc._id}/credit`)
                     : navigate(`/accounts/${acc._id}`)
                 }
-                className="snap-center shrink-0 w-[256px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active:scale-[0.97] transition-all cursor-pointer select-none bg-surface"
+                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active:scale-[0.97] transition-all cursor-pointer select-none bg-surface"
                 style={{
                   background: `linear-gradient(135deg, ${acc.color || '#10b981'}15 0%, ${acc.color || '#10b981'}03 100%), var(--bg-surface)`,
                   borderColor: `${acc.color || '#10b981'}35`,
@@ -397,7 +402,7 @@ const Home = () => {
           {/* "+ Ajouter un compte" Card at the end of the carousel */}
           <div
             onClick={handleOpenAdd}
-            className="snap-center shrink-0 w-[256px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active:scale-[0.97] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
+            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active:scale-[0.97] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
           >
             <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
               <span className="text-lg font-bold">+</span>

@@ -240,24 +240,24 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         {/* Header */}
         <div className="flex justify-between items-start relative z-10">
           <div className="flex-1 min-w-0 pr-3">
-            <p className="text-[11px] text-secondary/80 font-bold tracking-widest uppercase">Solde disponible</p>
+            <p className="text-xs text-secondary/80 font-semibold tracking-wider uppercase">Solde disponible</p>
             <h2 className={`text-4xl font-extrabold font-premium-numbers tracking-tight mt-1 transition-colors ${
               isComfortable ? 'text-accent' : floorBalance <= 0 ? 'text-danger' : 'text-warning'
             }`}>
               {formatCurrency(floorBalance)}
             </h2>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-[10px] text-muted font-medium">
+              <span className="text-xs text-muted font-normal">
                 Bancaire :&nbsp;
                 <span className="font-semibold text-secondary font-premium-numbers">{formatCurrency(actualBalance)}</span>
               </span>
               {totalPendingExpenses > 0 && (
-                <span className="text-[10px] font-bold text-warning/90 bg-warning/10 border border-warning/20 px-1.5 py-0.5 rounded-full font-premium-numbers">
+                <span className="text-xs font-semibold text-warning/90 bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full font-premium-numbers">
                   −{formatCurrency(totalPendingExpenses)} réservés
                 </span>
               )}
               {creditBalance !== 0 && (
-                <span className="text-[10px] font-bold text-danger/80 bg-danger/10 border border-danger/15 px-1.5 py-0.5 rounded-full font-premium-numbers">
+                <span className="text-xs font-semibold text-danger/80 bg-danger/10 border border-danger/15 px-2 py-0.5 rounded-full font-premium-numbers">
                   {formatCurrency(Math.abs(creditBalance))} en cartes
                 </span>
               )}
@@ -278,7 +278,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         </div>
 
         {/* Contextual micro-phrase */}
-        <div className={`relative z-10 flex items-center gap-2 text-[10px] font-semibold rounded-xl px-3 py-2.5 border transition-colors ${
+        <div className={`relative z-10 flex items-center gap-2 text-[11px] font-medium rounded-xl px-3 py-2.5 border transition-colors ${
           hasRiskOfNegative || !isComfortable
             ? 'bg-danger/10 border-danger/20 text-danger'
             : 'bg-accent/10 border-accent/20 text-accent'
@@ -296,10 +296,10 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           <div className="relative z-[9999] bg-surface/50 border border-border/20 rounded-2xl p-4 space-y-4 animate-fade-in">
             {/* Header Settings */}
             <div className="flex justify-between items-center pb-2 border-b border-border/20">
-              <span className="text-xs font-extrabold uppercase tracking-wide text-primary">Configuration du solde</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Configuration du solde</span>
               <button
                 onClick={() => setShowSettings(false)}
-                className="text-[10px] font-bold text-accent hover:underline"
+                className="text-xs font-semibold text-accent hover:underline"
               >
                 Fermer
               </button>
@@ -308,14 +308,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             {/* Section 1: Accounts */}
             <div className="space-y-2.5">
               <div className="flex justify-between items-center flex-wrap gap-2">
-                <label className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-primary flex items-center gap-1.5">
                   <Wallet size={14} className="text-accent" /> Comptes inclus
                 </label>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={handleSelectAllAccounts}
-                    className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
                   >
                     Tous
                   </button>
@@ -323,19 +323,19 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                     <button
                       type="button"
                       onClick={handleSelectOnlyCheckingAccounts}
-                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
                     >
                       Courants
                     </button>
                   )}
                 </div>
               </div>
-              <p className="text-[9px] text-muted leading-relaxed">
+              <p className="text-[11px] text-muted leading-relaxed">
                 Sélectionnez les comptes à inclure dans le calcul du solde disponible.
               </p>
               <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-border/10 rounded-xl p-1.5 bg-surface/25">
                 {accounts.length === 0 ? (
-                  <p className="text-[9px] text-muted text-center py-4">Aucun compte disponible.</p>
+                  <p className="text-[11px] text-muted text-center py-4">Aucun compte disponible.</p>
                 ) : (
                   accounts.map((acc) => {
                     const isSelected = activeSelectedIds.includes(acc._id);
@@ -358,14 +358,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                             )}
                           </div>
                           <div
-                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[9px] border border-border/10 shrink-0"
+                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] border border-border/10 shrink-0"
                             style={{ backgroundColor: `${acc.color || '#10b981'}15`, color: acc.color }}
                           >
                             {acc.type === 'credit' ? <CreditCard size={11} /> : <Wallet size={11} />}
                           </div>
-                          <span className="text-[11px] font-bold text-primary truncate max-w-[130px]">{acc.name}</span>
+                          <span className="text-xs font-semibold text-primary truncate max-w-[130px]">{acc.name}</span>
                         </div>
-                        <span className="font-premium-numbers font-bold text-[10px] text-secondary shrink-0">
+                        <span className="font-premium-numbers font-semibold text-xs text-secondary shrink-0">
                           {formatCurrency(acc.balance)}
                         </span>
                       </div>
@@ -379,10 +379,10 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
 
             {/* Section 2: Paycheck Day */}
             <div className="space-y-2.5">
-              <label htmlFor="paycheck-select" className="text-xs font-bold text-primary flex items-center gap-1.5">
+              <label htmlFor="paycheck-select" className="text-xs font-semibold text-primary flex items-center gap-1.5">
                 <Calendar size={14} className="text-accent" /> Jour récurrent de paye
               </label>
-              <p className="text-[9px] text-muted leading-relaxed">
+              <p className="text-[11px] text-muted leading-relaxed">
                 Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
               </p>
               <div className="relative z-[9999]">

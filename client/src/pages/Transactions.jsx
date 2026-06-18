@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
+import React, { useState, useContext } from 'react';
+import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
 import TransactionList from '../components/transactions/TransactionList';
 import { useTransactions } from '../hooks/useTransactions';
 import { useAccounts } from '../hooks/useAccounts';
@@ -15,6 +15,7 @@ import BottomSheet from '../components/ui/BottomSheet';
 import Select from '../components/ui/Select';
 
 const Transactions = () => {
+  const { isScrolled } = useContext(HeaderPortalContext);
   // Navigation / Visibility states
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -273,9 +274,13 @@ const Transactions = () => {
       <HeaderActions>{actions}</HeaderActions>
 
       {/* Large Collapsible Header Title on Page */}
-      <div className="mb-5 mt-2 px-1">
-        <div className="text-2xl font-extrabold text-primary tracking-tight">Transactions</div>
-        <p className="text-[11px] text-secondary mt-0.5 font-medium">Historique détaillé de vos flux et opérations.</p>
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Transactions</h1>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Historique détaillé de vos flux et opérations.</p>
       </div>
 
       <div className="mt-4 space-y-4">
