@@ -539,7 +539,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
             {/* Quick Templates Banner */}
             {!transactionToEdit && templates.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 select-none w-full max-w-sm mx-auto mb-2">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 select-none w-full max-w-sm mx-auto mb-2">
                 {templates.map(t => (
                   <button
                     key={t.id}
@@ -683,7 +683,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
             {/* Autocomplete Suggestions */}
             {suggestions.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 select-none w-full max-w-sm mx-auto animate-fadeIn">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 select-none w-full max-w-sm mx-auto mb-2 animate-fadeIn">
                 {suggestions.map((s, idx) => (
                   <button
                     key={idx}
