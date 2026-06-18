@@ -334,7 +334,7 @@ const Home = () => {
                 onClick={() =>
                   acc.type === 'credit'
                     ? navigate(`/accounts/${acc._id}/credit`)
-                    : handleOpenEdit(acc)
+                    : navigate(`/accounts/${acc._id}`)
                 }
                 className="snap-center shrink-0 w-[256px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active:scale-[0.97] transition-all cursor-pointer select-none bg-surface"
                 style={{

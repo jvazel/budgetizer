@@ -70,9 +70,16 @@ const SavingsPage = () => {
 
   return (
     <>
-      <HeaderTitle>Objectifs d'épargne</HeaderTitle>
+      <HeaderTitle collapsible={true}>Objectifs d'épargne</HeaderTitle>
       <HeaderBackButton to="/" />
       <HeaderActions>{actions}</HeaderActions>
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Épargne</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Suivez la progression de vos projets et cagnottes d'épargne.</p>
+      </div>
+
       <div className="mb-6 px-1">
         
         {error && (

@@ -162,4 +162,24 @@ body {
   transform: scale(0.9);
 }
 
+/* === Predictive Auto-fill Glow Animation === */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb), 0.7);
+    border-color: var(--accent);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(var(--color-accent-rgb), 0.4);
+    border-color: var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb), 0);
+  }
+}
+
+.animate-glow-prediction {
+  animation: pulse-glow 1s ease-in-out;
+}
+
+
 

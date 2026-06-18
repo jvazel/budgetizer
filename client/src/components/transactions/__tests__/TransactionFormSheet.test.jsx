@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import TransactionFormSheet from '../TransactionFormSheet';
 
 // Mock hooks
@@ -36,8 +36,15 @@ vi.mock('../../../hooks/useTags', () => ({
   })
 }));
 
+const mockTransactions = [
+  { _id: 'tx1', note: 'Starbucks', amount: 4.50, accountId: 'acc1', categoryId: 'cat1', type: 'expense', date: '2026-06-18', tags: ['tag1'] },
+  { _id: 'tx2', note: 'Starbucks', amount: 4.80, accountId: 'acc1', categoryId: 'cat1', type: 'expense', date: '2026-06-17', tags: ['tag1'] },
+  { _id: 'tx3', note: 'Netflix', amount: 15.99, accountId: 'acc2', categoryId: 'cat1', type: 'expense', date: '2026-06-16', tags: [] }
+];
+
 vi.mock('../../../hooks/useTransactions', () => ({
-  useTransactions: () => ({
+  useTransactions: (filters = {}) => ({
+    transactions: filters.limit === 50 ? mockTransactions : [],
     addTransaction: mockAddTransaction,
     updateTransaction: mockUpdateTransaction
   })
@@ -160,5 +167,208 @@ describe('TransactionFormSheet Component', () => {
     expect(screen.getByLabelText('Compte').value).toBe('acc2');
     expect(screen.getByLabelText('Note (optionnel)').value).toBe('Mon salaire');
     expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeInTheDocument();
+  });
+
+  it('saves and pre-fills account and category from localStorage', async () => {
+    localStorage.clear();
+
+    const handleClose = vi.fn();
+    const { rerender } = render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={handleClose} 
+      />
+    );
+
+    // Default should be acc1
+    expect(screen.getByLabelText('Compte').value).toBe('acc1');
+    expect(screen.getByLabelText('Catégorie').value).toBe('');
+
+    // Fill amount and note, select category cat1
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
+    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
+    fireEvent.change(screen.getByLabelText('Compte'), { target: { value: 'acc2' } });
+
+    // Submit
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter la transaction' }));
+
+    await waitFor(() => {
+      expect(mockAddTransaction).toHaveBeenCalled();
+      // Check that it saved to localStorage
+      expect(localStorage.getItem('budgetizer_last_account_id')).toBe('acc2');
+      expect(localStorage.getItem('budgetizer_last_expense_category_id')).toBe('cat1');
+    });
+
+    // Close and open a new form sheet to verify pre-fill
+    rerender(<TransactionFormSheet isOpen={false} onClose={handleClose} />);
+    rerender(<TransactionFormSheet isOpen={true} onClose={handleClose} />);
+
+    expect(screen.getByLabelText('Compte').value).toBe('acc2');
+    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+  });
+
+  it('handles Enter key navigation between fields and triggers submit', async () => {
+    const handleClose = vi.fn();
+    render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={handleClose} 
+      />
+    );
+
+    const amountInput = screen.getByPlaceholderText('0.00');
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+
+    // Mock focus on noteInput
+    noteInput.focus = vi.fn();
+
+    // Fill amount and hit enter
+    fireEvent.change(amountInput, { target: { value: '50' } });
+    fireEvent.keyDown(amountInput, { key: 'Enter', code: 'Enter' });
+
+    expect(noteInput.focus).toHaveBeenCalled();
+
+    // Type note and hit enter to submit
+    fireEvent.change(noteInput, { target: { value: 'Déjeuner' } });
+    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
+    
+    fireEvent.keyDown(noteInput, { key: 'Enter', code: 'Enter' });
+
+    await waitFor(() => {
+      expect(mockAddTransaction).toHaveBeenCalled();
+      expect(handleClose).toHaveBeenCalled();
+    });
+  });
+
+  it('loads default templates when localStorage is empty', () => {
+    localStorage.clear();
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    expect(screen.getByText('Café')).toBeInTheDocument();
+    expect(screen.getByText('Déjeuner')).toBeInTheDocument();
+    expect(screen.getByText('Courses')).toBeInTheDocument();
+  });
+
+  it('applies a template to the form fields on click', () => {
+    localStorage.clear();
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Click 'Café' template
+    fireEvent.click(screen.getByText('Café'));
+
+    expect(screen.getByPlaceholderText('0.00').value).toBe('2.50');
+    expect(screen.getByLabelText('Note (optionnel)').value).toBe('Café');
+  });
+
+  it('allows saving current form inputs as a new template', () => {
+    localStorage.clear();
+    const promptMock = vi.spyOn(window, 'prompt').mockReturnValue('Cookies');
+
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Fill form
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '4.50' } });
+    fireEvent.change(screen.getByLabelText('Note (optionnel)'), { target: { value: 'Pour le goûter' } });
+    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
+
+    // Click save template button
+    fireEvent.click(screen.getByText('+ Sauvegarder'));
+
+    expect(promptMock).toHaveBeenCalled();
+    expect(screen.getByText('Cookies')).toBeInTheDocument();
+
+    promptMock.mockRestore();
+  });
+
+  it('displays autocomplete suggestion bubbles based on note input matching', () => {
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Type "Sta" in note
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+    fireEvent.change(noteInput, { target: { value: 'Sta' } });
+
+    // Expect 'Starbucks' suggestion bubble to appear
+    expect(screen.getByRole('button', { name: /Starbucks/ })).toBeInTheDocument();
+  });
+
+  it('applies predicted category and account when clicking a suggestion bubble', () => {
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+    fireEvent.change(noteInput, { target: { value: 'Sta' } });
+
+    // Click 'Starbucks' bubble
+    fireEvent.click(screen.getByRole('button', { name: /Starbucks/ }));
+
+    // Expect note to be completed, account and category prefilled
+    expect(noteInput.value).toBe('Starbucks');
+    expect(screen.getByLabelText('Compte').value).toBe('acc1');
+    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+  });
+
+  it('auto-predicts and fills category and account on exact match loss of focus (onBlur)', () => {
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+    
+    // Type exact string "netflix" (case-insensitive) and trigger blur
+    fireEvent.change(noteInput, { target: { value: 'netflix' } });
+    fireEvent.blur(noteInput);
+
+    // Expect category and account to be filled according to predictions (acc2, cat1)
+    expect(screen.getByLabelText('Compte').value).toBe('acc2');
+    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+  });
+
+  it('allows deleting a template via long press', async () => {
+    localStorage.clear();
+    
+    render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+    
+    // Default template 'Café' should be in the document
+    const cafeBtn = screen.getByText('Café');
+    expect(cafeBtn).toBeInTheDocument();
+    
+    // Simulate long press: mousedown and wait 700ms
+    fireEvent.mouseDown(cafeBtn);
+    
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 700));
+    });
+    
+    // The ConfirmModal should be open
+    expect(screen.getByText('Supprimer le favori')).toBeInTheDocument();
+    expect(screen.getByText(/Êtes-vous sûr de vouloir supprimer le favori/)).toBeInTheDocument();
+    
+    // Click the "Supprimer" confirm button
+    const deleteConfirmBtn = screen.getByRole('button', { name: 'Supprimer' });
+    fireEvent.click(deleteConfirmBtn);
+    
+    // Expect Café template to be removed from the document
+    expect(screen.queryByText('Café')).not.toBeInTheDocument();
+  });
+
+  it('auto-predicts and fills associated tags when applying a suggestion', async () => {
+    const handleClose = vi.fn();
+    render(<TransactionFormSheet isOpen={true} onClose={handleClose} />);
+
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+    fireEvent.change(noteInput, { target: { value: 'Sta' } });
+
+    // Click Starbucks suggestion bubble
+    fireEvent.click(screen.getByRole('button', { name: /Starbucks/ }));
+
+    // Fill amount so form is valid
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+
+    // Submit
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter la transaction' }));
+
+    await waitFor(() => {
+      expect(mockAddTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        note: 'Starbucks',
+        tags: ['tag1']
+      }));
+    });
   });
 });

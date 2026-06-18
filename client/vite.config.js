@@ -22,6 +22,15 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
+        shortcuts: [
+          {
+            name: 'Nouvelle transaction',
+            short_name: 'Ajouter',
+            description: 'Enregistrer rapidement une nouvelle transaction',
+            url: '/?action=new-transaction',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
+          }
+        ],
         icons: [
           {
             src: 'pwa-192x192.png',

@@ -21,8 +21,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       title: 'Planification',
       items: [
         { label: 'Gérer les budgets', icon: CreditCard, path: '/budgets' },
-        { label: 'Mes abonnements', icon: CreditCard, path: '/subscriptions' },
-        { label: 'Transactions planifiées', icon: Repeat, path: '/scheduled' },
+        { label: 'Planifications & Abonnements', icon: Repeat, path: '/scheduled' },
         { label: 'Objectifs d\'épargne', icon: Target, path: '/savings' },
         { label: 'Simulateur de prêt', icon: Building2, path: '/loan-simulator' },
       ]
@@ -40,8 +39,6 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
     {
       title: 'Configuration',
       items: [
-        { label: 'Gérer les catégories', icon: FolderTree, path: '/categories' },
-        { label: 'Gérer les tags', icon: Tag, path: '/tags' },
         { label: 'Mon Profil & Paramètres', icon: Settings, path: '/settings' },
       ]
     }

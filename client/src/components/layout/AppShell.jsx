@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Menu, ChevronLeft } from 'lucide-react';
 import BottomTabBar from './BottomTabBar';
@@ -64,6 +64,16 @@ const AppShell = () => {
   const [isTxFormOpen, setIsTxFormOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { logout } = useContext(AuthContext);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'new-transaction') {
+      setIsTxFormOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
 
   const [titleTarget, setTitleTarget] = useState(null);
   const [actionsTarget, setActionsTarget] = useState(null);

@@ -136,9 +136,15 @@ const Budgets = () => {
 
   return (
     <>
-      <HeaderTitle>Budgets</HeaderTitle>
+      <HeaderTitle collapsible={true}>Budgets</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <HeaderBackButton to="/" />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Budgets</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Définissez et suivez vos enveloppes budgétaires périodiques.</p>
+      </div>
       <section className="mb-6">
         {/* Weekly Budgets Section */}
         <div className="mb-6">

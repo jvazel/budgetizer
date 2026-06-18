@@ -58,7 +58,23 @@ const ChartsPage = () => {
 
   return (
     <>
-      <HeaderTitle>{titleElement}</HeaderTitle>      {/* Dynamic Tab view wrapped in transition wrapper */}
+      <HeaderTitle collapsible={true}>{titleElement}</HeaderTitle>
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div 
+          onClick={() => setIsSelectorOpen(true)}
+          className="flex items-center gap-2 cursor-pointer group active:opacity-75 select-none"
+        >
+          <div className="text-2xl font-extrabold text-primary tracking-tight">Analyses</div>
+          <div className="flex items-center gap-1 bg-surface-2 border border-border px-2.5 py-1 rounded-xl text-xs font-extrabold text-secondary group-hover:text-primary transition-all">
+            <span>{tabNames[activeTab]}</span>
+            <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5" />
+          </div>
+        </div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Visualisez vos données financières sous différentes perspectives analytiques.</p>
+      </div>
+
       <div className="mb-6">
         {activeTab === 'category' && <CategoryChart />}
         {activeTab === 'velocity' && <VelocityChart />}

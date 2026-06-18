@@ -269,8 +269,15 @@ const Transactions = () => {
 
   return (
     <>
-      <HeaderTitle>Transactions</HeaderTitle>
+      <HeaderTitle collapsible={true}>Transactions</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Transactions</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Historique détaillé de vos flux et opérations.</p>
+      </div>
+
       <div className="mt-4 space-y-4">
         
         {/* Month Navigation Bar */}

@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
@@ -12,6 +13,7 @@ import PreferencesForm from '../components/settings/PreferencesForm';
 import CsvImportForm from '../components/settings/CsvImportForm';
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
   const { user, setUser, logout } = useContext(AuthContext);
 
   // Modal confirmations
@@ -58,6 +60,30 @@ const SettingsPage = () => {
 
         {/* Preferences / PWA options */}
         <PreferencesForm user={user} setUser={setUser} />
+
+        {/* Categories & Tags Management */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1 flex items-center gap-1.5">
+            Structure & Catégorisation
+          </h3>
+          <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4 shadow-sm">
+            <p className="text-[10px] text-muted">Gérez vos catégories de transactions et vos étiquettes personnalisées.</p>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button 
+                onClick={() => navigate('/categories')}
+                className="bg-surface border border-border/40 hover:bg-surface-2/80 py-3 rounded-2xl text-xs font-bold active:scale-98 transition-all text-center text-primary"
+              >
+                Catégories
+              </button>
+              <button 
+                onClick={() => navigate('/tags')}
+                className="bg-surface border border-border/40 hover:bg-surface-2/80 py-3 rounded-2xl text-xs font-bold active:scale-98 transition-all text-center text-primary"
+              >
+                Étiquettes (Tags)
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Portability / CSV Import & Export */}
         <CsvImportForm />

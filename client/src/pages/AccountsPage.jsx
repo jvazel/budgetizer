@@ -94,7 +94,7 @@ const AccountsPage = () => {
                 return (
                   <div 
                     key={acc._id}
-                    onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : handleOpenEdit(acc)}
+                    onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : navigate(`/accounts/${acc._id}`)}
                     className="bg-surface-2 hover:bg-surface-2/80 border border-border/40 p-4 rounded-[24px] flex items-center justify-between transition-all cursor-pointer shadow-sm relative group"
                   >
                     <div className="flex items-center gap-4 min-w-0">

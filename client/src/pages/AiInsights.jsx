@@ -66,8 +66,15 @@ const AiInsights = () => {
 
   return (
     <>
-      <HeaderTitle>Conseils</HeaderTitle>
+      <HeaderTitle collapsible={true}>Conseils</HeaderTitle>
       <HeaderBackButton to="/" />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Conseils IA</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Recommandations et pistes d'économies basées sur vos habitudes.</p>
+      </div>
+
       <div className="space-y-6 mb-6">
         
         {/* Header Introduction Card */}

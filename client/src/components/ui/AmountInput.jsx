@@ -8,7 +8,8 @@ const AmountInput = ({
   currencySymbol = '€',
   placeholder = '0.00',
   autoFocus = false,
-  className = ''
+  className = '',
+  onKeyDown
 }) => {
   const inputRef = useRef(null);
 
@@ -78,6 +79,7 @@ const AmountInput = ({
           pattern="[0-9]*"
           value={value}
           onChange={handleTextChange}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
           className={`
             w-48 text-center bg-transparent border-b-2 border-border/40 

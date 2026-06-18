@@ -112,28 +112,66 @@ const KpiCard = ({ icon: Icon, label, value, sub, color = 'text-accent', highlig
 );
 
 // ─── Input Field ──────────────────────────────────────────────────────────────
-const InputField = ({ label, value, onChange, min, max, step = 1, suffix, id }) => (
-  <div className="space-y-1.5">
-    <label htmlFor={id} className="text-[11px] font-bold text-secondary uppercase tracking-wider block">
-      {label}
-    </label>
-    <div className="relative flex items-center">
-      <input
-        id={id}
-        type="number"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        min={min}
-        max={max}
-        step={step}
-        className="w-full bg-surface-2 border border-border/40 rounded-[14px] px-4 py-3 text-sm font-bold text-primary focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/10 transition-all pr-14"
-      />
-      {suffix && (
-        <span className="absolute right-4 text-xs font-bold text-muted pointer-events-none">{suffix}</span>
+const InputField = ({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  suffix,
+  id,
+  rangeMin,
+  rangeMax,
+  rangeStep,
+  rangeMinLabel,
+  rangeMaxLabel
+}) => {
+  const pct = rangeMax > rangeMin ? Math.max(0, Math.min(100, ((Number(value) || 0) - rangeMin) / (rangeMax - rangeMin) * 100)) : 0;
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="text-[11px] font-bold text-secondary uppercase tracking-wider block">
+        {label}
+      </label>
+      <div className="relative flex items-center">
+        <input
+          id={id}
+          type="number"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          min={min}
+          max={max}
+          step={step}
+          className="w-full bg-surface-2 border border-border/40 rounded-[14px] px-4 py-3 text-sm font-bold text-primary focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/10 transition-all pr-14"
+        />
+        {suffix && (
+          <span className="absolute right-4 text-xs font-bold text-muted pointer-events-none">{suffix}</span>
+        )}
+      </div>
+      {rangeMin !== undefined && rangeMax !== undefined && (
+        <div className="px-1 pt-1 select-none space-y-1">
+          <input
+            type="range"
+            min={rangeMin}
+            max={rangeMax}
+            step={rangeStep || step}
+            value={value}
+            onChange={e => onChange(Number(e.target.value))}
+            className="w-full h-1 bg-border/40 rounded-lg appearance-none cursor-pointer accent-accent transition-all hover:bg-border/60"
+            style={{
+              background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--border) ${pct}%, var(--border) 100%)`
+            }}
+          />
+          <div className="flex justify-between text-[9px] text-muted font-bold">
+            <span>{rangeMinLabel || rangeMin}</span>
+            <span>{rangeMaxLabel || rangeMax}</span>
+          </div>
+        </div>
       )}
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Amortization Table (accordion) ──────────────────────────────────────────
 const AmortizationTable = ({ schedule, currency }) => {
@@ -281,35 +319,36 @@ const LoanSimulatorPage = () => {
 
   return (
     <>
-      <HeaderTitle>Simulateur de prêt</HeaderTitle>
+      <HeaderTitle collapsible={true}>Simulateur de prêt</HeaderTitle>
       <HeaderBackButton to="/" />
 
-      {/* Page Hero */}
-      <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-black text-primary tracking-tight flex items-center gap-2">
-          <Calculator size={22} className="text-accent" />
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight flex items-center gap-2">
+          <Calculator size={22} className="text-accent shrink-0" />
           Simulateur de prêt
-        </h1>
-        <p className="text-xs text-secondary leading-relaxed">
-          Calculez vos mensualités et visualisez l'impact sur votre budget.
-        </p>
+        </div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Calculez vos mensualités et visualisez l'impact sur votre budget.</p>
       </div>
 
       {/* ── FORM ── */}
       <div className="bg-surface-2 rounded-[24px] border border-border/40 p-5 mb-5 space-y-4">
         <p className="text-[10px] font-bold text-muted uppercase tracking-widest">Paramètres du prêt</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <InputField
-              id="loan-principal"
-              label="Montant emprunté"
-              value={principal}
-              onChange={v => setPrincipal(Number(v))}
-              min={1000} step={1000}
-              suffix={currency}
-            />
-          </div>
+        <div className="space-y-5">
+          <InputField
+            id="loan-principal"
+            label="Montant emprunté"
+            value={principal}
+            onChange={v => setPrincipal(Number(v))}
+            min={1000} step={1000}
+            suffix={currency}
+            rangeMin={10000}
+            rangeMax={1000000}
+            rangeStep={5000}
+            rangeMinLabel="10k €"
+            rangeMaxLabel="1M €"
+          />
           <InputField
             id="loan-deposit"
             label="Apport personnel"
@@ -317,6 +356,11 @@ const LoanSimulatorPage = () => {
             onChange={v => setDeposit(Number(v))}
             min={0} step={1000}
             suffix={currency}
+            rangeMin={0}
+            rangeMax={500000}
+            rangeStep={5000}
+            rangeMinLabel="0 €"
+            rangeMaxLabel="500k €"
           />
           <InputField
             id="loan-rate"
@@ -325,6 +369,11 @@ const LoanSimulatorPage = () => {
             onChange={v => setAnnualRate(Number(v))}
             min={0} max={30} step={0.05}
             suffix="%"
+            rangeMin={0.1}
+            rangeMax={15}
+            rangeStep={0.05}
+            rangeMinLabel="0.1 %"
+            rangeMaxLabel="15 %"
           />
           <InputField
             id="loan-duration"
@@ -333,6 +382,11 @@ const LoanSimulatorPage = () => {
             onChange={v => setDurationYears(Number(v))}
             min={1} max={30} step={1}
             suffix="ans"
+            rangeMin={1}
+            rangeMax={30}
+            rangeStep={1}
+            rangeMinLabel="1 an"
+            rangeMaxLabel="30 ans"
           />
           <InputField
             id="loan-insurance"
@@ -341,6 +395,11 @@ const LoanSimulatorPage = () => {
             onChange={v => setMonthlyInsurance(Number(v))}
             min={0} step={1}
             suffix={currency}
+            rangeMin={0}
+            rangeMax={500}
+            rangeStep={5}
+            rangeMinLabel="0 €"
+            rangeMaxLabel="500 €"
           />
         </div>
 

@@ -221,8 +221,14 @@ const FinancialScoresPage = () => {
 
   return (
     <>
-      <HeaderTitle>Scores financiers</HeaderTitle>
+      <HeaderTitle collapsible={true}>Scores financiers</HeaderTitle>
       <HeaderBackButton to="/" />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className="mb-5 mt-2 px-1">
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Scores Financiers</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Évaluez et suivez votre santé et discipline financière.</p>
+      </div>
 
       {/* Year Filter */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
