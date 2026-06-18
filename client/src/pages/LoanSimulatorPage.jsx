@@ -242,20 +242,24 @@ const LoanSimulatorPage = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const now = new Date();
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(now.getMonth() - 6);
-
-        const res = await api.get('/dashboard', {
-          params: {
-            startDate: sixMonthsAgo.toISOString().split('T')[0],
-            endDate: now.toISOString().split('T')[0],
-          }
-        });
-
+        const res = await api.get('/dashboard/monthly-summaries');
         const d = res.data;
-        if (d?.incomes != null) setAvgMonthlyIncome(d.incomes / 6);
-        if (d?.expenses != null) setAvgMonthlyExpenses(Math.abs(d.expenses) / 6);
+
+        // Filter out months that have no transactions at all (e.g., before user registration)
+        const activeMonths = (d?.summaries || []).filter(m => m.income > 0 || m.expenses > 0);
+
+        // Take up to the 6 most recent active months to compute a representative average
+        const representativeMonths = activeMonths.slice(0, 6);
+
+        if (representativeMonths.length > 0) {
+          const totalIncome = representativeMonths.reduce((sum, m) => sum + m.income, 0);
+          const totalExpenses = representativeMonths.reduce((sum, m) => sum + m.expenses, 0);
+          setAvgMonthlyIncome(totalIncome / representativeMonths.length);
+          setAvgMonthlyExpenses(totalExpenses / representativeMonths.length);
+        } else {
+          setAvgMonthlyIncome(null);
+          setAvgMonthlyExpenses(null);
+        }
       } catch {
         // silently fail — budget data is optional
       } finally {
@@ -573,11 +577,11 @@ const LoanSimulatorPage = () => {
                 </p>
                 <div style={{ width: '100%', height: 180 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={budgetImpactData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+                    <BarChart data={budgetImpactData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text-secondary)' }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 9, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false}
-                        tickFormatter={v => `${Math.round(v / 1000)}k`} />
+                        width={45} tickFormatter={v => fmt(v, currency)} />
                       <Tooltip content={<CustomTooltip currency={currency} />} />
                       <Bar dataKey="solde" name="Solde net" radius={[8, 8, 0, 0]}>
                         {budgetImpactData.map((entry, i) => (

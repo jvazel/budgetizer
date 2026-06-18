@@ -75,6 +75,14 @@ const AppShell = () => {
     }
   }, [location.search]);
 
+  // Scroll to top and reset header scrolled state on route transition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+    setIsScrolled(false);
+  }, [location.pathname]);
+
   const [titleTarget, setTitleTarget] = useState(null);
   const [actionsTarget, setActionsTarget] = useState(null);
   const [backTarget, setBackTarget] = useState(null);
