@@ -26,6 +26,8 @@ import tagRoutes from './routes/tagRoutes.js';
 import UserCredential from './models/UserCredential.js';
 import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec, { customCss } from './utils/swagger.js';
 
 dotenv.config({ override: true });
 initWebPush();
@@ -121,6 +123,12 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api', apiLimiter);
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss,
+  customSiteTitle: "Budgetizer API Documentation"
+}));
 
 // Routes
 app.use('/api/auth', authRoutes);
