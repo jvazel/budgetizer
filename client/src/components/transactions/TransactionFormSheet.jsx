@@ -5,10 +5,13 @@ import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
 import toast from 'react-hot-toast';
-import { X, Search, Star } from 'lucide-react';
+import { X, Search, Star, ChevronDown, RotateCcw } from 'lucide-react';
 import TagSelector from './TagSelector';
 import { triggerHaptic } from '../../utils/hapticHelper';
 import ConfirmModal from '../ui/ConfirmModal';
+
+const formatCurrencyShort = (amount) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
 
 const DEFAULT_TEMPLATES = [
   { id: 't-cafe', name: 'Café', type: 'expense', amount: '2.50', note: 'Café', icon: '☕' },
@@ -25,11 +28,13 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [categorySearch, setCategorySearch] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // activePanel state: 'form' | 'account' | 'category'
   const [activePanel, setActivePanel] = useState('form');
 
   const [templates, setTemplates] = useState([]);
+  const [lastTransaction, setLastTransaction] = useState(null);
 
   const noteInputRef = useRef(null);
 
@@ -167,6 +172,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   useEffect(() => {
     if (isOpen) {
       setActivePanel('form');
+      setShowDatePicker(false);
       if (transactionToEdit) {
         setType(transactionToEdit.type || 'expense');
         setAmount(String(transactionToEdit.amount || ''));
@@ -194,6 +200,14 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
           setCategoryId(lastCategoryId);
         } else {
           setCategoryId('');
+        }
+
+        // Load last transaction for "Répéter" chip
+        const storedLast = localStorage.getItem('budgetizer_last_transaction');
+        if (storedLast) {
+          try { setLastTransaction(JSON.parse(storedLast)); } catch (e) { setLastTransaction(null); }
+        } else {
+          setLastTransaction(null);
         }
       }
     }
@@ -414,6 +428,25 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     }
   };
 
+  const handleRepeatLast = () => {
+    if (!lastTransaction) return;
+    triggerHaptic('light');
+    setType(lastTransaction.type || 'expense');
+    setAmount(String(lastTransaction.amount || ''));
+    setNote(lastTransaction.note || '');
+    if (lastTransaction.accountId && accounts.some(acc => acc._id === lastTransaction.accountId)) {
+      setAccountId(lastTransaction.accountId);
+      triggerGlow('account');
+    }
+    if (lastTransaction.categoryId && catExists(lastTransaction.categoryId, lastTransaction.type || 'expense')) {
+      setCategoryId(lastTransaction.categoryId);
+      triggerGlow('category');
+    }
+    if (lastTransaction.tags && Array.isArray(lastTransaction.tags)) {
+      setSelectedTagIds(lastTransaction.tags);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       triggerHaptic('error');
@@ -449,7 +482,34 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
       } else {
         await addTransaction(payload);
         triggerHaptic('medium');
-        toast.success('Transaction ajoutée');
+
+        // Toast enrichi : affiche le solde résultant
+        const acc = accounts.find(a => a._id === accountId);
+        if (acc) {
+          const delta = type === 'expense' ? -parseFloat(amount) : parseFloat(amount);
+          const newBalance = acc.balance + delta;
+          toast.success(
+            <div>
+              <span className="font-bold">{type === 'expense' ? '−' : '+'}{formatCurrencyShort(parseFloat(amount))}</span> enregistré
+              <span className="block text-xs text-white/70 mt-0.5">Solde {acc.name} : <strong>{formatCurrencyShort(newBalance)}</strong></span>
+            </div>,
+            { duration: 3000 }
+          );
+        } else {
+          toast.success('Transaction ajoutée');
+        }
+
+        // Save last transaction for "Répéter" chip
+        localStorage.setItem('budgetizer_last_transaction', JSON.stringify({
+          type,
+          amount: parseFloat(amount),
+          accountId,
+          categoryId: categoryId || null,
+          note,
+          tags: selectedTagIds,
+          icon: selectedCategory?.icon || '💸',
+          label: note || selectedCategory?.name || 'Dernière transaction'
+        }));
       }
 
       // Save smart defaults in localStorage
@@ -535,9 +595,31 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               </div>
             </div>
 
+            {/* Chip « Répéter la dernière transaction » */}
+            {!transactionToEdit && lastTransaction && (
+              <button
+                type="button"
+                onClick={handleRepeatLast}
+                className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-surface border border-border/40 hover:border-accent/40 hover:bg-accent/5 active:scale-[0.98] transition-all text-left select-none group"
+              >
+                <span className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-base shrink-0 group-hover:bg-accent/20 transition-colors">
+                  <RotateCcw size={15} className="text-accent" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-bold text-primary block truncate">
+                    {lastTransaction.icon || '💸'} {lastTransaction.label || 'Dernière transaction'}
+                  </span>
+                  <span className="text-[10px] text-muted font-medium">
+                    Répéter · {lastTransaction.type === 'expense' ? '−' : '+'}{formatCurrencyShort(lastTransaction.amount)}
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-accent/70 shrink-0">1 tap →</span>
+              </button>
+            )}
+
             {/* Quick Templates Banner */}
             {!transactionToEdit && templates.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2 pb-4 select-none w-full max-w-sm mx-auto mb-2">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto">
                 {templates.map(t => (
                   <button
                     key={t.id}
@@ -548,20 +630,22 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     onTouchStart={(e) => handleTemplatePressStart(e, t.id)}
                     onTouchEnd={() => handleTemplatePressEnd(t.id)}
                     onClick={(e) => handleTemplateClick(e, t)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
                   >
-                    <span>{t.icon || '⭐'}</span>
-                    <span className="font-bold">{t.name}</span>
-                    <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
+                    <span className="text-base">{t.icon || '⭐'}</span>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold text-primary leading-tight">{t.name}</span>
+                      <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
+                    </div>
                   </button>
                 ))}
                 
                 <button
                   type="button"
                   onClick={handleSaveAsTemplate}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
+                  className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
                 >
-                  <span>+ Sauvegarder</span>
+                  <span>＋ Favori</span>
                 </button>
               </div>
             )}
@@ -592,6 +676,39 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               autoFocus={isOpen && activePanel === 'form'}
               onKeyDown={handleAmountKeyDown}
             />
+
+            {/* Note INPUT — remonté avant Compte/Catégorie pour booster l'autocomplete */}
+            <div className="flex flex-col">
+              <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1 select-none">Note <span className="text-muted font-normal">(optionnel)</span></label>
+              <input
+                ref={noteInputRef}
+                id="note-input"
+                type="text"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                onKeyDown={handleNoteKeyDown}
+                onBlur={handleNoteBlur}
+                placeholder="Ex: Resto avec amis..."
+                className="bg-surface border border-border rounded-xl p-3.5 text-primary focus:outline-none focus:border-accent transition-colors"
+              />
+            </div>
+
+            {/* Autocomplete Suggestions (apparaissent juste sous la note) */}
+            {suggestions.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto animate-fadeIn -mt-2">
+                {suggestions.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleApplySuggestion(s)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/25 active:scale-95 transition-all text-xs font-bold text-secondary hover:text-primary shrink-0 select-none"
+                  >
+                    <span>{s.icon}</span>
+                    <span className="font-bold">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Account and Category Selectors */}
             <div className="grid grid-cols-2 gap-4">
@@ -679,56 +796,39 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               </div>
             </div>
 
-            {/* Autocomplete Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2 pb-4 select-none w-full max-w-sm mx-auto mb-2 animate-fadeIn">
-                {suggestions.map((s, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleApplySuggestion(s)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/25 active:scale-95 transition-all text-xs font-bold text-secondary hover:text-primary shrink-0 select-none"
-                  >
-                    <span>{s.icon}</span>
-                    <span className="font-bold">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Date and Note Inputs */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col">
-                <label htmlFor="date-input" className="text-xs text-secondary font-medium mb-1">Date</label>
+            {/* Date — Badge accordéon, masqué par défaut */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(p => !p)}
+                className="flex items-center gap-2 text-xs text-secondary font-medium hover:text-primary transition-colors py-1 select-none"
+              >
+                <span>📅</span>
+                <span>
+                  {date === new Date().toISOString().split('T')[0]
+                    ? "Aujourd'hui"
+                    : new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+                  }
+                </span>
+                <ChevronDown
+                  size={13}
+                  className={`transition-transform duration-200 ${showDatePicker ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {showDatePicker && (
                 <input
                   id="date-input"
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
                   onClick={(e) => {
-                    try {
-                      e.target.showPicker();
-                    } catch (err) {}
+                    try { e.target.showPicker(); } catch (err) {}
                   }}
-                  className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full"
+                  className="mt-2 bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full text-sm animate-fadeIn"
                   required
+                  autoFocus
                 />
-              </div>
-
-              <div className="flex flex-col">
-                <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1">Note (optionnel)</label>
-                <input
-                  ref={noteInputRef}
-                  id="note-input"
-                  type="text"
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  onKeyDown={handleNoteKeyDown}
-                  onBlur={handleNoteBlur}
-                  placeholder="Ex: Resto avec amis..."
-                  className="bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent"
-                />
-              </div>
+              )}
             </div>
 
             {/* Tag Selector */}
@@ -737,8 +837,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               onChange={setSelectedTagIds}
             />
 
-            {/* Action Buttons */}
-            <div className="mt-auto pt-4">
+            {/* Action Buttons — sticky en bas */}
+            <div className="sticky bottom-0 pt-3 pb-1 bg-gradient-to-t from-[var(--surface-2,#1a1a2e)] via-[var(--surface-2,#1a1a2e)/95] to-transparent z-10">
               {transactionToEdit ? (
                 <div className="flex gap-3">
                   <button

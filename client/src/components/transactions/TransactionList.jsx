@@ -49,10 +49,26 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
   }, [transactions, visibleCount]);
 
   const grouped = React.useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
     return slicedTransactions.reduce((acc, curr) => {
-      const date = new Date(curr.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(curr);
+      const txDate = new Date(curr.date);
+      txDate.setHours(0, 0, 0, 0);
+
+      let label;
+      if (txDate.getTime() === today.getTime()) {
+        label = "Aujourd'hui";
+      } else if (txDate.getTime() === yesterday.getTime()) {
+        label = 'Hier';
+      } else {
+        label = new Date(curr.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+      }
+
+      if (!acc[label]) acc[label] = [];
+      acc[label].push(curr);
       return acc;
     }, {});
   }, [slicedTransactions]);
@@ -62,7 +78,10 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
       {Object.entries(grouped).map(([date, txs]) => (
         <div key={date} className="mb-6">
           <div className="sticky top-[56px] bg-base/95 backdrop-blur-sm z-10 py-2 mb-2 flex justify-between items-center px-1">
-            <h3 className="text-sm font-bold text-secondary capitalize">{date}</h3>
+            <h3 className={`text-sm font-bold capitalize ${
+              date === "Aujourd'hui" ? 'text-accent' :
+              date === 'Hier' ? 'text-primary' : 'text-secondary'
+            }`}>{date}</h3>
           </div>
           
           <div className="bg-surface-2 rounded-[24px] border border-border/40 overflow-hidden divide-y divide-border/30 shadow-sm">
@@ -182,7 +201,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   <div className="text-right shrink-0 ml-auto pl-1">
                     <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${
                       tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
-                        ? 'text-primary' 
+                        ? 'text-danger'
                         : 'text-accent'
                     }`}>
                       {tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
