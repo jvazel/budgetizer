@@ -4,6 +4,7 @@ import AmountInput from '../ui/AmountInput';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useBudgets } from '../../hooks/useBudgets';
 import toast from 'react-hot-toast';
 import { X, Search, Star, ChevronDown, RotateCcw } from 'lucide-react';
 import TagSelector from './TagSelector';
@@ -83,6 +84,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const { categoriesTree } = useCategories();
   const { addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { transactions: recentTransactions } = useTransactions({ limit: 50 });
+  const { budgets } = useBudgets();
 
   // Helper to verify if category exists in current tree
   const catExists = (catId, checkType) => {
@@ -447,6 +449,23 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     }
   };
 
+  // (12) Calcul du solde résultant à la volée
+  const projectedBalance = useMemo(() => {
+    const acc = accounts.find(a => a._id === accountId);
+    if (!acc || !amount || parseFloat(amount) <= 0) return null;
+    const delta = type === 'expense' ? -parseFloat(amount) : parseFloat(amount);
+    return { balance: acc.balance + delta, name: acc.name, positive: delta > 0 };
+  }, [accounts, accountId, amount, type]);
+
+  // (11) Budget actif pour la catégorie sélectionnée
+  const activeBudget = useMemo(() => {
+    if (!categoryId || !budgets || budgets.length === 0) return null;
+    return budgets.find(b => {
+      const bCatId = b.categoryId?._id || b.categoryId;
+      return bCatId === categoryId;
+    }) || null;
+  }, [categoryId, budgets]);
+
   const handleSubmit = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       triggerHaptic('error');
@@ -477,11 +496,11 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
       if (transactionToEdit) {
         await updateTransaction(transactionToEdit._id, payload);
-        triggerHaptic('medium');
+        triggerHaptic(type === 'expense' ? 'expense' : 'income');
         toast.success('Transaction modifiée');
       } else {
         await addTransaction(payload);
-        triggerHaptic('medium');
+        triggerHaptic(type === 'expense' ? 'expense' : 'income');
 
         // Toast enrichi : affiche le solde résultant
         const acc = accounts.find(a => a._id === accountId);
@@ -677,6 +696,24 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               onKeyDown={handleAmountKeyDown}
             />
 
+            {/* (12) Solde résultant à la volée */}
+            {projectedBalance && (
+              <div className="flex justify-center -mt-2 animate-fadeIn">
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                  projectedBalance.positive
+                    ? 'text-accent border-accent/25 bg-accent/5'
+                    : projectedBalance.balance < 0
+                    ? 'text-danger border-danger/25 bg-danger/5'
+                    : 'text-secondary border-border/30 bg-surface'
+                }`}>
+                  Solde {projectedBalance.name} après :{' '}
+                  <span className="font-bold font-premium-numbers">
+                    {formatCurrencyShort(projectedBalance.balance)}
+                  </span>
+                </span>
+              </div>
+            )}
+
             {/* Note INPUT — remonté avant Compte/Catégorie pour booster l'autocomplete */}
             <div className="flex flex-col">
               <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1 select-none">Note <span className="text-muted font-normal">(optionnel)</span></label>
@@ -796,6 +833,53 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               </div>
             </div>
 
+            {/* (11) Indicateur budget inline — apparaît si catégorie a un budget configuré */}
+            {activeBudget && type === 'expense' && (
+              <div className="animate-fadeIn">
+                {(() => {
+                  const spent = activeBudget.spent || 0;
+                  const limit = activeBudget.amount || 1;
+                  const amountNum = parseFloat(amount) || 0;
+                  const projectedSpent = spent + amountNum;
+                  const pct = Math.min((projectedSpent / limit) * 100, 100);
+                  const currentPct = Math.min((spent / limit) * 100, 100);
+                  const isOverBudget = projectedSpent > limit;
+                  const isWarning = pct >= 80;
+                  const color = isOverBudget ? 'text-danger' : isWarning ? 'text-amber-400' : 'text-accent';
+                  const barColor = isOverBudget ? 'bg-danger' : isWarning ? 'bg-amber-400' : 'bg-accent';
+                  const catIcon = activeBudget.categoryId?.icon || selectedCategory?.icon || '📊';
+                  const catName = activeBudget.categoryId?.name || selectedCategory?.name || 'Budget';
+                  return (
+                    <div className="bg-surface border border-border/40 rounded-xl p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[11px] font-bold text-secondary">
+                          {catIcon} Enveloppe {catName}
+                        </span>
+                        <span className={`text-[11px] font-bold font-premium-numbers ${color}`}>
+                          {amountNum > 0
+                            ? `${formatCurrencyShort(projectedSpent)} / ${formatCurrencyShort(limit)}`
+                            : `${formatCurrencyShort(spent)} / ${formatCurrencyShort(limit)}`
+                          }
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
+                        {/* Barre actuelle */}
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${barColor} ${isOverBudget ? 'opacity-100' : 'opacity-70'}`}
+                          style={{ width: `${amountNum > 0 ? pct : currentPct}%` }}
+                        />
+                      </div>
+                      {isOverBudget && (
+                        <p className="text-[10px] text-danger font-semibold mt-1.5">
+                          ⚠️ Dépassement de {formatCurrencyShort(projectedSpent - limit)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Date — Badge accordéon, masqué par défaut */}
             <div>
               <button
@@ -880,21 +964,35 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         {/* PANEL 2: SELECT ACCOUNT */}
         {activePanel === 'account' && (
           <div className="space-y-4 animate-fadeIn">
-            <div className="pb-2 border-b border-border/40 flex justify-between items-center">
+            {/* (13) Navigation directe Compte ↔ Catégorie */}
+            <div className="pb-2 border-b border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setActivePanel('form');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
+                >
+                  ← Retour
+                </button>
+                <div className="flex gap-1 bg-surface p-1 rounded-xl">
+                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-xs font-bold">Compte</span>
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setActivePanel('category'); }}
+                    disabled={type === 'transfer'}
+                    className="px-3 py-1 rounded-lg text-xs font-bold text-muted hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Catégorie
+                  </button>
+                </div>
+              </div>
               <div>
                 <h3 className="text-sm font-extrabold text-primary">Sélectionner un compte</h3>
                 <p className="text-xs text-muted font-medium mt-0.5">Choisissez le compte de débit/crédit</p>
               </div>
-              <button 
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setActivePanel('form');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
-              >
-                Retour
-              </button>
             </div>
             
             <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1 no-scrollbar py-1">
@@ -943,21 +1041,34 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         {/* PANEL 3: SELECT CATEGORY */}
         {activePanel === 'category' && (
           <div className="space-y-4 animate-fadeIn">
-            <div className="pb-2 border-b border-border/40 flex justify-between items-center">
+            {/* (13) Navigation directe Compte ↔ Catégorie */}
+            <div className="pb-2 border-b border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setActivePanel('form');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
+                >
+                  ← Retour
+                </button>
+                <div className="flex gap-1 bg-surface p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setActivePanel('account'); }}
+                    className="px-3 py-1 rounded-lg text-xs font-bold text-muted hover:text-primary transition-colors"
+                  >
+                    Compte
+                  </button>
+                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-xs font-bold">Catégorie</span>
+                </div>
+              </div>
               <div>
                 <h3 className="text-sm font-extrabold text-primary">Sélectionner une catégorie</h3>
                 <p className="text-xs text-muted font-medium mt-0.5">Choisissez la catégorie pour cette transaction</p>
               </div>
-              <button 
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setActivePanel('form');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
-              >
-                Retour
-              </button>
             </div>
             
             {/* Search bar inside sheet */}

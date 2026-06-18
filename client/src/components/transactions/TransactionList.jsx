@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { triggerHaptic } from '../../utils/hapticHelper';
 
@@ -90,24 +90,40 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                 key={tx._id} 
                 className="relative overflow-hidden bg-danger-dim/20 first:rounded-t-[24px] last:rounded-b-[24px]"
               >
-                {/* Back Layer: Swipe Delete Action */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('medium');
-                    if (onDelete) onDelete(tx);
-                  }}
-                  className="absolute right-0 top-0 bottom-0 w-20 bg-danger text-white flex flex-col items-center justify-center transition-colors hover:bg-danger/90 active:bg-danger/80 select-none z-0"
-                >
-                  <Trash2 size={16} />
-                  <span className="text-[8px] font-bold mt-1">Supprimer</span>
-                </button>
+                {/* Back Layer Left: Swipe édit + suppression */}
+                <div className="absolute right-0 top-0 bottom-0 flex">
+                  {/* Bouton Modifier */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerHaptic('light');
+                      if (onEdit) onEdit(tx);
+                    }}
+                    className="w-20 bg-accent text-white flex flex-col items-center justify-center transition-colors hover:bg-accent/90 active:bg-accent/80 select-none z-0"
+                  >
+                    <Pencil size={16} />
+                    <span className="text-[8px] font-bold mt-1">Modifier</span>
+                  </button>
+                  {/* Bouton Supprimer */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerHaptic('medium');
+                      if (onDelete) onDelete(tx);
+                    }}
+                    className="w-20 bg-danger text-white flex flex-col items-center justify-center transition-colors hover:bg-danger/90 active:bg-danger/80 select-none z-0"
+                  >
+                    <Trash2 size={16} />
+                    <span className="text-[8px] font-bold mt-1">Supprimer</span>
+                  </button>
+                </div>
 
                 {/* Front Layer: Draggable Content */}
                 <motion.div
                   drag="x"
-                  dragConstraints={{ left: -80, right: 0 }}
+                  dragConstraints={{ left: -160, right: 0 }}
                   dragElastic={{ left: 0.1, right: 0.5 }}
                   dragMomentum={false}
                   onDragStart={() => {
