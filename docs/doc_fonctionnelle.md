@@ -117,20 +117,56 @@ Pour analyser finement la répartition des flux d'argent, chaque transaction (ho
 
 Cette section regroupe la création rapide de transactions et la consultation de l'historique complet.
 
-### 6.1 Saisie de Transactions & Clavier Mobile Natif
-La saisie est simplifiée au maximum grâce à une interface de type "Bottom Sheet" glissante, dotée d'une zone de saisie de montant optimisée pour mobile :
-- **Sélection du type** : Dépense (Rouge), Revenu (Vert) ou Virement (Bleu).
-- **Saisie du Montant** : Saisie à l'aide d'un champ texte dédié configuré avec `inputMode="decimal"`. Sur mobile, cela déclenche automatiquement le clavier numérique décimal natif du téléphone. Le champ formate automatiquement l'entrée (conversion de la virgule `,` en point `.`, limitation stricte à deux chiffres après la virgule, suppression des zéros initiaux) pour une saisie rapide et robuste.
-- **Sélection des Comptes** :
-  - Pour une dépense/revenu : le compte source ou destinataire.
-  - Pour un virement : le compte de départ (`From`) et le compte d'arrivée (`To`).
-- **Métadonnées** : Date de la transaction, catégorie (automatiquement filtrée selon le type de flux), note textuelle facultative et tags (ex: `#vacances`, `#cadeau`).
+### 6.1 Saisie de Transactions — Optimisation Vitesse (< 5 secondes)
+La saisie est simplifiée au maximum grâce à une interface de type "Bottom Sheet" glissante, conçue pour passer sous le seuil critique des 5 secondes de saisie :
+
+- **Flux de saisie optimisé** : L'ordre des champs suit le flux cognitif naturel de l'utilisateur :
+  1. Type (Dépense / Revenu)
+  2. Montant
+  3. Note (déclenche l'autocomplete)
+  4. Catégorie (pré-remplie par l'autocomplete)
+  5. Compte (pré-rempli par défaut)
+  6. Date (masquée par défaut)
+  7. Tags (optionnels)
+
+- **Chip "🔁 Répéter la dernière transaction"** : Après chaque ajout, la transaction est mémorisée dans le `localStorage`. Un chip en haut du formulaire permet de pré-remplir entièrement le formulaire (type, montant, note, compte, catégorie, tags) en un seul tap.
+
+- **Saisie du Montant & Solde à la Volée** : Le champ montant déclenche l'affichage du clavier numérique natif. Un badge dynamique s'affiche en dessous :
+  - Vert si la transaction laisse le compte positif.
+  - Rouge si le solde après transaction passerait en négatif.
+
+- **Champ Note repositionné (Autocomplete avancé)** : Le champ Note est placé avant les sélecteurs. Dès 2 caractères saisis, les suggestions s'affichent immédiatement sous le champ et pré-remplissent le compte, la catégorie et les tags.
+
+- **Date masquée (accordéon)** : Un badge "📅 Aujourd'hui" remplace le champ date. L'utilisateur ne déroule le champ que si la date diffère d'aujourd'hui. Règle : 90 % des transactions sont saisies le jour même.
+
+- **Sélection des Comptes et Catégories** :
+  - Chaque sélecteur ouvre un panel dédié avec liste complète.
+  - **Navigation directe Compte ↔ Catégorie** : Des onglets `[Compte] [Catégorie]` en haut de chaque panel permettent de basculer directement sans repasser par le formulaire principal.
+
+- **Indicateur de Budget Inline** : Quand la catégorie sélectionnée possède un budget configuré, une mini-barre de progression s'affiche avec la dépense actuelle, le montant saisi projeté, et le plafond. La barre est verte < 80 %, orange 80–99 %, rouge si dépassement. Une alerte ⚠️ est affichée si la saisie ferait déborder l'enveloppe.
+
+- **Favoris rapides (Templates)** : Chips de raccourcis pré-remplis. Les zones tactiles ont été agrandies (≥ 44 px de hauteur) avec icône emoji agrandie, nom et montant sur deux lignes.
+
+- **Métadonnées** : Date, note (texte libre), tags.
+
+- **Bouton Valider Sticky** : Le bouton d'ajout est fixe en bas du Bottom Sheet (CSS `position: sticky`). Il reste visible même quand le clavier virtuel est ouvert.
+
+- **Toast Enrichi Post-Validation** : Après ajout, un toast affiche le montant débité/crédité ET le nouveau solde projeté du compte débouré, pendant 3 secondes.
+
+- **Patterns Haptiques Distinctifs** (via `navigator.vibrate`) :
+  - Dépense validée (`'expense'`) : 1 impulsion de 25 ms.
+  - Revenu validé (`'income'`) : 2 impulsions légères [15, 60, 15] ms.
+  - Erreur (`'error'`) : 3 impulsions [50, 40, 50, 40, 50] ms.
 
 ### 6.2 Liste Complète des Transactions
 Accessible via l'option "Transactions" du menu de navigation :
+- **Regroupement par Date Intelligent** : Les transactions sont groupées par jour avec des séparateurs collants (sticky) intituls « Aujourd'hui » (accent), « Hier » (primary) ou la date complète (secondary).
+- **Montants Colorisés** : Chaque montant est coloré en `text-danger` (rouge) pour les dépenses et en `text-accent` (vert) pour les revenus, permettant une lecture par scan visuel sans lire le libellé.
 - **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates ou recherche de mots-clés dans la description ou les notes.
-- **Gestion** : Possibilité de modifier ou supprimer directement chaque transaction.
-- **Ergonomie Mobile** : Afin d'éviter la troncature des libellés et d'assurer une lecture fluide sur petits écrans, l'étiquette du compte bancaire (badge coloré) est empilée verticalement sous la catégorie, libérant de l'espace horizontal pour l'intitulé et le montant. Une infobulle (title html) s'affiche au survol/toucher pour lire le libellé complet si besoin.
+- **Gestion par Swipe** : Sur mobile, le glissement gauche (Swipe Left) révèle désormais **deux boutons** :
+  - ✏️ **Modifier** (fond accent, bleu-violet) : ouvre directement le formulaire pré-rempli.
+  - 🗑️ **Supprimer** (fond rouge) : supprime immédiatement. Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).
+- **Chargement Infini** : Un `IntersectionObserver` charge 30 transactions supplémentaires au bas de la liste lors du scroll.
 
 ---
 

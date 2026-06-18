@@ -155,20 +155,46 @@ Pour les projets transversaux (ex. : `#vacances 2026`, `#travaux`), créez des t
 
 ### 4.1 La Saisie Rapide (Bottom Sheet)
 * **Ouverture** : Cliquez sur le bouton flottant d'action central `+` au bas de l'écran. Un tiroir interactif se déploie depuis le bas.
+* **Chip "🔁 Répéter la dernière transaction"** : Si vous avez déjà saisi une transaction lors d'une session précédente, un chip mémorise automatiquement votre dernière saisie. Un seul tap pré-remplit **intégralement** le formulaire (montant, note, compte, catégorie, tags). Idéal pour les habitudes quotidiennes comme le café ou le trajet.
+* **Favoris rapides (templates)** : Une bande horizontale affiche vos raccourcis de dépenses récurrentes. Les chips sont désormais **plus larges** (zone tactile ≥ 44 px) avec icône grande, nom et montant sur deux lignes pour une lecture plus confortable au pouce.
 * **Gestes et saisie de montant sur mobile** :
   * Appuyez sur le champ du montant. Sur smartphone, l'application force l'affichage du **clavier décimal numérique natif** de votre système (`inputMode="decimal"`).
   * La saisie est sécurisée contre les erreurs de frappe : les virgules `,` sont automatiquement converties en points `.`, les zéros initiaux superflus sont nettoyés et la saisie est bridée à deux chiffres après la décimale.
+* **Solde résultant à la volée** : Dès que vous tapez un montant, un badge discret s'affiche immédiatement sous le champ :
+  > Solde Compte Courant après : **1 437,50 €**
+  Il change de couleur selon l'impact : vert si revenu, rouge si le solde passe en négatif. Cela vous permet de vérifier en un coup d'œil que vous n'allez pas en découvert avant de valider.
+* **Champ Note en priorité** : Le champ Note est désormais placé **avant** les sélecteurs Compte et Catégorie. Dès que vous tapez 2 caractères, les suggestions d'autocomplete apparaissent juste en dessous, pré-remplissant automatiquement le compte, la catégorie et les tags depuis vos transactions récentes similaires.
 * **Sélection tactile simplifiée** :
   * **Sélection du compte** : Un panneau tactile s'ouvre, vous présentant la liste des comptes avec leurs soldes réels mis à jour.
   * **Sélection de la catégorie** : Choisissez d'abord la catégorie parente, puis une grille de sous-catégories apparaît pour affiner votre choix d'un simple toucher du pouce.
+  * **Navigation directe Compte ↔ Catégorie** : Une barre d'onglets `[Compte] [Catégorie]` est disponible en haut de chaque panel secondaire. Vous pouvez basculer directement de l'un à l'autre **sans repasser par le formulaire principal**, économisant 2 taps de navigation.
+* **Indicateur de budget inline** : Lorsque vous sélectionnez une catégorie qui possède une enveloppe budgétaire configurée, une mini-barre de progression apparaît automatiquement sous les sélecteurs :
+  > 🛒 Enveloppe Alimentation — **312 € / 400 €** consommés
+  La barre change de couleur selon l'avancement : verte (< 80 %), orange (80–100 %), rouge (dépassement). Le montant affiché se met à jour en temps réel selon ce que vous êtes en train de saisir, avec une alerte ⚠️ si votre saisie ferait dépasser le budget.
+* **Date masquée (accordéon)** : La date est masquée par défaut derrière un badge cliquable "📅 Aujourd'hui". Si la transaction se passe aujourd'hui (cas le plus fréquent), il suffit d'ignorer ce badge — la date est déjà correcte. Appuyez dessus uniquement si vous devez saisir une date antérieure.
 * **Tags et Notes** : Saisissez une note rapide et ajoutez des tags en insérant le caractère `#`.
+* **Bouton Valider toujours visible** : Le bouton "Ajouter la transaction" est **fixe en bas du formulaire** (sticky). Il reste visible en permanence, même lorsque le clavier virtuel est ouvert, pour valider sans chercher.
+* **Confirmation enrichie** : Après validation, un toast apparaît avec le montant saisi **et** le nouveau solde du compte concerné :
+  > ✅ −12,50€ enregistré · Solde Courant : **1 437,50 €**
+* **Patterns haptiques distinctifs** (sur mobile) :
+  * Dépense validée → 1 vibration courte.
+  * Revenu validé → 2 vibrations légères (signal positif).
+  * Erreur de saisie → 3 impulsions courtes.
 
 ### 4.2 Le Journal des Transactions (Historique)
 Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.
-* **Aperçu optimisé mobile** : Sur les petits écrans, Budgetizer empile verticalement le badge coloré de la catégorie et du compte bancaire sous l'intitulé de la transaction. Cela libère de l'espace horizontal pour éviter que vos descriptions ou vos montants ne soient tronqués.
+* **Regroupement par date intelligent** : Les transactions sont regroupées par jour. Les en-têtes de groupe s'affichent en couleur :
+  * **"Aujourd'hui"** → en couleur accent (bleu-violet) pour ressortir immédiatement.
+  * **"Hier"** → en couleur primaire.
+  * Jours antérieurs → en couleur secondaire discrète.
+* **Montants colorisés** : Les montants sont maintenant colorisés pour un scan visuel instantané :
+  * Dépenses → **rouge** (couleur danger).
+  * Revenus → **vert** (couleur accent).
 * **Gestes de modification et de suppression** :
-  * *Sur ordinateur (PC/Mac)* : Survolez la ligne de la transaction avec votre souris pour faire apparaître l'icône de corbeille rouge.
-  * *Sur smartphone/tablette* : **Faites glisser votre doigt vers la gauche (Swipe Left)** sur la ligne de transaction pour révéler instantanément le bouton de suppression rapide.
+  * *Sur ordinateur (PC/Mac)* : Cliquez sur la ligne de la transaction pour ouvrir le formulaire d'édition.
+  * *Sur smartphone/tablette* : **Faites glisser votre doigt vers la gauche (Swipe Left)** sur la ligne de transaction pour révéler **deux boutons** :
+    * ✏️ **Modifier** (bleu accent) — ouvre directement le formulaire pré-rempli de la transaction.
+    * 🗑️ **Supprimer** (rouge) — supprime immédiatement la transaction.
 * **Filtres** : Filtrez par période, catégorie, tag ou compte bancaire.
 
 ### 4.3 Virements Instantanés Internes (Transfers)
