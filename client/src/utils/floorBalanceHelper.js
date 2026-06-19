@@ -84,7 +84,7 @@ export const calculateFloorBalance = (
 
   // Filtrer les charges récurrentes engagées (échéance entre aujourd'hui inclus et la paye exclus)
   const pendingRecurringExpenses = upcomingExpenses.filter(tx => {
-    if (tx.type !== 'expense') return false;
+    if (tx.type !== 'expense' && !(tx.type === 'transfer' && tx.toAccountId?.type === 'credit')) return false;
     if (excludedIds.includes(tx._id)) return false;
 
     const txDate = new Date(tx.date);
@@ -131,7 +131,7 @@ export const calculateFloorProjection = (
     // Appliquer les prélèvements et revenus du jour
     txsOnDay.forEach(tx => {
       const amount = Number(tx.amount || 0);
-      if (tx.type === 'expense') {
+      if (tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')) {
         if (!excludedIds.includes(tx._id)) {
           currentBalance -= amount;
         }

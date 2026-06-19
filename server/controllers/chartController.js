@@ -44,45 +44,75 @@ export const getChartsByCategory = async (req, res) => {
     });
 
     // Query active transactions (not pending) for the current period
-    const transactions = await Transaction.find({
+    const query = {
       userId: req.user.id,
-      type,
       isPending: { $ne: true },
       date: { $gte: start, $lte: end }
-    }).select('categoryId amount').lean();
+    };
+    if (type === 'expense') {
+      query.$or = [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ];
+    } else {
+      query.type = type;
+    }
+
+    const transactions = await Transaction.find(query)
+      .select('categoryId amount type toAccountId')
+      .populate('toAccountId', 'type')
+      .lean();
+
+    const filteredTxs = transactions.filter(tx => 
+      type !== 'expense' || tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
 
     // Compute total sum
-    const totalAmount = transactions.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalAmount = filteredTxs.reduce((acc, curr) => acc + curr.amount, 0);
 
     // Group by category (either main or sub)
     const grouped = {};
-    transactions.forEach(tx => {
-      if (!tx.categoryId) return;
-      const catIdStr = tx.categoryId.toString();
-      const cat = categoryMap[catIdStr];
-      if (!cat) return;
-
-      let mainCatId = cat._id.toString();
+    filteredTxs.forEach(tx => {
+      let mainCatId;
       let subCatName = null;
       let subCatIcon = null;
 
-      // If it's a subcategory, group under parent
-      if (cat.parentId) {
-        mainCatId = cat.parentId.toString();
-        subCatName = cat.name;
-        subCatIcon = cat.icon;
+      if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+        mainCatId = 'credit_repayment';
+      } else {
+        if (!tx.categoryId) return;
+        const catIdStr = tx.categoryId.toString();
+        const cat = categoryMap[catIdStr];
+        if (!cat) return;
+
+        mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+        if (cat.parentId) {
+          subCatName = cat.name;
+          subCatIcon = cat.icon;
+        }
       }
 
       if (!grouped[mainCatId]) {
-        const mainCat = categoryMap[mainCatId] || { name: 'Autre', icon: '❓', color: '#888' };
-        grouped[mainCatId] = {
-          categoryId: mainCatId,
-          name: mainCat.name,
-          icon: mainCat.icon,
-          color: mainCat.color,
-          amount: 0,
-          subcategories: {}
-        };
+        if (mainCatId === 'credit_repayment') {
+          grouped[mainCatId] = {
+            categoryId: 'credit_repayment',
+            name: 'Remboursement Crédit',
+            icon: '🏦',
+            color: '#f43f5e',
+            amount: 0,
+            subcategories: {}
+          };
+        } else {
+          const mainCat = categoryMap[mainCatId] || { name: 'Autre', icon: '❓', color: '#888' };
+          grouped[mainCatId] = {
+            categoryId: mainCatId,
+            name: mainCat.name,
+            icon: mainCat.icon,
+            color: mainCat.color,
+            amount: 0,
+            subcategories: {}
+          };
+        }
       }
 
       grouped[mainCatId].amount += tx.amount;
@@ -122,19 +152,41 @@ export const getChartsByCategory = async (req, res) => {
 
     // Compute variation vs previous period if requested
     const { prevStartDate, prevEndDate } = getPreviousPeriod(start, end);
-    const prevTransactions = await Transaction.find({
+    
+    const prevQuery = {
       userId: req.user.id,
-      type,
       isPending: { $ne: true },
       date: { $gte: prevStartDate, $lte: prevEndDate }
-    }).select('categoryId amount').lean();
+    };
+    if (type === 'expense') {
+      prevQuery.$or = [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ];
+    } else {
+      prevQuery.type = type;
+    }
+
+    const prevTransactions = await Transaction.find(prevQuery)
+      .select('categoryId amount type toAccountId')
+      .populate('toAccountId', 'type')
+      .lean();
+
+    const filteredPrevTxs = prevTransactions.filter(tx => 
+      type !== 'expense' || tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
 
     const prevGrouped = {};
-    prevTransactions.forEach(tx => {
-      if (!tx.categoryId) return;
-      const cat = categoryMap[tx.categoryId.toString()];
-      if (!cat) return;
-      const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+    filteredPrevTxs.forEach(tx => {
+      let mainCatId;
+      if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+        mainCatId = 'credit_repayment';
+      } else {
+        if (!tx.categoryId) return;
+        const cat = categoryMap[tx.categoryId.toString()];
+        if (!cat) return;
+        mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+      }
       prevGrouped[mainCatId] = (prevGrouped[mainCatId] || 0) + tx.amount;
     });
 
@@ -164,36 +216,78 @@ export const getChartsByCategory = async (req, res) => {
     start6M.setUTCDate(1);
     start6M.setUTCHours(0, 0, 0, 0);
 
-    const txs3M = await Transaction.find({
+    const q3M = {
       userId: req.user.id,
-      type,
       isPending: { $ne: true },
       date: { $gte: start3M, $lte: end3M }
-    }).select('categoryId amount').lean();
+    };
+    if (type === 'expense') {
+      q3M.$or = [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ];
+    } else {
+      q3M.type = type;
+    }
 
-    const txs6M = await Transaction.find({
+    const txs3M = await Transaction.find(q3M)
+      .select('categoryId amount type toAccountId')
+      .populate('toAccountId', 'type')
+      .lean();
+
+    const filtered3MTxs = txs3M.filter(tx => 
+      type !== 'expense' || tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
+
+    const q6M = {
       userId: req.user.id,
-      type,
       isPending: { $ne: true },
       date: { $gte: start6M, $lte: end3M }
-    }).select('categoryId amount').lean();
+    };
+    if (type === 'expense') {
+      q6M.$or = [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ];
+    } else {
+      q6M.type = type;
+    }
+
+    const txs6M = await Transaction.find(q6M)
+      .select('categoryId amount type toAccountId')
+      .populate('toAccountId', 'type')
+      .lean();
+
+    const filtered6MTxs = txs6M.filter(tx => 
+      type !== 'expense' || tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
 
     const sum3M = {};
     const sum6M = {};
 
-    txs3M.forEach(tx => {
-      if (!tx.categoryId) return;
-      const cat = categoryMap[tx.categoryId.toString()];
-      if (!cat) return;
-      const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+    filtered3MTxs.forEach(tx => {
+      let mainCatId;
+      if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+        mainCatId = 'credit_repayment';
+      } else {
+        if (!tx.categoryId) return;
+        const cat = categoryMap[tx.categoryId.toString()];
+        if (!cat) return;
+        mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+      }
       sum3M[mainCatId] = (sum3M[mainCatId] || 0) + tx.amount;
     });
 
-    txs6M.forEach(tx => {
-      if (!tx.categoryId) return;
-      const cat = categoryMap[tx.categoryId.toString()];
-      if (!cat) return;
-      const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+    filtered6MTxs.forEach(tx => {
+      let mainCatId;
+      if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+        mainCatId = 'credit_repayment';
+      } else {
+        if (!tx.categoryId) return;
+        const cat = categoryMap[tx.categoryId.toString()];
+        if (!cat) return;
+        mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+      }
       sum6M[mainCatId] = (sum6M[mainCatId] || 0) + tx.amount;
     });
 
@@ -269,13 +363,13 @@ export const getFutureCharts = async (req, res) => {
       userId: req.user.id,
       isPending: true,
       date: { $gte: start, $lte: end }
-    }).populate('categoryId', 'name icon color').lean();
+    }).populate('categoryId', 'name icon color').populate('toAccountId', 'type').lean();
 
     // Query scheduled transactions
     const scheduledSchedules = await ScheduledTransaction.find({
       userId: req.user.id,
       isActive: true
-    }).populate('categoryId', 'name icon color').lean();
+    }).populate('categoryId', 'name icon color').populate('toAccountId', 'type').lean();
 
     // 1. Project schedule occurrences in range
     const simulatedScheduled = [];
@@ -292,7 +386,8 @@ export const getFutureCharts = async (req, res) => {
             amount: st.amount,
             type: st.type,
             source: 'scheduled',
-            categoryId: st.categoryId
+            categoryId: st.categoryId,
+            toAccountId: st.toAccountId
           });
         }
         // Advance
@@ -313,7 +408,8 @@ export const getFutureCharts = async (req, res) => {
       amount: pt.amount,
       type: pt.type,
       source: 'pending',
-      categoryId: pt.categoryId
+      categoryId: pt.categoryId,
+      toAccountId: pt.toAccountId
     }));
 
     // 3. Add manual future transactions (real transaction created in future date)
@@ -321,7 +417,7 @@ export const getFutureCharts = async (req, res) => {
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $gt: new Date(), $lte: end }
-    }).populate('categoryId', 'name icon color').lean();
+    }).populate('categoryId', 'name icon color').populate('toAccountId', 'type').lean();
 
     const manualList = futureReal.map(ft => ({
       date: ft.date,
@@ -329,7 +425,8 @@ export const getFutureCharts = async (req, res) => {
       amount: ft.amount,
       type: ft.type,
       source: 'manual',
-      categoryId: ft.categoryId
+      categoryId: ft.categoryId,
+      toAccountId: ft.toAccountId
     }));
 
     // Combine all future occurrences
@@ -354,6 +451,8 @@ export const getFutureCharts = async (req, res) => {
           periods[key].income += item.amount;
         } else if (item.type === 'expense') {
           periods[key].expenses += item.amount;
+        } else if (item.type === 'transfer' && item.toAccountId?.type === 'credit') {
+          periods[key].expenses += item.amount;
         }
       }
     });
@@ -376,6 +475,7 @@ export const getFutureCharts = async (req, res) => {
     allFuture.forEach(item => {
       if (item.type === 'income') runningBalance += item.amount;
       else if (item.type === 'expense') runningBalance -= item.amount;
+      else if (item.type === 'transfer' && item.toAccountId?.type === 'credit') runningBalance -= item.amount;
 
       projectedBalance.push({
         date: new Date(item.date).toISOString().split('T')[0],
@@ -418,7 +518,7 @@ export const getForecastCharts = async (req, res) => {
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $gte: historyStart, $lte: now }
-    }).lean();
+    }).populate('toAccountId', 'type').lean();
 
     // Populate historical monthly buckets
     const historicalBuckets = {};
@@ -434,6 +534,9 @@ export const getForecastCharts = async (req, res) => {
       if (historicalBuckets[key]) {
         if (tx.type === 'income') historicalBuckets[key].income += tx.amount;
         else if (tx.type === 'expense') historicalBuckets[key].expenses += tx.amount;
+        else if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+          historicalBuckets[key].expenses += tx.amount;
+        }
       }
     });
 
@@ -686,7 +789,7 @@ export const getCashFlowHistory = async (req, res) => {
       query.accountId = accountId;
     }
 
-    const transactions = await Transaction.find(query).lean();
+    const transactions = await Transaction.find(query).populate('toAccountId', 'type').lean();
 
     const buckets = {};
     for (let i = 0; i < monthsCount; i++) {
@@ -702,6 +805,8 @@ export const getCashFlowHistory = async (req, res) => {
         if (tx.type === 'income') {
           buckets[key].income += tx.amount;
         } else if (tx.type === 'expense') {
+          buckets[key].expenses += tx.amount;
+        } else if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
           buckets[key].expenses += tx.amount;
         }
       }
@@ -785,24 +890,36 @@ export const getExpenseRanking = async (req, res) => {
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
 
-    // Find all expense transactions in period
+    // Find all expense transactions + transfers in period
     const transactions = await Transaction.find({
       userId,
-      type: 'expense',
       isPending: { $ne: true },
-      date: { $gte: start, $lte: end }
-    }).populate('categoryId', 'name icon color parentId').lean();
+      date: { $gte: start, $lte: end },
+      $or: [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ]
+    }).populate('categoryId', 'name icon color parentId').populate('toAccountId', 'type').lean();
+
+    const filteredTxs = transactions.filter(tx => 
+      tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
 
     const groups = {};
 
-    transactions.forEach(tx => {
+    filteredTxs.forEach(tx => {
       let key = '';
       let name = '';
       let icon = '💸';
       let color = '#888888';
 
       if (groupBy === 'category') {
-        if (tx.categoryId) {
+        if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+          key = 'credit_repayment';
+          name = 'Remboursement Crédit';
+          icon = '🏦';
+          color = '#f43f5e';
+        } else if (tx.categoryId) {
           key = tx.categoryId._id.toString();
           name = tx.categoryId.name;
           icon = tx.categoryId.icon || '📁';
@@ -816,16 +933,25 @@ export const getExpenseRanking = async (req, res) => {
         if (cleanedDesc) {
           name = cleanedDesc.charAt(0).toUpperCase() + cleanedDesc.slice(1);
           key = name.toLowerCase();
-          icon = '🏪';
+          icon = tx.type === 'transfer' ? '🏦' : '🏪';
           if (tx.categoryId) {
             color = tx.categoryId.color || '#3b82f6';
+          } else if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+            color = '#f43f5e';
           }
         } else {
-          key = 'no_description';
-          name = tx.categoryId ? tx.categoryId.name : 'Dépense générale';
-          icon = tx.categoryId ? tx.categoryId.icon : '💸';
-          if (tx.categoryId) {
-            color = tx.categoryId.color;
+          if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+            key = 'credit_repayment';
+            name = 'Remboursement Crédit';
+            icon = '🏦';
+            color = '#f43f5e';
+          } else {
+            key = 'no_description';
+            name = tx.categoryId ? tx.categoryId.name : 'Dépense générale';
+            icon = tx.categoryId ? tx.categoryId.icon : '💸';
+            if (tx.categoryId) {
+              color = tx.categoryId.color;
+            }
           }
         }
       }
@@ -869,7 +995,7 @@ export const getExpenseRanking = async (req, res) => {
     res.json({
       ranking: limitedRanking,
       diffDays,
-      totalExpenses: transactions.reduce((sum, tx) => sum + tx.amount, 0)
+      totalExpenses: filteredTxs.reduce((sum, tx) => sum + tx.amount, 0)
     });
 
   } catch (error) {
@@ -922,7 +1048,11 @@ export const getHistogramData = async (req, res) => {
       ];
     }
 
-    const transactions = await Transaction.find(query).sort({ date: 1 }).lean();
+    const transactions = await Transaction.find(query)
+      .populate('toAccountId', 'type')
+      .populate('accountId', 'type')
+      .sort({ date: 1 })
+      .lean();
 
     // Initialize buckets
     const buckets = {};
@@ -996,6 +1126,8 @@ export const getHistogramData = async (req, res) => {
           if (tx.type === 'income') {
             buckets[key].income += tx.amount;
           } else if (tx.type === 'expense') {
+            buckets[key].expenses += tx.amount;
+          } else if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
             buckets[key].expenses += tx.amount;
           }
         }
@@ -1299,48 +1431,66 @@ export const getFixedVsVariableData = async (req, res) => {
       categoryMap[cat._id.toString()] = cat;
     });
 
-    // Fetch all expense transactions for the period (not pending)
+    // Fetch all expense transactions + transfers for the period (not pending)
     const transactions = await Transaction.find({
       userId: req.user.id,
-      type: 'expense',
       isPending: { $ne: true },
-      date: { $gte: start, $lte: end }
-    }).populate('categoryId', 'name icon color parentId').lean();
+      date: { $gte: start, $lte: end },
+      $or: [
+        { type: 'expense' },
+        { type: 'transfer' }
+      ]
+    }).populate('categoryId', 'name icon color parentId').populate('toAccountId', 'type').lean();
+
+    // Filter to keep expenses + only transfers to credit accounts
+    const filteredTxs = transactions.filter(tx => 
+      tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')
+    );
 
     // Separate into fixed (isScheduled=true) and variable
-    const fixedTxs = transactions.filter(tx => tx.isScheduled === true);
-    const variableTxs = transactions.filter(tx => !tx.isScheduled);
+    const fixedTxs = filteredTxs.filter(tx => tx.isScheduled === true);
+    const variableTxs = filteredTxs.filter(tx => !tx.isScheduled);
 
     const buildGrouped = (txList) => {
       const grouped = {};
       txList.forEach(tx => {
-        const cat = tx.categoryId;
-        if (!cat) {
-          const key = '__uncategorized__';
-          if (!grouped[key]) {
-            grouped[key] = { categoryId: key, name: 'Non catégorisé', icon: '❓', color: '#888', amount: 0, count: 0 };
-          }
-          grouped[key].amount += tx.amount;
-          grouped[key].count += 1;
-          return;
+        let key;
+        let name;
+        let icon;
+        let color;
+
+        if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+          key = 'credit_repayment';
+          name = 'Remboursement Crédit';
+          icon = '🏦';
+          color = '#f43f5e';
+        } else if (!tx.categoryId) {
+          key = '__uncategorized__';
+          name = 'Non catégorisé';
+          icon = '❓';
+          color = '#888';
+        } else {
+          const cat = tx.categoryId;
+          const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
+          const mainCat = categoryMap[mainCatId] || { name: cat.name, icon: cat.icon, color: cat.color };
+          key = mainCatId;
+          name = mainCat.name;
+          icon = mainCat.icon || '📁';
+          color = mainCat.color || '#888';
         }
 
-        // Resolve to main category
-        const mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
-        const mainCat = categoryMap[mainCatId] || { name: cat.name, icon: cat.icon, color: cat.color };
-
-        if (!grouped[mainCatId]) {
-          grouped[mainCatId] = {
-            categoryId: mainCatId,
-            name: mainCat.name,
-            icon: mainCat.icon,
-            color: mainCat.color,
+        if (!grouped[key]) {
+          grouped[key] = {
+            categoryId: key,
+            name,
+            icon,
+            color,
             amount: 0,
             count: 0
           };
         }
-        grouped[mainCatId].amount += tx.amount;
-        grouped[mainCatId].count += 1;
+        grouped[key].amount += tx.amount;
+        grouped[key].count += 1;
       });
 
       const total = Object.values(grouped).reduce((s, g) => s + g.amount, 0);
@@ -1399,8 +1549,13 @@ export const getWaterfallData = async (req, res) => {
     const transactions = await Transaction.find({
       userId: req.user.id,
       isPending: { $ne: true },
-      date: { $gte: start, $lte: end }
-    }).select('categoryId amount type').lean();
+      date: { $gte: start, $lte: end },
+      $or: [
+        { type: 'income' },
+        { type: 'expense' },
+        { type: 'transfer' }
+      ]
+    }).select('categoryId amount type toAccountId').populate('toAccountId', 'type').lean();
 
     let totalIncome = 0;
     let totalExpenses = 0;
@@ -1411,29 +1566,39 @@ export const getWaterfallData = async (req, res) => {
     transactions.forEach(tx => {
       if (tx.type === 'income') {
         totalIncome += tx.amount;
-      } else if (tx.type === 'expense') {
+      } else if (tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit')) {
         totalExpenses += tx.amount;
-        if (!tx.categoryId) return;
-        const catIdStr = tx.categoryId.toString();
-        const cat = categoryMap[catIdStr];
-        if (!cat) return;
-
-        let mainCatId = cat._id.toString();
-
-        // If it's a subcategory, group under parent
-        if (cat.parentId) {
-          mainCatId = cat.parentId.toString();
+        
+        let mainCatId;
+        if (tx.type === 'transfer' && tx.toAccountId?.type === 'credit') {
+          mainCatId = 'credit_repayment';
+        } else {
+          if (!tx.categoryId) return;
+          const catIdStr = tx.categoryId.toString();
+          const cat = categoryMap[catIdStr];
+          if (!cat) return;
+          mainCatId = cat.parentId ? cat.parentId.toString() : cat._id.toString();
         }
 
         if (!groupedExpenses[mainCatId]) {
-          const mainCat = categoryMap[mainCatId] || { name: 'Autre', icon: '❓', color: '#888888' };
-          groupedExpenses[mainCatId] = {
-            categoryId: mainCatId,
-            name: mainCat.name,
-            icon: mainCat.icon,
-            color: mainCat.color,
-            amount: 0
-          };
+          if (mainCatId === 'credit_repayment') {
+            groupedExpenses[mainCatId] = {
+              categoryId: 'credit_repayment',
+              name: 'Remboursement Crédit',
+              icon: '🏦',
+              color: '#f43f5e',
+              amount: 0
+            };
+          } else {
+            const mainCat = categoryMap[mainCatId] || { name: 'Autre', icon: '❓', color: '#888888' };
+            groupedExpenses[mainCatId] = {
+              categoryId: mainCatId,
+              name: mainCat.name,
+              icon: mainCat.icon,
+              color: mainCat.color,
+              amount: 0
+            };
+          }
         }
         groupedExpenses[mainCatId].amount += tx.amount;
       }

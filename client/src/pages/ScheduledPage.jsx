@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderActions, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { Plus, Clock, HelpCircle, Check, AlertCircle, RefreshCw, Trash2, Edit, CreditCard } from 'lucide-react';
 
 const ScheduledPage = () => {
+  const { isScrolled } = useContext(HeaderPortalContext);
   const { 
     scheduled, 
     pending, 
@@ -87,7 +88,7 @@ const ScheduledPage = () => {
     </button>
   );
 
-  retu  // Filter active subscriptions and planned transactions
+  // Filter active subscriptions and planned transactions
   const activeSubscriptions = scheduled.filter(st => st.isSubscription && st.isActive);
   const activeScheduled = scheduled.filter(st => !st.isSubscription);
 
@@ -115,11 +116,15 @@ const ScheduledPage = () => {
       <HeaderBackButton to="/" />
 
       {/* Large Page Title */}
-      <div className="mb-5 mt-2 px-1">
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
         <div className="text-2xl font-extrabold text-primary tracking-tight">
           Planifications & Abonnements
         </div>
-        <p className="text-[11px] text-secondary mt-0.5 font-medium">Suivi de vos échéances et coûts de souscriptions récurrentes.</p>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Suivi de vos échéances et coûts de souscriptions récurrentes.</p>
       </div>
 
       {/* Tabs Selector */}
@@ -154,19 +159,19 @@ const ScheduledPage = () => {
               <div className="space-y-3">
                 {pending.map(tx => (
                   <div key={tx._id} className="bg-surface-2 p-5 rounded-[24px] border border-accent/20 shadow-md space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-lg text-accent">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-lg text-accent shrink-0">
                           {tx.categoryId?.icon || '⏳'}
                         </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-primary">{tx.description || tx.categoryId?.name}</h4>
-                          <p className="text-xs text-muted">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold text-primary truncate">{tx.description || tx.categoryId?.name}</h4>
+                          <p className="text-xs text-muted truncate">
                             Prévu le : {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
                           </p>
                         </div>
                       </div>
-                      <span className="font-mono font-bold text-primary">{formatCurrency(tx.amount)}</span>
+                      <span className="font-mono font-bold text-primary shrink-0 pl-1">{formatCurrency(tx.amount)}</span>
                     </div>
 
                     {/* Actions inside card */}
@@ -231,16 +236,16 @@ const ScheduledPage = () => {
 
                   return (
                     <div key={st._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex flex-col gap-3 group relative">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm"
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm shrink-0"
                             style={{ backgroundColor: `${st.categoryId?.color || '#888'}20` }}
                           >
                             {st.categoryId?.icon || '🔁'}
                           </div>
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-bold text-primary truncate">{st.description}</h4>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm font-bold text-primary truncate" title={st.description}>{st.description}</h4>
                             <div className="flex flex-wrap items-center gap-1.5 mt-1">
                               {st.type === 'transfer' && (
                                 <span className="text-[9px] font-bold text-info bg-info/10 px-1.5 py-0.5 rounded-full">
@@ -256,9 +261,13 @@ const ScheduledPage = () => {
                           </div>
                         </div>
                         
-                        <div className="text-right">
-                          <span className={`font-mono font-bold ${st.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
-                            {st.type === 'expense' ? '-' : '+'}{formatCurrency(st.amount)}
+                        <div className="text-right shrink-0 pl-1">
+                          <span className={`font-mono font-bold ${
+                            st.type === 'expense' || (st.type === 'transfer' && st.toAccountId?.type === 'credit')
+                              ? 'text-primary'
+                              : 'text-accent'
+                          }`}>
+                            {st.type === 'expense' || (st.type === 'transfer' && st.toAccountId?.type === 'credit') ? '-' : '+'}{formatCurrency(st.amount)}
                           </span>
                           <p className="text-[9px] text-muted mt-1 whitespace-nowrap">
                             {frequencyText} · Prochain : {new Date(st.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
@@ -366,15 +375,15 @@ const ScheduledPage = () => {
                   }`;
 
                   return (
-                    <div key={sub._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between group relative">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div key={sub._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between gap-3 group relative">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div 
                           className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 shadow-sm"
                           style={{ backgroundColor: `${sub.categoryId?.color || '#888'}20` }}
                         >
                           {sub.categoryId?.icon || '💳'}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <h4 className="text-sm font-bold text-primary truncate">{sub.description}</h4>
                           <p className="text-xs text-muted truncate">
                             {frequencyText} · Prochain : {new Date(sub.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
@@ -382,7 +391,7 @@ const ScheduledPage = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 text-right">
+                      <div className="flex items-center gap-3 text-right shrink-0 ml-auto pl-1">
                         <span className="font-mono font-bold text-primary">
                           -{formatCurrency(sub.amount)}
                         </span>

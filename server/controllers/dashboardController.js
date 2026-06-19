@@ -336,7 +336,7 @@ export const getDashboardSummary = async (req, res) => {
         userId,
         isActive: true,
         nextDate: { $gte: now, $lte: futureLimit }
-      }).populate('categoryId', 'name icon').lean(),
+      }).populate('categoryId', 'name icon').populate('toAccountId', 'type').lean(),
       SavingsGoal.find({ userId }).lean(),
       Transaction.findOne({ userId, isPending: { $ne: true } }).sort({ date: 1 }).lean(),
       Transaction.find({
@@ -919,7 +919,7 @@ const computeMonthScore = async (userId, monthKey) => {
     userId,
     isPending: { $ne: true },
     date: { $gte: startOfMonth, $lte: endOfMonth }
-  }).lean();
+  }).populate('toAccountId', 'type').lean();
 
   // ── Pilier 1 : Taux d'épargne ───────────────────────────────────────────────
   // Income = income transactions on checking accounts
@@ -987,14 +987,12 @@ const computeMonthScore = async (userId, monthKey) => {
     pillar2Score = Math.round(ratio * 25);
   }
 
-  // ── Pilier 3 : Ratio charges fixes / revenus ─────────────────────────────────
-  // Fixed charges = transactions with isScheduled: true that are expenses on checking accounts
   let fixedCharges = 0;
   for (const tx of monthTransactions) {
     if (
       tx.isScheduled === true &&
-      tx.type === 'expense' &&
-      checkingIds.some(id => id.toString() === tx.accountId?.toString())
+      checkingIds.some(id => id.toString() === tx.accountId?.toString()) &&
+      (tx.type === 'expense' || (tx.type === 'transfer' && tx.toAccountId?.type === 'credit'))
     ) {
       fixedCharges += tx.amount;
     }

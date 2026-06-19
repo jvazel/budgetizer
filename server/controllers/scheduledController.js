@@ -256,7 +256,10 @@ export const getUpcomingTransactions = async (req, res) => {
       userId: req.user.id,
       isActive: true,
       nextDate: { $lte: futureLimit }
-    }).populate('categoryId', 'name icon color type').populate('accountId', 'name color icon');
+    })
+    .populate('categoryId', 'name icon color type')
+    .populate('accountId', 'name color icon')
+    .populate('toAccountId', 'name color icon type');
 
     const upcoming = [];
 
@@ -280,7 +283,8 @@ export const getUpcomingTransactions = async (req, res) => {
           categoryId: st.categoryId,
           accountId: st.accountId,
           isSubscription: st.isSubscription,
-          autoConfirm: st.autoConfirm
+          autoConfirm: st.autoConfirm,
+          toAccountId: st.toAccountId
         });
 
         // Move to next date deterministically using calculateNextDate

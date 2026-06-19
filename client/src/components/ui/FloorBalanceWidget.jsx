@@ -160,7 +160,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
     ).getTime();
 
     return upcoming.filter((tx) => {
-      if (tx.type !== 'expense') return false;
+      if (tx.type !== 'expense' && !(tx.type === 'transfer' && tx.toAccountId?.type === 'credit')) return false;
       const txDate = new Date(tx.date);
       const txTime = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate()).getTime();
       return txTime >= todayStart && txTime < paycheckStart;
