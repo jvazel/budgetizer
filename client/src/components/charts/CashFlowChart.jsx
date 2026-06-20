@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAccounts } from '../../hooks/useAccounts';
-import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { AlertCircle, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Wallet, Scale, Activity, X, Calendar } from 'lucide-react';
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend, CartesianGrid } from 'recharts';
+import { AlertCircle, AlertTriangle, CheckCircle2, Wallet, Scale, Activity, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
@@ -95,7 +95,6 @@ const CashFlowChart = () => {
   const StatusIcon = statusStyle.icon;
 
   const handleBarClick = async (clickedData) => {
-    // Recharts passes either directly the item payload or the active payload depending on where click triggers
     const payload = clickedData?.activePayload?.[0]?.payload || clickedData;
     if (!payload || !payload.month) return;
     
@@ -127,13 +126,13 @@ const CashFlowChart = () => {
       {/* 1. Filters (Horizon + Account Selector) */}
       <div className="flex gap-4 items-center justify-between">
         {/* Horizon selector */}
-        <div className="flex gap-1 bg-surface-2 p-1 rounded-xl">
+        <div className="flex gap-1 bg-surface-2-glass backdrop-blur-md p-1 rounded-xl border border-border/40">
           {[6, 12, 24].map(m => (
             <button
               key={m}
               onClick={() => setHorizon(m)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                horizon === m ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+                horizon === m ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
               }`}
             >
               {m} mois
@@ -146,7 +145,7 @@ const CashFlowChart = () => {
           value={selectedAccountId}
           onChange={(e) => setSelectedAccountId(e.target.value)}
           align="right"
-          className="bg-surface-2 border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+          className="bg-surface-2-glass backdrop-blur-md border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
         >
           <option value="">Tous les comptes</option>
           {accounts.map(a => (
@@ -157,7 +156,7 @@ const CashFlowChart = () => {
 
       {/* 2. Dynamic Diagnostic Banner */}
       {!loading && metrics.message && (
-        <div className={`p-4 rounded-2xl border flex items-start gap-3.5 transition-all shadow-sm ${statusStyle.bg}`}>
+        <div className={`p-4 rounded-[24px] border flex items-start gap-3.5 transition-all shadow-sm ${statusStyle.bg}`}>
           <StatusIcon size={20} className={`${statusStyle.iconColor} shrink-0 mt-0.5`} />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -174,13 +173,13 @@ const CashFlowChart = () => {
       {/* 3. Key Metrics Cards Grid */}
       <div className="grid grid-cols-3 gap-3.5">
         {/* Card 1: Total Savings / Rate */}
-        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+        <div className="bg-surface-2/80 backdrop-blur-md p-4 rounded-[24px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="space-y-1">
             <div className="w-7 h-7 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
               <Wallet size={14} />
             </div>
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Épargne Nette</p>
-            <h4 className={`text-sm font-extrabold mt-0.5 leading-tight ${metrics.netSavings >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <h4 className={`font-premium-numbers text-xs sm:text-sm font-extrabold mt-0.5 leading-tight ${metrics.netSavings >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {loading ? '...' : formatCurrency(metrics.netSavings)}
             </h4>
           </div>
@@ -190,30 +189,30 @@ const CashFlowChart = () => {
         </div>
 
         {/* Card 2: Averages */}
-        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+        <div className="bg-surface-2/80 backdrop-blur-md p-4 rounded-[24px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="space-y-1">
             <div className="w-7 h-7 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
               <Scale size={14} />
             </div>
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Moyenne / Mois</p>
-            <h4 className="text-sm font-extrabold mt-0.5 leading-tight text-primary">
+            <h4 className="font-premium-numbers text-xs sm:text-sm font-extrabold mt-0.5 leading-tight text-primary">
               {loading ? '...' : formatCurrency(metrics.avgNet)}
             </h4>
           </div>
-          <div className="text-[8px] text-muted font-bold mt-2 space-y-0.5">
+          <div className="font-premium-numbers text-[8px] text-muted font-bold mt-2 space-y-0.5">
             <div>Rev: {loading ? '...' : formatCurrency(metrics.avgIncome)}</div>
             <div>Dép: {loading ? '...' : formatCurrency(metrics.avgExpenses)}</div>
           </div>
         </div>
 
         {/* Card 3: Monthly Breakdown */}
-        <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
+        <div className="bg-surface-2/80 backdrop-blur-md p-4 rounded-[24px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="space-y-1">
             <div className="w-7 h-7 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
               <Activity size={14} />
             </div>
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Mois Positifs</p>
-            <h4 className="text-sm font-extrabold mt-0.5 leading-tight text-primary">
+            <h4 className="font-premium-numbers text-xs sm:text-sm font-extrabold mt-0.5 leading-tight text-primary">
               {loading ? '...' : `${metrics.positiveMonths} / ${horizon}`}
             </h4>
           </div>
@@ -224,7 +223,7 @@ const CashFlowChart = () => {
       </div>
 
       {/* 4. Chart Card */}
-      <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+      <div className="bg-surface-2/80 backdrop-blur-md p-5 rounded-[28px] border border-border/40 shadow-md space-y-4">
         <div>
           <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase">Graphique Mensuel</h3>
           <p className="text-[10px] text-muted">Comparaison directe entre vos gains (vert) et vos dépenses (rouge). La ligne violette montre l'épargne nette. Touchez une barre pour voir les détails.</p>
@@ -247,24 +246,25 @@ const CashFlowChart = () => {
               >
                 <defs>
                   <linearGradient id="cfIncomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.95}/>
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.85}/>
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.15}/>
                   </linearGradient>
                   <linearGradient id="cfExpenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.95}/>
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.85}/>
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.15}/>
                   </linearGradient>
                 </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.02)" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="month"
                   tickFormatter={formatMonthShortLabel}
-                  tick={{ fontSize: 9, fill: '#888', fontWeight: 'bold' }}
+                  tick={{ fontSize: 9, fill: 'var(--text-secondary)', fontWeight: 'bold' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   tickFormatter={(val) => `${val} €`}
-                  tick={{ fontSize: 9, fill: '#888' }}
+                  tick={{ fontSize: 9, fill: 'var(--text-secondary)' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -282,15 +282,15 @@ const CashFlowChart = () => {
                     return [formatCurrency(val), name];
                   }}
                   contentStyle={{
-                    borderRadius: '16px',
-                    background: 'rgba(10, 10, 12, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '20px',
+                    background: 'rgba(11, 21, 45, 0.90)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(229, 233, 240, 0.08)',
                     color: '#fff',
                     fontSize: '11px',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)'
                   }}
-                  cursor={{ stroke: 'rgba(255, 255, 255, 0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{ stroke: 'rgba(255, 255, 255, 0.05)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Legend
                   verticalAlign="top"
@@ -307,7 +307,7 @@ const CashFlowChart = () => {
                 />
 
                 {/* Grid line at 0 net */}
-                <ReferenceLine y={0} stroke="rgba(255, 255, 255, 0.15)" strokeDasharray="3 3" />
+                <ReferenceLine y={0} stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
 
                 {/* Bars for Income & Expenses side-by-side */}
                 <Bar
@@ -329,9 +329,9 @@ const CashFlowChart = () => {
                 <Line
                   type="monotone"
                   dataKey="net"
-                  stroke="#a855f7"
+                  stroke="#8b5cf6"
                   strokeWidth={2.5}
-                  dot={{ r: 3, strokeWidth: 1.5, fill: '#1e293b' }}
+                  dot={{ r: 3, strokeWidth: 1.5, fill: 'var(--bg-surface)' }}
                   activeDot={{ r: 5 }}
                   className="cursor-pointer"
                 />
@@ -343,7 +343,7 @@ const CashFlowChart = () => {
 
       {/* 5. Analysis Advice Card */}
       {!loading && (
-        <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-3.5">
+        <div className="bg-surface-2/80 backdrop-blur-md p-5 rounded-[28px] border border-border/40 shadow-sm space-y-3.5">
           <div className="flex items-center gap-2">
             <Scale size={16} className="text-accent" />
             <h3 className="text-xs font-extrabold text-primary tracking-wider uppercase">Comment interpréter ce graphique ?</h3>
@@ -417,28 +417,31 @@ const CashFlowChart = () => {
                 <p className="text-center text-xs text-muted py-8">Aucune transaction ce mois-ci.</p>
               ) : (
                 monthTransactions.map(tx => (
-                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
+                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-[24px] border border-border/30 flex items-center justify-between hover:bg-surface/30 transition-all cursor-pointer">
                     <div className="min-w-0 pr-2">
-                      <p className="text-xs font-bold text-primary truncate">
+                      <p className="text-xs font-bold text-primary truncate leading-snug">
                         {tx.description || tx.note || (tx.type === 'transfer' ? 'Virement' : tx.categoryId?.name) || 'Sans description'}
                       </p>
                       <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
                         <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        {(tx.description || tx.note) && (tx.categoryId?.name || tx.type === 'transfer') && (
+                        {tx.categoryId?.name && (
                           <>
                             <span className="opacity-60">•</span>
-                            <span className="truncate max-w-[100px]">{tx.type === 'transfer' ? 'Virement' : tx.categoryId?.name}</span>
+                            <span className="truncate max-w-[100px]">{tx.categoryId?.name}</span>
                           </>
                         )}
-                        {tx.description && tx.note && (
+                        {tx.accountId?.name && (
                           <>
                             <span className="opacity-60">•</span>
-                            <span className="truncate max-w-[100px] italic">({tx.note})</span>
+                            <span className="inline-flex items-center gap-1 font-bold text-secondary">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                              {tx.accountId?.name}
+                            </span>
                           </>
                         )}
                       </p>
                     </div>
-                    <span className={`font-mono text-xs font-black shrink-0 ${
+                    <span className={`font-premium-numbers text-xs font-black shrink-0 ${
                       tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
                     }`}>
                       {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}

@@ -137,15 +137,24 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                     style={{ 
                        backgroundColor: tx.type === 'transfer' 
                         ? 'rgba(59, 130, 246, 0.12)' 
-                        : `${tx.categoryId?.color || '#888'}15` 
+                        : !tx.categoryId
+                          ? 'rgba(245, 158, 11, 0.12)'
+                          : `${tx.categoryId?.color || '#888'}12`,
+                       border: tx.type === 'transfer'
+                        ? '1px solid rgba(59, 130, 246, 0.20)'
+                        : !tx.categoryId
+                          ? '1px solid rgba(245, 158, 11, 0.25)'
+                          : `1px solid ${tx.categoryId?.color || '#888'}25`
                     }}
                   >
-                    {tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
+                    {tx.type === 'transfer' ? '🔄' : !tx.categoryId ? '❓' : (tx.categoryId?.icon || '💸')}
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <p 
-                      className="text-primary font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug" 
+                      className={`font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug ${
+                        !tx.categoryId && tx.type !== 'transfer' ? 'text-amber-500' : 'text-primary'
+                      }`}
                       title={
                         tx.type === 'transfer' 
                           ? (tx.description || tx.note || 'Virement') 
@@ -154,18 +163,18 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                     >
                       {tx.type === 'transfer' 
                         ? (tx.description || tx.note || 'Virement') 
-                        : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
+                        : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie ⚠️')
                       }
                     </p>
                     
                     {tx.type === 'transfer' ? (
                       <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-secondary">
-                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-secondary truncate max-w-[110px] xs:max-w-[160px]">
                           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
                           <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                         </span>
                         <span className="text-muted text-[10px] shrink-0">➔</span>
-                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-secondary truncate max-w-[110px] xs:max-w-[160px]">
                           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
                           <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
                         </span>
@@ -173,12 +182,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                         {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
                           <span
                             key={tag._id}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
-                            style={{
-                              backgroundColor: `${tag.color}18`,
-                              color: tag.color,
-                              borderColor: `${tag.color}35`
-                            }}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold shrink-0 border bg-copper-dim border-copper/15 text-copper"
                           >
                             #{tag.name}
                           </span>
@@ -186,26 +190,25 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                       </div>
                     ) : (
                       <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        {tx.categoryId?.name && (
-                          <span className="text-[10px] text-secondary/80 font-medium truncate">
+                        {tx.categoryId?.name ? (
+                          <span className="text-[10px] text-secondary/80 font-bold truncate">
                             {tx.categoryId.name}
                           </span>
+                        ) : (
+                          <span className="text-[10px] text-amber-500 font-extrabold flex items-center gap-0.5">
+                            À catégoriser
+                          </span>
                         )}
-                        {tx.categoryId?.name && <span className="text-muted text-[8px]">•</span>}
-                        <span className="inline-flex items-center gap-1 bg-surface border border-border/40 px-2 py-0.5 rounded-full text-[10px] font-medium text-secondary truncate w-fit max-w-full">
+                        <span className="text-muted text-[8px]">•</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-secondary truncate w-fit max-w-full">
                           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
                           <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
                         </span>
-
+ 
                         {tx.tags && tx.tags.length > 0 && tx.tags.map(tag => (
                           <span
                             key={tag._id}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold shrink-0 border"
-                            style={{
-                              backgroundColor: `${tag.color}18`,
-                              color: tag.color,
-                              borderColor: `${tag.color}35`
-                            }}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold shrink-0 border bg-copper-dim border-copper/15 text-copper"
                           >
                             #{tag.name}
                           </span>
@@ -213,6 +216,21 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                       </div>
                     )}
                   </div>
+
+                  {/* Uncategorized Action Button (Gamification) */}
+                  {!tx.categoryId && tx.type !== 'transfer' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerHaptic('light');
+                        if (onEdit) onEdit(tx);
+                      }}
+                      className="mr-1 px-2.5 py-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 active:scale-90 transition-all flex items-center gap-1 shrink-0"
+                    >
+                      Classer ➔
+                    </button>
+                  )}
                   
                   <div className="text-right shrink-0 ml-auto pl-1">
                     <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${

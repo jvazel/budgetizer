@@ -24,7 +24,7 @@ export default {
         purple: "var(--purple)",
       },
       fontFamily: {
-        sans: ['"DM Sans"', "sans-serif"],
+        sans: ['"Manrope"', "sans-serif"],
         mono: ['"DM Mono"', "monospace"],
       },
     },

@@ -36,13 +36,13 @@ const BottomTabBar = ({ onPlusClick }) => {
       >
         {/* Active pill indicator */}
         {isActive && (
-          <div className="absolute inset-x-0.5 inset-y-1 rounded-xl bg-accent/10 -z-10 transition-all duration-300" />
+          <div className="absolute inset-x-0.5 inset-y-1 rounded-xl bg-copper-dim -z-10 transition-all duration-300" />
         )}
         <Icon
           size={20}
-          className={`transition-all duration-300 ${isActive ? 'text-accent' : 'text-secondary/70'}`}
+          className={`transition-all duration-300 ${isActive ? 'text-copper' : 'text-secondary/70'}`}
         />
-        <span className={`text-[9px] font-bold transition-colors duration-300 ${isActive ? 'text-accent' : 'text-secondary/70'}`}>
+        <span className={`text-[9px] font-bold transition-colors duration-300 ${isActive ? 'text-copper' : 'text-secondary/70'}`}>
           {tab.label}
         </span>
       </button>
@@ -50,7 +50,10 @@ const BottomTabBar = ({ onPlusClick }) => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-surface/90 backdrop-blur-lg border-t border-border/80 z-40 pb-[env(safe-area-inset-bottom)]">
+    <div 
+      className="fixed bottom-0 left-0 right-0 h-[calc(72px+env(safe-area-inset-bottom,0px))] bg-surface-glass backdrop-blur-lg border-t border-border/40 z-40 pb-[env(safe-area-inset-bottom,0px)] will-change-transform"
+      style={{ transform: 'translate3d(0, 0, 0)' }}
+    >
       <div className="flex justify-between items-center h-full px-6 max-w-md mx-auto relative">
 
         {renderTab(tabs[0])}
@@ -60,7 +63,7 @@ const BottomTabBar = ({ onPlusClick }) => {
         <div className="relative flex justify-center w-16">
           <button
             onClick={handlePlusClick}
-            className="absolute -top-7 w-[56px] h-[56px] bg-gradient-to-b from-[#10b981] to-[#059669] border border-white/10 rounded-full flex items-center justify-center text-white shadow-[0_8px_24px_rgba(0,0,0,0.5),0_2px_8px_rgba(16,185,129,0.3)] transition-all duration-300 hover:scale-105 active:scale-90"
+            className="absolute -top-7 w-[56px] h-[56px] bg-gradient-to-b from-[#d97706] to-[#b45309] border border-white/10 rounded-full flex items-center justify-center text-white shadow-[0_8px_24px_rgba(0,0,0,0.5),0_2px_8px_rgba(217,119,6,0.35)] transition-all duration-300 hover:scale-105 active:scale-90"
           >
             <Plus size={26} />
           </button>

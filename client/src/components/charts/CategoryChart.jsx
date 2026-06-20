@@ -404,7 +404,7 @@ const CategoryChart = () => {
       {/* 1. Selectors */}
       <div className="space-y-4">
         {/* Toggle between Monthly and Cumulative views */}
-        <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-full">
+        <div className="grid grid-cols-2 gap-1 bg-surface-2-glass backdrop-blur-md p-1 rounded-xl w-full border border-border/40">
           <button
             type="button"
             onClick={() => {
@@ -413,7 +413,7 @@ const CategoryChart = () => {
               }
             }}
             className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
-              isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+              isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
             }`}
           >
             Vue mensuelle
@@ -426,7 +426,7 @@ const CategoryChart = () => {
               }
             }}
             className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
-              !isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+              !isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
             }`}
           >
             Analyses cumulées
@@ -435,11 +435,11 @@ const CategoryChart = () => {
 
         {/* Period navigation or choices */}
         {isMonthly() ? (
-          <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-xl border border-border/40">
+          <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+              className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
               title="Mois précédent"
             >
               <ChevronLeft size={16} />
@@ -448,7 +448,7 @@ const CategoryChart = () => {
             <button
               type="button"
               onClick={() => setIsMonthSheetOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
             >
               <Calendar size={14} className="text-accent" />
               <span>{formatPeriodLabel(period)}</span>
@@ -458,7 +458,7 @@ const CategoryChart = () => {
               type="button"
               onClick={handleNextMonth}
               disabled={isCurrentMonth()}
-              className={`p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+              className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
                 isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
               }`}
               title="Mois suivant"
@@ -479,8 +479,8 @@ const CategoryChart = () => {
                 onClick={() => setPeriod(p.id)}
                 className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
                   period === p.id 
-                    ? 'bg-accent text-white shadow-sm' 
-                    : 'bg-surface-2 text-secondary hover:text-primary'
+                    ? 'bg-copper text-white shadow-sm font-extrabold' 
+                    : 'bg-surface-2-glass text-secondary hover:text-primary'
                 }`}
               >
                 {p.label}
@@ -496,12 +496,12 @@ const CategoryChart = () => {
 
         {/* Toggle expense/income & comparison */}
         <div className="flex justify-between items-center gap-4">
-          <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-48">
+          <div className="grid grid-cols-2 gap-1 bg-surface-2-glass backdrop-blur-md p-1 rounded-xl w-48 border border-border/40">
             <button
               type="button"
               onClick={() => setType('expense')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
-                type === 'expense' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+                type === 'expense' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
               }`}
             >
               Dépenses
@@ -510,7 +510,7 @@ const CategoryChart = () => {
               type="button"
               onClick={() => setType('income')}
               className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
-                type === 'income' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+                type === 'income' ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
               }`}
             >
               Revenus
@@ -521,7 +521,7 @@ const CategoryChart = () => {
           <button
             type="button"
             onClick={() => setIsCompareSheetOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2 border border-border/40 hover:bg-surface-2/80 active:scale-98 transition-all text-xs font-bold text-secondary"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-2-glass border border-border/40 hover:bg-surface-2/80 active:scale-98 transition-all text-xs font-bold text-secondary"
           >
             <TrendingUp size={12} className="text-accent" />
             <span>
@@ -540,7 +540,7 @@ const CategoryChart = () => {
         {selectedCategory && (
           <button
             onClick={() => setSelectedCategory(null)}
-            className="absolute top-4 left-4 text-xs font-bold text-accent flex items-center gap-1 bg-surface px-3 py-1.5 rounded-xl border border-border/40 shadow-sm"
+            className="absolute top-4 left-4 text-xs font-bold text-accent flex items-center gap-1 bg-surface px-3 py-1.5 rounded-xl border border-border/40 shadow-sm active:scale-95 transition-transform"
           >
             <ArrowLeft size={14} /> Toutes
           </button>
@@ -563,7 +563,7 @@ const CategoryChart = () => {
                     ? pieData[activeIndex].name
                     : (selectedCategory ? selectedCategory.name : 'Total')}
                 </span>
-                <p className="font-mono text-lg font-black text-primary truncate max-w-full leading-none mt-0.5">
+                <p className="font-premium-numbers text-lg font-black text-primary truncate max-w-full leading-none mt-0.5">
                   {formatCurrency(
                     activeIndex !== null && pieData[activeIndex]
                       ? pieData[activeIndex].value
@@ -583,8 +583,8 @@ const CategoryChart = () => {
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={90}
+                    innerRadius={70}
+                    outerRadius={95}
                     paddingAngle={3}
                     dataKey="value"
                     onClick={handleSliceClick}
@@ -601,14 +601,13 @@ const CategoryChart = () => {
                     formatter={(val) => formatCurrency(val)} 
                     wrapperStyle={{ pointerEvents: 'none' }}
                     contentStyle={{
-                      borderRadius: '16px',
-                      background: 'rgba(10, 10, 12, 0.85)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '20px',
+                      background: 'rgba(11, 21, 45, 0.90)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(229, 233, 240, 0.08)',
                       color: '#fff',
-                      fontFamily: 'monospace',
                       fontSize: '11px',
-                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)'
                     }}
                   />
                 </PieChart>
@@ -638,18 +637,20 @@ const CategoryChart = () => {
               <button
                 key={idx}
                 onClick={() => handleSubcategoryClick(sub.name)}
-                className="w-full bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between hover:bg-surface-2/70 active:scale-99 transition-all text-left"
+                className="w-full bg-surface-2 p-3.5 rounded-[24px] border border-border/40 flex items-center justify-between hover:bg-surface/30 active:scale-99 transition-all text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{sub.icon || '📁'}</span>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-surface-2/60 border border-border/40 shrink-0">
+                    {sub.icon || '📁'}
+                  </div>
                   <div>
-                    <h4 className="text-sm font-bold text-primary">{sub.name}</h4>
-                    <p className="text-xs text-muted">{sub.percentage}% de {selectedCategory.name}</p>
+                    <h4 className="text-xs sm:text-sm font-bold text-primary leading-snug">{sub.name}</h4>
+                    <p className="text-[10px] text-muted">{sub.percentage}% de {selectedCategory.name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-bold text-primary">{formatCurrency(sub.amount)}</span>
-                  <ChevronRight size={16} className="text-muted" />
+                  <span className="font-premium-numbers text-xs sm:text-sm font-bold text-primary">{formatCurrency(sub.amount)}</span>
+                  <ChevronRight size={16} className="text-muted shrink-0" />
                 </div>
               </button>
             ))}
@@ -661,27 +662,30 @@ const CategoryChart = () => {
               <div 
                 key={idx}
                 onClick={() => cat.subcategories?.length > 0 ? setSelectedCategory(cat) : handleOpenDetailSheet(cat)}
-                className="w-full bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between hover:bg-surface-2/70 transition-all cursor-pointer"
+                className="w-full bg-surface-2 p-3.5 rounded-[24px] border border-border/40 flex items-center justify-between hover:bg-surface/30 active:scale-[0.99] transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                    style={{ backgroundColor: `${cat.color || '#888'}15` }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
+                    style={{ 
+                      backgroundColor: `${cat.color || '#888'}1f`,
+                      border: `1px solid ${cat.color || '#888'}25`
+                    }}
                   >
                     {cat.icon || '📁'}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-primary">{cat.name}</h4>
-                    <p className="text-xs text-muted">{cat.percentage}% du total</p>
+                    <h4 className="text-xs sm:text-sm font-bold text-primary leading-snug">{cat.name}</h4>
+                    <p className="text-[10px] text-muted">{cat.percentage}% du total</p>
                   </div>
                 </div>
 
                 <div className="text-right flex items-center gap-3">
                   <div className="flex flex-col items-end">
-                    <span className="font-mono text-sm font-bold text-primary block">{formatCurrency(cat.amount)}</span>
+                    <span className="font-premium-numbers text-xs sm:text-sm font-bold text-primary block">{formatCurrency(cat.amount)}</span>
                     
                     {compareMode !== 'none' && (
-                      <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${getCompareColorClass(cat)}`}>
+                      <span className={`text-[9px] font-bold flex items-center justify-end gap-0.5 ${getCompareColorClass(cat)}`}>
                         {getCompareDiff(cat) > 0 ? (
                           <ArrowUpRight size={10} />
                         ) : getCompareDiff(cat) < 0 ? (
@@ -699,7 +703,7 @@ const CategoryChart = () => {
                       e.stopPropagation();
                       handleOpenDetailSheet(cat);
                     }}
-                    className="p-1.5 rounded-lg bg-surface hover:bg-border/30 transition-colors text-accent flex items-center justify-center"
+                    className="p-1.5 rounded-lg bg-surface hover:bg-border/30 transition-colors text-accent flex items-center justify-center active:scale-95"
                     title="Voir les tendances"
                   >
                     <TrendingUp size={14} />
@@ -727,7 +731,7 @@ const CategoryChart = () => {
               </div>
               <button 
                 onClick={() => setTransactionListSheet({ isOpen: false, subcatName: null, txs: [] })} 
-                className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors"
+                className="p-1 rounded-full bg-surface-2 hover:bg-border/60 transition-colors active:scale-90"
               >
                 <X size={20} className="text-secondary" />
               </button>
@@ -739,14 +743,23 @@ const CategoryChart = () => {
                 <p className="text-center text-xs text-muted py-6">Aucune transaction trouvée.</p>
               ) : (
                 transactionListSheet.txs.map(tx => (
-                  <div key={tx._id} className="bg-surface-2 p-4 rounded-xl border border-border/40 flex items-center justify-between">
+                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-2xl border border-border/40 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-bold text-primary">{tx.note || tx.description || 'Sans note'}</p>
-                      <p className="text-[10px] text-muted flex items-center gap-1">
+                      <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5">
                         <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {tx.accountId?.name && (
+                          <>
+                            <span className="opacity-60">•</span>
+                            <span className="inline-flex items-center gap-1 font-bold text-secondary">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                              {tx.accountId?.name}
+                            </span>
+                          </>
+                        )}
                       </p>
                     </div>
-                    <span className="font-mono text-xs font-extrabold text-primary">
+                    <span className="font-premium-numbers text-xs font-extrabold text-primary shrink-0 pl-1">
                       {formatCurrency(tx.amount)}
                     </span>
                   </div>

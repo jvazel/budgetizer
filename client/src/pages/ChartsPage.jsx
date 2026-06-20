@@ -49,7 +49,7 @@ const ChartsPage = () => {
   const titleElement = (
     <div 
       onClick={() => setIsSelectorOpen(true)}
-      className="flex items-center gap-1.5 cursor-pointer hover:text-accent active:opacity-75 transition-all select-none"
+      className="flex items-center gap-1.5 cursor-pointer hover:text-copper active:opacity-75 transition-all select-none"
     >
       <span>Analyses : {tabNames[activeTab]}</span>
       <ChevronDown size={14} className="text-secondary shrink-0 mt-0.5" />
@@ -64,10 +64,10 @@ const ChartsPage = () => {
       <div className="mb-5 mt-2 px-1">
         <div 
           onClick={() => setIsSelectorOpen(true)}
-          className="flex items-center gap-2 cursor-pointer group active:opacity-75 select-none"
+          className="flex items-center gap-2 cursor-pointer group active:scale-98 select-none"
         >
           <div className="text-2xl font-extrabold text-primary tracking-tight">Analyses</div>
-          <div className="flex items-center gap-1 bg-surface-2 border border-border px-2.5 py-1 rounded-xl text-xs font-extrabold text-secondary group-hover:text-primary transition-all">
+          <div className="flex items-center gap-1 bg-surface-2-glass backdrop-blur-md border border-border/40 shadow-sm px-2.5 py-1 rounded-xl text-xs font-extrabold text-secondary group-hover:text-primary group-hover:border-copper/30 transition-all">
             <span>{tabNames[activeTab]}</span>
             <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5" />
           </div>
@@ -147,12 +147,12 @@ const ChartsPage = () => {
                         }}
                         className={`p-3 rounded-2xl border flex flex-col items-start gap-2.5 transition-all text-left group active:scale-95 ${
                           isSelected 
-                            ? 'bg-accent/10 border-accent text-primary' 
+                            ? 'bg-copper/10 border-copper text-primary shadow-sm shadow-copper/10' 
                             : 'bg-surface border-border/40 hover:bg-surface-2/80 text-primary'
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-accent/20 text-accent' : item.color
+                          isSelected ? 'bg-copper/20 text-copper animate-pulse' : item.color
                         }`}>
                           <Icon size={16} />
                         </div>

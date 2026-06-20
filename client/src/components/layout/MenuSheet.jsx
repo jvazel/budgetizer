@@ -54,7 +54,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           />
 
           {/* Sidebar Drawer */}
@@ -63,16 +63,16 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 26, stiffness: 220 }}
-            className="bg-surface border-r border-border/40 w-full max-w-[280px] h-full shadow-2xl z-10 flex flex-col p-5 relative overflow-hidden pointer-events-auto"
+            className="bg-surface border-r border-border/40 w-full max-w-[280px] h-full shadow-2xl z-50 flex flex-col p-5 relative overflow-hidden pointer-events-auto"
           >
             {/* Ambient Background Glow Flares */}
-            <div className="absolute -top-12 -left-12 w-40 h-40 bg-accent/5 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -top-12 -left-12 w-40 h-40 bg-copper/5 rounded-full blur-[60px] pointer-events-none" />
             <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-purple/5 rounded-full blur-[60px] pointer-events-none" />
 
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-border/20 mb-6 mt-1 relative z-10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-surface border border-border/30 shadow-[0_0_15px_rgba(74,222,128,0.15)] shrink-0">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-surface border border-border/30 shadow-[0_0_15px_rgba(217,119,6,0.15)] shrink-0">
                   <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col">
@@ -107,20 +107,20 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
                         }}
                         className={`w-full p-2.5 rounded-xl flex items-center gap-3 transition-all duration-200 text-left font-medium text-xs relative overflow-hidden group ${
                           isActive 
-                            ? 'bg-accent/8 text-accent font-semibold shadow-sm' 
-                            : 'text-secondary hover:text-primary hover:bg-white/[0.03]'
+                            ? 'bg-copper-dim text-copper font-semibold shadow-sm shadow-copper/5' 
+                            : 'text-secondary hover:text-primary hover:bg-surface-2/50'
                         }`}
                       >
                         {/* Left active accent indicator bar */}
                         {isActive && (
-                          <span className="absolute left-0 top-2.5 bottom-2.5 w-[2px] bg-accent rounded-r" />
+                          <span className="absolute left-0 top-2.5 bottom-2.5 w-[2px] bg-copper rounded-r" />
                         )}
                         
                         {/* Icon wrapper */}
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 ${
                           isActive 
-                            ? 'bg-accent/15 text-accent' 
-                            : 'bg-white/[0.04] text-secondary group-hover:text-primary group-hover:bg-white/[0.08]'
+                            ? 'bg-copper/15 text-copper' 
+                            : 'bg-surface-2 text-secondary group-hover:text-primary group-hover:bg-border/30'
                         }`}>
                           <Icon size={14} />
                         </div>
@@ -129,7 +129,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
                         <span className="transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
                         
                         {/* Micro Chevron pointer on hover */}
-                        <span className="ml-auto opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-accent text-[8px] font-bold">
+                        <span className="ml-auto opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-copper text-[8px] font-bold">
                           ➔
                         </span>
                       </button>

@@ -14,13 +14,26 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
 
   const daysOfWeek = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
 
-  // Days array for calendar grid
+  // Days array for calendar grid (adjacent months filled)
   const days = [];
+  
+  // Previous month padding
+  const prevMonthDaysCount = new Date(year, month, 0).getDate();
   for (let i = 0; i < firstDayIndex; i++) {
-    days.push(null); // empty spots before the 1st
+    const dayNum = prevMonthDaysCount - firstDayIndex + 1 + i;
+    days.push(new Date(year, month - 1, dayNum));
   }
+  
+  // Current month
   for (let i = 1; i <= numDays; i++) {
     days.push(new Date(year, month, i));
+  }
+  
+  // Next month padding to reach standard 42-day (6 rows) grid
+  const totalSlots = 42;
+  const remaining = totalSlots - days.length;
+  for (let i = 1; i <= remaining; i++) {
+    days.push(new Date(year, month + 1, i));
   }
 
   // Helper to check transactions for a given date
@@ -55,13 +68,12 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
     });
 
     const getDotSizeClass = (amount) => {
-      if (amount < 50) return 'w-1 h-1';
-      if (amount < 200) return 'w-1.5 h-1.5';
-      return 'w-2 h-2';
+      if (amount < 100) return 'w-1 h-1';
+      return 'w-1.5 h-1.5';
     };
 
     return (
-      <div className="flex gap-1 items-center justify-center mt-1 h-2">
+      <div className="flex gap-1 items-center justify-center mt-1 h-1.5">
         {hasExpense && (
           <span className={`rounded-full bg-danger ${getDotSizeClass(totalExpense)} transition-all`} />
         )}
@@ -88,35 +100,36 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
   };
 
   return (
-    <div className="bg-surface-2 border border-border/40 rounded-3xl p-4 shadow-sm">
+    <div className="bg-surface-2/80 backdrop-blur-md border border-border/40 rounded-[28px] p-4 shadow-md">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2 text-center">
+      <div className="grid grid-cols-7 gap-2 mb-2.5 text-center">
         {daysOfWeek.map(d => (
-          <span key={d} className="text-xs font-bold text-muted uppercase tracking-wider">{d}</span>
+          <span key={d} className="text-[10px] font-bold text-muted/70 uppercase tracking-wider">{d}</span>
         ))}
       </div>
 
       {/* Grid cells */}
       <div className="grid grid-cols-7 gap-2">
-        {days.map((date, idx) => {
-          if (!date) return <div key={`empty-${idx}`} className="h-12" />;
-
+        {days.map((date) => {
           const selected = isSelected(date);
           const today = isToday(date);
+          const isCurrentMonth = date.getMonth() === month;
 
           return (
             <button
               key={date.toISOString()}
               onClick={() => onSelectDate(date)}
-              className={`h-12 flex flex-col items-center justify-center rounded-2xl relative transition-all active:scale-95 ${
+              className={`h-11 flex flex-col items-center justify-center rounded-xl relative transition-all active:scale-95 ${
                 selected 
-                  ? 'bg-accent text-white shadow-[0_4px_12px_rgba(74,222,128,0.2)] font-bold' 
+                  ? 'bg-copper text-white shadow-[0_4px_12px_rgba(217,119,6,0.35)] font-bold z-10' 
                   : today 
-                    ? 'border-2 border-accent text-accent font-bold' 
-                    : 'text-primary hover:bg-surface'
+                    ? 'border border-copper/50 text-copper font-bold' 
+                    : !isCurrentMonth
+                      ? 'text-primary/20 opacity-40 hover:bg-surface/50'
+                      : 'text-primary hover:bg-surface'
               }`}
             >
-              <span className="text-sm">{date.getDate()}</span>
+              <span className="text-xs sm:text-sm">{date.getDate()}</span>
               {!selected && getDots(date)}
             </button>
           );

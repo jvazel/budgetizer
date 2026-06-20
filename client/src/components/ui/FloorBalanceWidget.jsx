@@ -231,33 +231,34 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <section className="mb-6 mt-4">
-      <div className="relative overflow-hidden bg-gradient-to-br from-surface-2/80 via-surface/95 to-surface-2/80 backdrop-blur-md rounded-[24px] border border-white/[0.06] p-5 shadow-[0_12px_24px_rgba(0,0,0,0.35)] space-y-4 transition-all duration-300">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#03223F] via-[#0A2A52] to-[#1E3A8A] text-white rounded-[24px] border-none p-5 shadow-[0_12px_30px_-5px_rgba(10,26,47,0.35)] space-y-4 transition-all duration-300">
 
         {/* Decorative glows */}
-        <div className={`absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none transition-colors duration-700 ${isComfortable ? 'bg-accent/10' : 'bg-danger/10'}`} />
-        <div className="absolute -left-16 -top-16 w-36 h-36 bg-info/10 rounded-full blur-[40px] pointer-events-none" />
+        <div className="absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none bg-emerald-400/10" />
+        <div className="absolute -left-16 -top-16 w-36 h-36 bg-blue-400/15 rounded-full blur-[40px] pointer-events-none" />
 
         {/* Header */}
         <div className="flex justify-between items-start relative z-10">
           <div className="flex-1 min-w-0 pr-3">
-            <p className="text-xs text-secondary/80 font-semibold tracking-wider uppercase">Solde disponible</p>
-            <h2 className={`text-4xl font-extrabold font-premium-numbers tracking-tight mt-1 transition-colors ${
-              isComfortable ? 'text-accent' : floorBalance <= 0 ? 'text-danger' : 'text-warning'
-            }`}>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] text-blue-200/70 font-bold tracking-wider uppercase">Solde disponible</p>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse-live" title="Données synchronisées en temps réel" />
+            </div>
+            <h2 className="text-4xl font-extrabold font-premium-numbers tracking-tight mt-1 text-white">
               {formatCurrency(floorBalance)}
             </h2>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-xs text-muted font-normal">
+              <span className="text-xs text-blue-100/60 font-normal">
                 Bancaire :&nbsp;
-                <span className="font-semibold text-secondary font-premium-numbers">{formatCurrency(actualBalance)}</span>
+                <span className="font-semibold text-white font-premium-numbers">{formatCurrency(actualBalance)}</span>
               </span>
               {totalPendingExpenses > 0 && (
-                <span className="text-xs font-semibold text-warning/90 bg-warning/10 border border-warning/20 px-2 py-0.5 rounded-full font-premium-numbers">
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 border border-amber-500/25 px-2 py-0.5 rounded-full font-premium-numbers">
                   −{formatCurrency(totalPendingExpenses)} réservés
                 </span>
               )}
               {creditBalance !== 0 && (
-                <span className="text-xs font-semibold text-danger/80 bg-danger/10 border border-danger/15 px-2 py-0.5 rounded-full font-premium-numbers">
+                <span className="text-[10px] font-bold text-rose-300 bg-rose-500/20 border border-rose-500/25 px-2 py-0.5 rounded-full font-premium-numbers">
                   {formatCurrency(Math.abs(creditBalance))} en cartes
                 </span>
               )}
@@ -268,8 +269,8 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             onClick={() => setShowSettings(!showSettings)}
             className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 ${
               showSettings
-                ? 'bg-accent/10 border-accent/20 text-accent'
-                : 'bg-white/[0.05] border-white/[0.08] text-secondary hover:text-primary active:bg-white/[0.03]'
+                ? 'bg-amber-500/20 border-amber-500/30 text-amber-300'
+                : 'bg-white/10 border-white/10 text-blue-200 hover:text-white hover:bg-white/15'
             }`}
             aria-label="Configurer le jour de paye"
           >
@@ -278,28 +279,28 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         </div>
 
         {/* Contextual micro-phrase */}
-        <div className={`relative z-10 flex items-center gap-2 text-[11px] font-medium rounded-xl px-3 py-2.5 border transition-colors ${
+        <div className={`relative z-10 flex items-center gap-2 text-[11px] font-semibold rounded-xl px-3 py-2.5 border transition-colors ${
           hasRiskOfNegative || !isComfortable
-            ? 'bg-danger/10 border-danger/20 text-danger'
-            : 'bg-accent/10 border-accent/20 text-accent'
+            ? 'bg-rose-500/20 border-rose-500/30 text-rose-200'
+            : 'bg-white/5 border-white/10 text-blue-100'
         }`}>
           {hasRiskOfNegative || !isComfortable ? (
-            <AlertTriangle size={13} className="shrink-0" />
+            <AlertTriangle size={13} className="shrink-0 text-rose-300" />
           ) : (
-            <Sparkles size={13} className="shrink-0" />
+            <Sparkles size={13} className="shrink-0 text-amber-300" />
           )}
           <span className="leading-relaxed">{contextPhrase}</span>
         </div>
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="relative z-[9999] bg-surface/50 border border-border/20 rounded-2xl p-4 space-y-4 animate-fade-in">
+          <div className="relative z-10 bg-[#070e20]/95 border border-white/10 rounded-2xl p-4 space-y-4 animate-fade-in text-white shadow-xl">
             {/* Header Settings */}
-            <div className="flex justify-between items-center pb-2 border-b border-border/20">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Configuration du solde</span>
+            <div className="flex justify-between items-center pb-2 border-b border-white/10">
+              <span className="text-xs font-semibold uppercase tracking-wide text-blue-100">Configuration du solde</span>
               <button
                 onClick={() => setShowSettings(false)}
-                className="text-xs font-semibold text-accent hover:underline"
+                className="text-xs font-bold text-amber-400 hover:underline"
               >
                 Fermer
               </button>
@@ -308,14 +309,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             {/* Section 1: Accounts */}
             <div className="space-y-2.5">
               <div className="flex justify-between items-center flex-wrap gap-2">
-                <label className="text-xs font-semibold text-primary flex items-center gap-1.5">
-                  <Wallet size={14} className="text-accent" /> Comptes inclus
+                <label className="text-xs font-semibold text-blue-100 flex items-center gap-1.5">
+                  <Wallet size={14} className="text-amber-400" /> Comptes inclus
                 </label>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={handleSelectAllAccounts}
-                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/10 border border-white/10 rounded hover:bg-white/15 active:scale-95 text-white transition-all"
                   >
                     Tous
                   </button>
@@ -323,19 +324,19 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                     <button
                       type="button"
                       onClick={handleSelectOnlyCheckingAccounts}
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/[0.05] border border-border/30 rounded hover:bg-white/[0.1] active:scale-95 text-primary transition-all"
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/10 border border-white/10 rounded hover:bg-white/15 active:scale-95 text-white transition-all"
                     >
                       Courants
-                    </button>
+                  </button>
                   )}
                 </div>
               </div>
-              <p className="text-[11px] text-muted leading-relaxed">
+              <p className="text-[11px] text-blue-200/70 leading-relaxed">
                 Sélectionnez les comptes à inclure dans le calcul du solde disponible.
               </p>
-              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-border/10 rounded-xl p-1.5 bg-surface/25">
+              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-white/10 rounded-xl p-1.5 bg-[#030816]/30">
                 {accounts.length === 0 ? (
-                  <p className="text-[11px] text-muted text-center py-4">Aucun compte disponible.</p>
+                  <p className="text-[11px] text-blue-200/50 text-center py-4">Aucun compte disponible.</p>
                 ) : (
                   accounts.map((acc) => {
                     const isSelected = activeSelectedIds.includes(acc._id);
@@ -345,27 +346,27 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                         onClick={() => handleAccountToggle(acc._id)}
                         className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer select-none ${
                           isSelected
-                            ? 'bg-surface border-border/50 shadow-sm'
+                            ? 'bg-[#0b152d] border-white/15 shadow-sm'
                             : 'bg-transparent border-transparent opacity-50 hover:opacity-85'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="text-secondary shrink-0">
+                          <div className="text-blue-300 shrink-0">
                             {isSelected ? (
-                              <CheckCircle2 size={14} className="text-accent" />
+                              <CheckCircle2 size={14} className="text-amber-400" />
                             ) : (
-                              <Circle size={14} className="text-muted" />
+                              <Circle size={14} className="text-blue-100/30" />
                             )}
                           </div>
                           <div
-                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] border border-border/10 shrink-0"
-                            style={{ backgroundColor: `${acc.color || '#10b981'}15`, color: acc.color }}
+                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] border border-white/10 shrink-0"
+                            style={{ backgroundColor: `${acc.color || '#10b981'}25`, color: acc.color || '#10b981' }}
                           >
                             {acc.type === 'credit' ? <CreditCard size={11} /> : <Wallet size={11} />}
                           </div>
-                          <span className="text-xs font-semibold text-primary truncate max-w-[130px]">{acc.name}</span>
+                          <span className="text-xs font-semibold text-white truncate max-w-[130px]">{acc.name}</span>
                         </div>
-                        <span className="font-premium-numbers font-semibold text-xs text-secondary shrink-0">
+                        <span className="font-premium-numbers font-semibold text-xs text-blue-200 shrink-0">
                           {formatCurrency(acc.balance)}
                         </span>
                       </div>
@@ -375,22 +376,22 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
               </div>
             </div>
 
-            <div className="h-[1px] bg-border/20" />
+            <div className="h-[1px] bg-white/10" />
 
             {/* Section 2: Paycheck Day */}
             <div className="space-y-2.5">
-              <label htmlFor="paycheck-select" className="text-xs font-semibold text-primary flex items-center gap-1.5">
-                <Calendar size={14} className="text-accent" /> Jour récurrent de paye
+              <label htmlFor="paycheck-select" className="text-xs font-semibold text-blue-100 flex items-center gap-1.5">
+                <Calendar size={14} className="text-amber-400" /> Jour récurrent de paye
               </label>
-              <p className="text-[11px] text-muted leading-relaxed">
+              <p className="text-[11px] text-blue-200/70 leading-relaxed">
                 Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
               </p>
-              <div className="relative z-[9999]">
+              <div className="relative z-10">
                 <Select
                   id="paycheck-select"
                   value={paycheckDayConfig}
                   onChange={(e) => handlePaycheckDayChange(e.target.value)}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                  className="w-full bg-[#030816] border border-white/15 px-3 py-2 rounded-xl text-xs font-bold text-white focus:outline-none"
                 >
                   <option value="auto">Automatique (Détecter via les revenus)</option>
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
@@ -407,16 +408,16 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         {/* Sparkline — Projection 30 jours */}
         <div className="relative z-0">
           <div className="flex justify-between items-center mb-1 px-0.5">
-            <span className="text-[9px] font-bold text-muted uppercase tracking-wider">Projection 30 jours</span>
+            <span className="text-[9px] font-bold text-blue-200/70 uppercase tracking-wider">Projection 30 jours</span>
             {hasRiskOfNegative && (
-              <span className="text-[9px] font-bold text-danger flex items-center gap-0.5 animate-pulse">
+              <span className="text-[9px] font-bold text-rose-300 flex items-center gap-0.5 animate-pulse">
                 ⚠️ Zone négative détectée
               </span>
             )}
           </div>
           <div className="w-full h-[80px] select-none">
             {projectionData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted text-xs">
+              <div className="h-full flex items-center justify-center text-blue-200/50 text-xs">
                 Aucune projection disponible.
               </div>
             ) : (
@@ -426,12 +427,12 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                     <linearGradient id="colorFloor" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="5%"
-                        stopColor={isComfortable ? 'var(--accent)' : 'var(--danger)'}
-                        stopOpacity={0.15}
+                        stopColor={isComfortable ? '#10b981' : '#f43f5e'}
+                        stopOpacity={0.25}
                       />
                       <stop
                         offset="95%"
-                        stopColor={isComfortable ? 'var(--accent)' : 'var(--danger)'}
+                        stopColor={isComfortable ? '#10b981' : '#f43f5e'}
                         stopOpacity={0}
                       />
                     </linearGradient>
@@ -444,7 +445,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                       const d = new Date(tick);
                       return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
                     }}
-                    tick={{ fontSize: 9, fill: 'var(--text-secondary)', fontWeight: 'bold' }}
+                    tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.6)', fontWeight: 'bold' }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -456,9 +457,9 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                     wrapperStyle={{ pointerEvents: 'none' }}
                     contentStyle={{
                       borderRadius: '16px',
-                      background: 'var(--bg-elevated)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text-primary)',
+                      background: '#070e20',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#ffffff',
                       fontSize: '11px',
                       padding: '8px 12px',
                       boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
@@ -467,13 +468,13 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                   <Area
                     type="monotone"
                     dataKey="balance"
-                    stroke={isComfortable ? 'var(--accent)' : 'var(--danger)'}
-                    strokeWidth={2}
+                    stroke={isComfortable ? '#10b981' : '#f43f5e'}
+                    strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#colorFloor)"
                   />
                   {hasRiskOfNegative && (
-                    <ReferenceLine y={0} stroke="var(--danger)" strokeDasharray="3 3" strokeWidth={1.5} />
+                    <ReferenceLine y={0} stroke="#f43f5e" strokeDasharray="3 3" strokeWidth={1.5} />
                   )}
                 </AreaChart>
               </ResponsiveContainer>
@@ -482,29 +483,29 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         </div>
 
         {/* Accordion — Échéances avant la paye */}
-        <div className="relative z-0 border-t border-white/[0.04] pt-3">
+        <div className="relative z-0 border-t border-white/10 pt-3">
           <button
             onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-            className="w-full flex justify-between items-center py-1.5 text-xs font-bold text-primary focus:outline-none"
+            className="w-full flex justify-between items-center py-1.5 text-xs font-bold text-white focus:outline-none"
             aria-expanded={isAccordionExpanded}
           >
             <span className="flex items-center gap-2">
               Échéances avant la paye
-              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-surface text-secondary border border-border/40 font-premium-numbers">
+              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/10 text-blue-200 border border-white/5 font-premium-numbers">
                 {pendingRecurringExpenses.length}
               </span>
             </span>
             {isAccordionExpanded ? (
-              <ChevronUp size={16} className="text-secondary" />
+              <ChevronUp size={16} className="text-blue-200" />
             ) : (
-              <ChevronDown size={16} className="text-secondary" />
+              <ChevronDown size={16} className="text-blue-200" />
             )}
           </button>
 
           {isAccordionExpanded && (
             <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1 no-scrollbar">
               {pendingRecurringExpenses.length === 0 ? (
-                <div className="text-center py-6 text-muted text-xs border border-dashed border-border/20 rounded-2xl bg-surface/10">
+                <div className="text-center py-6 text-blue-200/50 text-xs border border-dashed border-white/10 rounded-2xl bg-[#030816]/20">
                   Aucune charge planifiée détectée d'ici la paye.
                 </div>
               ) : (
@@ -519,31 +520,31 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                       onClick={() => toggleExpenseExclusion(tx._id)}
                       className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
                         isExcluded
-                          ? 'bg-surface/20 border-border/20 opacity-50'
-                          : 'bg-surface border-border/40 active:scale-[0.99] active:border-border/60'
+                          ? 'bg-white/5 border-white/5 opacity-40'
+                          : 'bg-white/10 border-white/10 active:scale-[0.99] hover:bg-white/[0.12]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-1 text-secondary">
+                        <div className="p-1 text-blue-300">
                           {isExcluded ? (
-                            <CheckCircle2 size={18} className="text-accent" />
+                            <CheckCircle2 size={18} className="text-amber-400" />
                           ) : (
-                            <Circle size={18} className="text-muted" />
+                            <Circle size={18} className="text-blue-200/40" />
                           )}
                         </div>
                         <div
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-border/10"
-                          style={{ backgroundColor: `${catColor}15`, color: catColor }}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-white/5"
+                          style={{ backgroundColor: `${catColor}25`, color: catColor }}
                         >
                           {catIcon}
                         </div>
                         <div className="min-w-0">
-                          <p className={`text-xs font-bold truncate max-w-[130px] leading-tight ${
-                            isExcluded ? 'line-through text-muted' : 'text-primary'
+                          <p className={`text-xs font-bold truncate max-w-[130px] leading-tight text-white ${
+                            isExcluded ? 'line-through opacity-50' : ''
                           }`}>
                             {tx.description}
                           </p>
-                          <p className="text-[9px] text-muted">
+                          <p className="text-[9px] text-blue-200/60 mt-0.5">
                             Le{' '}
                             {new Date(tx.date).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -552,8 +553,8 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                           </p>
                         </div>
                       </div>
-                      <span className={`text-xs font-bold font-premium-numbers shrink-0 ${
-                        isExcluded ? 'text-muted' : 'text-primary'
+                      <span className={`text-xs font-bold font-premium-numbers shrink-0 text-white ${
+                        isExcluded ? 'opacity-50' : ''
                       }`}>
                         −{formatCurrency(tx.amount)}
                       </span>

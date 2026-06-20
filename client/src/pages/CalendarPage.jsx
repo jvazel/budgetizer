@@ -50,7 +50,7 @@ const CalendarPage = () => {
   };
 
   const formatMonth = (date) => {
-    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).toUpperCase();
+    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   };
 
   const formatCurrency = (amount) => {
@@ -65,24 +65,43 @@ const CalendarPage = () => {
            d.getFullYear() === selectedDate.getFullYear();
   });
 
-  const actions = (
-    <>
-      <button onClick={prevMonth} className="p-1 text-muted hover:text-primary transition-colors">
-        <ChevronLeft size={20} />
-      </button>
-      <button onClick={nextMonth} className="p-1 text-muted hover:text-primary transition-colors">
-        <ChevronRight size={20} />
-      </button>
-    </>
-  );
-
   return (
     <>
-      <HeaderTitle>{formatMonth(currentDate)}</HeaderTitle>
-      <HeaderActions>{actions}</HeaderActions>
+      <HeaderTitle>Calendrier</HeaderTitle>
+      
+      {/* Large Page Title */}
+      <div className="mb-5 mt-2 px-1">
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Calendrier</h1>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Planifiez et suivez vos opérations au jour le jour.</p>
+      </div>
+
+      {/* Month Navigation Bar */}
+      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm mb-4">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          title="Mois précédent"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        
+        <div className="flex items-center gap-2 px-4 py-1.5 text-primary font-bold text-xs uppercase tracking-wider">
+          <span>{formatMonth(currentDate)}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          title="Mois suivant"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
       
       {/* Calendar Grid */}
-      <section className="mb-6 mt-2">
+      <section className="mb-6">
         {isLoading ? (
           <div className="h-64 bg-surface-2 rounded-3xl animate-pulse" />
         ) : (
@@ -105,56 +124,113 @@ const CalendarPage = () => {
 
         <div className="space-y-3">
           {selectedDayTxs.length === 0 ? (
-            <div className="text-center py-8 text-muted bg-surface-2/40 rounded-2xl border border-dashed border-border/40">
-              Aucune transaction pour ce jour.
-            </div>
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="w-full text-center py-8 text-muted bg-surface-2/20 hover:bg-surface-2/40 hover:text-secondary rounded-[24px] border border-dashed border-border/60 transition-all flex flex-col items-center justify-center gap-2 group cursor-pointer focus:outline-none"
+            >
+              <span className="text-lg opacity-60 group-hover:scale-110 transition-transform">📅</span>
+              <p className="text-xs font-bold">Aucune transaction pour ce jour.</p>
+              <span className="text-[10px] text-accent font-bold bg-accent-dim px-2 py-0.5 rounded-lg border border-accent/15 group-hover:bg-accent group-hover:text-white transition-all">
+                Ajouter une opération +
+              </span>
+            </button>
           ) : (
             selectedDayTxs.map(tx => {
               const isPlanned = tx.isPlanned === true;
               return (
                 <div 
                   key={tx._id} 
-                  className={`p-4 rounded-2xl flex items-center gap-4 transition-colors group relative ${
+                  className={`p-3.5 rounded-[24px] flex items-center gap-3 sm:gap-4 transition-colors group relative ${
                     isPlanned 
-                      ? 'bg-purple-500/10 border border-purple-500/20' 
-                      : 'bg-surface-2 border border-border/40'
+                      ? 'bg-purple-500/5 border border-purple-500/15' 
+                      : 'bg-surface-2 border border-border/40 hover:bg-surface/30'
                   }`}
                 >
                   <div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0"
-                    style={{ backgroundColor: isPlanned ? '#a855f720' : `${tx.categoryId?.color || '#888'}20` }}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
+                    style={{ 
+                      backgroundColor: isPlanned 
+                        ? 'rgba(139, 92, 246, 0.12)' 
+                        : tx.type === 'transfer'
+                          ? 'rgba(59, 130, 246, 0.12)'
+                          : `${tx.categoryId?.color || '#888'}12`,
+                      border: isPlanned
+                        ? '1px solid rgba(139, 92, 246, 0.20)'
+                        : tx.type === 'transfer'
+                          ? '1px solid rgba(59, 130, 246, 0.20)'
+                          : `1px solid ${tx.categoryId?.color || '#888'}25`
+                    }}
                   >
-                    {isPlanned ? '🔁' : (tx.categoryId?.icon || '💸')}
+                    {isPlanned ? '🔁' : tx.type === 'transfer' ? '🔄' : (tx.categoryId?.icon || '💸')}
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-primary font-bold text-sm truncate">
-                        {isPlanned ? tx.description : (tx.categoryId?.name || 'Inconnu')}
+                      <p className="text-primary font-bold text-xs sm:text-sm truncate leading-snug">
+                        {isPlanned 
+                          ? tx.description 
+                          : tx.type === 'transfer' 
+                            ? (tx.description || tx.note || 'Virement') 
+                            : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie ⚠️')
+                        }
                       </p>
                       {isPlanned && (
-                        <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[9px] font-bold text-purple bg-purple/10 border border-purple/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0">
                           Planifié
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted truncate">
-                      {isPlanned ? 'Répétition programmée' : (tx.note || tx.accountId?.name)}
-                    </p>
+
+                    {tx.type === 'transfer' ? (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-secondary">
+                        <span className="inline-flex items-center gap-1 font-bold text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                          <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
+                        </span>
+                        <span className="text-muted text-[10px] shrink-0">➔</span>
+                        <span className="inline-flex items-center gap-1 font-bold text-secondary truncate max-w-[110px] xs:max-w-[160px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.toAccountId?.color || '#888' }} />
+                          <span className="truncate">{tx.toAccountId?.name || 'Inconnu'}</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {isPlanned ? (
+                          <span className="text-[10px] text-purple/80 font-bold truncate">
+                            Répétition programmée
+                          </span>
+                        ) : tx.categoryId?.name ? (
+                          <span className="text-[10px] text-secondary/80 font-bold truncate">
+                            {tx.categoryId.name}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-amber-500 font-extrabold flex items-center gap-0.5">
+                            À catégoriser
+                          </span>
+                        )}
+                        <span className="text-muted text-[8px]">•</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-secondary truncate w-fit max-w-full">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                          <span className="truncate">{tx.accountId?.name || 'Inconnu'}</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="text-right flex items-center gap-2">
-                    <span className={`font-mono font-bold ${
+                  <div className="text-right flex items-center gap-2 shrink-0 ml-auto pl-1">
+                    <span className={`font-premium-numbers font-bold text-xs sm:text-sm ${
                       isPlanned 
-                        ? 'text-purple-400' 
-                        : (tx.type === 'expense' || tx.type === 'transfer') ? 'text-primary' : 'text-accent'
+                        ? 'text-purple' 
+                        : (tx.type === 'expense' || tx.type === 'transfer') ? 'text-danger' : 'text-accent'
                     }`}>
-                      {tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+'}{formatCurrency(tx.amount)}
+                      {isPlanned ? '' : (tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+')}
+                      {formatCurrency(tx.amount)}
                     </span>
 
                     {!isPlanned && (
                       <button 
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setTxToDelete(tx);
                           setConfirmDeleteOpen(true);
                         }}

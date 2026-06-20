@@ -828,11 +828,17 @@ export const getDashboardSummary = async (req, res) => {
       }
     }
 
+    // Calculate actual categorization rate
+    const totalTxCount = await Transaction.countDocuments({ userId, type: 'expense' });
+    const categorizedTxCount = await Transaction.countDocuments({ userId, type: 'expense', categoryId: { $ne: null } });
+    const categorizationRate = totalTxCount > 0 ? Math.round((categorizedTxCount / totalTxCount) * 100) : 100;
+
     // 10. Compile final payload
     const dashboardPayload = {
       totalBalance,
       totalAvailable,
       totalCredit,
+      categorizationRate,
       accounts,
       budgets,
       savingsGoals,

@@ -13,7 +13,7 @@ import InstallPromptBanner from '../components/ui/InstallPromptBanner';
 import CircularScoreGauge from '../components/ui/CircularScoreGauge';
 import {
   Bell, AlertTriangle, TrendingUp, TrendingDown, Wallet,
-  CreditCard, Target, AlertCircle,
+  CreditCard, Target, AlertCircle, CheckCircle2,
   BarChart2, Award, Minus, ArrowLeftRight, Clock, Sparkles, Calendar,
   PiggyBank, Coins, Flame
 } from 'lucide-react';
@@ -129,13 +129,71 @@ const Home = () => {
     lastMonth = { income: 0, expenses: 0, net: 0 },
     last7DaysExpenses = [],
     expensesByCategory = [],
+    categorizationRate = 100,
   } = db || {};
 
   const formatCurrency = (amount, currencyCode = 'EUR') =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currencyCode }).format(amount);
 
+  const allocationData = useMemo(() => {
+    let checking = 0;
+    let savings = 0;
+    let investment = 0;
+    let credit = 0;
+    let cash = 0;
+
+    accounts.forEach(acc => {
+      const bal = Math.max(0, acc.balance);
+      if (acc.type === 'checking') checking += bal;
+      else if (acc.type === 'savings') savings += bal;
+      else if (acc.type === 'investment') investment += bal;
+      else if (acc.type === 'credit') credit += Math.max(0, Math.abs(acc.balance));
+      else if (acc.type === 'cash') cash += bal;
+    });
+
+    const total = checking + savings + investment + credit + cash;
+    if (total === 0) return [];
+
+    const raw = [
+      { label: 'Courants', amount: checking, color: '#3b82f6' },
+      { label: 'Épargne', amount: savings, color: '#10b981' },
+      { label: 'Bourse', amount: investment, color: '#8b5cf6' },
+      { label: 'Crédit', amount: credit, color: '#f43f5e' },
+      { label: 'Espèces', amount: cash, color: '#f59e0b' },
+    ].filter(item => item.amount > 0);
+
+    let currentPercent = 0;
+    return raw.map(item => {
+      const pct = (item.amount / total) * 100;
+      const start = currentPercent;
+      currentPercent += pct;
+      return {
+        ...item,
+        percentage: pct,
+        start,
+        end: currentPercent
+      };
+    });
+  }, [accounts]);
+
+  const donutBackgroundStyle = useMemo(() => {
+    if (allocationData.length === 0) {
+      return { background: '#64748b' };
+    }
+    const gradientParts = allocationData.map(
+      item => `${item.color} ${item.start.toFixed(1)}% ${item.end.toFixed(1)}%`
+    );
+    return {
+      background: `conic-gradient(${gradientParts.join(', ')})`
+    };
+  }, [allocationData]);
+
   const budgetAlerts = db?.budgetAlerts || [];
   const notifications = db?.notifications || [];
+
+  const realAnomaly = useMemo(() => {
+    return notifications.find(n => n.type === 'insight' || n.id?.startsWith('anomaly-') || n.id?.startsWith('velocity-'));
+  }, [notifications]);
 
   // ─── Header ─────────────────────────────────────────────────────────────────
   const title = `Bonjour, ${user?.name ? user.name.split(' ')[0] : ''} 👋`;
@@ -260,6 +318,74 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Assistant Intelligent IA ────────────────────────────────────────── */}
+      <section className="mb-6">
+        <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm space-y-4 select-none">
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                <Sparkles size={13} className="animate-pulse" />
+              </div>
+              <h3 className="text-sm font-bold text-primary">Assistant IA</h3>
+            </div>
+            <span className="text-[10px] font-extrabold text-amber-500 bg-amber-500/10 border border-amber-500/15 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+              Actif
+            </span>
+          </div>
+
+          {/* Categorization progress */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-secondary">Transactions classées</span>
+              <span className="text-primary font-mono font-premium-numbers">{categorizationRate}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-500 to-[#b45309] rounded-full transition-all duration-500" 
+                style={{ width: `${categorizationRate}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted">
+              {categorizationRate < 100 
+                ? "Aidez l'IA à catégoriser les transactions restantes pour affiner vos budgets." 
+                : "Toutes vos transactions sont bien catégorisées. Excellent travail !"}
+            </p>
+          </div>
+
+          {/* Dynamic Anomaly or Success banner */}
+          {realAnomaly ? (
+            <div className="bg-danger/10 border border-danger/15 rounded-2xl p-3 flex items-start gap-3">
+              <AlertTriangle className="text-danger shrink-0 mt-0.5" size={16} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-primary">{realAnomaly.title}</p>
+                <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">
+                  {realAnomaly.message}
+                </p>
+              </div>
+              {realAnomaly.action && (
+                <button 
+                  onClick={() => navigate(realAnomaly.action.path)}
+                  className="text-[10px] font-bold text-danger hover:underline shrink-0 mt-0.5"
+                >
+                  {realAnomaly.action.label || 'Vérifier'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="bg-accent/10 border border-accent/15 rounded-2xl p-3 flex items-start gap-3">
+              <CheckCircle2 className="text-accent shrink-0 mt-0.5" size={16} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-primary">Budget sous contrôle</p>
+                <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">
+                  Aucune hausse suspecte ni anomalie n'a été détectée par notre IA ce mois-ci. ✓
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ── Raccourcis de Navigation Rapide ─────────────────────────────────── */}
       <section className="mb-6">
@@ -412,6 +538,41 @@ const Home = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* ── Patrimoine & Allocation ────────────────────────────────────────── */}
+      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 select-none">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+              <TrendingUp size={13} />
+            </div>
+            <h3 className="text-sm font-bold text-primary">Allocation Patrimoine</h3>
+          </div>
+        </div>
+
+        {allocationData.length === 0 ? (
+          <p className="text-xs text-muted text-center py-6">Ajoutez des comptes pour voir votre répartition.</p>
+        ) : (
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 rounded-full relative flex-shrink-0 shadow-inner" style={donutBackgroundStyle}>
+              <div className="absolute inset-[18px] rounded-full bg-surface-2 shadow-sm" />
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
+              {allocationData.map(item => (
+                <div key={item.label} className="flex flex-col">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-secondary">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  <span className="text-xs font-extrabold text-primary font-mono mt-0.5 ml-3 font-premium-numbers">
+                    {formatCurrency(item.amount, user?.currency?.code)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Dépenses 7 derniers jours — Sparkline ────────────────────────────── */}

@@ -286,7 +286,7 @@ const Transactions = () => {
       <div className="mt-4 space-y-4">
         
         {/* Month Navigation Bar */}
-        <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-2xl border border-border/40 shadow-sm">
+        <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
           <button
             type="button"
             onClick={handlePrevMonth}
@@ -412,22 +412,36 @@ const Transactions = () => {
 
             {/* Selection Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Filter by Type */}
-              <div className="space-y-1">
+              {/* Filter by Type (Segmented control style Bankyboard) */}
+              <div className="space-y-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
-                <Select
-                  value={type}
-                  onChange={(e) => {
-                    setType(e.target.value);
-                    setCategoryId('');
-                  }}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                >
-                  <option value="">Tous les types</option>
-                  <option value="expense">Dépenses 🔴</option>
-                  <option value="income">Revenus 🟢</option>
-                  <option value="transfer">Virements 🔵</option>
-                </Select>
+                <div className="flex bg-surface p-1 rounded-xl border border-border/40 gap-1 select-none">
+                  {[
+                    { key: '', label: 'Tous' },
+                    { key: 'expense', label: 'Dépenses 🔴' },
+                    { key: 'income', label: 'Revenus 🟢' },
+                    { key: 'transfer', label: 'Virements 🔵' }
+                  ].map((opt) => {
+                    const isSelected = type === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => {
+                          setType(opt.key);
+                          setCategoryId('');
+                        }}
+                        className={`flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition-all active:scale-95 ${
+                          isSelected
+                            ? 'bg-copper text-white shadow-sm font-extrabold'
+                            : 'text-secondary hover:text-primary hover:bg-border/10'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Filter by Account */}
