@@ -108,7 +108,11 @@ const AppShell = () => {
       isScrolled,
       setCollapsible
     }}>
-      <div className="min-h-screen bg-base pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+      <div className="min-h-screen bg-base pb-[calc(80px+env(safe-area-inset-bottom,0px))] relative overflow-x-hidden">
+        {/* Ambient Background Glow Orbs (Bankyboard theme) */}
+        <div className="bg-glow-orb glow-orb-amber w-[300px] h-[300px] -top-20 -left-20" />
+        <div className="bg-glow-orb glow-orb-indigo w-[400px] h-[400px] top-[40%] -right-40" />
+        <div className="bg-glow-orb glow-orb-emerald w-[300px] h-[300px] -bottom-20 -left-20" />
         
         {/* Header Centralisé */}
         <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top,0px)] h-[calc(56px+env(safe-area-inset-top,0px))] flex items-center px-4 max-w-md mx-auto justify-between pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]">

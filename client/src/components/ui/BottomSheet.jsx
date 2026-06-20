@@ -20,7 +20,16 @@ const BottomSheet = ({ isOpen, onClose, children }) => {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: "spring", damping: 28, stiffness: 220 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            onDragEnd={(e, info) => {
+              // If velocity is high or swipe distance is > 120px, close
+              if (info.offset.y > 120 || info.velocity.y > 500) {
+                onClose();
+              }
+            }}
             onClick={onClose}
             className="fixed bottom-0 left-0 right-0 z-50 flex justify-center"
           >

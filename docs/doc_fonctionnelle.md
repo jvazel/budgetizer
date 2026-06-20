@@ -483,4 +483,28 @@ Le rapport PDF est découpé en pages A4 bien distinctes, reprenant le code visu
 ### 18.3 Gestion des Sauts de Page
 Le document utilise le sélecteur CSS `.pdf-page:not(:last-child)` pour appliquer dynamiquement `page-break-after: always`. Ceci élimine toute génération de pages blanches intermédiaires ou de pages vides à la fin du document.
 
+---
+
+## 19. Système Visuel Premium Bankyboard 🎨
+
+Pour offrir une expérience proche de la fintech **Bankyboard**, Budgetizer a fait l'objet d'une refonte ergonomique majeure visant à simplifier les interactions et à magnifier l'aspect visuel de l'application (en particulier sur mobile).
+
+### 19.1 Une Identité Visuelle Immersive "Encre & Cuivre"
+*   L'application baigne dans un thème sombre aux contrastes soignés : un fond noir d'encre marine profond agrémenté de halos lumineux cuivrés/pourpres en arrière-plan, conférant une sensation de relief et de modernité.
+*   Chaque bouton et composant interactif réagit au toucher par une légère micro-animation d'échelle (`active:scale`), mimant un retour de clic physique.
+
+### 19.2 Balayage Intuitif (Swipe-to-Dismiss)
+*   Les fenêtres coulissantes au bas de l'écran (Bottom Sheets) peuvent désormais être fermées d'un simple glissement du doigt vers le bas. Plus besoin de viser le bouton "Fermer" ou la croix en haut de l'écran, le geste de balayage naturel suffit pour les congédier de manière intuitive.
+
+### 19.3 Solde Hero Compact
+*   La carte de solde global sur l'accueil est stylisée comme une carte physique premium.
+*   **Aide à la Décision** : La bordure de la carte change de couleur pour refléter instantanément la santé financière de l'utilisateur (Vert = Solde sain, Orange = Vigilance, Rouge = Danger).
+*   **Graphique Intégré** : La courbe de tendance sur 30 jours est directement fondue en arrière-plan de cette carte. Cela permet à l'utilisateur de surveiller sa trajectoire de fin de mois d'un simple coup d'œil, tout en libérant un précieux espace vertical sur son écran de téléphone.
+
+### 19.4 Saisie Progressive en Deux Étapes
+*   Pour éviter la gêne ergonomique d'un grand formulaire écrasé par l'ouverture du clavier mobile, la création de transaction se fait maintenant de manière guidée :
+    *   **Étape 1 (Montant)** : L'utilisateur se concentre uniquement sur la somme à saisir, avec un accès direct à ses favoris rapides et à un bouton pour répéter sa dernière transaction en un seul clic.
+    *   **Étape 2 (Détails)** : Une fois le montant saisi, l'utilisateur accède aux détails avancés. Le champ note propose des suggestions basées sur son historique de dépenses. Les sélecteurs de comptes et catégories s'ouvrent dans des panneaux glissants complets, dotés d'onglets pour naviguer directement de l'un à l'autre sans perdre sa saisie.
+
+
 

@@ -8,11 +8,11 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 
 - **Tableau de Bord Dynamique** : Vue globale sur le solde total net, répartition visuelle par compte et accès rapide à la saisie de transactions.
 - **Gestion Multi-comptes** : Prise en charge de divers types de comptes (courant, épargne, espèces, investissements) avec personnalisation esthétique (icônes, couleurs).
-- **Saisie Intuitive** : Formulaires d'ajout rapide avec pavé numérique sur-mesure pour une expérience fluide (notamment sur mobile).
+- **Saisie Progressive en Deux Étapes** : Formulaire de transaction mobile fluide structuré en deux étapes (Étape 1 : montant focalisé, puces de favoris éditables et raccourci "répéter" en 1 clic ; Étape 2 : note prédictive, compte/catégorie sous forme de panneaux glissants tactiles, et tags). Prévient la surcharge ergonomique liée à l'affichage du clavier système.
 - **Gestion des Catégories** : Catégorisation personnalisable des revenus et dépenses.
 - **Enveloppes Budgétaires** : Définition de budgets par catégorie avec alertes de dépassement (seuil par défaut à 80%) et option de report de solde d'un mois sur l'autre (rollover).
 - **Transactions Planifiées & Abonnements** : Planification de transactions régulières ou d'abonnements mensuels/annuels, avec option d'auto-confirmation ou d'approbation manuelle.
-- **Visualisations & Graphiques** : Graphiques d'évolution du solde, répartition catégorielle, prévisions intelligentes de solde à 30 jours (via Recharts) et **Indicateur de Vélocité de Dépense (Tachymètre)** pour surveiller le rythme de consommation budgétaire en temps réel.
+- **Visualisations & Graphiques** : Graphiques d'évolution du solde, répartition catégorielle, prévisions intelligentes de solde à 30 jours (via Recharts), **Indicateur de Vélocité de Dépense (Tachymètre)** pour surveiller le rythme de consommation budgétaire en temps réel, et intégration du graphique de tendance en arrière-plan translucide de la **Carte Solde Hero** physique pour un gain de hauteur optimal.
 - **Conseils & IA (Insights)** : Détection automatique des anomalies de dépenses par catégorie (alertes orange/rouges) comparées à la moyenne des 3 derniers mois avec seuil de sensibilité configurable et persistant. Suggestions de réductions budgétaires interactives et audit d'abonnements.
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
@@ -26,7 +26,7 @@ L'application est construite sur une architecture découplée de type client-ser
 - **Frontend (Client)** :
   - **Framework** : [React](https://react.dev/) (propulsé par [Vite](https://vite.dev/))
   - **PWA** : Configuration Progressive Web App via `@vite-pwa/plugin` avec Service Worker, gestion du cache et détection du mode hors ligne.
-  - **Styles & Animations** : [Tailwind CSS](https://tailwindcss.com/) et [Framer Motion](https://www.framer.com/motion/) pour des transitions fluides et un design sombre premium.
+  - **Styles & Animations** : [Tailwind CSS](https://tailwindcss.com/) et [Framer Motion](https://www.framer.com/motion/) pour un design sombre premium "Encre & Cuivre" inspiré de Bankyboard (lueurs orbes translucides en arrière-plan, transitions élastiques tactiles, et support du balayage *swipe-to-dismiss* sur les tiroirs de dialogue).
   - **Graphiques** : [Recharts](https://recharts.org/) pour les visualisations interactives.
   - **Routage** : [React Router DOM v7](https://reactrouter.com/) pour la navigation.
 

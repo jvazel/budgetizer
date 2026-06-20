@@ -30,6 +30,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [categorySearch, setCategorySearch] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [formStep, setFormStep] = useState(1);
 
   // activePanel state: 'form' | 'account' | 'category'
   const [activePanel, setActivePanel] = useState('form');
@@ -174,6 +175,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   useEffect(() => {
     if (isOpen) {
       setActivePanel('form');
+      setFormStep(transactionToEdit ? 2 : 1);
       setShowDatePicker(false);
       if (transactionToEdit) {
         setType(transactionToEdit.type || 'expense');
@@ -593,11 +595,24 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         {activePanel === 'form' && (
           <>
             {/* Header */}
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2 select-none">
               <h2 className="text-xl font-bold text-primary">
                 {transactionToEdit ? 'Modifier la transaction' : 'Nouvelle transaction'}
               </h2>
               <div className="flex items-center gap-2">
+                {/* Back Button for step 2 */}
+                {formStep === 2 && !transactionToEdit && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setFormStep(1);
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-surface-2 hover:bg-border/60 transition-colors text-xs font-bold text-secondary active:scale-95"
+                  >
+                    ← Retour
+                  </button>
+                )}
                 {transactionToEdit && (
                   <button 
                     type="button" 
@@ -614,358 +629,421 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
               </div>
             </div>
 
-            {/* Chip « Répéter la dernière transaction » */}
-            {!transactionToEdit && lastTransaction && (
-              <button
-                type="button"
-                onClick={handleRepeatLast}
-                className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-surface border border-border/40 hover:border-accent/40 hover:bg-accent/5 active:scale-[0.98] transition-all text-left select-none group"
-              >
-                <span className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-base shrink-0 group-hover:bg-accent/20 transition-colors">
-                  <RotateCcw size={15} className="text-accent" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-primary block truncate">
-                    {lastTransaction.icon || '💸'} {lastTransaction.label || 'Dernière transaction'}
-                  </span>
-                  <span className="text-[10px] text-muted font-medium">
-                    Répéter · {lastTransaction.type === 'expense' ? '−' : '+'}{formatCurrencyShort(lastTransaction.amount)}
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold text-accent/70 shrink-0">1 tap →</span>
-              </button>
-            )}
-
-            {/* Quick Templates Banner */}
-            {!transactionToEdit && templates.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto">
-                {templates.map(t => (
+            {/* STEP 1: AMOUNT & QUICK FAVORITES */}
+            {formStep === 1 && (
+              <div className="space-y-4 animate-fadeIn">
+                {/* Chip « Répéter la dernière transaction » */}
+                {!transactionToEdit && lastTransaction && (
                   <button
-                    key={t.id}
                     type="button"
-                    onMouseDown={(e) => handleTemplatePressStart(e, t.id)}
-                    onMouseUp={() => handleTemplatePressEnd(t.id)}
-                    onMouseLeave={() => handleTemplatePressEnd(t.id)}
-                    onTouchStart={(e) => handleTemplatePressStart(e, t.id)}
-                    onTouchEnd={() => handleTemplatePressEnd(t.id)}
-                    onClick={(e) => handleTemplateClick(e, t)}
-                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
+                    onClick={() => {
+                      handleRepeatLast();
+                      setFormStep(2);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-surface border border-border/40 hover:border-accent/40 hover:bg-accent/5 active:scale-[0.98] transition-all text-left select-none group"
                   >
-                    <span className="text-base">{t.icon || '⭐'}</span>
-                    <div className="flex flex-col items-start">
-                      <span className="font-bold text-primary leading-tight">{t.name}</span>
-                      <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
+                    <span className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-base shrink-0 group-hover:bg-accent/20 transition-colors">
+                      <RotateCcw size={15} className="text-accent" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-bold text-primary block truncate">
+                        {lastTransaction.icon || '💸'} {lastTransaction.label || 'Dernière transaction'}
+                      </span>
+                      <span className="text-[10px] text-muted font-medium">
+                        Répéter · {lastTransaction.type === 'expense' ? '−' : '+'}{formatCurrencyShort(lastTransaction.amount)}
+                      </span>
                     </div>
+                    <span className="text-[10px] font-bold text-accent/70 shrink-0">1 tap →</span>
                   </button>
-                ))}
+                )}
+
+                {/* Quick Templates Banner */}
+                {!transactionToEdit && templates.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto">
+                    {templates.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onMouseDown={(e) => handleTemplatePressStart(e, t.id)}
+                        onMouseUp={() => handleTemplatePressEnd(t.id)}
+                        onMouseLeave={() => handleTemplatePressEnd(t.id)}
+                        onTouchStart={(e) => handleTemplatePressStart(e, t.id)}
+                        onTouchEnd={() => handleTemplatePressEnd(t.id)}
+                        onClick={(e) => {
+                          handleTemplateClick(e, t);
+                          if (t.categoryId) setFormStep(2);
+                        }}
+                        className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
+                      >
+                        <span className="text-base">{t.icon || '⭐'}</span>
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-primary leading-tight">{t.name}</span>
+                          <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
+                        </div>
+                      </button>
+                    ))}
+                    
+                    <button
+                      type="button"
+                      onClick={handleSaveAsTemplate}
+                      className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
+                    >
+                      <span>＋ Favori</span>
+                    </button>
+                  </div>
+                )}
                 
-                <button
-                  type="button"
-                  onClick={handleSaveAsTemplate}
-                  className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
-                >
-                  <span>＋ Favori</span>
-                </button>
-              </div>
-            )}
-            
-            {/* Type Selector */}
-            <div className="flex bg-surface p-1 rounded-2xl mx-auto w-full max-w-sm shadow-sm">
-              <button 
-                type="button"
-                onClick={() => handleTypeChange('expense')}
-                className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${type === 'expense' ? 'bg-danger text-white shadow-sm' : 'text-muted'}`}
-              >
-                Dépense
-              </button>
-              <button 
-                type="button"
-                onClick={() => handleTypeChange('income')}
-                className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${type === 'income' ? 'bg-accent text-white shadow-sm' : 'text-muted'}`}
-              >
-                Revenu
-              </button>
-            </div>
-
-            {/* Amount Display */}
-            <AmountInput 
-              value={amount}
-              onChange={setAmount}
-              type={type}
-              autoFocus={isOpen && activePanel === 'form'}
-              onKeyDown={handleAmountKeyDown}
-            />
-
-            {/* (12) Solde résultant à la volée */}
-            {projectedBalance && (
-              <div className="flex justify-center -mt-2 animate-fadeIn">
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
-                  projectedBalance.positive
-                    ? 'text-accent border-accent/25 bg-accent/5'
-                    : projectedBalance.balance < 0
-                    ? 'text-danger border-danger/25 bg-danger/5'
-                    : 'text-secondary border-border/30 bg-surface'
-                }`}>
-                  Solde {projectedBalance.name} après :{' '}
-                  <span className="font-bold font-premium-numbers">
-                    {formatCurrencyShort(projectedBalance.balance)}
-                  </span>
-                </span>
-              </div>
-            )}
-
-            {/* Note INPUT — remonté avant Compte/Catégorie pour booster l'autocomplete */}
-            <div className="flex flex-col">
-              <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1 select-none">Note <span className="text-muted font-normal">(optionnel)</span></label>
-              <input
-                ref={noteInputRef}
-                id="note-input"
-                type="text"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                onKeyDown={handleNoteKeyDown}
-                onBlur={handleNoteBlur}
-                placeholder="Ex: Resto avec amis..."
-                className="bg-surface border border-border rounded-xl p-3.5 text-primary focus:outline-none focus:border-accent transition-colors"
-              />
-            </div>
-
-            {/* Autocomplete Suggestions (apparaissent juste sous la note) */}
-            {suggestions.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto animate-fadeIn -mt-2">
-                {suggestions.map((s, idx) => (
-                  <button
-                    key={idx}
+                {/* Type Selector */}
+                <div className="flex bg-surface p-1 rounded-2xl mx-auto w-full max-w-sm shadow-sm border border-border/40 select-none">
+                  <button 
                     type="button"
-                    onClick={() => handleApplySuggestion(s)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/25 active:scale-95 transition-all text-xs font-bold text-secondary hover:text-primary shrink-0 select-none"
+                    onClick={() => handleTypeChange('expense')}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'expense' ? 'bg-danger text-white shadow-sm' : 'text-muted'}`}
                   >
-                    <span>{s.icon}</span>
-                    <span className="font-bold">{s.name}</span>
+                    Dépense
                   </button>
-                ))}
-              </div>
-            )}
-
-            {/* Account and Category Selectors */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col">
-                <label htmlFor="account-select" className="text-xs text-secondary font-medium mb-1.5 select-none">Compte</label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setActivePanel('account');
-                  }}
-                  className={`flex items-center justify-between bg-surface border border-border rounded-xl p-3.5 text-left text-xs font-bold text-primary active:scale-98 active:bg-white/[0.02] transition-all select-none ${glowAccount ? 'animate-glow-prediction' : ''}`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {selectedAccount ? (
-                      <>
-                        <span 
-                          className="w-2.5 h-2.5 rounded-full shrink-0" 
-                          style={{ backgroundColor: selectedAccount.color || 'var(--accent)' }}
-                        />
-                        <span className="truncate">{selectedAccount.name}</span>
-                      </>
-                    ) : (
-                      <span className="text-muted font-normal">-- Choisir --</span>
-                    )}
-                  </div>
-                  <span className="text-muted text-[10px] ml-1 shrink-0">▼</span>
-                </button>
-                <select
-                  id="account-select"
-                  value={accountId}
-                  onChange={e => setAccountId(e.target.value)}
-                  className="sr-only"
-                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
-                >
-                  {accounts.map(acc => (
-                    <option key={acc._id} value={acc._id}>{acc.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="flex flex-col">
-                 <label htmlFor="category-select" className="text-xs text-secondary font-medium mb-1.5 select-none">Catégorie</label>
-                 <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setActivePanel('category');
-                  }}
-                  disabled={type === 'transfer'}
-                  className={`flex items-center justify-between bg-surface border border-border rounded-xl p-3.5 text-left text-xs font-bold text-primary active:scale-98 active:bg-white/[0.02] transition-all disabled:opacity-40 disabled:cursor-not-allowed select-none ${glowCategory ? 'animate-glow-prediction' : ''}`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {type === 'transfer' ? (
-                      <span className="text-muted font-normal">Non applicable</span>
-                    ) : selectedCategory ? (
-                      <>
-                        <span>{selectedCategory.icon || '📁'}</span>
-                        <span className="truncate">{selectedCategory.name}</span>
-                      </>
-                    ) : (
-                      <span className="text-muted font-normal">-- Choisir --</span>
-                    )}
-                  </div>
-                  {type !== 'transfer' && <span className="text-muted text-[10px] ml-1 shrink-0">▼</span>}
-                </button>
-                <select
-                  id="category-select"
-                  value={categoryId}
-                  onChange={e => setCategoryId(e.target.value)}
-                  className="sr-only"
-                  disabled={type === 'transfer'}
-                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
-                >
-                  <option value="">-- Choisir --</option>
-                  {availableCategories?.map(parent => (
-                    <React.Fragment key={parent._id}>
-                      <option value={parent._id}>{parent.name}</option>
-                      {parent.children?.map(child => (
-                        <option key={child._id} value={child._id}>&nbsp;&nbsp;{child.name}</option>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* (11) Indicateur budget inline — apparaît si catégorie a un budget configuré */}
-            {activeBudget && type === 'expense' && (
-              <div className="animate-fadeIn">
-                {(() => {
-                  const spent = activeBudget.spent || 0;
-                  const limit = activeBudget.amount || 1;
-                  const amountNum = parseFloat(amount) || 0;
-                  const projectedSpent = spent + amountNum;
-                  const pct = Math.min((projectedSpent / limit) * 100, 100);
-                  const currentPct = Math.min((spent / limit) * 100, 100);
-                  const isOverBudget = projectedSpent > limit;
-                  const isWarning = pct >= 80;
-                  const color = isOverBudget ? 'text-danger' : isWarning ? 'text-amber-400' : 'text-accent';
-                  const barColor = isOverBudget ? 'bg-danger' : isWarning ? 'bg-amber-400' : 'bg-accent';
-                  const catIcon = activeBudget.categoryId?.icon || selectedCategory?.icon || '📊';
-                  const catName = activeBudget.categoryId?.name || selectedCategory?.name || 'Budget';
-                  return (
-                    <div className="bg-surface border border-border/40 rounded-xl p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-[11px] font-bold text-secondary">
-                          {catIcon} Enveloppe {catName}
-                        </span>
-                        <span className={`text-[11px] font-bold font-premium-numbers ${color}`}>
-                          {amountNum > 0
-                            ? `${formatCurrencyShort(projectedSpent)} / ${formatCurrencyShort(limit)}`
-                            : `${formatCurrencyShort(spent)} / ${formatCurrencyShort(limit)}`
-                          }
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
-                        {/* Barre actuelle */}
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${barColor} ${isOverBudget ? 'opacity-100' : 'opacity-70'}`}
-                          style={{ width: `${amountNum > 0 ? pct : currentPct}%` }}
-                        />
-                      </div>
-                      {isOverBudget && (
-                        <p className="text-[10px] text-danger font-semibold mt-1.5">
-                          ⚠️ Dépassement de {formatCurrencyShort(projectedSpent - limit)}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Date — Badge accordéon, masqué par défaut */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowDatePicker(p => !p)}
-                className="flex items-center gap-2 text-xs text-secondary font-medium hover:text-primary transition-colors py-1 select-none"
-              >
-                <span>📅</span>
-                <span>
-                  {date === new Date().toISOString().split('T')[0]
-                    ? "Aujourd'hui"
-                    : new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-                  }
-                </span>
-                <ChevronDown
-                  size={13}
-                  className={`transition-transform duration-200 ${showDatePicker ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {showDatePicker && (
-                <input
-                  id="date-input"
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  onClick={(e) => {
-                    try { e.target.showPicker(); } catch (err) {}
-                  }}
-                  className="mt-2 bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full text-sm animate-fadeIn"
-                  required
-                  autoFocus
-                />
-              )}
-            </div>
-
-            {/* Tag Selector */}
-            <TagSelector
-              selectedTagIds={selectedTagIds}
-              onChange={setSelectedTagIds}
-            />
-
-            {/* Action Buttons — sticky en bas */}
-            <div className="sticky bottom-0 pt-3 pb-1 bg-gradient-to-t from-[var(--surface-2,#1a1a2e)] via-[var(--surface-2,#1a1a2e)/95] to-transparent z-10">
-              {transactionToEdit ? (
-                <div className="flex gap-3">
-                  <button
+                  <button 
                     type="button"
-                    onClick={handleDelete}
-                    className="flex-1 py-4 rounded-2xl bg-danger/10 hover:bg-danger/15 text-danger font-bold transition-all shadow-sm active:scale-95"
+                    onClick={() => handleTypeChange('income')}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'income' ? 'bg-accent text-white shadow-sm' : 'text-muted'}`}
                   >
-                    Supprimer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    className={`flex-[2] py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
-                      type === 'expense' 
-                        ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
-                        : 'bg-accent hover:bg-accent/90 shadow-accent/20'
-                    }`}
-                  >
-                    Enregistrer
+                    Revenu
                   </button>
                 </div>
-              ) : (
+
+                {/* Amount Display */}
+                <AmountInput 
+                  value={amount}
+                  onChange={setAmount}
+                  type={type}
+                  autoFocus={isOpen && formStep === 1}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (amount && parseFloat(amount) > 0) {
+                        triggerHaptic('light');
+                        setFormStep(2);
+                      }
+                    }
+                  }}
+                />
+
+                {/* Continue Button */}
                 <button
                   type="button"
-                  onClick={handleSubmit}
-                  className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-md ${
-                    type === 'expense' 
-                      ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
-                      : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+                  onClick={() => {
+                    if (!amount || parseFloat(amount) <= 0) {
+                      triggerHaptic('error');
+                      toast.error('Veuillez saisir un montant');
+                      return;
+                    }
+                    triggerHaptic('light');
+                    setFormStep(2);
+                  }}
+                  className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md mt-4 ${
+                    type === 'expense' ? 'bg-danger shadow-danger/10' : 'bg-accent shadow-accent/10'
                   }`}
                 >
-                  Ajouter la transaction
+                  Continuer
                 </button>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* STEP 2: METADATA & VALIDATION */}
+            {formStep === 2 && (
+              <div className="space-y-4 animate-fadeIn">
+                {/* Resulting balance live calculation */}
+                {projectedBalance && (
+                  <div className="flex justify-center -mt-1 animate-fadeIn select-none">
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                      projectedBalance.positive
+                        ? 'text-accent border-accent/25 bg-accent/5'
+                        : projectedBalance.balance < 0
+                        ? 'text-danger border-danger/25 bg-danger/5'
+                        : 'text-secondary border-border/30 bg-surface'
+                    }`}>
+                      Solde {projectedBalance.name} après :{' '}
+                      <span className="font-bold font-premium-numbers">
+                        {formatCurrencyShort(projectedBalance.balance)}
+                      </span>
+                    </span>
+                  </div>
+                )}
+
+                {/* Amount summary chip */}
+                <div 
+                  onClick={() => !transactionToEdit && setFormStep(1)}
+                  className="flex justify-between items-center bg-surface-2 border border-border/40 p-3.5 rounded-xl cursor-pointer active:scale-98 select-none active:bg-surface-2/80 transition-colors"
+                >
+                  <span className="text-xs text-secondary font-medium">Montant saisi</span>
+                  <span className={`text-base font-extrabold font-premium-numbers ${type === 'expense' ? 'text-danger' : 'text-accent'}`}>
+                    {type === 'expense' ? '−' : '+'}{amount} €
+                  </span>
+                </div>
+                {/* Hidden amount input for testing/accessibility in step 2 */}
+                <div className="sr-only">
+                  <AmountInput 
+                    value={amount}
+                    onChange={setAmount}
+                    type={type}
+                  />
+                </div>
+
+                {/* Note INPUT */}
+                <div className="flex flex-col">
+                  <label htmlFor="note-input" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Note <span className="text-muted font-normal">(optionnel)</span></label>
+                  <input
+                    ref={noteInputRef}
+                    id="note-input"
+                    type="text"
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    onKeyDown={handleNoteKeyDown}
+                    onBlur={handleNoteBlur}
+                    placeholder="Ex: Resto avec amis..."
+                    className="bg-surface border border-border rounded-xl p-3.5 text-primary text-xs focus:outline-none focus:border-accent transition-colors"
+                  />
+                </div>
+
+                {/* Autocomplete Suggestions */}
+                {suggestions.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto animate-fadeIn -mt-2">
+                    {suggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleApplySuggestion(s)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/25 active:scale-95 transition-all text-xs font-bold text-secondary hover:text-primary shrink-0 select-none"
+                      >
+                        <span>{s.icon}</span>
+                        <span className="font-bold">{s.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Account and Category selectors */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col">
+                    <label htmlFor="account-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Compte</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setActivePanel('account');
+                      }}
+                      className={`flex items-center justify-between bg-surface border border-border rounded-xl p-3.5 text-left text-xs font-bold text-primary active:scale-98 active:bg-white/[0.02] transition-all select-none ${glowAccount ? 'animate-glow-prediction' : ''}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {selectedAccount ? (
+                          <>
+                            <span 
+                              className="w-2.5 h-2.5 rounded-full shrink-0" 
+                              style={{ backgroundColor: selectedAccount.color || 'var(--accent)' }}
+                            />
+                            <span className="truncate">{selectedAccount.name}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted font-normal">-- Choisir --</span>
+                        )}
+                      </div>
+                      <span className="text-muted text-[10px] ml-1 shrink-0">▼</span>
+                    </button>
+                    <select
+                      id="account-select"
+                      value={accountId}
+                      onChange={e => setAccountId(e.target.value)}
+                      className="sr-only"
+                      style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                    >
+                      {accounts.map(acc => (
+                        <option key={acc._id} value={acc._id}>{acc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="flex flex-col">
+                     <label htmlFor="category-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Catégorie</label>
+                     <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setActivePanel('category');
+                      }}
+                      disabled={type === 'transfer'}
+                      className={`flex items-center justify-between bg-surface border border-border rounded-xl p-3.5 text-left text-xs font-bold text-primary active:scale-98 active:bg-white/[0.02] transition-all disabled:opacity-40 disabled:cursor-not-allowed select-none ${glowCategory ? 'animate-glow-prediction' : ''}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {type === 'transfer' ? (
+                          <span className="text-muted font-normal">Non applicable</span>
+                        ) : selectedCategory ? (
+                          <>
+                            <span>{selectedCategory.icon || '📁'}</span>
+                            <span className="truncate">{selectedCategory.name}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted font-normal">-- Choisir --</span>
+                        )}
+                      </div>
+                      {type !== 'transfer' && <span className="text-muted text-[10px] ml-1 shrink-0">▼</span>}
+                    </button>
+                    <select
+                      id="category-select"
+                      value={categoryId}
+                      onChange={e => setCategoryId(e.target.value)}
+                      className="sr-only"
+                      disabled={type === 'transfer'}
+                      style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                    >
+                      <option value="">-- Choisir --</option>
+                      {availableCategories?.map(parent => (
+                        <React.Fragment key={parent._id}>
+                          <option value={parent._id}>{parent.name}</option>
+                          {parent.children?.map(child => (
+                            <option key={child._id} value={child._id}>&nbsp;&nbsp;{child.name}</option>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* (11) Budget active indicator */}
+                {activeBudget && type === 'expense' && (
+                  <div className="animate-fadeIn select-none">
+                    {(() => {
+                      const spent = activeBudget.spent || 0;
+                      const limit = activeBudget.amount || 1;
+                      const amountNum = parseFloat(amount) || 0;
+                      const projectedSpent = spent + amountNum;
+                      const pct = Math.min((projectedSpent / limit) * 100, 100);
+                      const currentPct = Math.min((spent / limit) * 100, 100);
+                      const isOverBudget = projectedSpent > limit;
+                      const isWarning = pct >= 80;
+                      const color = isOverBudget ? 'text-danger' : isWarning ? 'text-amber-400' : 'text-accent';
+                      const barColor = isOverBudget ? 'bg-danger' : isWarning ? 'bg-amber-400' : 'bg-accent';
+                      const catIcon = activeBudget.categoryId?.icon || selectedCategory?.icon || '📊';
+                      const catName = activeBudget.categoryId?.name || selectedCategory?.name || 'Budget';
+                      return (
+                        <div className="bg-surface border border-border/40 rounded-xl p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[11px] font-bold text-secondary">
+                              {catIcon} Enveloppe {catName}
+                            </span>
+                            <span className={`text-[11px] font-bold font-premium-numbers ${color}`}>
+                              {amountNum > 0
+                                ? `${formatCurrencyShort(projectedSpent)} / ${formatCurrencyShort(limit)}`
+                                : `${formatCurrencyShort(spent)} / ${formatCurrencyShort(limit)}`
+                              }
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${barColor} ${isOverBudget ? 'opacity-100' : 'opacity-70'}`}
+                              style={{ width: `${amountNum > 0 ? pct : currentPct}%` }}
+                            />
+                          </div>
+                          {isOverBudget && (
+                            <p className="text-[10px] text-danger font-semibold mt-1.5">
+                              ⚠️ Dépassement de {formatCurrencyShort(projectedSpent - limit)}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Date accordion style */}
+                <div>
+                  <label htmlFor="date-input" className="sr-only">Date</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(p => !p)}
+                    className="flex items-center gap-2 text-xs text-secondary font-medium hover:text-primary transition-colors py-1 select-none font-bold"
+                  >
+                    <span>📅</span>
+                    <span>
+                      {date === new Date().toISOString().split('T')[0]
+                        ? "Aujourd'hui"
+                        : new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+                      }
+                    </span>
+                    <ChevronDown
+                      size={13}
+                      className={`transition-transform duration-200 ${showDatePicker ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <input
+                    id="date-input"
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    onClick={(e) => {
+                      try { e.target.showPicker(); } catch (err) {}
+                    }}
+                    className={showDatePicker 
+                      ? "mt-2 bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full text-xs animate-fadeIn"
+                      : "sr-only"
+                    }
+                    required
+                    autoFocus={showDatePicker}
+                  />
+                </div>
+
+                {/* Tag Selector */}
+                <TagSelector
+                  selectedTagIds={selectedTagIds}
+                  onChange={setSelectedTagIds}
+                />
+
+                {/* Submit Action Buttons */}
+                <div className="sticky bottom-0 pt-3 pb-1 bg-gradient-to-t from-[var(--surface-2,#1a1a2e)] via-[var(--surface-2,#1a1a2e)/95] to-transparent z-10">
+                  {transactionToEdit ? (
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="flex-1 py-4 rounded-2xl bg-danger/10 hover:bg-danger/15 text-danger font-bold transition-all shadow-sm active:scale-95"
+                      >
+                        Supprimer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        className={`flex-[2] py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md ${
+                          type === 'expense' 
+                            ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
+                            : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+                        }`}
+                      >
+                        Enregistrer
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md ${
+                        type === 'expense' 
+                          ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
+                          : 'bg-accent hover:bg-accent/90 shadow-accent/20'
+                      }`}
+                    >
+                      Ajouter la transaction
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 
         {/* PANEL 2: SELECT ACCOUNT */}
         {activePanel === 'account' && (
           <div className="space-y-4 animate-fadeIn">
-            {/* (13) Navigation directe Compte ↔ Catégorie */}
-            <div className="pb-2 border-b border-border/40">
+            {/* (13) Account selector Header */}
+            <div className="pb-2 border-b border-border/40 select-none">
               <div className="flex items-center justify-between mb-3">
                 <button 
                   type="button"
@@ -973,25 +1051,25 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     triggerHaptic('light');
                     setActivePanel('form');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
+                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary active:scale-95"
                 >
                   ← Retour
                 </button>
                 <div className="flex gap-1 bg-surface p-1 rounded-xl">
-                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-xs font-bold">Compte</span>
+                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-[10px] font-bold">Compte</span>
                   <button
                     type="button"
                     onClick={() => { triggerHaptic('light'); setActivePanel('category'); }}
                     disabled={type === 'transfer'}
-                    className="px-3 py-1 rounded-lg text-xs font-bold text-muted hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-3 py-1 rounded-lg text-[10px] font-bold text-muted hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Catégorie
                   </button>
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-primary">Sélectionner un compte</h3>
-                <p className="text-xs text-muted font-medium mt-0.5">Choisissez le compte de débit/crédit</p>
+                <h3 className="text-xs font-extrabold text-primary uppercase tracking-wider">Sélectionner un compte</h3>
+                <p className="text-[10px] text-muted font-medium mt-0.5">Choisissez le compte de débit/crédit</p>
               </div>
             </div>
             
@@ -1009,7 +1087,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     }}
                     className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all text-left ${
                       isSelected 
-                        ? 'bg-accent/10 border-accent text-primary font-bold' 
+                        ? 'bg-accent/10 border-accent text-primary font-bold shadow-sm' 
                         : 'bg-surface border-border/40 hover:bg-surface-2/80 active:scale-98'
                     }`}
                   >
@@ -1041,8 +1119,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         {/* PANEL 3: SELECT CATEGORY */}
         {activePanel === 'category' && (
           <div className="space-y-4 animate-fadeIn">
-            {/* (13) Navigation directe Compte ↔ Catégorie */}
-            <div className="pb-2 border-b border-border/40">
+            {/* (13) Direct category selector Header */}
+            <div className="pb-2 border-b border-border/40 select-none">
               <div className="flex items-center justify-between mb-3">
                 <button 
                   type="button"
@@ -1050,7 +1128,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     triggerHaptic('light');
                     setActivePanel('form');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary"
+                  className="px-3 py-1.5 rounded-xl bg-surface-2 text-xs font-bold hover:bg-border/60 text-secondary active:scale-95"
                 >
                   ← Retour
                 </button>
@@ -1058,16 +1136,16 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   <button
                     type="button"
                     onClick={() => { triggerHaptic('light'); setActivePanel('account'); }}
-                    className="px-3 py-1 rounded-lg text-xs font-bold text-muted hover:text-primary transition-colors"
+                    className="px-3 py-1 rounded-lg text-[10px] font-bold text-muted hover:text-primary transition-colors"
                   >
                     Compte
                   </button>
-                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-xs font-bold">Catégorie</span>
+                  <span className="px-3 py-1 rounded-lg bg-accent text-white text-[10px] font-bold">Catégorie</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-primary">Sélectionner une catégorie</h3>
-                <p className="text-xs text-muted font-medium mt-0.5">Choisissez la catégorie pour cette transaction</p>
+                <h3 className="text-xs font-extrabold text-primary uppercase tracking-wider">Sélectionner une catégorie</h3>
+                <p className="text-[10px] text-muted font-medium mt-0.5">Choisissez la catégorie pour cette transaction</p>
               </div>
             </div>
             
@@ -1101,12 +1179,21 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                         }}
                         className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all text-left ${
                           isParentSelected 
-                            ? 'bg-accent/15 border-accent text-primary' 
+                            ? 'bg-accent/15 border-accent text-primary font-bold shadow-sm' 
                             : 'bg-surface border-border/40 hover:bg-surface-2/85 active:scale-[0.99]'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-lg shrink-0">{parent.icon || '📁'}</span>
+                          <span 
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0"
+                            style={{
+                              backgroundColor: `${parent.color || '#3b82f6'}18`,
+                              color: parent.color || '#3b82f6',
+                              border: `1px solid ${parent.color || '#3b82f6'}20`
+                            }}
+                          >
+                            {parent.icon || '📁'}
+                          </span>
                           <span className="font-bold text-xs text-primary truncate">{parent.name}</span>
                         </div>
                         {isParentSelected ? (
@@ -1130,14 +1217,23 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                                   setCategoryId(child._id);
                                   setActivePanel('form');
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
+                                className={`p-2.5 rounded-xl border text-left flex items-center gap-2.5 transition-all ${
                                   isChildSelected 
-                                    ? 'bg-accent/10 border-accent/60 text-accent font-bold' 
+                                    ? 'bg-accent/10 border-accent text-accent font-bold shadow-sm' 
                                     : 'bg-surface-2/50 border-border/20 hover:border-border/40 active:scale-95'
                                 }`}
                               >
-                                <span className="text-sm shrink-0">{child.icon || parent.icon || '↳'}</span>
-                                <span className="text-[11px] truncate text-primary">{child.name}</span>
+                                <span 
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0"
+                                  style={{
+                                    backgroundColor: `${child.color || parent.color || '#3b82f6'}18`,
+                                    color: child.color || parent.color || '#3b82f6',
+                                    border: `1px solid ${child.color || parent.color || '#3b82f6'}20`
+                                  }}
+                                >
+                                  {child.icon || parent.icon || '📁'}
+                                </span>
+                                <span className="text-[11.5px] truncate text-primary font-semibold">{child.name}</span>
                               </button>
                             );
                           })}
@@ -1162,7 +1258,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         cancelText="Annuler"
         type="danger"
       >
-        <p className="text-xs text-secondary leading-relaxed">
+        <p className="text-xs text-secondary leading-relaxed select-none">
           Êtes-vous sûr de vouloir supprimer le favori{" "}
           <strong className="text-primary font-bold">
             "{templates.find(t => t.id === templateToDeleteId)?.name || ''}"

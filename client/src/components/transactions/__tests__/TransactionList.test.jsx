@@ -49,7 +49,7 @@ describe('TransactionList Component', () => {
       return element.tagName === 'P' && element.textContent.includes('45,50') && element.textContent.startsWith('-');
     });
     expect(expenseAmount).toBeInTheDocument();
-    expect(expenseAmount).toHaveClass('text-primary');
+    expect(expenseAmount).toHaveClass('text-danger');
 
     // Income should render with plus
     const incomeAmount = screen.getByText((content, element) => {
@@ -66,7 +66,7 @@ describe('TransactionList Component', () => {
       return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('-');
     });
     expect(transferAmount).toBeInTheDocument();
-    expect(transferAmount).toHaveClass('text-primary');
+    expect(transferAmount).toHaveClass('text-danger');
   });
 
   it('renders transfer as negative when currentAccountId is the source account (checking)', () => {
@@ -76,7 +76,7 @@ describe('TransactionList Component', () => {
       return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('-');
     });
     expect(transferAmount).toBeInTheDocument();
-    expect(transferAmount).toHaveClass('text-primary');
+    expect(transferAmount).toHaveClass('text-danger');
   });
 
   it('renders transfer as positive and styled as accent when currentAccountId is the destination account (credit)', () => {

@@ -567,3 +567,30 @@ Dans les tableaux du rapport PDF, le champ description est déterminé à la vol
 ### 11.6 Export PDF et Fallback d'Impression
 Le processus d'exportation dynamique importe à la volée `html2pdf.js` pour alléger le bundle d'initialisation de l'application. En cas d'échec de chargement de la bibliothèque sur le terminal client, une capture d'exception robuste redirige l'utilisateur vers la boîte de dialogue d'impression système du navigateur via `window.print()`.
 
+---
+
+## 12. Système Graphique et Améliorations UX (Style Bankyboard) 🎨
+
+Afin de fournir une expérience utilisateur mobile de qualité premium, l'application intègre des ajustements graphiques profonds inspirés de la fintech **Bankyboard**.
+
+### 12.1 Thème Visuel et Orbes Ambiants
+*   **Palette de couleurs "Encre & Cuivre"** : Définie dans [index.css](file:///c:/Projects/budgetizer/client/src/index.css) à l'aide de variables HSL. Le fond sombre est fixé sur un noir d'encre marine profond (`#030816`), rehaussé d'ombres subtiles et de reflets chauds de couleur cuivre/ambre (`#d97706`).
+*   **Glow Orbs** : Intégration de trois halos lumineux translucides fixes (`div` dotées de flous CSS `blur-[100px]` et de faibles opacités de 5% à 8%) injectés dans le composant racine [AppShell.jsx](file:///c:/Projects/budgetizer/client/src/components/layout/AppShell.jsx) pour apporter du relief visuel.
+*   **Retours Tactiles** : Ajout de la classe utilitaire `.active-scale` offrant une réduction d'échelle de $2\%$ lors des clics ou appuis tactiles sur les boutons interactifs.
+
+### 12.2 Tiroirs Gestuels (Swipe-to-Dismiss)
+*   Le composant [BottomSheet.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/BottomSheet.jsx) s'appuie sur `framer-motion` pour intercepter les gestes mobiles.
+*   Les propriétés de drag vertical (`drag="y"`, `dragConstraints={{ top: 0 }}`, `dragElastic=0.2`) permettent à l'utilisateur de fermer les tiroirs de dialogue par simple glissement vers le bas. Une distance de glissement supérieure à $100\text{px}$ déclenche automatiquement la fermeture (`onClose`).
+
+### 12.3 Carte Solde Physique et Graphique Intégré
+*   Le composant [FloorBalanceWidget.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/FloorBalanceWidget.jsx) affiche le solde disponible dans un conteneur simulant une carte bancaire physique rigide (bordures cuivrées fines, effet de brillance *glassmorphism*).
+*   **Indicateur de Santé Lumineux** : La bordure de la carte pulse doucement et change de couleur selon la santé financière globale (vert pour Excellent, orange pour Warn, rouge pour Danger).
+*   **Graphique en Arrière-plan** : Le graphique de tendance à 30 jours (`AreaChart` de Recharts) est superposé en arrière-plan translucide absolu sous les étiquettes de solde. Cela permet d'économiser plus de $100\text{px}$ de hauteur d'écran sur mobile tout en préservant le contexte analytique.
+
+### 12.4 Formulaire Progressif de Transaction
+*   **Saisie en Deux Étapes** : Afin de libérer de l'espace écran et de ne pas encombrer le clavier virtuel mobile, [TransactionFormSheet.jsx](file:///c:/Projects/budgetizer/client/src/components/transactions/TransactionFormSheet.jsx) sépare le flux :
+    *   **Étape 1** : Saisie ciblée du montant via le clavier virtuel, gestion du type (revenu/dépense) et accès rapide aux favoris tactiles et au bouton "Répéter la dernière transaction" (sauvegardée dans le `localStorage`).
+    *   **Étape 2** : Complétion des détails (note prédictive intelligente s'appuyant sur l'historique récent, tags, date en accordéon et sélection de comptes/catégories).
+*   **Optimisation Accessibilité (A11y) & Tests** : Pour conserver la compatibilité avec les outils d'audit d'accessibilité et les tests unitaires automatisés (qui interrogent le DOM avec `getByLabelText`), des éléments `<select>` natifs et inputs de date invisibles (`sr-only`) restent présents dans le DOM en arrière-plan, synchronisant en temps réel leurs valeurs avec les choix effectués dans l'interface tactile customisée.
+
+

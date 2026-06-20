@@ -229,13 +229,52 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────────
+  const cardGradientClass = useMemo(() => {
+    if (hasRiskOfNegative) return 'bg-gradient-to-br from-[#1C050A] via-[#0F0204] to-[#250308] border border-danger/30 shadow-[0_12px_30px_-5px_rgba(244,63,94,0.15)]';
+    if (!isComfortable) return 'bg-gradient-to-br from-[#1C0F02] via-[#0F0701] to-[#251203] border border-warning/30 shadow-[0_12px_30px_-5px_rgba(245,158,11,0.15)]';
+    return 'bg-gradient-to-br from-[#03223F] via-[#0A2A52] to-[#1E3A8A] border border-white/10 shadow-[0_12px_30px_-5px_rgba(10,26,47,0.35)]';
+  }, [hasRiskOfNegative, isComfortable]);
+
   return (
     <section className="mb-6 mt-4">
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#03223F] via-[#0A2A52] to-[#1E3A8A] text-white rounded-[24px] border-none p-5 shadow-[0_12px_30px_-5px_rgba(10,26,47,0.35)] space-y-4 transition-all duration-300">
+      <div className={`relative overflow-hidden text-white rounded-[24px] p-5 space-y-4 transition-all duration-300 active-card-feedback ${cardGradientClass}`}>
+
+        {/* Absolute Background Projection Chart Wave */}
+        <div className="absolute inset-x-0 bottom-0 h-[100px] opacity-[0.14] pointer-events-none select-none z-0">
+          {projectionData.length > 0 && (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={projectionData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorFloorBg" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor={isComfortable ? '#10b981' : hasRiskOfNegative ? '#f43f5e' : '#f59e0b'}
+                      stopOpacity={0.4}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={isComfortable ? '#10b981' : hasRiskOfNegative ? '#f43f5e' : '#f59e0b'}
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="balance"
+                  stroke={isComfortable ? '#10b981' : hasRiskOfNegative ? '#f43f5e' : '#f59e0b'}
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorFloorBg)"
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
 
         {/* Decorative glows */}
-        <div className="absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none bg-emerald-400/10" />
-        <div className="absolute -left-16 -top-16 w-36 h-36 bg-blue-400/15 rounded-full blur-[40px] pointer-events-none" />
+        <div className="absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none bg-emerald-400/10 z-0" />
+        <div className="absolute -left-16 -top-16 w-36 h-36 bg-blue-400/15 rounded-full blur-[40px] pointer-events-none z-0" />
 
         {/* Header */}
         <div className="flex justify-between items-start relative z-10">
@@ -351,7 +390,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="text-blue-300 shrink-0">
+                           <div className="text-blue-300 shrink-0">
                             {isSelected ? (
                               <CheckCircle2 size={14} className="text-amber-400" />
                             ) : (
@@ -405,85 +444,8 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           </div>
         )}
 
-        {/* Sparkline — Projection 30 jours */}
-        <div className="relative z-0">
-          <div className="flex justify-between items-center mb-1 px-0.5">
-            <span className="text-[9px] font-bold text-blue-200/70 uppercase tracking-wider">Projection 30 jours</span>
-            {hasRiskOfNegative && (
-              <span className="text-[9px] font-bold text-rose-300 flex items-center gap-0.5 animate-pulse">
-                ⚠️ Zone négative détectée
-              </span>
-            )}
-          </div>
-          <div className="w-full h-[80px] select-none">
-            {projectionData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-blue-200/50 text-xs">
-                Aucune projection disponible.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={projectionData} margin={{ top: 5, right: 2, left: 2, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="colorFloor" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor={isComfortable ? '#10b981' : '#f43f5e'}
-                        stopOpacity={0.25}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={isComfortable ? '#10b981' : '#f43f5e'}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="date"
-                    ticks={[projectionData[0]?.date, projectionData[projectionData.length - 1]?.date]}
-                    tickFormatter={(tick) => {
-                      if (!tick) return '';
-                      const d = new Date(tick);
-                      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-                    }}
-                    tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.6)', fontWeight: 'bold' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(val) => [formatCurrency(val), 'Solde projeté']}
-                    labelFormatter={(lbl) =>
-                      `Le : ${new Date(lbl).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
-                    }
-                    wrapperStyle={{ pointerEvents: 'none' }}
-                    contentStyle={{
-                      borderRadius: '16px',
-                      background: '#070e20',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#ffffff',
-                      fontSize: '11px',
-                      padding: '8px 12px',
-                      boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="balance"
-                    stroke={isComfortable ? '#10b981' : '#f43f5e'}
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#colorFloor)"
-                  />
-                  {hasRiskOfNegative && (
-                    <ReferenceLine y={0} stroke="#f43f5e" strokeDasharray="3 3" strokeWidth={1.5} />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
         {/* Accordion — Échéances avant la paye */}
-        <div className="relative z-0 border-t border-white/10 pt-3">
+        <div className="relative z-10 border-t border-white/10 pt-3">
           <button
             onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
             className="w-full flex justify-between items-center py-1.5 text-xs font-bold text-white focus:outline-none"

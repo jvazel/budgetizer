@@ -263,3 +263,38 @@ body {
   background-color: rgba(241, 244, 249, 0.6);
 }
 
+/* Ambient Background Glow Orbs for premium visual atmosphere (Bankyboard) */
+.bg-glow-orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+  will-change: transform;
+}
+[data-theme="light"] .bg-glow-orb, .light .bg-glow-orb {
+  opacity: 0.04;
+}
+
+.glow-orb-amber {
+  background: radial-gradient(circle, #d97706 0%, transparent 70%);
+}
+
+.glow-orb-indigo {
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+}
+
+.glow-orb-emerald {
+  background: radial-gradient(circle, #10b981 0%, transparent 70%);
+}
+
+/* Premium card active visual feedback */
+.active-card-feedback {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.active-card-feedback:active {
+  transform: scale(0.985);
+}
+
+

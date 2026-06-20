@@ -90,6 +90,16 @@ vi.mock('../../hooks/useTags', () => ({
   })
 }));
 
+vi.mock('../../hooks/useBudgets', () => ({
+  useBudgets: () => ({
+    budgets: [],
+    loading: false,
+    addBudget: vi.fn(),
+    updateBudget: vi.fn(),
+    deleteBudget: vi.fn()
+  })
+}));
+
 vi.mock('../../hooks/useSavedFilters', () => ({
   useSavedFilters: () => ({
     savedFilters: mockSavedFilters,

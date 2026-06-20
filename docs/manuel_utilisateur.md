@@ -153,33 +153,25 @@ Pour les projets transversaux (ex. : `#vacances 2026`, `#travaux`), créez des t
 
 ## 4. Saisie et suivi des mouvements au quotidien
 
-### 4.1 La Saisie Rapide (Bottom Sheet)
-* **Ouverture** : Cliquez sur le bouton flottant d'action central `+` au bas de l'écran. Un tiroir interactif se déploie depuis le bas.
-* **Chip "🔁 Répéter la dernière transaction"** : Si vous avez déjà saisi une transaction lors d'une session précédente, un chip mémorise automatiquement votre dernière saisie. Un seul tap pré-remplit **intégralement** le formulaire (montant, note, compte, catégorie, tags). Idéal pour les habitudes quotidiennes comme le café ou le trajet.
-* **Favoris rapides (templates)** : Une bande horizontale affiche vos raccourcis de dépenses récurrentes. Les chips sont désormais **plus larges** (zone tactile ≥ 44 px) avec icône grande, nom et montant sur deux lignes pour une lecture plus confortable au pouce.
-* **Gestes et saisie de montant sur mobile** :
-  * Appuyez sur le champ du montant. Sur smartphone, l'application force l'affichage du **clavier décimal numérique natif** de votre système (`inputMode="decimal"`).
-  * La saisie est sécurisée contre les erreurs de frappe : les virgules `,` sont automatiquement converties en points `.`, les zéros initiaux superflus sont nettoyés et la saisie est bridée à deux chiffres après la décimale.
-* **Solde résultant à la volée** : Dès que vous tapez un montant, un badge discret s'affiche immédiatement sous le champ :
-  > Solde Compte Courant après : **1 437,50 €**
-  Il change de couleur selon l'impact : vert si revenu, rouge si le solde passe en négatif. Cela vous permet de vérifier en un coup d'œil que vous n'allez pas en découvert avant de valider.
-* **Champ Note en priorité** : Le champ Note est désormais placé **avant** les sélecteurs Compte et Catégorie. Dès que vous tapez 2 caractères, les suggestions d'autocomplete apparaissent juste en dessous, pré-remplissant automatiquement le compte, la catégorie et les tags depuis vos transactions récentes similaires.
-* **Sélection tactile simplifiée** :
-  * **Sélection du compte** : Un panneau tactile s'ouvre, vous présentant la liste des comptes avec leurs soldes réels mis à jour.
-  * **Sélection de la catégorie** : Choisissez d'abord la catégorie parente, puis une grille de sous-catégories apparaît pour affiner votre choix d'un simple toucher du pouce.
-  * **Navigation directe Compte ↔ Catégorie** : Une barre d'onglets `[Compte] [Catégorie]` est disponible en haut de chaque panel secondaire. Vous pouvez basculer directement de l'un à l'autre **sans repasser par le formulaire principal**, économisant 2 taps de navigation.
-* **Indicateur de budget inline** : Lorsque vous sélectionnez une catégorie qui possède une enveloppe budgétaire configurée, une mini-barre de progression apparaît automatiquement sous les sélecteurs :
-  > 🛒 Enveloppe Alimentation — **312 € / 400 €** consommés
-  La barre change de couleur selon l'avancement : verte (< 80 %), orange (80–100 %), rouge (dépassement). Le montant affiché se met à jour en temps réel selon ce que vous êtes en train de saisir, avec une alerte ⚠️ si votre saisie ferait dépasser le budget.
-* **Date masquée (accordéon)** : La date est masquée par défaut derrière un badge cliquable "📅 Aujourd'hui". Si la transaction se passe aujourd'hui (cas le plus fréquent), il suffit d'ignorer ce badge — la date est déjà correcte. Appuyez dessus uniquement si vous devez saisir une date antérieure.
-* **Tags et Notes** : Saisissez une note rapide et ajoutez des tags en insérant le caractère `#`.
-* **Bouton Valider toujours visible** : Le bouton "Ajouter la transaction" est **fixe en bas du formulaire** (sticky). Il reste visible en permanence, même lorsque le clavier virtuel est ouvert, pour valider sans chercher.
-* **Confirmation enrichie** : Après validation, un toast apparaît avec le montant saisi **et** le nouveau solde du compte concerné :
-  > ✅ −12,50€ enregistré · Solde Courant : **1 437,50 €**
-* **Patterns haptiques distinctifs** (sur mobile) :
-  * Dépense validée → 1 vibration courte.
-  * Revenu validé → 2 vibrations légères (signal positif).
-  * Erreur de saisie → 3 impulsions courtes.
+### 4.1 La Saisie Rapide et Progressive (Bottom Sheet)
+* **Ouverture** : Cliquez sur le bouton flottant d'action central `+` au bas de l'écran. Un tiroir interactif (Bottom Sheet) se déploie depuis le bas.
+* **Balayage tactile (Swipe-to-Dismiss)** : Sur mobile, vous pouvez fermer ce tiroir à tout moment d'un simple mouvement du doigt en le faisant glisser vers le bas de plus de 100 px.
+* **Fonctionnement progressif en Deux Étapes** : Le formulaire est structuré en deux étapes pour optimiser l'espace écran et réduire la gêne occasionnée par l'ouverture du clavier mobile :
+  * **Étape 1 (Saisie du Montant)** : 
+    * Saisissez la somme à enregistrer. Sur mobile, le pavé numérique décimal s'affiche automatiquement.
+    * Un indicateur de solde résultant s'affiche en temps réel sous le montant (vert s'il est créditeur, rouge s'il risque de vous faire passer en découvert).
+    * **Chip "🔁 Répéter la dernière transaction"** : Permet de cloner et de pré-remplir l'intégralité du dernier enregistrement en un seul tap.
+    * **Favoris rapides (templates)** : Accédez à vos puces de favoris configurées (boutons de taille confortable de plus de 44 px) pour saisir vos dépenses quotidiennes instantanément. Vous pouvez supprimer un favori en restant appuyé longuement dessus (appui tactile prolongé).
+    * Sélectionnez le type (Revenu ou Dépense) puis appuyez sur **Continuer** pour passer à l'étape suivante.
+  * **Étape 2 (Détails de la Transaction)** :
+    * **Suggestions intelligentes** : Saisissez la note. À partir de 2 caractères, l'application vous propose des complétions issues de votre historique récent pour pré-remplir la catégorie et les tags correspondants.
+    * **Sélecteurs tactiles Compte et Catégorie** : Cliquer sur l'un d'eux ouvre un panneau coulissant complet. Une barre d'onglets `[Compte] [Catégorie]` en haut vous permet de passer directement de l'un à l'autre sans faire de détours par le formulaire principal.
+    * **Indicateur de budget en ligne** : Si la catégorie choisie dispose d'une enveloppe de budget configurée, une barre de progression s'affiche pour vous indiquer le niveau de consommation actuel et l'impact du montant que vous êtes en train de saisir, avec une alerte visuelle en cas de dépassement.
+    * **Date en accordéon** : Cachée par défaut sous le bouton *"📅 Aujourd'hui"*, déroulez l'accordéon uniquement si vous souhaitez modifier la date de l'opération.
+    * Ajoutez des tags et validez à l'aide du bouton sticky resté visible en bas du formulaire.
+* **Confirmation et retours haptiques** : 
+  * Un toast de succès vert apparaît en haut de l'écran pendant 3 secondes pour récapituler le montant enregistré et afficher le nouveau solde du compte.
+  * Votre appareil mobile émet des vibrations caractéristiques (1 vibration brève pour une dépense, 2 vibrations légères rythmées pour un revenu, et 3 secousses marquées en cas d'erreur de saisie).
 
 ### 4.2 Le Journal des Transactions (Historique)
 Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.

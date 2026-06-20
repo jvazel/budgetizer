@@ -36,6 +36,17 @@ vi.mock('../../../hooks/useTags', () => ({
   })
 }));
 
+vi.mock('../../../hooks/useBudgets', () => ({
+  useBudgets: () => ({
+    budgets: [],
+    loading: false,
+    addBudget: vi.fn(),
+    updateBudget: vi.fn(),
+    deleteBudget: vi.fn()
+  })
+}));
+
+
 const mockTransactions = [
   { _id: 'tx1', note: 'Starbucks', amount: 4.50, accountId: 'acc1', categoryId: 'cat1', type: 'expense', date: '2026-06-18', tags: ['tag1'] },
   { _id: 'tx2', note: 'Starbucks', amount: 4.80, accountId: 'acc1', categoryId: 'cat1', type: 'expense', date: '2026-06-17', tags: ['tag1'] },
@@ -74,6 +85,11 @@ describe('TransactionFormSheet Component', () => {
     expect(screen.getByRole('button', { name: 'Dépense' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Revenu' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
+
+    // Enter amount and continue to Step 2
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
     expect(screen.getByLabelText('Compte')).toBeInTheDocument();
     expect(screen.getByLabelText('Catégorie')).toBeInTheDocument();
     expect(screen.getByLabelText('Date')).toBeInTheDocument();
@@ -83,13 +99,13 @@ describe('TransactionFormSheet Component', () => {
   it('changes type from Expense to Income and filters categories', () => {
     render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
     
-    // Default is expense, check category list contains Alimentation
-    const categorySelect = screen.getByLabelText('Catégorie');
-    expect(screen.getByText('Alimentation')).toBeInTheDocument();
-    
-    // Switch to income
+    // Default is expense, switch to Income in step 1
     const incomeBtn = screen.getByRole('button', { name: 'Revenu' });
     fireEvent.click(incomeBtn);
+
+    // Enter amount and continue to step 2
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     
     // Check category list now contains Salaire
     expect(screen.getByText('Salaire')).toBeInTheDocument();
@@ -108,11 +124,14 @@ describe('TransactionFormSheet Component', () => {
       />
     );
 
-    // Enter amount
+    // Enter amount in step 1
     const amountInput = screen.getByPlaceholderText('0.00');
     fireEvent.change(amountInput, { target: { value: '45.50' } });
 
-    // Enter note
+    // Continue to step 2
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    // Enter note in step 2
     const noteInput = screen.getByLabelText('Note (optionnel)');
     fireEvent.change(noteInput, { target: { value: 'Courses hebdomadaires' } });
 
@@ -180,12 +199,15 @@ describe('TransactionFormSheet Component', () => {
       />
     );
 
+    // Enter amount and continue to step 2
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
     // Default should be acc1
     expect(screen.getByLabelText('Compte').value).toBe('acc1');
     expect(screen.getByLabelText('Catégorie').value).toBe('');
 
-    // Fill amount and note, select category cat1
-    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
+    // Fill category and account
     fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
     fireEvent.change(screen.getByLabelText('Compte'), { target: { value: 'acc2' } });
 
@@ -203,6 +225,10 @@ describe('TransactionFormSheet Component', () => {
     rerender(<TransactionFormSheet isOpen={false} onClose={handleClose} />);
     rerender(<TransactionFormSheet isOpen={true} onClose={handleClose} />);
 
+    // Enter amount and continue to step 2
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
     expect(screen.getByLabelText('Compte').value).toBe('acc2');
     expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
   });
@@ -217,16 +243,13 @@ describe('TransactionFormSheet Component', () => {
     );
 
     const amountInput = screen.getByPlaceholderText('0.00');
-    const noteInput = screen.getByLabelText('Note (optionnel)');
 
-    // Mock focus on noteInput
-    noteInput.focus = vi.fn();
-
-    // Fill amount and hit enter
+    // Fill amount and hit enter to switch to step 2
     fireEvent.change(amountInput, { target: { value: '50' } });
     fireEvent.keyDown(amountInput, { key: 'Enter', code: 'Enter' });
 
-    expect(noteInput.focus).toHaveBeenCalled();
+    // Now noteInput is rendered in step 2
+    const noteInput = screen.getByLabelText('Note (optionnel)');
 
     // Type note and hit enter to submit
     fireEvent.change(noteInput, { target: { value: 'Déjeuner' } });
@@ -257,6 +280,9 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.click(screen.getByText('Café'));
 
     expect(screen.getByPlaceholderText('0.00').value).toBe('2.50');
+    
+    // Click Continuer to see step 2 note field
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(screen.getByLabelText('Note (optionnel)').value).toBe('Café');
   });
 
@@ -266,13 +292,11 @@ describe('TransactionFormSheet Component', () => {
 
     render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
 
-    // Fill form
+    // Fill amount in step 1
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '4.50' } });
-    fireEvent.change(screen.getByLabelText('Note (optionnel)'), { target: { value: 'Pour le goûter' } });
-    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
-
-    // Click save template button
-    fireEvent.click(screen.getByText('+ Sauvegarder'));
+    
+    // Save template is in step 1
+    fireEvent.click(screen.getByText('＋ Favori'));
 
     expect(promptMock).toHaveBeenCalled();
     expect(screen.getByText('Cookies')).toBeInTheDocument();
@@ -282,6 +306,10 @@ describe('TransactionFormSheet Component', () => {
 
   it('displays autocomplete suggestion bubbles based on note input matching', () => {
     render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Enter amount and continue
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     // Type "Sta" in note
     const noteInput = screen.getByLabelText('Note (optionnel)');
@@ -293,6 +321,10 @@ describe('TransactionFormSheet Component', () => {
 
   it('applies predicted category and account when clicking a suggestion bubble', () => {
     render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Enter amount and continue
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     const noteInput = screen.getByLabelText('Note (optionnel)');
     fireEvent.change(noteInput, { target: { value: 'Sta' } });
@@ -308,6 +340,10 @@ describe('TransactionFormSheet Component', () => {
 
   it('auto-predicts and fills category and account on exact match loss of focus (onBlur)', () => {
     render(<TransactionFormSheet isOpen={true} onClose={() => {}} />);
+
+    // Enter amount and continue
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     const noteInput = screen.getByLabelText('Note (optionnel)');
     
@@ -352,14 +388,15 @@ describe('TransactionFormSheet Component', () => {
     const handleClose = vi.fn();
     render(<TransactionFormSheet isOpen={true} onClose={handleClose} />);
 
+    // Enter amount and continue
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
     const noteInput = screen.getByLabelText('Note (optionnel)');
     fireEvent.change(noteInput, { target: { value: 'Sta' } });
 
     // Click Starbucks suggestion bubble
     fireEvent.click(screen.getByRole('button', { name: /Starbucks/ }));
-
-    // Fill amount so form is valid
-    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
 
     // Submit
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter la transaction' }));
