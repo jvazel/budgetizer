@@ -698,14 +698,14 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   <button 
                     type="button"
                     onClick={() => handleTypeChange('expense')}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'expense' ? 'bg-danger text-white shadow-sm' : 'text-muted'}`}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'expense' ? 'bg-copper text-white shadow-sm font-extrabold' : 'text-muted hover:text-primary'}`}
                   >
                     Dépense
                   </button>
                   <button 
                     type="button"
                     onClick={() => handleTypeChange('income')}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'income' ? 'bg-accent text-white shadow-sm' : 'text-muted'}`}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${type === 'income' ? 'bg-copper text-white shadow-sm font-extrabold' : 'text-muted hover:text-primary'}`}
                   >
                     Revenu
                   </button>
