@@ -7,6 +7,11 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
   const [visibleCount, setVisibleCount] = React.useState(30);
   const observerTarget = React.useRef(null);
 
+  const alertThreshold = React.useMemo(() => {
+    const saved = localStorage.getItem('budgetizer_alert_threshold');
+    return saved ? Number(saved) : 100;
+  }, []);
+
   // Reset pagination when the global list of transactions changes (e.g., when applying filters)
   React.useEffect(() => {
     setVisibleCount(30);
@@ -233,16 +238,17 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   )}
                   
                   <div className="text-right shrink-0 ml-auto pl-1">
-                    <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${
-                      tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
-                        ? 'text-danger'
-                        : 'text-accent'
-                    }`}>
-                      {tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)))
-                        ? '-' 
-                        : '+'
-                      }{formatCurrency(tx.amount)}
-                    </p>
+                    {(() => {
+                      const isDebit = tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)));
+                      const isHighAlert = isDebit && tx.amount >= alertThreshold;
+                      const colorClass = isDebit ? (isHighAlert ? 'text-danger' : 'text-secondary') : 'text-accent';
+                      
+                      return (
+                        <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${colorClass}`}>
+                          {isDebit ? '-' : '+'}{formatCurrency(tx.amount)}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               </div>
