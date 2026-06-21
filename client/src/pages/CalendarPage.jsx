@@ -7,6 +7,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AiBadge from '../components/ui/AiBadge';
 
 const CalendarPage = () => {
   const queryClient = useQueryClient();
@@ -72,7 +73,7 @@ const CalendarPage = () => {
       {/* Large Page Title */}
       <div className="mb-5 mt-2 px-1">
         <h1 className="text-2xl font-extrabold text-primary tracking-tight">Calendrier</h1>
-        <p className="text-xs text-secondary mt-0.5 font-medium">Planifiez et suivez vos opérations au jour le jour.</p>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Planifie et suis tes opérations au jour le jour pour garder l'esprit tranquille.</p>
       </div>
 
       {/* Month Navigation Bar */}
@@ -112,6 +113,20 @@ const CalendarPage = () => {
             transactions={transactions}
           />
         )}
+      </section>
+
+      {/* Coach IA recommendation */}
+      <section className="mb-6">
+        <div className="bg-surface-2 p-4 rounded-[24px] border border-border/40 flex gap-3 items-start select-none shadow-sm">
+          <AiBadge text="Coach IA" className="mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] text-secondary font-semibold leading-relaxed">
+              {transactions.filter(t => new Date(t.date).getTime() > new Date().getTime()).length === 0
+                ? "Tu n'as aucune charge planifiée pour le reste du mois. C'est le moment idéal pour épargner un peu ! 🎯"
+                : "Planifie et anticipe tes prochaines échéances à l'avance pour garder l'esprit tranquille. Tu es bien parti ! 👍"}
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Selected Day Transactions Panel */}

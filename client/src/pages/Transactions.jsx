@@ -280,7 +280,7 @@ const Transactions = () => {
           : 'opacity-100 translate-y-0'
       }`}>
         <h1 className="text-2xl font-extrabold text-primary tracking-tight">Transactions</h1>
-        <p className="text-xs text-secondary mt-0.5 font-medium">Historique détaillé de vos flux et opérations.</p>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Historique détaillé de tes flux et opérations.</p>
       </div>
 
       <div className="mt-4 space-y-4">
@@ -653,7 +653,7 @@ const Transactions = () => {
           <div>
             {transactions.length === 0 ? (
               <div className="bg-surface-2 border border-border/40 rounded-[28px] p-8 text-center text-muted">
-                <p className="text-xs">Aucune transaction ne correspond à vos critères de recherche.</p>
+                <p className="text-xs">Aucune transaction ne correspond à tes critères de recherche.</p>
               </div>
             ) : (
               <TransactionList 
@@ -703,10 +703,10 @@ const Transactions = () => {
       >
         {txToDelete && (
           <p className="text-xs text-secondary leading-relaxed">
-            Êtes-vous sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name || (txToDelete.type === 'transfer' ? 'Virement' : 'Transaction')}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(txToDelete.amount)}</span> ?
+            Es-tu sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name || (txToDelete.type === 'transfer' ? 'Virement' : 'Transaction')}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(txToDelete.amount)}</span> ?
             <br />
             <br />
-            Cette action est irréversible et réajustera le solde de votre compte.
+            Cette action est irréversible et réajustera le solde de ton compte.
           </p>
         )}
       </ConfirmModal>

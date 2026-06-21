@@ -153,7 +153,7 @@ describe('SettingsPage Component', () => {
 
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith('/users/clear');
-      expect(toast.success).toHaveBeenCalledWith('Toutes vos données financières ont été effacées');
+      expect(toast.success).toHaveBeenCalledWith('Toutes tes données financières ont été effacées');
       expect(window.location.reload).toHaveBeenCalled();
     });
 

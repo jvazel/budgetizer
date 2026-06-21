@@ -16,6 +16,7 @@ import FixedVarChart from '../components/charts/FixedVarChart';
 import WaterfallChart from '../components/charts/WaterfallChart';
 import BottomSheet from '../components/ui/BottomSheet';
 import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge, ShieldCheck, Lock } from 'lucide-react';
+import AiBadge from '../components/ui/AiBadge';
 
 
 const ChartsPage = () => {
@@ -61,7 +62,7 @@ const ChartsPage = () => {
       <HeaderTitle collapsible={true}>{titleElement}</HeaderTitle>
 
       {/* Large Collapsible Header Title on Page */}
-      <div className="mb-5 mt-2 px-1">
+      <div className="mb-5 mt-2 px-1 space-y-4">
         <div 
           onClick={() => setIsSelectorOpen(true)}
           className="flex items-center gap-2 cursor-pointer group active:scale-98 select-none"
@@ -73,7 +74,17 @@ const ChartsPage = () => {
             <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5 ml-1" />
           </div>
         </div>
-        <p className="text-[11px] text-secondary mt-0.5 font-medium">Visualisez vos données financières sous différentes perspectives analytiques.</p>
+        <p className="text-[11px] text-secondary font-medium leading-none">Visualise tes données financières sous différentes perspectives analytiques.</p>
+
+        {/* Coach IA recommendation */}
+        <div className="bg-surface-2 p-4 rounded-[24px] border border-border/40 flex gap-3 items-start select-none shadow-sm">
+          <AiBadge text="Conseil IA" className="mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] text-secondary font-semibold leading-relaxed">
+              Explore les différents graphiques pour comprendre la structure de tes dépenses. Suivre tes habitudes est le premier pas vers une épargne sereine ! 💡
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="mb-6">

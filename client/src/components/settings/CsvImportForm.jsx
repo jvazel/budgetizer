@@ -103,7 +103,7 @@ const CsvImportForm = () => {
       <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
         <div>
           <h4 className="text-xs font-bold text-primary">Gestion des transactions</h4>
-          <p className="text-[10px] text-muted">Sauvegardez vos données ou importez un extrait de compte bancaire.</p>
+          <p className="text-[10px] text-muted">Sauvegarde tes données ou importe un extrait de compte bancaire.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-2">

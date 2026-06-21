@@ -101,7 +101,7 @@ const PreferencesForm = ({ user, setUser }) => {
           <div className="flex justify-between items-center gap-4">
             <div>
               <h4 className="text-xs font-bold text-primary">Devise par défaut</h4>
-              <p className="text-[10px] text-muted">Devise utilisée pour vos budgets et affichages.</p>
+              <p className="text-[10px] text-muted">Devise utilisée pour tes budgets et affichages.</p>
             </div>
             <Select
               value={currencyCode}
@@ -170,7 +170,7 @@ const PreferencesForm = ({ user, setUser }) => {
           <div className="flex justify-between items-center gap-4">
             <div>
               <h4 className="text-xs font-bold text-primary">Sensibilité d'anomalie (IA)</h4>
-              <p className="text-[10px] text-muted">Seuil de dépassement par défaut pour vos alertes.</p>
+              <p className="text-[10px] text-muted">Seuil de dépassement par défaut pour tes alertes.</p>
             </div>
             <Select
               value={anomalyThreshold}
@@ -271,7 +271,7 @@ const PreferencesForm = ({ user, setUser }) => {
               <div className="flex justify-between items-center gap-4">
                 <div>
                   <span className="text-xs text-primary font-medium">Objectifs d'Épargne</span>
-                  <p className="text-[9px] text-muted font-normal mt-0.5">Suivi et félicitations pour vos objectifs d'épargne.</p>
+                  <p className="text-[9px] text-muted font-normal mt-0.5">Suivi et félicitations pour tes objectifs d'épargne.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -294,7 +294,7 @@ const PreferencesForm = ({ user, setUser }) => {
               <div className="flex justify-between items-center gap-4">
                 <div>
                   <span className="text-xs text-primary font-medium">Soldes de Comptes</span>
-                  <p className="text-[9px] text-muted font-normal mt-0.5">Alertes lorsque vos comptes passent sous le seuil configuré.</p>
+                  <p className="text-[9px] text-muted font-normal mt-0.5">Alertes lorsque tes comptes passent sous le seuil configuré.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -345,10 +345,10 @@ const PreferencesForm = ({ user, setUser }) => {
                       {pushPermission === 'unsupported' 
                         ? "Non supporté par ce navigateur."
                         : pushPermission === 'denied'
-                        ? "Bloqué par les réglages de votre navigateur."
+                        ? "Bloqué par les réglages de ton navigateur."
                         : isPushSubscribed
                         ? "Abonné aux notifications sur cet appareil."
-                        : "Recevez les alertes en tâche de fond."}
+                        : "Reçois les alertes en tâche de fond."}
                     </p>
                   </div>
                   {pushPermission !== 'unsupported' && pushPermission !== 'denied' && (
@@ -385,7 +385,7 @@ const PreferencesForm = ({ user, setUser }) => {
                     onClick={async () => {
                       try {
                         await sendTestPush();
-                        toast.success('Test envoyé ! Vérifiez vos notifications.');
+                        toast.success('Test envoyé ! Vérifie tes notifications.');
                       } catch (err) {
                         toast.error('Échec de l\'envoi du test');
                       }
@@ -438,11 +438,11 @@ const PreferencesForm = ({ user, setUser }) => {
 
           <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
             <div>
-              <h4 className="text-xs font-bold text-primary">Budgetizer sur votre appareil</h4>
+              <h4 className="text-xs font-bold text-primary">Budgetizer sur ton appareil</h4>
               <p className="text-[10px] text-muted">
                 {isStandalone 
-                  ? "L'application est installée sur votre appareil et fonctionne de manière autonome." 
-                  : "Installez l'application pour y accéder directement depuis votre écran d'accueil."}
+                  ? "L'application est installée sur ton appareil et fonctionne de manière autonome." 
+                  : "Installe l'application pour y accéder directement depuis ton écran d'accueil."}
               </p>
             </div>
 
@@ -470,7 +470,7 @@ const PreferencesForm = ({ user, setUser }) => {
           <div className="bg-surface border border-border max-w-sm w-full rounded-3xl p-6 space-y-4 shadow-2xl">
             <h3 className="text-sm font-extrabold text-primary">Installer sur iOS</h3>
             <p className="text-xs text-secondary leading-relaxed">
-              Pour installer Budgetizer sur votre iPhone :
+              Pour installer Budgetizer sur ton iPhone :
             </p>
             <ol className="list-decimal pl-4 text-xs text-secondary space-y-1.5">
               <li>Appuyez sur le bouton <strong>Partager</strong> en bas de Safari.</li>

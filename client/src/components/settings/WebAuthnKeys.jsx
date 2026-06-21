@@ -34,7 +34,7 @@ const WebAuthnKeys = () => {
   const handleRegisterCredential = async (e) => {
     e.preventDefault();
     if (!deviceName.trim()) {
-      toast.error('Veuillez entrer un nom pour cet appareil.');
+      toast.error('Saisis un nom pour cet appareil.');
       return;
     }
     
@@ -72,7 +72,7 @@ const WebAuthnKeys = () => {
           .filter(cred => cred.id.byteLength > 0);
       }
 
-      toast.loading("Veuillez authentifier votre appareil (empreinte, visage ou PIN)...");
+      toast.loading("Authentifie ton appareil (empreinte, visage ou PIN)...");
       const credential = await navigator.credentials.create({ publicKey: options });
       toast.dismiss();
 
@@ -157,7 +157,7 @@ const WebAuthnKeys = () => {
         <div>
           <h4 className="text-xs font-bold text-primary">Enregistrer un nouvel appareil</h4>
           <p className="text-[10px] text-muted font-medium">
-            Associez cet appareil (empreinte digitale, Face ID, Hello) à votre compte pour vous connecter sans mot de passe.
+            Associe cet appareil (empreinte digitale, Face ID, Hello) à ton compte pour te connecter sans mot de passe.
           </p>
         </div>
 

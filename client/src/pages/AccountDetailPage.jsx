@@ -353,10 +353,10 @@ const AccountDetailPage = () => {
       >
         {txToDelete && (
           <p className="text-xs text-secondary leading-relaxed">
-            Êtes-vous sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{formatCurrency(txToDelete.amount, account.currency)}</span> ?
+            Es-tu sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{formatCurrency(txToDelete.amount, account.currency)}</span> ?
             <br />
             <br />
-            Cette action est irréversible et réajustera le solde de votre compte.
+            Cette action est irréversible et réajustera le solde de ton compte.
           </p>
         )}
       </ConfirmModal>

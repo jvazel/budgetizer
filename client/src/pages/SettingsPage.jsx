@@ -24,7 +24,7 @@ const SettingsPage = () => {
   const handleClearAllData = async () => {
     try {
       await api.delete('/users/clear');
-      toast.success('Toutes vos données financières ont été effacées');
+      toast.success('Toutes tes données financières ont été effacées');
       setShowClearConfirm(false);
       window.location.reload();
     } catch (err) {
@@ -36,7 +36,7 @@ const SettingsPage = () => {
   const handleDeleteAccount = async () => {
     try {
       await api.delete('/users/me');
-      toast.success('Votre compte et toutes vos données ont été définitivement supprimés.');
+      toast.success('Ton compte et toutes tes données ont été définitivement supprimés.');
       logout();
     } catch (err) {
       toast.error('Erreur de suppression du compte');
@@ -67,7 +67,7 @@ const SettingsPage = () => {
             Structure & Catégorisation
           </h3>
           <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4 shadow-sm">
-            <p className="text-[10px] text-muted">Gérez vos catégories de transactions et vos étiquettes personnalisées.</p>
+            <p className="text-[10px] text-muted">Gère tes catégories de transactions et tes étiquettes personnalisées.</p>
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button 
                 onClick={() => navigate('/categories')}
@@ -97,7 +97,7 @@ const SettingsPage = () => {
           <div className="bg-danger-dim/10 p-5 rounded-[28px] border border-danger/20 space-y-4">
             <div>
               <h4 className="text-xs font-bold text-danger">Actions irréversibles</h4>
-              <p className="text-[10px] text-danger/80">Soyez extrêmement prudent avec ces actions.</p>
+              <p className="text-[10px] text-danger/80">Sois extrêmement prudent avec ces actions.</p>
             </div>
 
             <div className="space-y-2 pt-2">
@@ -136,7 +136,7 @@ const SettingsPage = () => {
             <div>
               <h3 className="text-sm font-extrabold text-primary">Effacer toutes les données ?</h3>
               <p className="text-xs text-muted mt-1 leading-relaxed">
-                Cette action supprimera l'intégralité de vos comptes, transactions, budgets et planifications. Vos identifiants de profil seront conservés.
+                Cette action supprimera l'intégralité de tes comptes, transactions, budgets et planifications. Tes identifiants de profil seront conservés.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -165,7 +165,7 @@ const SettingsPage = () => {
             <div>
               <h3 className="text-sm font-extrabold text-primary">Supprimer mon compte ?</h3>
               <p className="text-xs text-muted mt-1 leading-relaxed">
-                Cette opération est définitive et irréversible. Votre compte d'utilisateur et l'intégralité de vos enregistrements financiers seront effacés en cascade.
+                Cette opération est définitive et irréversible. Ton compte d'utilisateur et l'intégralité de tes enregistrements financiers seront effacés en cascade.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
