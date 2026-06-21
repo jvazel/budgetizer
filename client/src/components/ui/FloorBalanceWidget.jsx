@@ -276,59 +276,54 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         <div className="absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none bg-emerald-400/10 z-0" />
         <div className="absolute -left-16 -top-16 w-36 h-36 bg-blue-400/15 rounded-full blur-[40px] pointer-events-none z-0" />
 
-        {/* Header */}
-        <div className="flex justify-between items-start relative z-10">
-          <div className="flex-1 min-w-0 pr-3">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[10px] text-blue-200/70 font-bold tracking-wider uppercase">Solde disponible</p>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse-live" title="Données synchronisées en temps réel" />
-            </div>
-            <h2 className="text-4xl font-extrabold font-premium-numbers tracking-tight mt-1 text-white">
-              {formatCurrency(floorBalance)}
-            </h2>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-xs text-blue-100/60 font-normal">
-                Bancaire :&nbsp;
-                <span className="font-semibold text-white font-premium-numbers">{formatCurrency(actualBalance)}</span>
-              </span>
-              {totalPendingExpenses > 0 && (
-                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 border border-amber-500/25 px-2 py-0.5 rounded-full font-premium-numbers">
-                  −{formatCurrency(totalPendingExpenses)} réservés
-                </span>
-              )}
-              {creditBalance !== 0 && (
-                <span className="text-[10px] font-bold text-rose-300 bg-rose-500/20 border border-rose-500/25 px-2 py-0.5 rounded-full font-premium-numbers">
-                  {formatCurrency(Math.abs(creditBalance))} en cartes
-                </span>
-              )}
-            </div>
+        {/* Header Title & Config button */}
+        <div className="flex justify-between items-center relative z-10">
+          <div className="flex items-center gap-1.5">
+            <p className="text-[10px] text-blue-200/50 font-extrabold tracking-wider uppercase">Solde disponible</p>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse-live" title="Données synchronisées en temps réel" />
           </div>
-
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 ${
+            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active:scale-95 shrink-0 ${
               showSettings
-                ? 'bg-amber-500/20 border-amber-500/30 text-amber-300'
+                ? 'bg-[#d97706]/20 border-[#d97706]/30 text-[#d97706]'
                 : 'bg-white/10 border-white/10 text-blue-200 hover:text-white hover:bg-white/15'
             }`}
             aria-label="Configurer le jour de paye"
           >
-            <Settings size={16} />
+            <Settings size={14} />
           </button>
         </div>
 
-        {/* Contextual micro-phrase */}
-        <div className={`relative z-10 flex items-center gap-2 text-[11px] font-semibold rounded-xl px-3 py-2.5 border transition-colors ${
-          hasRiskOfNegative || !isComfortable
-            ? 'bg-rose-500/20 border-rose-500/30 text-rose-200'
-            : 'bg-white/5 border-white/10 text-blue-100'
-        }`}>
-          {hasRiskOfNegative || !isComfortable ? (
-            <AlertTriangle size={13} className="shrink-0 text-rose-300" />
-          ) : (
-            <Sparkles size={13} className="shrink-0 text-amber-300" />
+        {/* Level 1: Balance Amount */}
+        <div className="relative z-10 flex flex-col items-center justify-center py-1 text-center select-none">
+          <h2 className="text-5xl font-black font-premium-numbers tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
+            {formatCurrency(floorBalance)}
+          </h2>
+        </div>
+
+        {/* Level 2: Sub-balances and contexts (dimmed grey slate) */}
+        <div className="relative z-10 flex items-center justify-center gap-2 flex-wrap text-center pb-2 text-[11px] text-slate-400">
+          <span>
+            Bancaire :&nbsp;
+            <span className="font-semibold text-slate-200 font-premium-numbers">{formatCurrency(actualBalance)}</span>
+          </span>
+          {totalPendingExpenses > 0 && (
+            <>
+              <span className="opacity-40">•</span>
+              <span className="font-semibold text-slate-200 font-premium-numbers">
+                −{formatCurrency(totalPendingExpenses)} réservés
+              </span>
+            </>
           )}
-          <span className="leading-relaxed">{contextPhrase}</span>
+          {creditBalance !== 0 && (
+            <>
+              <span className="opacity-40">•</span>
+              <span className="font-semibold text-slate-200 font-premium-numbers">
+                {formatCurrency(Math.abs(creditBalance))} en cartes
+              </span>
+            </>
+          )}
         </div>
 
         {/* Settings panel */}
@@ -444,88 +439,106 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           </div>
         )}
 
-        {/* Accordion — Échéances avant la paye */}
-        <div className="relative z-10 border-t border-white/10 pt-3">
-          <button
-            onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-            className="w-full flex justify-between items-center py-1.5 text-xs font-bold text-white focus:outline-none"
-            aria-expanded={isAccordionExpanded}
-          >
-            <span className="flex items-center gap-2">
-              Échéances avant la paye
-              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/10 text-blue-200 border border-white/5 font-premium-numbers">
-                {pendingRecurringExpenses.length}
-              </span>
-            </span>
-            {isAccordionExpanded ? (
-              <ChevronUp size={16} className="text-blue-200" />
+        {/* Level 3: Visually detached sub-block containing IA insights & Deadlines list */}
+        <div className="relative z-10 bg-black/20 border border-white/5 rounded-2xl p-3.5 space-y-3.5 shadow-inner">
+          
+          {/* Contextual micro-phrase */}
+          <div className={`flex items-center gap-2.5 text-[11px] font-semibold rounded-xl px-3 py-2.5 border transition-colors ${
+            hasRiskOfNegative || !isComfortable
+              ? 'bg-rose-500/10 border-rose-500/15 text-rose-200'
+              : 'bg-white/5 border-white/5 text-blue-100'
+          }`}>
+            {hasRiskOfNegative || !isComfortable ? (
+              <AlertTriangle size={13} className="shrink-0 text-rose-300" />
             ) : (
-              <ChevronDown size={16} className="text-blue-200" />
+              <Sparkles size={13} className="shrink-0 text-amber-300" />
             )}
-          </button>
+            <span className="leading-relaxed">{contextPhrase}</span>
+          </div>
 
-          {isAccordionExpanded && (
-            <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1 no-scrollbar">
-              {pendingRecurringExpenses.length === 0 ? (
-                <div className="text-center py-6 text-blue-200/50 text-xs border border-dashed border-white/10 rounded-2xl bg-[#030816]/20">
-                  Aucune charge planifiée détectée d'ici la paye.
-                </div>
+          {/* Accordion — Échéances avant la paye */}
+          <div className="border-t border-white/5 pt-3">
+            <button
+              onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
+              className="w-full flex justify-between items-center px-3 py-2 text-xs font-bold text-white focus:outline-none rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 active:bg-white/10 active:scale-98 transition-all"
+              aria-expanded={isAccordionExpanded}
+            >
+              <span className="flex items-center gap-2">
+                Échéances avant la paye
+                <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/10 text-blue-200 border border-white/5 font-premium-numbers">
+                  {pendingRecurringExpenses.length}
+                </span>
+              </span>
+              {isAccordionExpanded ? (
+                <ChevronUp size={16} className="text-blue-200" />
               ) : (
-                pendingRecurringExpenses.map((tx) => {
-                  const isExcluded = excludedIds.includes(tx._id);
-                  const catColor = tx.categoryId?.color || '#a1a1aa';
-                  const catIcon = tx.categoryId?.icon || '🔁';
-
-                  return (
-                    <div
-                      key={tx._id}
-                      onClick={() => toggleExpenseExclusion(tx._id)}
-                      className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
-                        isExcluded
-                          ? 'bg-white/5 border-white/5 opacity-40'
-                          : 'bg-white/10 border-white/10 active:scale-[0.99] hover:bg-white/[0.12]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-1 text-blue-300">
-                          {isExcluded ? (
-                            <CheckCircle2 size={18} className="text-amber-400" />
-                          ) : (
-                            <Circle size={18} className="text-blue-200/40" />
-                          )}
-                        </div>
-                        <div
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-white/5"
-                          style={{ backgroundColor: `${catColor}25`, color: catColor }}
-                        >
-                          {catIcon}
-                        </div>
-                        <div className="min-w-0">
-                          <p className={`text-xs font-bold truncate max-w-[130px] leading-tight text-white ${
-                            isExcluded ? 'line-through opacity-50' : ''
-                          }`}>
-                            {tx.description}
-                          </p>
-                          <p className="text-[9px] text-blue-200/60 mt-0.5">
-                            Le{' '}
-                            {new Date(tx.date).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'short',
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <span className={`text-xs font-bold font-premium-numbers shrink-0 text-white ${
-                        isExcluded ? 'opacity-50' : ''
-                      }`}>
-                        −{formatCurrency(tx.amount)}
-                      </span>
-                    </div>
-                  );
-                })
+                <ChevronDown size={16} className="text-blue-200" />
               )}
-            </div>
-          )}
+            </button>
+
+            {isAccordionExpanded && (
+              <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1 no-scrollbar">
+                {pendingRecurringExpenses.length === 0 ? (
+                  <div className="text-center py-6 text-blue-200/50 text-xs border border-dashed border-white/10 rounded-2xl bg-[#030816]/20">
+                    Aucune charge planifiée détectée d'ici la paye.
+                  </div>
+                ) : (
+                  pendingRecurringExpenses.map((tx) => {
+                    const isExcluded = excludedIds.includes(tx._id);
+                    const catColor = tx.categoryId?.color || '#a1a1aa';
+                    const catIcon = tx.categoryId?.icon || '🔁';
+
+                    return (
+                      <div
+                        key={tx._id}
+                        onClick={() => toggleExpenseExclusion(tx._id)}
+                        className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
+                          isExcluded
+                            ? 'bg-white/5 border-white/5 opacity-40'
+                            : 'bg-white/10 border-white/10 active:scale-[0.99] hover:bg-white/[0.12]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="p-1 text-blue-300">
+                            {isExcluded ? (
+                              <CheckCircle2 size={18} className="text-amber-400" />
+                            ) : (
+                              <Circle size={18} className="text-blue-200/40" />
+                            )}
+                          </div>
+                          <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-white/5"
+                            style={{ backgroundColor: `${catColor}25`, color: catColor }}
+                          >
+                            {catIcon}
+                          </div>
+                          <div className="min-w-0">
+                            <p className={`text-xs font-bold truncate max-w-[130px] leading-tight text-white ${
+                              isExcluded ? 'line-through opacity-50' : ''
+                            }`}>
+                              {tx.description}
+                            </p>
+                            <p className="text-[9px] text-blue-200/60 mt-0.5">
+                              Le{' '}
+                              {new Date(tx.date).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-bold font-premium-numbers shrink-0 text-white ${
+                          isExcluded ? 'opacity-50' : ''
+                        }`}>
+                          −{formatCurrency(tx.amount)}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
