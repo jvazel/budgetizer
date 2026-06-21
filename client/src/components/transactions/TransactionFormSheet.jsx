@@ -659,37 +659,41 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
                 {/* Quick Templates Banner */}
                 {!transactionToEdit && templates.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full max-w-sm mx-auto">
-                    {templates.map(t => (
+                  <div className="relative w-full max-w-sm mx-auto">
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 select-none w-full pr-8">
+                      {templates.map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onMouseDown={(e) => handleTemplatePressStart(e, t.id)}
+                          onMouseUp={() => handleTemplatePressEnd(t.id)}
+                          onMouseLeave={() => handleTemplatePressEnd(t.id)}
+                          onTouchStart={(e) => handleTemplatePressStart(e, t.id)}
+                          onTouchEnd={() => handleTemplatePressEnd(t.id)}
+                          onClick={(e) => {
+                            handleTemplateClick(e, t);
+                            if (t.categoryId) setFormStep(2);
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
+                        >
+                          <span className="text-base">{t.icon || '⭐'}</span>
+                          <div className="flex flex-col items-start">
+                            <span className="font-bold text-primary leading-tight">{t.name}</span>
+                            <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
+                          </div>
+                        </button>
+                      ))}
+                      
                       <button
-                        key={t.id}
                         type="button"
-                        onMouseDown={(e) => handleTemplatePressStart(e, t.id)}
-                        onMouseUp={() => handleTemplatePressEnd(t.id)}
-                        onMouseLeave={() => handleTemplatePressEnd(t.id)}
-                        onTouchStart={(e) => handleTemplatePressStart(e, t.id)}
-                        onTouchEnd={() => handleTemplatePressEnd(t.id)}
-                        onClick={(e) => {
-                          handleTemplateClick(e, t);
-                          if (t.categoryId) setFormStep(2);
-                        }}
-                        className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-surface-2 hover:bg-border/30 border border-border/20 active:scale-95 transition-all text-xs font-medium text-secondary hover:text-primary shrink-0 select-none"
+                        onClick={handleSaveAsTemplate}
+                        className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
                       >
-                        <span className="text-base">{t.icon || '⭐'}</span>
-                        <div className="flex flex-col items-start">
-                          <span className="font-bold text-primary leading-tight">{t.name}</span>
-                          <span className="text-[10px] text-muted font-bold font-premium-numbers">{t.amount}€</span>
-                        </div>
+                        <span>＋ Favori</span>
                       </button>
-                    ))}
-                    
-                    <button
-                      type="button"
-                      onClick={handleSaveAsTemplate}
-                      className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/40 active:scale-95 transition-all text-xs font-bold text-accent shrink-0"
-                    >
-                      <span>＋ Favori</span>
-                    </button>
+                    </div>
+                    {/* Fade overlay on the right to indicate horizontal scroll */}
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-surface-2 to-transparent pointer-events-none z-10" />
                   </div>
                 )}
                 
