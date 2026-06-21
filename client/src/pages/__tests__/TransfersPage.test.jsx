@@ -58,8 +58,8 @@ describe('TransfersPage Component', () => {
     renderComponent();
 
     expect(screen.getByText('Nouveau Virement')).toBeInTheDocument();
-    expect(screen.getByLabelText('Débiter (Source)')).toBeInTheDocument();
-    expect(screen.getByLabelText('Créditer (Destination)')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Débiter \(Source\)/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Créditer \(Destination\)/)).toBeInTheDocument();
     expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
   });
 

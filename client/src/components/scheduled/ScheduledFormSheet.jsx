@@ -152,7 +152,7 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             
             {/* Description */}
             <div className="space-y-1.5">
-              <label htmlFor="description-input" className="text-xs font-bold text-secondary">Nom / Description</label>
+              <label htmlFor="description-input" className="text-xs font-bold text-secondary">Nom / Description <span className="text-danger ml-0.5">*</span></label>
               <input 
                 id="description-input"
                 type="text"
@@ -195,7 +195,7 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
             {/* Category Selector (Only for income/expense) */}
             {type !== 'transfer' && (
               <div className="space-y-1.5 relative">
-                <label className="text-xs font-bold text-secondary">Catégorie</label>
+                <label className="text-xs font-bold text-secondary">Catégorie <span className="text-danger ml-0.5">*</span></label>
                 <button
                   type="button"
                   onClick={() => setIsCategoryOpen(!isCategoryOpen)}

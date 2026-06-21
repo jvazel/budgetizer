@@ -90,9 +90,9 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
-    expect(screen.getByLabelText('Compte')).toBeInTheDocument();
-    expect(screen.getByLabelText('Catégorie')).toBeInTheDocument();
-    expect(screen.getByLabelText('Date')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Compte/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Catégorie/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Date/)).toBeInTheDocument();
     expect(screen.getByLabelText('Note (optionnel)')).toBeInTheDocument();
   });
 
@@ -136,11 +136,11 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.change(noteInput, { target: { value: 'Courses hebdomadaires' } });
 
     // Select account (default is first account)
-    const accountSelect = screen.getByLabelText('Compte');
+    const accountSelect = screen.getByLabelText(/Compte/);
     expect(accountSelect.value).toBe('acc1');
 
     // Select category
-    const categorySelect = screen.getByLabelText('Catégorie');
+    const categorySelect = screen.getByLabelText(/Catégorie/);
     fireEvent.change(categorySelect, { target: { value: 'cat1' } });
 
     // Click submit button
@@ -183,7 +183,7 @@ describe('TransactionFormSheet Component', () => {
 
     expect(screen.getByText('Modifier la transaction')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('0.00').value).toBe('1500');
-    expect(screen.getByLabelText('Compte').value).toBe('acc2');
+    expect(screen.getByLabelText(/Compte/).value).toBe('acc2');
     expect(screen.getByLabelText('Note (optionnel)').value).toBe('Mon salaire');
     expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeInTheDocument();
   });
@@ -204,12 +204,12 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     // Default should be acc1
-    expect(screen.getByLabelText('Compte').value).toBe('acc1');
-    expect(screen.getByLabelText('Catégorie').value).toBe('');
+    expect(screen.getByLabelText(/Compte/).value).toBe('acc1');
+    expect(screen.getByLabelText(/Catégorie/).value).toBe('');
 
     // Fill category and account
-    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
-    fireEvent.change(screen.getByLabelText('Compte'), { target: { value: 'acc2' } });
+    fireEvent.change(screen.getByLabelText(/Catégorie/), { target: { value: 'cat1' } });
+    fireEvent.change(screen.getByLabelText(/Compte/), { target: { value: 'acc2' } });
 
     // Submit
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter la transaction' }));
@@ -229,8 +229,8 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
-    expect(screen.getByLabelText('Compte').value).toBe('acc2');
-    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+    expect(screen.getByLabelText(/Compte/).value).toBe('acc2');
+    expect(screen.getByLabelText(/Catégorie/).value).toBe('cat1');
   });
 
   it('handles Enter key navigation between fields and triggers submit', async () => {
@@ -253,7 +253,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Type note and hit enter to submit
     fireEvent.change(noteInput, { target: { value: 'Déjeuner' } });
-    fireEvent.change(screen.getByLabelText('Catégorie'), { target: { value: 'cat1' } });
+    fireEvent.change(screen.getByLabelText(/Catégorie/), { target: { value: 'cat1' } });
     
     fireEvent.keyDown(noteInput, { key: 'Enter', code: 'Enter' });
 
@@ -334,8 +334,8 @@ describe('TransactionFormSheet Component', () => {
 
     // Expect note to be completed, account and category prefilled
     expect(noteInput.value).toBe('Starbucks');
-    expect(screen.getByLabelText('Compte').value).toBe('acc1');
-    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+    expect(screen.getByLabelText(/Compte/).value).toBe('acc1');
+    expect(screen.getByLabelText(/Catégorie/).value).toBe('cat1');
   });
 
   it('auto-predicts and fills category and account on exact match loss of focus (onBlur)', () => {
@@ -352,8 +352,8 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.blur(noteInput);
 
     // Expect category and account to be filled according to predictions (acc2, cat1)
-    expect(screen.getByLabelText('Compte').value).toBe('acc2');
-    expect(screen.getByLabelText('Catégorie').value).toBe('cat1');
+    expect(screen.getByLabelText(/Compte/).value).toBe('acc2');
+    expect(screen.getByLabelText(/Catégorie/).value).toBe('cat1');
   });
 
   it('allows deleting a template via long press', async () => {

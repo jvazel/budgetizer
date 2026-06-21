@@ -146,7 +146,7 @@ const TransfersPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative">
                 {/* Source Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <label htmlFor="fromAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source)</label>
+                  <label htmlFor="fromAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source) <span className="text-danger ml-0.5">*</span></label>
                   <Select
                     id="fromAccountId-select"
                     value={fromAccountId}
@@ -173,7 +173,7 @@ const TransfersPage = () => {
                 
                 {/* Destination Account Box */}
                 <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <label htmlFor="toAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination)</label>
+                  <label htmlFor="toAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination) <span className="text-danger ml-0.5">*</span></label>
                   <Select
                     id="toAccountId-select"
                     value={toAccountId}
@@ -208,7 +208,7 @@ const TransfersPage = () => {
               {/* Description and Note */}
               <div className="grid grid-cols-1 gap-3">
                 <div className="flex flex-col space-y-1">
-                  <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Description</label>
+                  <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Description <span className="text-danger ml-0.5">*</span></label>
                   <input
                     type="text"
                     placeholder="Ex: Virement mensuel..."

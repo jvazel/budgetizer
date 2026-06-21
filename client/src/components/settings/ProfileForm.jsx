@@ -43,7 +43,7 @@ const ProfileForm = ({ user, setUser }) => {
         
         <form onSubmit={handleUpdateProfile} className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-secondary">Nom d'affichage</label>
+            <label className="text-xs font-bold text-secondary">Nom d'affichage <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
             <input 
               type="text"
               value={profileName}
@@ -54,7 +54,7 @@ const ProfileForm = ({ user, setUser }) => {
           </div>
           
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-secondary">Adresse Email</label>
+            <label className="text-xs font-bold text-secondary">Adresse Email <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
             <input 
               type="email"
               value={profileEmail}

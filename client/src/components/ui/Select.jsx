@@ -14,6 +14,7 @@ const Select = ({
   error,
   label,
   align = 'left',
+  required = false,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,6 +105,7 @@ const Select = ({
       {label && (
         <label htmlFor={id} className="mb-2 text-sm text-secondary font-medium">
           {label}
+          {required && <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span>}
         </label>
       )}
       
@@ -129,6 +131,7 @@ const Select = ({
         value={value ?? ''}
         onChange={(e) => handleSelect(e.target.value)}
         disabled={disabled}
+        required={required}
         className="sr-only"
         style={{
           position: 'absolute',

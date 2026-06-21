@@ -19,6 +19,7 @@ const Input = ({
   rangeMinLabel,
   rangeMaxLabel,
   uppercaseLabel = false,
+  required = false,
   ...props
 }) => {
   const pct = rangeMax > rangeMin ? Math.max(0, Math.min(100, ((Number(value) || 0) - rangeMin) / (rangeMax - rangeMin) * 100)) : 0;
@@ -33,6 +34,7 @@ const Input = ({
           }`}
         >
           {label}
+          {required && <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span>}
         </label>
       )}
       <div className="relative flex items-center">
@@ -47,6 +49,7 @@ const Input = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          required={required}
           className={`
             w-full h-[52px] bg-surface-2 border border-border rounded-2xl
             text-primary placeholder:text-muted focus:outline-none focus:border-accent

@@ -114,7 +114,7 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="mb-2 text-sm text-secondary font-medium block">Cible (€)</label>
+            <label className="mb-2 text-sm text-secondary font-medium block">Cible (€) <span className="text-danger ml-0.5">*</span></label>
             <input
               type="number"
               step="0.01"
@@ -126,7 +126,7 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
             />
           </div>
           <div className="flex-1">
-            <label className="mb-2 text-sm text-secondary font-medium block">Date cible</label>
+            <label className="mb-2 text-sm text-secondary font-medium block">Date cible <span className="text-danger ml-0.5">*</span></label>
             <input
               type="date"
               value={targetDate}

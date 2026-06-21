@@ -61,7 +61,7 @@ const TagSelector = ({ selectedTagIds = [], onChange }) => {
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <label className="text-xs text-secondary font-medium">Étiquettes (Projets / Événements)</label>
+        <label className="text-xs text-secondary font-medium">Étiquettes (Projets / Événements) <span className="text-muted font-normal text-[10px]">(optionnel)</span></label>
         {selectedTagIds.length > 0 && (
           <span className="text-[10px] text-accent font-bold">
             {selectedTagIds.length} sélectionné{selectedTagIds.length > 1 ? 's' : ''}

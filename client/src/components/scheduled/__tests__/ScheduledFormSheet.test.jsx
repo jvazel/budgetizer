@@ -59,7 +59,7 @@ describe('ScheduledFormSheet Component', () => {
     fireEvent.change(amountInput, { target: { value: '29.99' } });
 
     // Description
-    const descInput = screen.getByLabelText('Nom / Description');
+    const descInput = screen.getByLabelText(/Nom \/ Description/);
     fireEvent.change(descInput, { target: { value: 'Abonnement Netflix' } });
 
     // Select category button (custom category tree trigger)

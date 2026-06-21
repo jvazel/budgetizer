@@ -27,7 +27,7 @@ const PasswordForm = () => {
       
       <form onSubmit={handleUpdatePassword} className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-secondary">Ancien mot de passe</label>
+          <label className="text-xs font-bold text-secondary">Ancien mot de passe <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
           <input 
             type="password"
             value={oldPassword}
@@ -38,7 +38,7 @@ const PasswordForm = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-secondary">Nouveau mot de passe</label>
+          <label className="text-xs font-bold text-secondary">Nouveau mot de passe <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
           <input 
             type="password"
             value={newPassword}

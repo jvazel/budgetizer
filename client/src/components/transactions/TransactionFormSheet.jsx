@@ -825,7 +825,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                 {/* Account and Category selectors */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
-                    <label htmlFor="account-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Compte</label>
+                    <label htmlFor="account-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Compte <span className="text-danger ml-0.5">*</span></label>
                     <button
                       type="button"
                       onClick={() => {
@@ -863,7 +863,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   </div>
                   
                   <div className="flex flex-col">
-                     <label htmlFor="category-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Catégorie</label>
+                     <label htmlFor="category-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Catégorie <span className="text-danger ml-0.5">*</span></label>
                      <button
                       type="button"
                       onClick={() => {

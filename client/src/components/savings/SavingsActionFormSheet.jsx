@@ -129,7 +129,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         {/* Amount Input */}
         <div>
           <label className="mb-2 text-sm text-secondary font-medium block">
-            Montant à {isDeposit ? 'verser' : 'retirer'} (€)
+            Montant à {isDeposit ? 'verser' : 'retirer'} (€) <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span>
           </label>
           <input
             type="number"
@@ -199,7 +199,9 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         {/* Date and Note */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-2 text-sm text-secondary font-medium block">Date</label>
+            <label className="mb-2 text-sm text-secondary font-medium block">
+              Date <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span>
+            </label>
             <input
               type="date"
               value={date}
