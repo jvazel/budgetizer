@@ -47,10 +47,27 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
     });
   };
 
+  const isFuture = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const compareToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return compareDate.getTime() > compareToday.getTime();
+  };
+
   const getDots = (date) => {
     if (!date) return null;
     const txs = getDayTransactions(date);
-    if (txs.length === 0) return null;
+    if (txs.length === 0) {
+      if (isFuture(date) && date.getMonth() === month) {
+        return (
+          <div className="flex gap-1 items-center justify-center mt-1 h-1.5 animate-fadeIn">
+            <span className="rounded-full bg-accent/40 w-1.5 h-1.5" title="Aucune charge prévue" />
+          </div>
+        );
+      }
+      return null;
+    }
 
     let hasIncome = false;
     let hasExpense = false;
@@ -114,6 +131,7 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
           const selected = isSelected(date);
           const today = isToday(date);
           const isCurrentMonth = date.getMonth() === month;
+          const futureNoCharge = !selected && !today && isCurrentMonth && isFuture(date) && getDayTransactions(date).length === 0;
 
           return (
             <button
@@ -124,9 +142,11 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
                   ? 'bg-copper text-white shadow-[0_4px_12px_rgba(217,119,6,0.35)] font-bold z-10' 
                   : today 
                     ? 'border border-copper/50 text-copper font-bold' 
-                    : !isCurrentMonth
-                      ? 'text-primary/20 opacity-40 hover:bg-surface/50'
-                      : 'text-primary hover:bg-surface'
+                    : futureNoCharge
+                      ? 'bg-accent/[0.03] text-accent font-semibold border border-accent/10 hover:bg-accent/[0.08]'
+                      : !isCurrentMonth
+                        ? 'text-primary/20 opacity-40 hover:bg-surface/50'
+                        : 'text-primary hover:bg-surface'
               }`}
             >
               <span className="text-xs sm:text-sm">{date.getDate()}</span>
