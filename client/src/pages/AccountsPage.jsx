@@ -58,9 +58,14 @@ const AccountsPage = () => {
 
         {/* Accounts List Section */}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1">
-            Mes Comptes Bancaires
-          </h3>
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <div className="w-6 h-6 rounded-lg bg-accent-dim border border-accent/20 flex items-center justify-center text-accent">
+              <Wallet size={13} />
+            </div>
+            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">
+              Mes Comptes Bancaires
+            </h3>
+          </div>
 
           {loading ? (
             <div className="space-y-3">
@@ -95,7 +100,7 @@ const AccountsPage = () => {
                   <div 
                     key={acc._id}
                     onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : navigate(`/accounts/${acc._id}`)}
-                    className="bg-surface-2 hover:bg-surface-2/80 border border-border/40 p-4 rounded-[24px] flex items-center justify-between transition-all cursor-pointer shadow-sm relative group"
+                    className="bg-surface-2 hover:bg-surface-2/80 border border-border/40 p-4 rounded-[24px] flex items-center justify-between transition-all cursor-pointer shadow-sm relative group active-card-feedback"
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       {/* Icon with customizable background */}
@@ -149,7 +154,7 @@ const AccountsPage = () => {
 
         <button 
           onClick={handleOpenAdd}
-          className="w-full text-xs font-bold text-accent py-3.5 border border-border/40 hover:bg-accent/5 active:scale-[0.99] rounded-[16px] transition-all flex items-center justify-center gap-1.5 bg-surface-2"
+          className="w-full text-xs font-bold text-accent py-3.5 border border-border/40 hover:bg-accent/5 rounded-[16px] transition-all flex items-center justify-center gap-1.5 bg-surface-2 active-spring-sm"
         >
           + Ajouter un compte
         </button>

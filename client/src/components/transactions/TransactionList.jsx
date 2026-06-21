@@ -6,7 +6,7 @@ import { triggerHaptic } from '../../utils/hapticHelper';
 const CategoryIcon = ({ tx }) => {
   if (tx.type === 'transfer') {
     return (
-      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0 bg-blue-500/10 border border-blue-500/20 text-blue-400">
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-lg shrink-0 bg-blue-500/10 border border-blue-500/20 text-blue-400">
         🔄
       </div>
     );
@@ -14,7 +14,7 @@ const CategoryIcon = ({ tx }) => {
   
   if (!tx.categoryId) {
     return (
-      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0 bg-amber-500/10 border border-amber-500/20 text-amber-500">
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-lg shrink-0 bg-amber-500/10 border border-amber-500/20 text-amber-500">
         ❓
       </div>
     );
@@ -23,7 +23,7 @@ const CategoryIcon = ({ tx }) => {
   const catColor = tx.categoryId.color || '#888';
   return (
     <div 
-      className="w-10 h-10 sm:w-11 sm:h-11 rounded-full shrink-0 flex items-center justify-center text-lg shadow-inner border"
+      className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl shrink-0 flex items-center justify-center text-lg shadow-inner border"
       style={{
         background: `linear-gradient(135deg, ${catColor}25 0%, ${catColor}08 100%)`,
         borderColor: `${catColor}35`

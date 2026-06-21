@@ -125,23 +125,32 @@ const SummaryHistory = () => {
                 <MonthGauge income={summary.income} expenses={summary.expenses} />
 
                 {/* Monthly Details list */}
-                <div className="flex-1 space-y-1 text-xs min-w-0">
+                <div className="flex-1 space-y-1.5 text-xs min-w-0">
                   <div className="flex justify-between items-center">
-                    <span className="text-secondary font-medium">Revenus:</span>
-                    <span className="font-semibold text-accent font-mono">
+                    <span className="text-secondary font-medium flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-[2px] bg-accent shrink-0" />
+                      Revenus
+                    </span>
+                    <span className="font-extrabold text-accent font-premium-numbers">
                       {formatCurrency(summary.income, user?.currency?.code)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-secondary font-medium">Dépenses:</span>
-                    <span className="font-semibold text-danger font-mono">
+                    <span className="text-secondary font-medium flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-[2px] bg-danger shrink-0" />
+                      Dépenses
+                    </span>
+                    <span className="font-extrabold text-danger font-premium-numbers">
                       -{formatCurrency(summary.expenses, user?.currency?.code)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center border-t border-border/20 pt-1 mt-1">
-                    <span className="text-secondary font-bold">Total:</span>
-                    <span className={`font-bold font-mono ${summary.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                      {summary.net >= 0 ? '' : '-'}{formatCurrency(Math.abs(summary.net), user?.currency?.code)}
+                  <div className="flex justify-between items-center border-t border-border/20 pt-1.5 mt-1.5">
+                    <span className="text-secondary font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-[2px] bg-muted shrink-0" />
+                      Net
+                    </span>
+                    <span className={`font-extrabold font-premium-numbers ${summary.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+                      {summary.net >= 0 ? '+' : ''}{formatCurrency(summary.net, user?.currency?.code)}
                     </span>
                   </div>
                 </div>

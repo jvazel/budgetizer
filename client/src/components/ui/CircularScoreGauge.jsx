@@ -1,6 +1,6 @@
 import React from 'react';
 
-const getScoreColor = (score) => {
+export const getScoreColor = (score) => {
   if (score === null || score === undefined) return 'var(--border)';
   if (score >= 80) return 'var(--accent)';
   if (score >= 60) return 'var(--info)';

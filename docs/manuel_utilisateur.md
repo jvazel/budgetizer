@@ -100,6 +100,15 @@ Ce composant réunit vos indicateurs de suivi du temps dans une unique carte dot
 * **Onglet "Ce mois"** : Affiche vos Revenus, vos Dépenses et votre Solde Net mensuel avec le pourcentage d'évolution (hausse ou baisse) par rapport au mois précédent.
 * **Onglet "Cette semaine"** : Affiche le montant cumulé de vos dépenses sur les 7 derniers jours glissants et un mini-graphique (Sparkline de type courbe d'aire) reflétant leur évolution au fil des jours.
 
+### 2.7 Harmonisation Typographique et Boutons Premium
+Toutes les sections du tableau de bord (Comptes, Top Catégories, Budgets, Objectifs d'Épargne, Allocation Patrimoine, Score Financier) partagent une charte typographique et des interactions uniformisées :
+* **En-têtes de Sections** : Chaque en-tête intègre une icône minimale Lucide (Wallet, CreditCard, Target, Award, etc.) dans un petit conteneur carré arrondi doté d'une couleur thématique pastel transparente, associée au titre de section en capitales épaisses espacées.
+* **Boutons Action Pills** : Les liens textuels bruts de navigation (tels que *"Gérer"* et *"Détails"*) sont remplacés par des boutons badges-pills compacts et élégants (`bg-accent/10 border border-accent/20 text-accent rounded-full`) utilisant la micro-interaction physique élastique `.active-spring-sm`.
+* **Cartes d'Objectifs d'Épargne & Score Financier** :
+  * Les objectifs d'épargne affichent désormais des cartes imbriquées avec un arrondi d'angle harmonisé à `rounded-[20px]`, un rembourrage confortable `p-5` et une bordure gauche de couleur `border-l-4` reprenant le code couleur personnalisé choisi pour l'objectif.
+  * Les fiches de score mensuel de votre santé financière utilisent des cartes similaires avec une bordure gauche `border-l-4` reprenant la couleur représentative de votre score de santé (Vert pour un score excellent, Bleu pour correct, Ambre pour vigilance, et Rouge pour critique).
+  * L'ensemble de ces blocs de cartes intègre le retour tactile amorti `.active-spring-sm` ou `.active-card-feedback` lors du tap.
+
 ---
 
 ## 3. Mise en place de votre structure financière (Comptes, Catégories, Tags)

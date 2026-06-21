@@ -7,12 +7,15 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   // 1. Color System based on progress
   let barColor = 'bg-accent'; // Vert
   let textColor = 'text-accent';
+  let borderLeftClass = 'border-l-accent-4px';
   if (budget.percentage >= 70 && budget.percentage < 90) {
     barColor = 'bg-warning'; // Orange
     textColor = 'text-warning';
+    borderLeftClass = 'border-l-warning-4px';
   } else if (budget.percentage >= 90) {
     barColor = 'bg-danger'; // Rouge
     textColor = 'text-danger';
+    borderLeftClass = 'border-l-danger-4px';
   }
 
   const isOverBudget = budget.percentage >= 100;
@@ -142,7 +145,7 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   return (
     <div 
       onClick={onEdit ? () => onEdit(budget) : undefined}
-      className={`bg-surface-2 p-5 rounded-[16px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${onEdit ? 'cursor-pointer active-scale-sm' : ''}`}
+      className={`bg-surface-2 p-5 rounded-[20px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${borderLeftClass} ${onEdit ? 'cursor-pointer active-scale-sm' : ''}`}
     >
       <div className="flex gap-4 items-start">
         
