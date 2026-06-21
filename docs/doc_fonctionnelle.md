@@ -46,12 +46,14 @@ Afin de concilier une sécurité maximale et une expérience utilisateur fluide,
 Le tableau de bord est la page d'accueil principale après connexion. Il regroupe les informations de synthèse financière indispensables :
 
 - **Solde Net Global** : Affiche la somme des soldes de tous les comptes actifs inclus dans le total.
-- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée premium avec défilement fluide et recentrage automatique (snap scroll). Chaque carte affiche :
+- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée premium avec défilement fluide et recentrage automatique (snap scroll). Chaque carte dispose d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures semi-transparentes (`border-white/10`). Elle affiche :
   - Le nom du compte.
-  - Le solde actuel mis en valeur avec un contraste maximal (couleur neutre `text-primary` si positif/nul, rouge `text-danger` si négatif) en chiffres tabulaires `font-premium-numbers`.
-  - Un fond dégradé premium translucide superposant la couleur thématique du compte à la couleur de fond du thème, s'adaptant parfaitement aux modes clair et sombre.
-  - Une icône visuelle moderne et dynamique représentant graphiquement le type de compte (Tirelire 🐷 pour l'Épargne, Carte 💳 pour les Crédits, Pièces 🪙 pour le Cash, Tendance 📈 pour les Investissements, Portefeuille 💼 pour le Courant) enveloppée dans un badge circulaire en verre poli (`backdrop-blur-md`).
-  - La date de dernière mise à jour des transactions positionnée sur sa propre ligne sous le solde, accompagnée d'une pastille thématique clignotante (`animate-pulse`).
+  - Le solde actuel mis en valeur en chiffres tabulaires `font-premium-numbers`.
+  - Un fond dégradé premium translucide basé sur la couleur du compte.
+  - Une icône visuelle moderne représentant son type (🐷 pour l'Épargne, 💳 pour les Crédits, 🪙 pour le Cash, 📈 pour les Investissements, 💼 pour le Courant).
+  - Un voyant vert clignotant animé (`.animate-pulse-live`) avec la mention `Live` indiquant que la synchronisation en temps réel est active.
+- **Carte des Statistiques Temporelles (Timeframe Statistics Card)** : Un composant compact à onglets qui regroupe la synthèse mensuelle (Revenus, Dépenses, Solde net) et le graphique de vélocité hebdomadaire (Sparkline courbe d'aire Recharts des 7 derniers jours) dans un espace visuel unifié et interactif pour mobile.
+- **Raccourcis Tactiles Compacts (Hub Raccourcis)** : Une barre de raccourcis sur une seule ligne offrant un accès rapide aux 4 fonctionnalités principales (Budgets, Épargne, Analyses, Conseils IA) complétée par un bouton "Plus" (BottomSheet) pour les autres raccourcis secondaires.
 - **Formulaire d'ajout rapide (Action Sheet)** : Un bouton d'action flottant central permet d'ouvrir instantanément un panneau de saisie rapide (Bottom Sheet) pour ajouter une transaction (Dépense, Revenu ou Virement interne) sans quitter l'écran d'accueil.
 - **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules, réorganisés de manière ergonomique par fréquence d'usage :
   1. **Mon Quotidien** (Haute fréquence) : Tableau de bord, Comptes, Transactions, Virements instantanés.
@@ -61,7 +63,6 @@ Le tableau de bord est la page d'accueil principale après connexion. Il regroup
   Le menu intègre des effets de halo lumineux (glow flares) et des flous (backdrop-blur) pour un design premium sombre et immersif.
 - **Barre d'en-tête collante (Sticky Header)** : Sur toutes les pages, une barre d'en-tête reste collée en haut lors du défilement. Elle affiche le bouton de menu burger (ou un bouton de retour arrière selon le contexte de navigation) ainsi que le titre de la page courante, assurant une navigation fluide sans devoir remonter en haut de l'écran.
 - **Aperçu des Transactions Récentes** : Liste chronologique des dernières transactions saisies ou confirmées.
-- **Mini-Calendrier** : Vue compacte affichant les transactions et les échéances planifiées à venir pour la semaine en cours.
 
 ---
 
@@ -168,9 +169,10 @@ La saisie est simplifiée au maximum grâce à une interface de type "Bottom She
 
 ### 6.2 Liste Complète des Transactions
 Accessible via l'option "Transactions" du menu de navigation :
-- **Regroupement par Date Intelligent** : Les transactions sont groupées par jour avec des séparateurs collants (sticky) intituls « Aujourd'hui » (accent), « Hier » (primary) ou la date complète (secondary).
-- **Montants Colorisés** : Chaque montant est coloré en `text-danger` (rouge) pour les dépenses et en `text-accent` (vert) pour les revenus, permettant une lecture par scan visuel sans lire le libellé.
-- **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates ou recherche de mots-clés dans la description ou les notes.
+- **Regroupement par Date Intelligent** : Les transactions sont groupées par jour avec des séparateurs collants (sticky) intitulés « Aujourd'hui » (accent), « Hier » (primary) ou la date complète (secondary).
+- **Icônes de Catégorie & Bordure Colorée (Left-Border)** : Chaque transaction affiche l'icône de sa catégorie sur un disque dégradé translucide et dispose d'une fine bordure gauche de 4px reprenant le code couleur du compte ou de sa catégorie de dépense.
+- **Montants & Typographie** : Alignement en chiffres tabulaires `.font-premium-numbers` en taille `text-sm sm:text-base` et graisse `font-extrabold`. Les revenus s'affichent en vert émeraude et les débits importants (supérieurs au seuil d'alerte) s'affichent en rouge danger, tandis que les dépenses standard s'affichent sobrement en blanc/bleuté.
+- **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates, étiquettes ou recherche de mots-clés dans la description ou les notes.
 - **Gestion par Swipe** : Sur mobile, le glissement gauche (Swipe Left) révèle désormais **deux boutons** :
   - ✏️ **Modifier** (fond accent, bleu-violet) : ouvre directement le formulaire pré-rempli.
   - 🗑️ **Supprimer** (fond rouge) : supprime immédiatement. Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).

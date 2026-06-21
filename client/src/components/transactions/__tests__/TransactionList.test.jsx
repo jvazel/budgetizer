@@ -44,12 +44,12 @@ describe('TransactionList Component', () => {
   it('renders expense as negative and income as positive', () => {
     render(<TransactionList transactions={mockTransactions} />);
     
-    // Expense should render with minus and text-secondary because it is below the default 100€ threshold
+    // Expense should render with minus and text-primary/80 because it is below the default 100€ threshold
     const expenseAmount = screen.getByText((content, element) => {
       return element.tagName === 'P' && element.textContent.includes('45,50') && element.textContent.startsWith('-');
     });
     expect(expenseAmount).toBeInTheDocument();
-    expect(expenseAmount).toHaveClass('text-secondary');
+    expect(expenseAmount).toHaveClass('text-primary/80');
 
     // Income should render with plus
     const incomeAmount = screen.getByText((content, element) => {
@@ -89,15 +89,15 @@ describe('TransactionList Component', () => {
     expect(transferAmount).toHaveClass('text-accent');
   });
 
-  it('applies text-danger to expenses equal or above threshold and text-secondary below it', () => {
+  it('applies text-danger to expenses equal or above threshold and text-primary/80 below it', () => {
     localStorage.setItem('budgetizer_alert_threshold', '50');
     render(<TransactionList transactions={mockTransactions} />);
     
-    // Expense of 45.50 (below 50€ threshold) -> text-secondary
+    // Expense of 45.50 (below 50€ threshold) -> text-primary/80
     const expenseBelow = screen.getByText((content, element) => {
       return element.tagName === 'P' && element.textContent.includes('45,50') && element.textContent.startsWith('-');
     });
-    expect(expenseBelow).toHaveClass('text-secondary');
+    expect(expenseBelow).toHaveClass('text-primary/80');
     
     // Transfer of 350.00 (above 50€ threshold) -> text-danger
     const transferAbove = screen.getByText((content, element) => {

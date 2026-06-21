@@ -76,9 +76,10 @@ graph TD
 * **Affichage** : Une bande horizontale présente vos comptes bancaires sous forme de cartes colorées premium.
 * **Geste interactif (Snap Scroll)** : Faites glisser horizontalement les cartes avec votre doigt. Elles se recentrent automatiquement (snap scroll).
 * **Codes visuels des cartes** :
-  * Les soldes positifs s'affichent dans une police de chiffres tabulaires à fort contraste. S'ils sont négatifs, ils passent automatiquement en rouge vif.
-  * Chaque carte arbore une icône en verre poli (`backdrop-blur-md`) adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements).
-  * Une pastille thématique clignotante (`animate-pulse`) en bas à gauche de chaque carte indique la date de dernière mise à jour.
+  * Les soldes positifs s'affichent dans une police de chiffres tabulaires à fort contraste (`.font-premium-numbers`). S'ils sont négatifs, ils passent automatiquement en rouge vif.
+  * Chaque carte bénéficie d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures semi-transparentes (`border-white/10`).
+  * Chaque carte arbore une icône adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements).
+  * Un voyant vert clignotant animé (`.animate-pulse-live`) accompagné du label `Live` en haut à droite indique la date et l'état de synchronisation en temps réel du compte.
 * **Gestes interactifs sur les cartes** :
   * **Tapez sur une carte standard** (courant, épargne, espèces) pour ouvrir le formulaire de modification de ce compte ou consulter son détail de transactions.
   * **Tapez sur une carte de crédit (bordeaux / rouge foncé)** pour être automatiquement redirigé vers sa page d'analyse de prêt dédiée.
@@ -91,7 +92,13 @@ Situé juste sous le solde global de votre compte courant principal, cet indicat
 * **Accordéon pliable des charges** : Dépliez la liste au bas de la carte pour voir le détail des factures attendues. **Cochez ou décochez une charge** : si vous l'avez payée en avance ou par un autre moyen, son exclusion réajuste instantanément et dynamiquement le montant de votre Vrai Disponible.
 
 ### 2.5 Raccourcis tactiles (Dashboard Hub)
-Située au cœur du tableau de bord, cette grille de widgets tactiles au format $2 \times 4$ vous offre des boutons d'accès rapide vers les sections clés : budgets, abonnements, objectifs d'épargne, simulateur de crédit, analyses de graphiques, calendrier des échéances, virements instantanés et scores financiers.
+Située au cœur du tableau de bord, cette barre de raccourcis sur une seule ligne vous offre un accès direct aux 4 services primaires de l'application : Budgets, Épargne, Analyses, Conseils.
+Un 5ème bouton **Plus** (trois points) permet d'ouvrir un tiroir coulissant (BottomSheet) contenant les raccourcis secondaires : Abonnements, Scores, Échéances, Virements. Ce format compact allège considérablement l'affichage sur mobile.
+
+### 2.6 La Carte des Statistiques Temporelles (Ce mois / Cette semaine) 📊
+Ce composant réunit vos indicateurs de suivi du temps dans une unique carte dotée d'un sélecteur d'onglets pour économiser de la hauteur d'écran :
+* **Onglet "Ce mois"** : Affiche vos Revenus, vos Dépenses et votre Solde Net mensuel avec le pourcentage d'évolution (hausse ou baisse) par rapport au mois précédent.
+* **Onglet "Cette semaine"** : Affiche le montant cumulé de vos dépenses sur les 7 derniers jours glissants et un mini-graphique (Sparkline de type courbe d'aire) reflétant leur évolution au fil des jours.
 
 ---
 
@@ -184,9 +191,8 @@ Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.
   * **"Aujourd'hui"** → en couleur accent (bleu-violet) pour ressortir immédiatement.
   * **"Hier"** → en couleur primaire.
   * Jours antérieurs → en couleur secondaire discrète.
-* **Montants colorisés** : Les montants sont maintenant colorisés pour un scan visuel instantané :
-  * Dépenses → **rouge** (couleur danger).
-  * Revenus → **vert** (couleur accent).
+* **Indicateur de Catégorie & Bordure Colorée (Left-Border)** : Pour faciliter le scan visuel rapide, chaque ligne de transaction dispose d'une fine bordure verticale gauche de 4px reprenant le code couleur de son compte ou de sa catégorie. De plus, l'icône de sa catégorie (ex : 🍔, 🏠, 🛒) ou de son type (ex : 🔄 pour les virements, ❓ pour les éléments non classés) s'affiche sur un arrière-plan en dégradé de couleur translucide et une bordure assortie.
+* **Typographie Premium & Contraste des Montants** : Les montants sont formatés avec la police `.font-premium-numbers` en taille `text-sm sm:text-base` et en graisse `font-extrabold`. Les revenus s'affichent en vert émeraude et les débits importants de dépassement de seuil s'affichent en rouge vif, tandis que les dépenses régulières s'affichent de façon plus sobre en blanc/bleuté pour ne pas surcharger l'écran.
 * **Gestes de modification et de suppression** :
   * *Sur ordinateur (PC/Mac)* : Cliquez sur la ligne de la transaction pour ouvrir le formulaire d'édition.
   * *Sur smartphone/tablette* : **Faites glisser votre doigt vers la gauche (Swipe Left)** sur la ligne de transaction pour révéler **deux boutons** :

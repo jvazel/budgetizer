@@ -167,9 +167,9 @@ Ce composant affiche les transactions sous forme de liste chronologique groupée
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
 | **Rendu par date** | Liste de transactions mockées (Dépense, Revenu, Virement) | Rangement chronologique et regroupement par date locale | La structure affiche les titres de dates localisés, et le nom de chaque transaction est visible dans le document. |
-| **Rendu signes Dépense & Revenu** | Une dépense et un revenu réels | Attribution de signe selon le type | La dépense s'affiche précédée de `"-"` et de la classe `text-primary`. Le revenu s'affiche précédé de `"+"` et de la classe `text-accent`. |
-| **Signe Virement par défaut** | Virement, `currentAccountId` non défini | Traitement par défaut du transfert en tant que sortie de fonds | Le virement s'affiche précédé de `"-"` et coloré en `text-primary`. |
-| **Virement sur compte source** | Virement, `currentAccountId` égal à l'émetteur (`acc_checking`) | Identification du compte débité | Le montant s'affiche en négatif (`-`) et rouge `text-primary` pour symboliser le débit. |
+| **Rendu signes Dépense & Revenu** | Une dépense et un revenu réels | Attribution de signe selon le type | La dépense s'affiche précédée de `"-"` et de la classe `text-primary/80` (si en dessous du seuil d'alerte). Le revenu s'affiche précédé de `"+"` et de la classe `text-accent`. |
+| **Signe Virement par défaut** | Virement, `currentAccountId` non défini | Traitement par défaut du transfert en tant que sortie de fonds | Le virement s'affiche précédé de `"-"` et coloré en `text-danger` (si au-dessus du seuil). |
+| **Virement sur compte source** | Virement, `currentAccountId` égal à l'émetteur (`acc_checking`) | Identification du compte débité | Le montant s'affiche en négatif (`-`) et rouge `text-danger` (si au-dessus du seuil) ou `text-primary/80` (si en dessous) pour symboliser le débit. |
 | **Virement sur compte destinataire** | Virement, `currentAccountId` égal au récepteur (`acc_credit`) | Identification du compte crédité | Le montant s'affiche en positif (`+`) et vert `text-accent` pour symboliser l'augmentation de solde (ou remboursement de dette). |
 
 ---

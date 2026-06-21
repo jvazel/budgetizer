@@ -83,6 +83,13 @@ body {
   color: var(--text-muted);
 }
 
+.font-condensed-tight {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
 /* Nesting des arrondis (Border Radius Nesting) */
 .premium-card {
   border-radius: 20px;

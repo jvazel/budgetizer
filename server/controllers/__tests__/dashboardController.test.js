@@ -16,7 +16,8 @@ vi.mock('../../models/Transaction.js', () => ({
   default: {
     find: vi.fn(),
     findOne: vi.fn(),
-    aggregate: vi.fn()
+    aggregate: vi.fn(),
+    countDocuments: vi.fn()
   }
 }));
 
@@ -57,6 +58,7 @@ describe('Dashboard Controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     invalidateDashboardCache('user_123');
+    Transaction.countDocuments.mockResolvedValue(10);
     Transaction.aggregate.mockResolvedValue([
       { _id: 'acc1', lastTransactionDate: new Date('2026-06-01') },
       { _id: 'acc2', lastTransactionDate: new Date('2026-06-01') }

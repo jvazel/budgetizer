@@ -262,33 +262,36 @@ const AiInsights = () => {
                     return (
                       <div 
                         key={suggestion.categoryId || idx} 
-                        className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4 transition-all hover:border-border/60"
+                        className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4 hover:border-border/60 transition-all shadow-sm active-card-feedback relative overflow-hidden"
                       >
+                        {/* Decorative glow */}
+                        <div className="absolute -right-6 -top-6 w-16 h-16 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+
                         {/* Category Info Header */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-surface border border-border/40 flex items-center justify-center text-xl shrink-0 shadow-inner">
+                        <div className="flex items-center gap-3 relative z-10">
+                          <div className="w-11 h-11 rounded-xl bg-surface border border-border/40 flex items-center justify-center text-xl shrink-0 shadow-inner">
                             {suggestion.icon || '📁'}
                           </div>
                           <div className="min-w-0">
-                            <h4 className="text-xs font-extrabold text-primary truncate">{suggestion.name}</h4>
-                            <p className="text-[10px] text-muted leading-tight">
+                            <h4 className="text-xs font-extrabold text-primary truncate uppercase tracking-wider">{suggestion.name}</h4>
+                            <p className="text-[10px] text-muted leading-tight mt-0.5">
                               Moyenne mensuelle habituelle : <span className="font-bold text-secondary font-mono">{formatCurrency(suggestion.averageMonthlyAmount)}</span>
                             </p>
                           </div>
                         </div>
 
                         {/* Interactive Chips Selector */}
-                        <div className="space-y-2">
-                          <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Cible de réduction</p>
+                        <div className="space-y-2 relative z-10">
+                          <p className="text-[9px] text-muted font-bold uppercase tracking-wider">Cible d'économie</p>
                           <div className="grid grid-cols-3 gap-2">
                             {[10, 20, 30].map(pct => (
                               <button
                                 key={pct}
                                 onClick={() => handleSelectReduction(suggestion.categoryId, pct)}
-                                className={`py-2 rounded-xl text-[10px] font-bold transition-all border flex flex-col items-center justify-center ${
+                                className={`py-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center active-scale-sm ${
                                   activePct === pct
-                                    ? 'bg-accent/10 border-accent/30 text-accent font-extrabold'
-                                    : 'bg-surface border-border/40 text-secondary hover:text-primary hover:bg-surface/80'
+                                    ? 'bg-copper text-white border-transparent font-extrabold shadow-sm'
+                                    : 'bg-surface border-border/40 text-secondary hover:text-primary hover:bg-surface/85'
                                 }`}
                               >
                                 <span>-{pct}%</span>
@@ -298,27 +301,46 @@ const AiInsights = () => {
                         </div>
 
                         {/* Savings Display Output */}
-                        <div className="p-3 bg-surface rounded-2xl border border-border/40 flex items-center justify-between gap-3">
+                        <div className="p-3.5 bg-surface rounded-2xl border border-border/40 flex items-center justify-between gap-3 relative z-10">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-accent/15 flex items-center justify-center text-accent shrink-0">
-                              <TrendingDown size={12} />
+                            <div className="w-6.5 h-6.5 rounded-lg bg-accent/15 flex items-center justify-center text-accent shrink-0">
+                              <TrendingDown size={14} />
                             </div>
                             <span className="text-[10px] text-secondary font-bold">Économie annuelle</span>
                           </div>
-                          <span className="text-xs font-extrabold text-accent font-mono">
+                          <span className="text-sm font-extrabold text-accent font-mono font-premium-numbers">
                             {formatCurrency(savings)} / an
                           </span>
                         </div>
 
                         {/* Subscription Warning Alert Banner */}
                         {suggestion.hasSubscription && (
-                          <div className="flex items-start gap-2 p-3 bg-purple/10 border border-purple/20 rounded-2xl text-purple">
-                            <Sparkles size={14} className="shrink-0 mt-0.5 text-purple" />
+                          <div className="flex items-start gap-2.5 p-3.5 bg-purple/10 border border-purple/20 rounded-2xl text-purple relative z-10">
+                            <Sparkles size={14} className="shrink-0 mt-0.5 text-purple animate-pulse" />
                             <p className="text-[10px] font-medium leading-relaxed">
                               💡 <strong>Abonnements détectés :</strong> Pensez à auditer vos services actifs dans cette catégorie pour couper les coûts inutiles facilement.
                             </p>
                           </div>
                         )}
+
+                        {/* Fiche Action CTA Buttons */}
+                        <div className="pt-2 border-t border-border/20 flex gap-2">
+                          {suggestion.hasSubscription ? (
+                            <button
+                              onClick={() => navigate('/subscriptions')}
+                              className="flex-1 py-2.5 px-3 rounded-xl border border-purple/30 text-purple bg-purple/5 hover:bg-purple/10 active:scale-95 text-[11px] font-bold text-center transition-all focus:outline-none"
+                            >
+                              Gérer mes abonnements
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => navigate('/budgets')}
+                              className="flex-1 py-2.5 px-3 rounded-xl border border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 active:scale-95 text-[11px] font-bold text-center transition-all focus:outline-none"
+                            >
+                              Fixer une limite budget
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

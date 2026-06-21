@@ -3,6 +3,37 @@ import { Trash2, Pencil, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { triggerHaptic } from '../../utils/hapticHelper';
 
+const CategoryIcon = ({ tx }) => {
+  if (tx.type === 'transfer') {
+    return (
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0 bg-blue-500/10 border border-blue-500/20 text-blue-400">
+        🔄
+      </div>
+    );
+  }
+  
+  if (!tx.categoryId) {
+    return (
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0 bg-amber-500/10 border border-amber-500/20 text-amber-500">
+        ❓
+      </div>
+    );
+  }
+  
+  const catColor = tx.categoryId.color || '#888';
+  return (
+    <div 
+      className="w-10 h-10 sm:w-11 sm:h-11 rounded-full shrink-0 flex items-center justify-center text-lg shadow-inner border"
+      style={{
+        background: `linear-gradient(135deg, ${catColor}25 0%, ${catColor}08 100%)`,
+        borderColor: `${catColor}35`
+      }}
+    >
+      {tx.categoryId.icon || '💸'}
+    </div>
+  );
+};
+
 const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) => {
   const [visibleCount, setVisibleCount] = React.useState(30);
   const observerTarget = React.useRef(null);
@@ -134,26 +165,17 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   onDragStart={() => {
                     triggerHaptic('light');
                   }}
-                  className="bg-surface-2 relative z-10 p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors cursor-pointer select-none"
+                  className="bg-surface-2 relative z-10 p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors cursor-pointer select-none border-l-4"
+                  style={{
+                    borderLeftColor: tx.type === 'transfer'
+                      ? '#3b82f6'
+                      : !tx.categoryId
+                        ? '#f59e0b'
+                        : tx.categoryId?.color || '#888'
+                  }}
                   onClick={onEdit ? () => onEdit(tx) : undefined}
                 >
-                  <div 
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg shrink-0"
-                    style={{ 
-                       backgroundColor: tx.type === 'transfer' 
-                        ? 'rgba(59, 130, 246, 0.12)' 
-                        : !tx.categoryId
-                          ? 'rgba(245, 158, 11, 0.12)'
-                          : `${tx.categoryId?.color || '#888'}12`,
-                       border: tx.type === 'transfer'
-                        ? '1px solid rgba(59, 130, 246, 0.20)'
-                        : !tx.categoryId
-                          ? '1px solid rgba(245, 158, 11, 0.25)'
-                          : `1px solid ${tx.categoryId?.color || '#888'}25`
-                    }}
-                  >
-                    {tx.type === 'transfer' ? '🔄' : !tx.categoryId ? '❓' : (tx.categoryId?.icon || '💸')}
-                  </div>
+                  <CategoryIcon tx={tx} />
                   
                   <div className="flex-1 min-w-0">
                     <p 
@@ -241,10 +263,10 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                     {(() => {
                       const isDebit = tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)));
                       const isHighAlert = isDebit && tx.amount >= alertThreshold;
-                      const colorClass = isDebit ? (isHighAlert ? 'text-danger' : 'text-secondary') : 'text-accent';
+                      const colorClass = isDebit ? (isHighAlert ? 'text-danger font-extrabold' : 'text-primary/80') : 'text-accent font-extrabold';
                       
                       return (
-                        <p className={`font-premium-numbers font-bold text-xs sm:text-sm ${colorClass}`}>
+                        <p className={`font-premium-numbers font-extrabold text-sm sm:text-base ${colorClass}`}>
                           {isDebit ? '-' : '+'}{formatCurrency(tx.amount)}
                         </p>
                       );
