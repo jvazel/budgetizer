@@ -9,7 +9,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
 
   const menuGroups = [
     {
-      title: 'Opérations',
+      title: 'Mon Quotidien',
       items: [
         { label: 'Tableau de bord', icon: CalendarDays, path: '/' },
         { label: 'Comptes', icon: Wallet, path: '/accounts' },
@@ -18,12 +18,11 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       ]
     },
     {
-      title: 'Planification',
+      title: 'Mon Budget & Projets',
       items: [
         { label: 'Gérer les budgets', icon: CreditCard, path: '/budgets' },
-        { label: 'Planifications & Abonnements', icon: Repeat, path: '/scheduled' },
         { label: 'Objectifs d\'épargne', icon: Target, path: '/savings' },
-        { label: 'Simulateur de prêt', icon: Building2, path: '/loan-simulator' },
+        { label: 'Planifications & Abonnements', icon: Repeat, path: '/scheduled' },
       ]
     },
     {
@@ -31,14 +30,15 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
       items: [
         { label: 'Analyses & Graphiques', icon: BarChart2, path: '/charts' },
         { label: 'Rapport Mensuel', icon: FileText, path: '/monthly-report' },
-        { label: 'Scores financiers', icon: TrendingUp, path: '/financial-scores' },
         { label: 'Conseils', icon: Sparkles, path: '/ai-insights' },
-        { label: 'Exporter un rapport', icon: FileText, path: '/reports' },
+        { label: 'Scores financiers', icon: TrendingUp, path: '/financial-scores' },
       ]
     },
     {
-      title: 'Configuration',
+      title: 'Outils & Options',
       items: [
+        { label: 'Simulateur de prêt', icon: Building2, path: '/loan-simulator' },
+        { label: 'Exporter un rapport', icon: FileText, path: '/reports' },
         { label: 'Mon Profil & Paramètres', icon: Settings, path: '/settings' },
       ]
     }
