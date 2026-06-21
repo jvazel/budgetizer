@@ -51,7 +51,7 @@ const ChartsPage = () => {
       onClick={() => setIsSelectorOpen(true)}
       className="flex items-center gap-1.5 cursor-pointer hover:text-copper active:opacity-75 transition-all select-none"
     >
-      <span>Analyses : {tabNames[activeTab]}</span>
+      <span>Type d'analyse : {tabNames[activeTab]}</span>
       <ChevronDown size={14} className="text-secondary shrink-0 mt-0.5" />
     </div>
   );
@@ -67,9 +67,10 @@ const ChartsPage = () => {
           className="flex items-center gap-2 cursor-pointer group active:scale-98 select-none"
         >
           <div className="text-2xl font-extrabold text-primary tracking-tight">Analyses</div>
-          <div className="flex items-center gap-1 bg-surface-2-glass backdrop-blur-md border border-border/40 shadow-sm px-2.5 py-1 rounded-xl text-xs font-extrabold text-secondary group-hover:text-primary group-hover:border-copper/30 transition-all">
-            <span>{tabNames[activeTab]}</span>
-            <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5" />
+          <div className="flex items-center gap-1 bg-surface-2-glass backdrop-blur-md border border-border/40 shadow-sm px-3 py-1.5 rounded-xl text-xs font-extrabold text-secondary group-hover:text-primary group-hover:border-copper/30 transition-all">
+            <span className="text-[9px] uppercase font-black tracking-wider text-muted mr-1.5">Type :</span>
+            <span className="text-primary">{tabNames[activeTab]}</span>
+            <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5 ml-1" />
           </div>
         </div>
         <p className="text-[11px] text-secondary mt-0.5 font-medium">Visualisez vos données financières sous différentes perspectives analytiques.</p>
