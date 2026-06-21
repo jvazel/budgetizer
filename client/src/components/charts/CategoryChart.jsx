@@ -44,6 +44,7 @@ const CategoryChart = () => {
   
   // Transaction list bottom sheet states
   const [transactionListSheet, setTransactionListSheet] = useState({ isOpen: false, subcatName: null, txs: [] });
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
 
   const getCompareValue = (cat) => {
     if (compareMode === 'previous') return cat.changeVsPreviousPeriod || 0;
@@ -399,6 +400,10 @@ const CategoryChart = () => {
         color: cat.color || '#10b981'
       }));
 
+  const visibleLegendItems = isLegendExpanded ? pieData : pieData.slice(0, 4);
+  const hasMoreLegendItems = pieData.length > 4;
+  const hiddenLegendCount = pieData.length - 4;
+
   return (
     <div className="space-y-6">
       {/* 1. Selectors */}
@@ -615,6 +620,46 @@ const CategoryChart = () => {
             </>
           )}
         </div>
+
+        {/* Dynamic Interactive Legend */}
+        {pieData.length > 0 && (
+          <div className="w-full mt-4 pt-4 border-t border-border/30 z-10 animate-fadeIn">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+              {visibleLegendItems.map((item, index) => {
+                const totalVal = selectedCategory ? selectedCategory.amount : data.total || 1;
+                const pct = ((item.value / totalVal) * 100).toFixed(1);
+                const isHovered = activeIndex === index;
+                
+                return (
+                  <div 
+                    key={index}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all select-none cursor-pointer ${
+                      isHovered ? 'bg-surface border border-border/40 shadow-sm scale-[1.01]' : 'border border-transparent hover:bg-surface/30'
+                    }`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex(null)}
+                    onClick={() => {
+                      handleSliceClick(item);
+                    }}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-[11px] font-bold text-primary truncate flex-1">{item.name}</span>
+                    <span className="text-[10px] font-bold text-secondary font-premium-numbers shrink-0">{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+            {hasMoreLegendItems && (
+              <button
+                type="button"
+                onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+                className="w-full text-center mt-3 text-[10px] font-black text-[#d97706] uppercase tracking-wider hover:underline focus:outline-none py-1.5 rounded-xl hover:bg-surface/30 active:scale-95 transition-all"
+              >
+                {isLegendExpanded ? 'Voir moins ▲' : `+ ${hiddenLegendCount} autres ▼`}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 3. Categories/Subcategories List */}
