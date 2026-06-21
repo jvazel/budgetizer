@@ -374,7 +374,7 @@ describe('TransactionFormSheet Component', () => {
     
     // The ConfirmModal should be open
     expect(screen.getByText('Supprimer le favori')).toBeInTheDocument();
-    expect(screen.getByText(/Êtes-vous sûr de vouloir supprimer le favori/)).toBeInTheDocument();
+    expect(screen.getByText(/Es-tu sûr de vouloir supprimer le favori/)).toBeInTheDocument();
     
     // Click the "Supprimer" confirm button
     const deleteConfirmBtn = screen.getByRole('button', { name: 'Supprimer' });
@@ -407,5 +407,35 @@ describe('TransactionFormSheet Component', () => {
         tags: ['tag1']
       }));
     });
+  });
+
+  it('automatically predicts the category and displays the suggestion badge', async () => {
+    render(<TransactionFormSheet isOpen={true} onClose={vi.fn()} />);
+
+    // Go to step 2 by entering an amount and clicking Continuer
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '15' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    // Initially, there should not be any "Suggéré" badge
+    expect(screen.queryByText('Suggéré')).not.toBeInTheDocument();
+
+    // Type a note matching a suggestion (e.g. 'Sta' which matches Starbucks)
+    const noteInput = screen.getByLabelText('Note (optionnel)');
+    fireEvent.change(noteInput, { target: { value: 'Sta' } });
+
+    // The prediction should be triggered and display "Suggéré"
+    await waitFor(() => {
+      expect(screen.getByText('Suggéré')).toBeInTheDocument();
+    });
+
+    // The category selection button should now show "Alimentation"
+    expect(screen.getAllByText('Alimentation')[0]).toBeInTheDocument();
+
+    // Now manually change the category
+    const categorySelect = screen.getByLabelText(/Catégorie/);
+    fireEvent.change(categorySelect, { target: { value: 'cat2' } });
+
+    // The "Suggéré" badge should disappear because of manual override
+    expect(screen.queryByText('Suggéré')).not.toBeInTheDocument();
   });
 });

@@ -10,6 +10,7 @@ import { X, Search, Star, ChevronDown, RotateCcw } from 'lucide-react';
 import TagSelector from './TagSelector';
 import { triggerHaptic } from '../../utils/hapticHelper';
 import ConfirmModal from '../ui/ConfirmModal';
+import AiBadge from '../ui/AiBadge';
 
 const formatCurrencyShort = (amount) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -31,6 +32,9 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [categorySearch, setCategorySearch] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [formStep, setFormStep] = useState(1);
+
+  const [isCategoryPredicted, setIsCategoryPredicted] = useState(false);
+  const userHasManuallySelectedCategory = useRef(false);
 
   // activePanel state: 'form' | 'account' | 'category'
   const [activePanel, setActivePanel] = useState('form');
@@ -172,6 +176,34 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
       .slice(0, 4);
   }, [note, recentTransactions, categoriesTree, transactionToEdit]);
 
+  // Auto-predict category based on suggestions as user types the note/merchant
+  useEffect(() => {
+    if (transactionToEdit) return;
+
+    if (!userHasManuallySelectedCategory.current) {
+      if (suggestions && suggestions.length > 0) {
+        const bestSuggestion = suggestions[0];
+        if (bestSuggestion.categoryId) {
+          if (bestSuggestion.categoryId !== categoryId) {
+            setCategoryId(bestSuggestion.categoryId);
+          }
+          setIsCategoryPredicted(true);
+        }
+      } else {
+        if (isCategoryPredicted) {
+          const lastCatKey = type === 'expense' ? 'budgetizer_last_expense_category_id' : 'budgetizer_last_income_category_id';
+          const lastCategoryId = localStorage.getItem(lastCatKey);
+          if (lastCategoryId && catExists(lastCategoryId, type)) {
+            setCategoryId(lastCategoryId);
+          } else {
+            setCategoryId('');
+          }
+          setIsCategoryPredicted(false);
+        }
+      }
+    }
+  }, [suggestions, transactionToEdit, type, isCategoryPredicted, categoryId]);
+
   useEffect(() => {
     if (isOpen) {
       setActivePanel('form');
@@ -185,12 +217,16 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         setNote(transactionToEdit.note || '');
         setDate(transactionToEdit.date ? new Date(transactionToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
         setSelectedTagIds(transactionToEdit.tags?.map(t => t._id || t) || []);
+        userHasManuallySelectedCategory.current = true;
+        setIsCategoryPredicted(false);
       } else {
         setType('expense');
         setAmount('');
         setNote('');
         setDate(defaultDate ? new Date(defaultDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
         setSelectedTagIds([]);
+        userHasManuallySelectedCategory.current = false;
+        setIsCategoryPredicted(false);
 
         const lastAccountId = localStorage.getItem('budgetizer_last_account_id');
         if (lastAccountId && accounts.some(acc => acc._id === lastAccountId)) {
@@ -219,6 +255,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
   const handleTypeChange = (newType) => {
     setType(newType);
+    userHasManuallySelectedCategory.current = false;
+    setIsCategoryPredicted(false);
     const lastCatKey = newType === 'expense' ? 'budgetizer_last_expense_category_id' : 'budgetizer_last_income_category_id';
     const lastCategoryId = localStorage.getItem(lastCatKey);
     if (lastCategoryId && catExists(lastCategoryId, newType)) {
@@ -244,6 +282,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
   const handleApplyTemplate = (t) => {
     triggerHaptic('light');
+    userHasManuallySelectedCategory.current = true;
+    setIsCategoryPredicted(false);
     setType(t.type || 'expense');
     setAmount(String(t.amount || ''));
     setNote(t.note || '');
@@ -310,6 +350,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
 
   const handleApplySuggestion = (suggestion) => {
     triggerHaptic('light');
+    userHasManuallySelectedCategory.current = true;
+    setIsCategoryPredicted(false);
     setNote(suggestion.name);
     
     if (suggestion.accountId && accounts.some(acc => acc._id === suggestion.accountId)) {
@@ -333,6 +375,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     if (!note) return;
     const exactMatch = suggestions.find(s => s.name.toLowerCase() === note.toLowerCase().trim());
     if (exactMatch) {
+      userHasManuallySelectedCategory.current = true;
+      setIsCategoryPredicted(false);
       if (exactMatch.accountId && accounts.some(acc => acc._id === exactMatch.accountId)) {
         setAccountId(exactMatch.accountId);
         triggerGlow('account');
@@ -435,6 +479,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const handleRepeatLast = () => {
     if (!lastTransaction) return;
     triggerHaptic('light');
+    userHasManuallySelectedCategory.current = true;
+    setIsCategoryPredicted(false);
     setType(lastTransaction.type || 'expense');
     setAmount(String(lastTransaction.amount || ''));
     setNote(lastTransaction.note || '');
@@ -867,7 +913,10 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   </div>
                   
                   <div className="flex flex-col">
-                     <label htmlFor="category-select" className="text-xs text-secondary font-medium mb-1.5 select-none font-bold">Catégorie <span className="text-danger ml-0.5">*</span></label>
+                     <div className="flex justify-between items-center mb-1.5 select-none">
+                       <label htmlFor="category-select" className="text-xs text-secondary font-medium font-bold">Catégorie <span className="text-danger ml-0.5">*</span></label>
+                       {isCategoryPredicted && <AiBadge text="Suggéré" />}
+                     </div>
                      <button
                       type="button"
                       onClick={() => {
@@ -894,7 +943,11 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     <select
                       id="category-select"
                       value={categoryId}
-                      onChange={e => setCategoryId(e.target.value)}
+                      onChange={e => {
+                        setCategoryId(e.target.value);
+                        userHasManuallySelectedCategory.current = true;
+                        setIsCategoryPredicted(false);
+                      }}
                       className="sr-only"
                       disabled={type === 'transfer'}
                       style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
@@ -1179,6 +1232,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                         onClick={() => {
                           triggerHaptic('light');
                           setCategoryId(parent._id);
+                          userHasManuallySelectedCategory.current = true;
+                          setIsCategoryPredicted(false);
                           setActivePanel('form');
                         }}
                         className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all text-left ${
@@ -1219,6 +1274,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                                 onClick={() => {
                                   triggerHaptic('light');
                                   setCategoryId(child._id);
+                                  userHasManuallySelectedCategory.current = true;
+                                  setIsCategoryPredicted(false);
                                   setActivePanel('form');
                                 }}
                                 className={`p-2.5 rounded-xl border text-left flex items-center gap-2.5 transition-all ${
@@ -1263,7 +1320,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         type="danger"
       >
         <p className="text-xs text-secondary leading-relaxed select-none">
-          Êtes-vous sûr de vouloir supprimer le favori{" "}
+          Es-tu sûr de vouloir supprimer le favori{" "}
           <strong className="text-primary font-bold">
             "{templates.find(t => t.id === templateToDeleteId)?.name || ''}"
           </strong>{" "}
