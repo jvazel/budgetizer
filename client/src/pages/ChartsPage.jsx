@@ -107,9 +107,9 @@ const ChartsPage = () => {
               {
                 title: 'Activité Mensuelle',
                 items: [
-                  { key: 'category', label: 'Catégories', icon: PieChart, color: 'text-purple-400 bg-purple-500/10' },
+                  { key: 'category', label: 'Catégories', icon: PieChart, color: 'text-purple-400 bg-purple-500/10', badge: 'Populaire' },
                   { key: 'waterfall', label: 'Analyse mensuelle', icon: TrendingUp, color: 'text-emerald-400 bg-emerald-500/10' },
-                  { key: 'velocity', label: 'Rythme Dépenses', icon: Gauge, color: 'text-rose-400 bg-rose-500/10' },
+                  { key: 'velocity', label: 'Rythme Dépenses', icon: Gauge, color: 'text-rose-400 bg-rose-500/10', badge: 'Recommandé' },
                   { key: 'fixedvar', label: 'Fixes vs Var.', icon: Lock, color: 'text-indigo-400 bg-indigo-500/10' },
                   { key: 'tags', label: 'Tags & Projets', icon: Tag, color: 'text-amber-400 bg-amber-500/10' }
                 ]
@@ -129,7 +129,7 @@ const ChartsPage = () => {
                   { key: 'resilience', label: 'Stress-test', icon: ShieldCheck, color: 'text-emerald-400 bg-emerald-500/10' },
                   { key: 'budgetactual', label: 'Budget vs Réel', icon: Sliders, color: 'text-pink-400 bg-pink-500/10' },
                   { key: 'future', label: 'Trésorerie', icon: Clock, color: 'text-blue-400 bg-blue-500/10' },
-                  { key: 'forecast', label: 'Tendances (IA)', icon: TrendingUp, color: 'text-indigo-400 bg-indigo-500/10' }
+                  { key: 'forecast', label: 'Tendances (IA)', icon: TrendingUp, color: 'text-indigo-400 bg-indigo-500/10', badge: 'Recommandé' }
                 ]
               }
             ].map(group => (
@@ -139,6 +139,7 @@ const ChartsPage = () => {
                   {group.items.map(item => {
                     const Icon = item.icon;
                     const isSelected = activeTab === item.key;
+                    const isRecommended = item.badge === 'Recommandé';
                     return (
                       <button
                         key={item.key}
@@ -146,16 +147,29 @@ const ChartsPage = () => {
                           setActiveTab(item.key);
                           setIsSelectorOpen(false);
                         }}
-                        className={`p-3 rounded-2xl border flex flex-col items-start gap-2.5 transition-all text-left group active:scale-95 ${
+                        className={`p-3 rounded-2xl border flex flex-col items-start gap-2.5 transition-all text-left group active:scale-95 w-full ${
                           isSelected 
                             ? 'bg-copper/10 border-copper text-primary shadow-sm shadow-copper/10' 
-                            : 'bg-surface border-border/40 hover:bg-surface-2/80 text-primary'
+                            : isRecommended
+                              ? 'bg-amber-500/[0.02] border-amber-500/35 hover:bg-amber-500/[0.06] text-primary'
+                              : 'bg-surface border-border/40 hover:bg-surface-2/80 text-primary'
                         }`}
                       >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-copper/20 text-copper animate-pulse' : item.color
-                        }`}>
-                          <Icon size={16} />
+                        <div className="w-full flex justify-between items-center gap-1.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-copper/20 text-copper animate-pulse' : item.color
+                          }`}>
+                            <Icon size={16} />
+                          </div>
+                          {item.badge && (
+                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider shrink-0 ${
+                              item.badge === 'Populaire'
+                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                            }`}>
+                              {item.badge}
+                            </span>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <span className="font-bold text-xs block text-primary truncate">{item.label}</span>
