@@ -20,6 +20,7 @@ import {
   calculateFloorProjection,
 } from '../../utils/floorBalanceHelper';
 import { triggerHaptic } from '../../utils/hapticHelper';
+import AiBadge from './AiBadge';
 
 const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) => {
   const { user } = useContext(AuthContext);
@@ -443,17 +444,21 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         <div className="relative z-10 bg-black/20 border border-white/5 rounded-2xl p-3.5 space-y-3.5 shadow-inner">
           
           {/* Contextual micro-phrase */}
-          <div className={`flex items-center gap-2.5 text-[11px] font-semibold rounded-xl px-3 py-2.5 border transition-colors ${
+          <div className={`flex flex-col gap-2 p-3.5 rounded-2xl border transition-colors ${
             hasRiskOfNegative || !isComfortable
               ? 'bg-rose-500/10 border-rose-500/15 text-rose-200'
               : 'bg-white/5 border-white/5 text-blue-100'
           }`}>
-            {hasRiskOfNegative || !isComfortable ? (
-              <AlertTriangle size={13} className="shrink-0 text-rose-300" />
-            ) : (
-              <Sparkles size={13} className="shrink-0 text-amber-300" />
-            )}
-            <span className="leading-relaxed">{contextPhrase}</span>
+            <div className="flex items-center justify-between">
+              {hasRiskOfNegative || !isComfortable ? (
+                <span className="flex items-center gap-1.5 text-[10px] font-black text-rose-300 uppercase tracking-wide">
+                  <AlertTriangle size={12} /> Alerte
+                </span>
+              ) : (
+                <AiBadge text="Coach IA" />
+              )}
+            </div>
+            <p className="text-[11px] font-semibold leading-relaxed">{contextPhrase}</p>
           </div>
 
           {/* Accordion — Échéances avant la paye */}
