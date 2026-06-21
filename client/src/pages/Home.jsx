@@ -218,7 +218,7 @@ const Home = () => {
   const actions = (
     <button
       onClick={() => setIsNotificationsOpen(true)}
-      className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/[0.06] active:scale-95 text-secondary hover:text-primary transition-all p-0 relative -mr-3"
+      className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/[0.06] active-spring-sm text-secondary hover:text-primary transition-all p-0 relative -mr-3"
       id="notification-bell-btn"
     >
       <Bell size={22} />
@@ -271,6 +271,11 @@ const Home = () => {
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
+      {/* Ambient Background Glow Orbs for premium visual atmosphere (Bankyboard) */}
+      <div className="bg-glow-orb glow-orb-indigo w-[300px] h-[300px] -top-20 -left-20 opacity-[0.05]" />
+      <div className="bg-glow-orb glow-orb-amber w-[250px] h-[250px] top-[40%] -right-20 opacity-[0.04]" />
+      <div className="bg-glow-orb glow-orb-emerald w-[300px] h-[300px] bottom-10 -left-10 opacity-[0.05]" />
+
       <HeaderTitle collapsible={true}>{title}</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <InstallPromptBanner />
@@ -301,7 +306,7 @@ const Home = () => {
           <button
             type="button"
             onClick={() => setTimeTab('month')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active:scale-95 ${
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm ${
               timeTab === 'month'
                 ? 'bg-copper text-white shadow-sm font-extrabold'
                 : 'text-secondary hover:text-primary hover:bg-border/10'
@@ -312,7 +317,7 @@ const Home = () => {
           <button
             type="button"
             onClick={() => setTimeTab('week')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active:scale-95 ${
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm ${
               timeTab === 'week'
                 ? 'bg-copper text-white shadow-sm font-extrabold'
                 : 'text-secondary hover:text-primary hover:bg-border/10'
@@ -532,7 +537,7 @@ const Home = () => {
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
+                className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
                   <Icon size={16} />
@@ -546,7 +551,7 @@ const Home = () => {
           {/* Bouton Plus */}
           <button
             onClick={() => setIsShortcutsOpen(true)}
-            className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
+            className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
           >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center border text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05] shrink-0 transition-transform duration-200 group-active:scale-90">
               <MoreHorizontal size={16} />
@@ -578,7 +583,7 @@ const Home = () => {
                     setIsShortcutsOpen(false);
                     navigate(item.path);
                   }}
-                  className="flex flex-col items-center justify-center py-3 px-1 rounded-[16px] bg-surface border border-border/40 active:scale-95 active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-2 group select-none shadow-sm"
+                  className="flex flex-col items-center justify-center py-3 px-1 rounded-[16px] bg-surface border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-2 group select-none shadow-sm"
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
                     <Icon size={18} />
@@ -648,9 +653,9 @@ const Home = () => {
                 onClick={() =>
                   acc.type === 'credit'
                     ? navigate(`/accounts/${acc._id}/credit`)
-                    : navigate(`/accounts/${acc._id}`)
+                     : navigate(`/accounts/${acc._id}`)
                 }
-                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active:scale-[0.97] transition-all cursor-pointer select-none bg-surface-glass backdrop-blur-md"
+                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-glass backdrop-blur-md"
                 style={{
                   background: `linear-gradient(135deg, ${acc.color || '#10b981'}22 0%, ${acc.color || '#10b981'}08 100%)`,
                   borderColor: `${acc.color || '#10b981'}30`,
@@ -736,7 +741,7 @@ const Home = () => {
           {/* "+ Ajouter un compte" Card at the end of the carousel */}
           <div
             onClick={handleOpenAdd}
-            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active:scale-[0.97] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
+            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
           >
             <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
               <span className="text-lg font-bold">+</span>
@@ -857,7 +862,7 @@ const Home = () => {
             <p className="text-muted text-[10px] max-w-[200px] mb-3">Fixez des limites de dépenses pour garder le contrôle.</p>
             <button
               onClick={() => navigate('/budgets')}
-              className="py-2.5 px-4 bg-accent text-white font-bold text-[10px] rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
+              className="py-2.5 px-4 bg-accent text-white font-bold text-[10px] rounded-xl shadow-md shadow-accent/20 active-spring-sm transition-all"
             >
               Créer un budget
             </button>
@@ -902,7 +907,7 @@ const Home = () => {
             <p className="text-muted text-[10px] max-w-[200px] mb-3">Planifiez un projet (fonds d'urgence, voyage, achat...).</p>
             <button
               onClick={() => navigate('/savings')}
-              className="py-2.5 px-4 bg-purple text-white font-bold text-[10px] rounded-xl shadow-md shadow-purple/20 active:scale-95 transition-all"
+              className="py-2.5 px-4 bg-purple text-white font-bold text-[10px] rounded-xl shadow-md shadow-purple/20 active-spring-sm transition-all"
             >
               Créer un objectif
             </button>

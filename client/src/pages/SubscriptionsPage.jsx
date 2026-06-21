@@ -68,7 +68,7 @@ const SubscriptionsPage = () => {
   const actions = (
     <button 
       onClick={handleOpenAdd}
-      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent active-spring-sm transition-all duration-200"
     >
       <Plus size={16} />
     </button>
@@ -83,6 +83,8 @@ const SubscriptionsPage = () => {
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
         <div className="bg-gradient-to-br from-accent to-emerald-600 p-6 rounded-[24px] text-white shadow-xl relative overflow-hidden">
+          {/* Glass reflection shine overlay */}
+          <div className="glass-reflection opacity-50" />
           {/* Subtle light bubble background */}
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
           
@@ -123,7 +125,7 @@ const SubscriptionsPage = () => {
             <p className="text-muted text-[10px] max-w-[200px] mb-3">Ajoutez un abonnement pour suivre vos coûts récurrents.</p>
             <button 
               onClick={handleOpenAdd}
-              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
+              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active-spring-sm transition-all"
             >
               Ajouter un abonnement
             </button>
@@ -131,7 +133,11 @@ const SubscriptionsPage = () => {
         ) : (
           <div className="space-y-3">
             {activeSubscriptions.map(sub => (
-              <div key={sub._id} className="bg-surface-2 p-4 rounded-2xl border border-border/40 flex items-center justify-between group relative">
+              <div 
+                key={sub._id} 
+                className="bg-surface-2 p-4 rounded-2xl border border-border/40 border-l-4 flex items-center justify-between group relative active-spring-sm active-card-feedback transition-all duration-200"
+                style={{ borderLeftColor: sub.categoryId?.color || 'var(--accent)' }}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 shadow-sm"
@@ -154,13 +160,13 @@ const SubscriptionsPage = () => {
                   <div className="flex gap-1.5 shrink-0">
                     <button 
                       onClick={() => handleOpenEdit(sub)}
-                      className="p-1 text-muted hover:text-accent transition-colors"
+                      className="p-1 text-muted hover:text-accent active-spring-sm transition-colors"
                     >
                       <Edit size={14} />
                     </button>
                     <button 
                       onClick={() => handleDelete(sub._id)}
-                      className="p-1 text-muted hover:text-danger transition-colors"
+                      className="p-1 text-muted hover:text-danger active-spring-sm transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>

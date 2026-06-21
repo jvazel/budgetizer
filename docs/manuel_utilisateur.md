@@ -77,11 +77,12 @@ graph TD
 * **Geste interactif (Snap Scroll)** : Faites glisser horizontalement les cartes avec votre doigt. Elles se recentrent automatiquement (snap scroll).
 * **Codes visuels des cartes** :
   * Les soldes positifs s'affichent dans une police de chiffres tabulaires à fort contraste (`.font-premium-numbers`). S'ils sont négatifs, ils passent automatiquement en rouge vif.
-  * Chaque carte bénéficie d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures semi-transparentes (`border-white/10`).
+  * Chaque carte bénéficie d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures de couleur semi-transparentes assorties au compte.
+  * Un **reflet satiné de verre (`.glass-reflection`)** diagonal et une **puce électronique dorée virtuelle** (imitant une vraie carte bancaire physique) ornent le devant de chaque carte pour renforcer l'immersion.
   * Chaque carte arbore une icône adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements).
   * Un voyant vert clignotant animé (`.animate-pulse-live`) accompagné du label `Live` en haut à droite indique la date et l'état de synchronisation en temps réel du compte.
 * **Gestes interactifs sur les cartes** :
-  * **Tapez sur une carte standard** (courant, épargne, espèces) pour ouvrir le formulaire de modification de ce compte ou consulter son détail de transactions.
+  * **Tapez sur une carte standard** (courant, épargne, espèces) ou de crédit pour ouvrir son détail. Toutes les cartes intègrent une **animation tactile de rebond élastique (`.active-spring-sm`)** simulée au toucher.
   * **Tapez sur une carte de crédit (bordeaux / rouge foncé)** pour être automatiquement redirigé vers sa page d'analyse de prêt dédiée.
 
 ### 2.4 Le Solde Plancher (Vrai Disponible) 📉
@@ -100,10 +101,14 @@ Ce composant réunit vos indicateurs de suivi du temps dans une unique carte dot
 * **Onglet "Ce mois"** : Affiche vos Revenus, vos Dépenses et votre Solde Net mensuel avec le pourcentage d'évolution (hausse ou baisse) par rapport au mois précédent.
 * **Onglet "Cette semaine"** : Affiche le montant cumulé de vos dépenses sur les 7 derniers jours glissants et un mini-graphique (Sparkline de type courbe d'aire) reflétant leur évolution au fil des jours.
 
-### 2.7 Harmonisation Typographique et Boutons Premium
+### 2.7 Atmosphère Lumineuse (Ambient Glow Orbs)
+* **Halos lumineux arrières** : Afin de donner du relief visuel à l'application mobile en mode sombre, trois halos de lumière colorés diffus (`bg-glow-orb`) sont disposés à des coordonnées fixes de fond d'écran. Ces orbes de lueur (indigo en haut à gauche, ambre au centre droit, émeraude en bas à gauche) émettent une lumière tamisée à très faible intensité en arrière-plan.
+
+### 2.8 Harmonisation Typographique et Boutons Premium
 Toutes les sections du tableau de bord (Comptes, Top Catégories, Budgets, Objectifs d'Épargne, Allocation Patrimoine, Score Financier) partagent une charte typographique et des interactions uniformisées :
 * **En-têtes de Sections** : Chaque en-tête intègre une icône minimale Lucide (Wallet, CreditCard, Target, Award, etc.) dans un petit conteneur carré arrondi doté d'une couleur thématique pastel transparente, associée au titre de section en capitales épaisses espacées.
 * **Boutons Action Pills** : Les liens textuels bruts de navigation (tels que *"Gérer"* et *"Détails"*) sont remplacés par des boutons badges-pills compacts et élégants (`bg-accent/10 border border-accent/20 text-accent rounded-full`) utilisant la micro-interaction physique élastique `.active-spring-sm`.
+* **Raccourcis Rares & Plus** : Les boutons d'accès rapide de navigation s'animent également avec la courbe élastique `.active-spring-sm` lors du tap, y compris le bouton de cloche de notifications et les boutons de sélection d'onglets temporels.
 * **Cartes d'Objectifs d'Épargne & Score Financier** :
   * Les objectifs d'épargne affichent désormais des cartes imbriquées avec un arrondi d'angle harmonisé à `rounded-[20px]`, un rembourrage confortable `p-5` et une bordure gauche de couleur `border-l-4` reprenant le code couleur personnalisé choisi pour l'objectif.
   * Les fiches de score mensuel de votre santé financière utilisent des cartes similaires avec une bordure gauche `border-l-4` reprenant la couleur représentative de votre score de santé (Vert pour un score excellent, Bleu pour correct, Ambre pour vigilance, et Rouge pour critique).
@@ -254,7 +259,8 @@ Pour anticiper vos dépenses et revenus récurrents (loyer, abonnements, salaire
 
 ### 5.3 Suivi des Abonnements (Subscriptions)
 Le panneau **Abonnements** regroupe tous vos contrats et charges récurrentes actives (Netflix, électricité, salle de sport).
-* **Indicateur de charge fixe** : Il affiche en haut de page le cumul de vos abonnements traduits en **coût mensuel total** et **coût annuel total** pour vous faire prendre conscience du poids de vos charges contractuelles.
+* **Indicateur de charge fixe** : Il affiche en haut de page le cumul de vos abonnements traduits en **coût mensuel total** et **coût annuel total** pour vous faire prendre conscience du poids de vos charges contractuelles. Le panneau de totalisation bénéficie d'un **reflet satiné brillant (`.glass-reflection`)** qui le met en relief.
+* **Liste segmentée thématiquement** : Chaque ligne d'abonnement dispose d'une **bordure gauche colorée (`border-l-4`)** reprenant le code couleur thématique attribué à sa catégorie financière parente. Les actions d'édition et suppression s'animent avec la courbe tactile élastique `.active-spring-sm`.
 * **Lien avec les Crédits** : Les abonnements créés automatiquement suite à la configuration d'un compte de type Crédit affichent un badge spécial `"🏦 Crédit"`. Ces planifications ne sont pas modifiables directement ici : cliquez sur le lien associé pour être automatiquement redirigé vers les paramètres de votre compte de crédit.
 
 ---

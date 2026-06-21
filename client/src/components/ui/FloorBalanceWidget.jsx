@@ -285,7 +285,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           </div>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active:scale-95 shrink-0 ${
+            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active-spring-sm shrink-0 ${
               showSettings
                 ? 'bg-[#d97706]/20 border-[#d97706]/30 text-[#d97706]'
                 : 'bg-white/10 border-white/10 text-blue-200 hover:text-white hover:bg-white/15'
@@ -379,7 +379,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                       <div
                         key={acc._id}
                         onClick={() => handleAccountToggle(acc._id)}
-                        className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer select-none ${
+                        className={`flex items-center justify-between p-2 rounded-lg border transition-all active-spring-sm cursor-pointer select-none ${
                           isSelected
                             ? 'bg-[#0b152d] border-white/15 shadow-sm'
                             : 'bg-transparent border-transparent opacity-50 hover:opacity-85'
@@ -465,7 +465,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           <div className="border-t border-white/5 pt-3">
             <button
               onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-              className="w-full flex justify-between items-center px-3 py-2 text-xs font-bold text-white focus:outline-none rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 active:bg-white/10 active:scale-98 transition-all"
+              className="w-full flex justify-between items-center px-3 py-2 text-xs font-bold text-white focus:outline-none rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 active:bg-white/10 active-spring-sm transition-all"
               aria-expanded={isAccordionExpanded}
             >
               <span className="flex items-center gap-2">
@@ -500,7 +500,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                         className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
                           isExcluded
                             ? 'bg-white/5 border-white/5 opacity-40'
-                            : 'bg-white/10 border-white/10 active:scale-[0.99] hover:bg-white/[0.12]'
+                            : 'bg-white/10 border-white/10 active-spring-sm hover:bg-white/[0.12]'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">

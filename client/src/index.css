@@ -336,5 +336,38 @@ body {
   transform: scale(0.94) !important;
 }
 
+/* Glass reflection shine overlay */
+.glass-reflection {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 40%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Premium Card & Card Inner customizations */
+.banky-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+}
+
+/* Custom premium chart tooltip for Recharts */
+.custom-chart-tooltip {
+  background-color: rgba(7, 14, 32, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="light"] .custom-chart-tooltip, .light .custom-chart-tooltip {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
 
 
