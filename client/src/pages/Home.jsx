@@ -246,6 +246,9 @@ const Home = () => {
   const expenseGrowth = lastMonth.expenses > 0
     ? Math.round(((month.expenses - lastMonth.expenses) / lastMonth.expenses) * 100)
     : null;
+  const netGrowth = lastMonth.net !== 0
+    ? Math.round(((month.net - lastMonth.net) / Math.abs(lastMonth.net)) * 100)
+    : null;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -292,9 +295,18 @@ const Home = () => {
               {formatCurrency(month.income, user?.currency?.code)}
             </p>
             {incomeGrowth !== null && (
-              <p className={`text-[11px] mt-0.5 font-medium ${incomeGrowth >= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
-                {incomeGrowth >= 0 ? '▲' : '▼'} {Math.abs(incomeGrowth)}%
-              </p>
+              <div className="mt-1">
+                <span className={`text-[11px] font-bold ${
+                  incomeGrowth >= 0 
+                    ? 'text-accent/80' 
+                    : incomeGrowth >= -10 
+                      ? 'text-warning/80' 
+                      : 'text-danger/80'
+                }`}>
+                  {incomeGrowth >= 0 ? '▲' : '▼'} {Math.abs(incomeGrowth)}%
+                </span>
+                <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+              </div>
             )}
           </div>
           {/* Dépenses */}
@@ -304,9 +316,18 @@ const Home = () => {
               {formatCurrency(month.expenses, user?.currency?.code)}
             </p>
             {expenseGrowth !== null && (
-              <p className={`text-[11px] mt-0.5 font-medium ${expenseGrowth <= 0 ? 'text-accent/80' : 'text-danger/80'}`}>
-                {expenseGrowth <= 0 ? '▼' : '▲'} {Math.abs(expenseGrowth)}%
-              </p>
+              <div className="mt-1">
+                <span className={`text-[11px] font-bold ${
+                  expenseGrowth <= 0 
+                    ? 'text-accent/80' 
+                    : expenseGrowth <= 10 
+                      ? 'text-warning/80' 
+                      : 'text-danger/80'
+                }`}>
+                  {expenseGrowth <= 0 ? '▼' : '▲'} {Math.abs(expenseGrowth)}%
+                </span>
+                <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+              </div>
             )}
           </div>
           {/* Net */}
@@ -315,6 +336,20 @@ const Home = () => {
             <p className={`font-bold text-sm font-premium-numbers leading-tight ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
               {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
             </p>
+            {netGrowth !== null && (
+              <div className="mt-1">
+                <span className={`text-[11px] font-bold ${
+                  netGrowth >= 0 
+                    ? 'text-accent/80' 
+                    : netGrowth >= -15 
+                      ? 'text-warning/80' 
+                      : 'text-danger/80'
+                }`}>
+                  {netGrowth >= 0 ? '▲' : '▼'} {Math.abs(netGrowth)}%
+                </span>
+                <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
