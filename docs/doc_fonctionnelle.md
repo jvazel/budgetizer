@@ -53,7 +53,13 @@ Le tableau de bord est la page d'accueil principale après connexion. Il regroup
   - Une icône visuelle moderne et dynamique représentant graphiquement le type de compte (Tirelire 🐷 pour l'Épargne, Carte 💳 pour les Crédits, Pièces 🪙 pour le Cash, Tendance 📈 pour les Investissements, Portefeuille 💼 pour le Courant) enveloppée dans un badge circulaire en verre poli (`backdrop-blur-md`).
   - La date de dernière mise à jour des transactions positionnée sur sa propre ligne sous le solde, accompagnée d'une pastille thématique clignotante (`animate-pulse`).
 - **Formulaire d'ajout rapide (Action Sheet)** : Un bouton d'action flottant central permet d'ouvrir instantanément un panneau de saisie rapide (Bottom Sheet) pour ajouter une transaction (Dépense, Revenu ou Virement interne) sans quitter l'écran d'accueil.
-- **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules (Accueil, Transactions, Catégories, Budgets, Échéances, Abonnements, Statistiques, Conseils, Paramètres) et intègre des effets de halo lumineux (glow flares) et des flous (backdrop-blur) pour un design premium sombre et immersif.
+- **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules, réorganisés de manière ergonomique par fréquence d'usage :
+  1. **Mon Quotidien** (Haute fréquence) : Tableau de bord, Comptes, Transactions, Virements instantanés.
+  2. **Mon Budget & Projets** (Moyenne fréquence) : Budgets, Objectifs d'épargne, Planifications.
+  3. **Analyses & IA** (Analyses & conseils) : Graphiques, Rapport Mensuel, Conseils IA, Scores financiers.
+  4. **Outils & Options** (Occasionnel) : Simulateur de prêt, Exporter un rapport, Mon Profil & Paramètres.
+  Le menu intègre des effets de halo lumineux (glow flares) et des flous (backdrop-blur) pour un design premium sombre et immersif.
+- **Barre d'en-tête collante (Sticky Header)** : Sur toutes les pages, une barre d'en-tête reste collée en haut lors du défilement. Elle affiche le bouton de menu burger (ou un bouton de retour arrière selon le contexte de navigation) ainsi que le titre de la page courante, assurant une navigation fluide sans devoir remonter en haut de l'écran.
 - **Aperçu des Transactions Récentes** : Liste chronologique des dernières transactions saisies ou confirmées.
 - **Mini-Calendrier** : Vue compacte affichant les transactions et les échéances planifiées à venir pour la semaine en cours.
 
@@ -136,6 +142,8 @@ La saisie est simplifiée au maximum grâce à une interface de type "Bottom She
   - Rouge si le solde après transaction passerait en négatif.
 
 - **Champ Note repositionné (Autocomplete avancé)** : Le champ Note est placé avant les sélecteurs. Dès 2 caractères saisis, les suggestions s'affichent immédiatement sous le champ et pré-remplissent le compte, la catégorie et les tags.
+
+- **Pré-catégorisation automatique intelligente** : Lors de la saisie d'une note (marchand/description), l'algorithme parcourt en temps réel l'historique des transactions passées de l'utilisateur pour identifier la catégorie correspondante la plus fréquente et la pré-sélectionne automatiquement. Un badge d'IA premium orné de la mention `Suggéré` s'affiche alors de façon fluide au-dessus du sélecteur de catégorie. Si l'utilisateur choisit manuellement une autre catégorie ou applique un template, la suggestion automatique est désactivée et le badge s'efface.
 
 - **Date masquée (accordéon)** : Un badge "📅 Aujourd'hui" remplace le champ date. L'utilisateur ne déroule le champ que si la date diffère d'aujourd'hui. Règle : 90 % des transactions sont saisies le jour même.
 

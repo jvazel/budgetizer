@@ -59,9 +59,14 @@ graph TD
     Dashboard --> Hub[Dashboard Hub / Raccourcis]
 ```
 
-### 2.1 Le Menu de Navigation Latéral (Tiroir Burger)
-* **Accès** : Cliquez sur les trois lignes horizontales (Menu Burger) en haut à gauche de l'écran.
-* **Esthétique & Navigation** : Ce tiroir borderless glisse sur le côté gauche, appliquant un flou d'arrière-plan (`backdrop-blur`) et intégrant des reflets lumineux discrets (glow flares). Il structure les modules en 4 grands blocs : *Opérations*, *Planification*, *Analyses & IA* et *Configuration*. Cliquez sur une rubrique pour y naviguer ; le tiroir se referme automatiquement.
+### 2.1 Le Menu de Navigation Latéral (Tiroir Burger) & En-tête Collante
+* **Accès au Menu** : Cliquez sur les trois lignes horizontales (Menu Burger) en haut à gauche de l'écran.
+* **Esthétique & Navigation** : Ce tiroir borderless glisse sur le côté gauche, appliquant un flou d'arrière-plan (`backdrop-blur`) et intégrant des reflets lumineux discrets (glow flares). Il réorganise les fonctionnalités de manière ergonomique par fréquence d'usage :
+  1. **Mon Quotidien** (Haute fréquence) : Tableau de bord, Comptes, Transactions, Virements instantanés.
+  2. **Mon Budget & Projets** (Moyenne fréquence) : Budgets, Objectifs d'épargne, Planifications.
+  3. **Analyses & IA** (Analyses & conseils) : Graphiques, Rapport Mensuel, Conseils IA, Scores financiers.
+  4. **Outils & Options** (Occasionnel) : Simulateur de prêt, Exporter un rapport, Mon Profil & Paramètres.
+* **Barre d'en-tête collante (Sticky Header)** : Pour assurer une navigation fluide, la barre supérieure (contenant le menu burger ou le bouton de retour selon le contexte, ainsi que le titre de la page) reste fixée tout en haut de l'écran lorsque vous faites défiler la page vers le bas.
 
 ### 2.2 Consulter le Solde Global (Net Worth)
 * **Affichage** : Tout en haut, le montant principal représente votre valeur nette globale (la somme des soldes de vos comptes actifs inclus dans le calcul).
@@ -164,7 +169,7 @@ Pour les projets transversaux (ex. : `#vacances 2026`, `#travaux`), créez des t
     * **Favoris rapides (templates)** : Accédez à vos puces de favoris configurées (boutons de taille confortable de plus de 44 px) pour saisir vos dépenses quotidiennes instantanément. Vous pouvez supprimer un favori en restant appuyé longuement dessus (appui tactile prolongé).
     * Sélectionnez le type (Revenu ou Dépense) puis appuyez sur **Continuer** pour passer à l'étape suivante.
   * **Étape 2 (Détails de la Transaction)** :
-    * **Suggestions intelligentes** : Saisissez la note. À partir de 2 caractères, l'application vous propose des complétions issues de votre historique récent pour pré-remplir la catégorie et les tags correspondants.
+    * **Suggestions et Pré-catégorisation intelligente (IA)** : Saisissez la note (description/nom du marchand). Dès 2 caractères saisis, l'application propose des complétions basées sur votre historique récent. De plus, Budgetizer analyse automatiquement votre saisie de note pour identifier la catégorie passée la plus probable et la pré-sélectionne à la volée. Un badge d'IA avec l'étiquette `Suggéré` apparaît alors juste au-dessus du sélecteur de catégorie. Si vous décidez de changer manuellement de catégorie ou d'utiliser un favori, l'auto-suggestion se désactive et le badge disparaît.
     * **Sélecteurs tactiles Compte et Catégorie** : Cliquer sur l'un d'eux ouvre un panneau coulissant complet. Une barre d'onglets `[Compte] [Catégorie]` en haut vous permet de passer directement de l'un à l'autre sans faire de détours par le formulaire principal.
     * **Indicateur de budget en ligne** : Si la catégorie choisie dispose d'une enveloppe de budget configurée, une barre de progression s'affiche pour vous indiquer le niveau de consommation actuel et l'impact du montant que vous êtes en train de saisir, avec une alerte visuelle en cas de dépassement.
     * **Date en accordéon** : Cachée par défaut sous le bouton *"📅 Aujourd'hui"*, déroulez l'accordéon uniquement si vous souhaitez modifier la date de l'opération.
