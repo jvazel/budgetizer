@@ -142,7 +142,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
       <div className="bg-surface-2 rounded-[24px] border border-border/40 shadow-sm overflow-hidden">
         {/* Score Header Row */}
         <div
-          className="p-5 flex items-center gap-4 cursor-pointer hover:bg-surface/30 transition-colors"
+          className="p-5 flex items-center gap-4 cursor-pointer hover:bg-surface/30 active:bg-surface/50 active:scale-[0.99] transition-all duration-200"
           onClick={() => setExpanded(v => !v)}
         >
           {/* Circular Gauge Score */}

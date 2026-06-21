@@ -122,7 +122,7 @@ const AmortizationTable = ({ schedule, currency }) => {
     <div className="bg-surface-2 rounded-[20px] border border-border/40 overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] active:bg-white/[0.05] active:scale-[0.99] transition-all duration-200"
       >
         <span className="text-sm font-bold text-primary flex items-center gap-2">
           <CreditCard size={15} className="text-accent" />
