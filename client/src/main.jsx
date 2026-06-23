@@ -25,6 +25,10 @@ if (tokenParam) {
   window.history.replaceState({}, '', window.location.pathname + (newSearch ? '?' + newSearch : ''));
 }
 
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
 if ('serviceWorker' in navigator) {
   registerSW({
     onNeedRefresh() {

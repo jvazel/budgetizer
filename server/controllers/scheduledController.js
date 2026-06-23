@@ -5,18 +5,6 @@ import mongoose from 'mongoose';
 import { calculateNextDate } from '../utils/dateHelper.js';
 import { invalidateDashboardCache } from './dashboardController.js';
 
-const updateAccountBalance = async (accountId, amount, type, session) => {
-  const numericAmount = Number(amount);
-  if (isNaN(numericAmount)) throw new Error('Invalid amount');
-  const delta = type === 'expense' ? -numericAmount : numericAmount;
-  const account = await Account.findOneAndUpdate(
-    { _id: accountId },
-    { $inc: { balance: delta } },
-    { session, new: true }
-  );
-  if (!account) throw new Error('Account not found');
-};
-
 // 1. Get all active scheduled transactions
 export const getScheduledTransactions = async (req, res) => {
   try {
@@ -211,10 +199,10 @@ export const confirmPendingTransaction = async (req, res) => {
     // Update bank balances
     if (tx.type === 'transfer') {
       if (!tx.toAccountId) throw new Error('toAccountId is required for transfer');
-      await updateAccountBalance(tx.accountId, tx.amount, 'expense', session);
-      await updateAccountBalance(tx.toAccountId, tx.amount, 'income', session);
+      await Account.updateBalance(tx.accountId, tx.amount, 'expense', session);
+      await Account.updateBalance(tx.toAccountId, tx.amount, 'income', session);
     } else {
-      await updateAccountBalance(tx.accountId, tx.amount, tx.type, session);
+      await Account.updateBalance(tx.accountId, tx.amount, tx.type, session);
     }
 
     await session.commitTransaction();

@@ -57,7 +57,22 @@ const accountSchema = new mongoose.Schema({
   }
 });
 
+// Method to update account balance in a single, safe database operation
+accountSchema.statics.updateBalance = async function (accountId, amount, type, session = null) {
+  const numericAmount = Number(amount);
+  if (isNaN(numericAmount)) throw new Error('Invalid amount');
+  const delta = type === 'expense' ? -numericAmount : numericAmount;
+  const account = await this.findOneAndUpdate(
+    { _id: accountId },
+    { $inc: { balance: delta } },
+    { session, new: true }
+  );
+  if (!account) throw new Error('Account not found');
+  return account;
+};
+
 // Indexes for query performance optimization
 accountSchema.index({ userId: 1, order: 1 });
 
 export default mongoose.model('Account', accountSchema);
+

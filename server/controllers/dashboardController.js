@@ -4,9 +4,10 @@ import Budget from '../models/Budget.js';
 import SavingsGoal from '../models/SavingsGoal.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import mongoose from 'mongoose';
+import { TtlCache } from '../utils/ttlCache.js';
 
-// Simple In-Memory Cache for User Dashboards
-const dashboardCache = new Map();
+// Leak-Safe In-Memory Cache for User Dashboards
+const dashboardCache = new TtlCache(120000, 1000); // 2 minutes TTL, 1000 users max limit
 
 export const invalidateDashboardCache = (userId) => {
   if (userId) {
@@ -194,8 +195,8 @@ export const getDashboardSummary = async (req, res) => {
     
     // Check cache first (2 minutes TTL)
     const cached = dashboardCache.get(userId);
-    if (cached && Date.now() < cached.expiresAt) {
-      return res.json(cached.data);
+    if (cached) {
+      return res.json(cached);
     }
 
     const now = new Date();
@@ -871,10 +872,7 @@ export const getDashboardSummary = async (req, res) => {
     };
 
     // Store in cache (2 minutes TTL)
-    dashboardCache.set(userId, {
-      data: dashboardPayload,
-      expiresAt: Date.now() + 120000
-    });
+    dashboardCache.set(userId, dashboardPayload);
 
     res.json(dashboardPayload);
 

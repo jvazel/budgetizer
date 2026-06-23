@@ -4,18 +4,6 @@ import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 import { calculateNextDate } from './dateHelper.js';
 
-const updateAccountBalance = async (accountId, amount, type, session) => {
-  const numericAmount = Number(amount);
-  if (isNaN(numericAmount)) throw new Error('Invalid amount');
-  const delta = type === 'expense' ? -numericAmount : numericAmount;
-  const account = await Account.findOneAndUpdate(
-    { _id: accountId },
-    { $inc: { balance: delta } },
-    { session, new: true }
-  );
-  if (!account) throw new Error(`Account ${accountId} not found`);
-};
-
 export const processScheduledTransactions = async () => {
   const now = new Date();
   const session = await mongoose.startSession();
@@ -67,10 +55,10 @@ export const processScheduledTransactions = async () => {
         if (st.autoConfirm) {
           if (st.type === 'transfer') {
             if (!st.toAccountId) throw new Error('toAccountId is required for transfers');
-            await updateAccountBalance(st.accountId, st.amount, 'expense', session);
-            await updateAccountBalance(st.toAccountId, st.amount, 'income', session);
+            await Account.updateBalance(st.accountId, st.amount, 'expense', session);
+            await Account.updateBalance(st.toAccountId, st.amount, 'income', session);
           } else {
-            await updateAccountBalance(st.accountId, st.amount, st.type, session);
+            await Account.updateBalance(st.accountId, st.amount, st.type, session);
           }
         }
 

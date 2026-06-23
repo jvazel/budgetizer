@@ -69,6 +69,8 @@ Représente un compte bancaire, un portefeuille d'actifs, ou un crédit amortiss
   - `scheduledTransactionId` (ObjectId -> ScheduledTransaction) : Référence au virement automatique associé.
 - `order` (Number, default: 0) : Ordre d'affichage dans le carrousel.
 
+- **Méthode Statique `updateBalance(accountId, amount, type, session = null)`** : Centralise la mise à jour transactionnelle sécurisée du solde d'un compte. Elle calcule le delta (négatif pour une dépense `expense`, positif pour un revenu `income` ou transfert entrant) et l'applique de manière atomique en base de données à l'aide de l'opérateur `$inc` de MongoDB (avec support facultatif de sessions de transaction), évitant ainsi les conditions de concurrence et les incohérences de solde.
+
 ### 2.3 Modèle `Category` (Catégories)
 Gère l'arborescence des types de flux financiers.
 - `userId` (ObjectId -> User, requis).
@@ -372,7 +374,7 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
 - **Confirmation unifiée et Saisie Tactile (`ConfirmModal.jsx` / `BottomSheet.jsx`)** : Le composant réutilisable de dialogue de confirmation `<ConfirmModal>` gère désormais les avertissements système critiques de suppression (transactions, filtres personnalisés dans Transactions, suppression de comptes dans AccountsPage, abonnements dans SubscriptionsPage, échéances dans ScheduledPage, catégories dans Categories, effacement de données et suppression de compte dans SettingsPage) avec trois configurations thématiques de danger (danger, warning, info) et effets d'entrée élastiques. De plus, la modification rapide de montant d'une échéance dans ScheduledPage utilise un **BottomSheet de saisie numérique customisé** fluide et tactile pour éviter les invites `window.prompt` natives.
 - **Régulation des Enveloppes de Budgets (`Budgets.jsx`)** : Fusion des trois chronologies chronophages verticales antérieures dans un segmented control supérieur (Semaine | Mois | Année) régulé par un unique navigateur de période (← Période →).
 - **Historique Mensuel & MonthGauge (`SummaryHistory.jsx`)** : Agrandissement du diamètre du graphique de beignet `MonthGauge` de 75 px à 90 px avec rayons ajustés à 26/36, et mise à jour du skeleton loader correspondant.
-- **Transitions Globales d'Onglets (`AppShell.jsx`)** : Centralisation des animations d'interfaces à l'aide de `<AnimatePresence mode="wait">` et d'une balise `<motion.div>` enveloppant le composant `<Outlet />` de React Router pour produire des transitions fluides de glissement-fondu entre les routes principales.
+- **Gestion Robuste du Chargement des Routes & Suspense (`AppShell.jsx` / `main.jsx`)** : Afin d'éviter les gels d'affichage sous React 19 (où un parent `<AnimatePresence mode="wait">` pouvait bloquer le rendu lors de la suspension d'une route lazy-loadée), la transition globale de page a été retirée au profit d'un composant `<Suspense>` direct enveloppant `<Outlet />`. Ce dernier affiche un *shimmer loader* (squelette de chargement) modélisant l'emplacement des futures cartes. De plus, la restauration automatique du défilement du navigateur a été désactivée (`window.history.scrollRestoration = 'manual'` dans [main.jsx](file:///c:/Projects/budgetizer/client/src/main.jsx)) et gérée manuellement lors des transitions de routes dans `AppShell.jsx` pour éviter les sauts brusques d'affichage.
 - **Sélecteur d'Analyses Catégorisé en Grille (`ChartsPage.jsx`)** : Restructuration du tiroir de sélection d'analyses en regroupant les 12 graphiques sous forme de grille compacte sur 2 colonnes avec des icônes de couleur, pour une meilleure ergonomie sur mobile.
 - **Harmonisation des Bordures et États Vides** : Standardisation du rayon de courbure à `rounded-[16px]` pour les composants internes et squelettes de chargement. Remplacement des bordures tiretées (`border-dashed`) des états vides par des cartes solides structurées intégrant des halos lumineux et des boutons d'actions nets (via le composant réutilisable `<EmptyState>`).
 - **Système d'Interaction Tactile Haptique** : Définition des classes d'utilitaires CSS `.active-scale-sm`, `.active-scale-md`, et `.active-scale-lg` et de l'animation `@keyframes shimmer` pour des retours physiques instantanés de pressions tactiles sur les boutons, cartes et icônes.
@@ -424,6 +426,13 @@ Pour résoudre ce problème, Budgetizer utilise la topologie décrite dans [ecos
 
 - **budgetizer-api** : S'exécute en mode `cluster` sur `max` instances. La variable `RUN_SCHEDULED_JOBS` y est positionnée à `false` ; ces instances répondent aux requêtes HTTP de l'API mais n'exécutent pas de boucle de planification.
 - **budgetizer-worker** : S'exécute en instance unique (`instances: 1`) en mode `fork`. La variable `RUN_SCHEDULED_JOBS` is positionnée à `true` ; cette instance se consacre exclusivement aux calculs planifiés et à la récurrence sans accepter de trafic web public.
+
+### 6.4 Gestion du Cache en Mémoire & Prévention des Fuites de Mémoire
+Pour accélérer le chargement du tableau de bord sans multiplier les requêtes MongoDB coûteuses, les données agrégées de `getDashboardSummary` sont mises en cache en mémoire.
+- **TtlCache (`ttlCache.js`)** : Remplace l'utilisation d'un objet `Map` standard sujet aux fuites de mémoire. Cette classe implémente :
+  - **Expiration Temporelle (TTL)** : Les entrées expirent après une durée configurable (2 minutes par défaut) pour garantir la fraîcheur des données.
+  - **Limite de Taille Maximale (FIFO Eviction)** : Une taille maximale est définie (1000 utilisateurs par défaut). Si la limite est atteinte, l'entrée la plus ancienne est automatiquement évincée lors de l'ajout d'une nouvelle clé.
+  - **Invalidation Réactive** : Le cache est invalidé instantanément (`dashboardCache.delete(userId)`) à chaque création, modification ou suppression de transaction, virement, ou budget pour maintenir la cohérence des données affichées.
 
 ---
 
@@ -515,7 +524,7 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
 ### 9.4 Alertes Proactives et Flux Push Backend
 - **Agrégation Optimisée en Parallèle (`getDashboardSummary`)** : Afin de calculer la vélocité sans dégrader les temps de réponse, une agrégation stochastique est ajoutée en parallèle (`Promise.all`) dans `dashboardController.js`. Elle filtre les dépenses réelles sur la période récente (7 jours ou depuis le 1er du mois) par catégorie en s'appuyant sur l'index `{ userId: 1, type: 1, date: -1 }`.
 - **Calcul et Projection en Temps Réel** : Le serveur calcule la projection d'épuisement complète du budget mensuel. Si l'utilisateur est en excès de vitesse et que `depletionDate` est estimée avant le 20 du mois en cours, l'alerte est insérée dans la liste des notifications du tableau de bord.
-- **Déclenchement Push Instantané** : Lors de chaque ajout ou modification de dépense (méthode `checkAndTriggerAlerts` de `transactionController.js`), le rythme de dépenses est recalculé. En cas d'anomalie de vélocité projetant une rupture avant le 20, une notification Push PWA native est immédiatement émise via la bibliothèque `web-push`.
+- **Architecture Événementielle Découplée (EventBus)** : Au lieu d'appeler directement les vérifications d'alertes dans le contrôleur de transactions, l'application utilise un bus d'événements (`eventBus.js`) basé sur `EventEmitter`. Lors de l'ajout ou de la mise à jour d'une transaction, le contrôleur émet un événement (`transaction:created` ou `transaction:updated`). Un écouteur centralisé (`alertListener.js`) intercepte ces événements de manière asynchrone pour exécuter `checkAndTriggerAlerts`, recalculer la vélocité et envoyer les notifications Push PWA via `web-push`, garantissant un code propre, modulaire et hautement découplé.
 
 ## 10. Architecture Technique de la Simulation Monte Carlo & Stress-test ⚙️
 
@@ -586,6 +595,12 @@ Dans les tableaux du rapport PDF, le champ description est déterminé à la vol
 
 ### 11.6 Export PDF et Fallback d'Impression
 Le processus d'exportation dynamique importe à la volée `html2pdf.js` pour alléger le bundle d'initialisation de l'application. En cas d'échec de chargement de la bibliothèque sur le terminal client, une capture d'exception robuste redirige l'utilisateur vers la boîte de dialogue d'impression système du navigateur via `window.print()`.
+
+### 11.7 Optimisation des Feuilles de Style d'Impression (`index.css`)
+Pour garantir que l'impression système (`window.print()`) ou la conversion PDF native génère des documents d'une qualité irréprochable :
+- **Masquage des Éléments Interactifs** : Les éléments non imprimables tels que les menus de navigation (`nav`, `aside`), les en-têtes/pieds de page de l'application, les boutons d'action, les toasts de notification et l'indicateur d'état hors ligne sont automatiquement masqués via `@media print`.
+- **Adaptation Visuelle de Contraste** : Le fond sombre ("Encre & Cuivre") est converti en fond blanc pur avec texte noir pour économiser l'encre et optimiser la lisibilité.
+- **Préservation des Composants Premium** : Les cartes de solde et de budget conservent des bordures claires de démarcation sans ombres lourdes dégradantes (`box-shadow: none`), avec des règles de saut de page contrôlées (`page-break-inside: avoid`).
 
 ---
 

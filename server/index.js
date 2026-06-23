@@ -28,6 +28,7 @@ import { processScheduledTransactions } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec, { customCss } from './utils/swagger.js';
+import './listeners/alertListener.js';
 
 dotenv.config({ override: true });
 initWebPush();

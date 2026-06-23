@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState, useEffect, useContext, createContext, Suspense } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Menu, ChevronLeft } from 'lucide-react';
@@ -146,17 +146,16 @@ const AppShell = () => {
 
         {/* Main Content */}
         <main className="max-w-md mx-auto p-4 pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))] relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Suspense fallback={
+            <div className="space-y-4 py-6 select-none">
+              {/* Shimmers mimicking a typical dashboard/page layout */}
+              <div className="h-16 w-full rounded-[24px] bg-surface-2 shimmer-loader" />
+              <div className="h-12 w-full rounded-[24px] bg-surface-2 shimmer-loader" />
+              <div className="h-48 w-full rounded-[24px] bg-surface-2 shimmer-loader" />
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </main>
 
         {/* Navigation */}

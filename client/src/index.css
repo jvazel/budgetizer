@@ -381,6 +381,52 @@ body {
   box-shadow: 0 4px 20px -2px rgba(10, 26, 47, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
+/* === PRINT STYLE SHEETS OPTIMIZATION === */
+@media print {
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide navigation, buttons, status bars, and floating controls */
+  nav, 
+  aside, 
+  header, 
+  footer, 
+  button, 
+  .no-print, 
+  .print-hide,
+  .toaster,
+  .OfflineStatus,
+  .HeaderActions {
+    display: none !important;
+  }
+
+  /* Force white background, remove shadows on printable cards */
+  .premium-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  /* Force standard margins and break pages beautifully */
+  .print-page-break {
+    page-break-after: always;
+  }
+
+  .print-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 
 
 

@@ -3,190 +3,11 @@ import Account from '../models/Account.js';
 import Category from '../models/Category.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import SavingsGoal from '../models/SavingsGoal.js';
-import User from '../models/User.js';
-import Budget from '../models/Budget.js';
 import Tag from '../models/Tag.js';
-import { sendPushNotification } from '../utils/pushNotification.js';
 import { invalidateMonthlyReport } from '../utils/cacheInvalidator.js';
 import { invalidateDashboardCache } from './dashboardController.js';
+import { eventBus } from '../utils/eventBus.js';
 import mongoose from 'mongoose';
-
-// Helper for budget dates (UTC)
-const getBudgetPeriodDates = (period, referenceDate = new Date()) => {
-  let start, end;
-  const ref = new Date(referenceDate);
-  if (period === 'weekly') {
-    const day = ref.getUTCDay();
-    const diff = ref.getUTCDate() - day + (day === 0 ? -6 : 1);
-    start = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), diff, 0, 0, 0, 0));
-    end = new Date(start.getTime());
-    end.setUTCDate(end.getUTCDate() + 6);
-    end.setUTCHours(23, 59, 59, 999);
-  } else if (period === 'yearly') {
-    start = new Date(Date.UTC(ref.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
-    end = new Date(Date.UTC(ref.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
-  } else { // monthly
-    start = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), 1, 0, 0, 0, 0));
-    end = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth() + 1, 0, 23, 59, 59, 999));
-  }
-  return { start, end };
-};
-
-const checkAndTriggerAlerts = async (userId, transaction, amount, oldTransaction = null) => {
-  try {
-    if (transaction.type !== 'expense') return;
-
-    const user = await User.findById(userId);
-    if (!user) return;
-
-    // 1. Low Balance Alert
-    if (user.preferences.enableLowBalanceAlerts) {
-      const account = await Account.findById(transaction.accountId);
-      if (account) {
-        const threshold = user.preferences.lowBalanceThreshold;
-        const balanceAfter = account.balance;
-        
-        let balanceBefore = balanceAfter + amount;
-        if (oldTransaction && oldTransaction.accountId.toString() === transaction.accountId.toString() && oldTransaction.type === 'expense') {
-          balanceBefore = balanceAfter + amount - oldTransaction.amount;
-        }
-        
-        if (balanceBefore >= threshold && balanceAfter < threshold) {
-          sendPushNotification(userId, {
-            title: 'Alerte Solde Bas ⚠️',
-            body: `Le solde de votre compte "${account.name}" est passé à ${balanceAfter.toFixed(2)} € (sous le seuil de ${threshold.toFixed(2)} €).`,
-            url: '/accounts'
-          });
-        }
-      }
-    }
-
-    // 2. Budget Alert
-    if (user.preferences.enableBudgetAlerts && transaction.categoryId) {
-      const budgets = await Budget.find({ userId, categoryId: transaction.categoryId });
-      if (budgets.length > 0) {
-        const includedAccounts = await Account.find({ userId, includeInTotal: { $ne: false } }).select('_id');
-        const includedAccountIds = includedAccounts.map(acc => acc._id);
-
-        for (const budget of budgets) {
-          const { start, end } = getBudgetPeriodDates(budget.period, transaction.date || new Date());
-
-          // Sum expenses for this category in the period using MongoDB aggregation for efficiency (only for included accounts)
-        const spentResult = await Transaction.aggregate([
-          {
-            $match: {
-              userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
-              type: 'expense',
-              accountId: { $in: includedAccountIds },
-              isPending: { $ne: true },
-              categoryId: mongoose.Types.ObjectId.isValid(budget.categoryId) ? new mongoose.Types.ObjectId(budget.categoryId) : budget.categoryId,
-              date: { $gte: start, $lte: end }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalSpent: { $sum: '$amount' }
-            }
-          }
-        ]);
-        const spentAfter = spentResult[0]?.totalSpent || 0;
-        
-        let spentBefore = spentAfter - amount;
-
-        if (oldTransaction && oldTransaction.categoryId && oldTransaction.categoryId.toString() === transaction.categoryId.toString() && oldTransaction.type === 'expense') {
-          spentBefore = spentAfter - amount + oldTransaction.amount;
-        }
-
-        const alertThreshold = budget.amount * ((budget.alertAt || 80) / 100);
-
-        if (spentBefore < alertThreshold && spentAfter >= alertThreshold && spentAfter < budget.amount) {
-          sendPushNotification(userId, {
-            title: 'Alerte Budget 📊',
-            body: `Attention : vous avez consommé ${Math.round((spentAfter / budget.amount) * 100)}% de votre budget "${budget.name}" (${spentAfter.toFixed(2)} € / ${budget.amount.toFixed(2)} €).`,
-            url: '/budgets'
-          });
-        } else if (spentBefore < budget.amount && spentAfter >= budget.amount) {
-          sendPushNotification(userId, {
-            title: 'Dépassement de Budget 🚨',
-            body: `Alerte : votre budget "${budget.name}" est dépassé ! (${spentAfter.toFixed(2)} € dépensés sur ${budget.amount.toFixed(2)} € alloués).`,
-            url: '/budgets'
-          });
-        }
-
-        // Proactive Velocity Alert
-        if (budget.period === 'monthly' || !budget.period) {
-          const today = transaction.date || new Date();
-          const currentDay = today.getDate();
-
-          if (currentDay < 20) {
-            const daysCount = currentDay >= 7 ? 7 : currentDay;
-            const startOfRecentPeriod = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysCount + 1, 0, 0, 0, 0);
-
-            const recentSpentResult = await Transaction.aggregate([
-              {
-                $match: {
-                  userId: mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId,
-                  type: 'expense',
-                  accountId: { $in: includedAccountIds },
-                  isPending: { $ne: true },
-                  categoryId: mongoose.Types.ObjectId.isValid(budget.categoryId) ? new mongoose.Types.ObjectId(budget.categoryId) : budget.categoryId,
-                  date: { $gte: startOfRecentPeriod, $lte: end }
-                }
-              },
-              {
-                $group: {
-                  _id: null,
-                  totalSpent: { $sum: '$amount' }
-                }
-              }
-            ]);
-            const recentSpent = recentSpentResult[0]?.totalSpent || 0;
-            const actualVelocity = recentSpent / daysCount;
-
-            const remainingBudget = budget.amount - spentAfter;
-            const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-            const daysRemaining = totalDaysInMonth - currentDay + 1;
-            const targetVelocity = remainingBudget > 0 && daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
-
-            if (actualVelocity > targetVelocity && remainingBudget > 0) {
-              const daysToDepletion = remainingBudget / actualVelocity;
-              const depletionDate = new Date(today);
-              depletionDate.setDate(today.getDate() + Math.ceil(daysToDepletion));
-
-              if (depletionDate.getMonth() === today.getMonth() &&
-                  depletionDate.getFullYear() === today.getFullYear() &&
-                  depletionDate.getDate() < 20) {
-                
-                sendPushNotification(userId, {
-                  title: 'Alerte Vélocité Proactive ⚠️',
-                  body: `Attention : au rythme actuel de dépenses (${actualVelocity.toFixed(2)} €/j au lieu de ${targetVelocity.toFixed(2)} €/j), votre budget "${budget.name}" sera épuisé le ${depletionDate.toLocaleDateString('fr-FR')}, soit avant le 20 du mois.`,
-                  url: '/charts'
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  } catch (err) {
-    console.error('Error triggering alerts:', err);
-  }
-};
-
-// Utility function to update account balance
-const updateAccountBalance = async (accountId, amount, type, session = null) => {
-  const numericAmount = Number(amount);
-  if (isNaN(numericAmount)) throw new Error('Invalid amount');
-  const delta = type === 'expense' ? -numericAmount : numericAmount;
-  const account = await Account.findOneAndUpdate(
-    { _id: accountId },
-    { $inc: { balance: delta } },
-    { session, new: true }
-  );
-  if (!account) throw new Error('Account not found');
-};
 
 // Utility function to update savings goal progress
 const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false, session = null, transaction = null) => {
@@ -356,13 +177,13 @@ export const createTransaction = async (req, res) => {
     // Update balances
     if (type === 'transfer') {
       if (!toAccountId) throw new Error('toAccountId is required for transfer');
-      await updateAccountBalance(accountId, amount, 'expense', session); // From account
-      await updateAccountBalance(toAccountId, amount, 'income', session); // To account
+      await Account.updateBalance(accountId, amount, 'expense', session); // From account
+      await Account.updateBalance(toAccountId, amount, 'income', session); // To account
       if (savingsGoalId) {
         await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session, transaction);
       }
     } else {
-      await updateAccountBalance(accountId, amount, type, session);
+      await Account.updateBalance(accountId, amount, type, session);
       if (savingsGoalId) {
         await updateSavingsGoalProgress(savingsGoalId, amount, type, false, session, transaction);
       }
@@ -370,8 +191,8 @@ export const createTransaction = async (req, res) => {
 
     await session.commitTransaction();
     
-    // Trigger push notifications in background
-    checkAndTriggerAlerts(req.user.id, transaction, amount).catch(err => console.error('Alert trigger error:', err));
+    // Trigger push notifications in background via EventBus
+    eventBus.emit('transaction:created', { userId: req.user.id, transaction, amount });
     
     // Invalidate monthly report cache
     invalidateMonthlyReport(req.user.id, transaction.date).catch(err => console.error('Cache invalidation error:', err));
@@ -411,9 +232,9 @@ export const deleteTransaction = async (req, res) => {
     // Revert balances if the transaction is not pending (meaning it was actually executed and affected balances)
     if (!transaction.isPending) {
       if (transaction.type === 'transfer') {
-        await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session);
+        await Account.updateBalance(transaction.accountId, transaction.amount, 'income', session);
         if (transaction.toAccountId) {
-          await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session);
+          await Account.updateBalance(transaction.toAccountId, transaction.amount, 'expense', session);
         }
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
@@ -421,7 +242,7 @@ export const deleteTransaction = async (req, res) => {
       } else {
         // If it was an expense, adding it back means 'income' type operation on balance
         const revertType = transaction.type === 'expense' ? 'income' : 'expense';
-        await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+        await Account.updateBalance(transaction.accountId, transaction.amount, revertType, session);
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
         }
@@ -832,16 +653,16 @@ export const updateTransaction = async (req, res) => {
     // 1. Revert OLD balance impact if the transaction is not pending
     if (!transaction.isPending) {
       if (transaction.type === 'transfer') {
-        await updateAccountBalance(transaction.accountId, transaction.amount, 'income', session); // Revert expense
+        await Account.updateBalance(transaction.accountId, transaction.amount, 'income', session); // Revert expense
         if (transaction.toAccountId) {
-          await updateAccountBalance(transaction.toAccountId, transaction.amount, 'expense', session); // Revert income
+          await Account.updateBalance(transaction.toAccountId, transaction.amount, 'expense', session); // Revert income
         }
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
         }
       } else {
         const revertType = transaction.type === 'expense' ? 'income' : 'expense';
-        await updateAccountBalance(transaction.accountId, transaction.amount, revertType, session);
+        await Account.updateBalance(transaction.accountId, transaction.amount, revertType, session);
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, true, session, transaction);
         }
@@ -870,13 +691,13 @@ export const updateTransaction = async (req, res) => {
     if (!transaction.isPending) {
       if (transaction.type === 'transfer') {
         if (!transaction.toAccountId) throw new Error('Un compte destinataire est requis pour un transfert.');
-        await updateAccountBalance(transaction.accountId, transaction.amount, 'expense', session);
-        await updateAccountBalance(transaction.toAccountId, transaction.amount, 'income', session);
+        await Account.updateBalance(transaction.accountId, transaction.amount, 'expense', session);
+        await Account.updateBalance(transaction.toAccountId, transaction.amount, 'income', session);
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
         }
       } else {
-        await updateAccountBalance(transaction.accountId, transaction.amount, transaction.type, session);
+        await Account.updateBalance(transaction.accountId, transaction.amount, transaction.type, session);
         if (transaction.savingsGoalId) {
           await updateSavingsGoalProgress(transaction.savingsGoalId, transaction.amount, transaction.type, false, session, transaction);
         }
@@ -885,8 +706,8 @@ export const updateTransaction = async (req, res) => {
 
     await session.commitTransaction();
 
-    // Trigger push notifications in background
-    checkAndTriggerAlerts(req.user.id, transaction, amount, oldTransactionCopy).catch(err => console.error('Alert trigger error:', err));
+    // Trigger push notifications in background via EventBus
+    eventBus.emit('transaction:updated', { userId: req.user.id, transaction, amount, oldTransaction: oldTransactionCopy });
 
     // Invalidate monthly report cache for both old and new dates if changed
     invalidateMonthlyReport(req.user.id, oldTransactionCopy.date).catch(err => console.error('Cache invalidation error:', err));

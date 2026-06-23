@@ -79,7 +79,12 @@ vi.mock('../../models/Transaction.js', () => ({
 vi.mock('../../models/Account.js', () => ({
   default: {
     findById: vi.fn(),
-    findOneAndUpdate: vi.fn()
+    findOneAndUpdate: vi.fn(),
+    updateBalance: async function(accountId, amount, type, session = null) {
+      const numericAmount = Number(amount);
+      const delta = type === 'expense' ? -numericAmount : numericAmount;
+      return await this.findOneAndUpdate({ _id: accountId }, { $inc: { balance: delta } }, { session, new: true });
+    }
   }
 }));
 

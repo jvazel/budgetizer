@@ -88,6 +88,11 @@ vi.mock('../../models/Account.js', () => {
   MockAccount.findOne = vi.fn();
   MockAccount.insertMany = vi.fn();
   MockAccount.findOneAndUpdate = vi.fn();
+  MockAccount.updateBalance = async function(accountId, amount, type, session = null) {
+    const numericAmount = Number(amount);
+    const delta = type === 'expense' ? -numericAmount : numericAmount;
+    return await this.findOneAndUpdate({ _id: accountId }, { $inc: { balance: delta } }, { session, new: true });
+  };
 
   return { default: MockAccount };
 });
