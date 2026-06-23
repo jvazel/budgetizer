@@ -87,7 +87,7 @@ describe('FloorBalanceWidget Component', () => {
     renderComponent();
     
     // Open settings
-    const settingsBtn = screen.getByRole('button', { name: /configurer le jour de paye/i });
+    const settingsBtn = screen.getByTitle('Configurer le solde disponible');
     fireEvent.click(settingsBtn);
     
     // Selector should be visible

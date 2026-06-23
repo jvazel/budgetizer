@@ -353,7 +353,7 @@ const Transactions = () => {
         </div>
 
         {/* Stats Summary Bar */}
-        <div className="grid grid-cols-3 gap-2 bg-surface-2-glass backdrop-blur-md border border-border/40 rounded-2xl p-3 text-center select-none shadow-sm animate-fadeIn">
+        <div className="grid grid-cols-3 gap-2 bg-surface-2-glass backdrop-blur-md border border-border/40 rounded-2xl p-3 text-center select-none shadow-sm">
           <div>
             <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Revenus</span>
             <span className="text-xs font-extrabold text-accent font-premium-numbers block mt-0.5">
@@ -376,7 +376,7 @@ const Transactions = () => {
         
         {/* Dynamic sliding Search Bar */}
         {showSearch && (
-          <div className="bg-surface-2 p-4 rounded-2xl border border-border/40 shadow-sm flex items-center gap-3 animate-fadeIn">
+          <div className="bg-surface-2 p-4 rounded-2xl border border-border/40 shadow-sm flex items-center gap-3">
             <Search size={18} className="text-muted flex-shrink-0" />
             <input 
               type="text"

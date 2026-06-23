@@ -271,11 +271,6 @@ const Home = () => {
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* Ambient Background Glow Orbs for premium visual atmosphere (Bankyboard) */}
-      <div className="bg-glow-orb glow-orb-indigo w-[300px] h-[300px] -top-20 -left-20 opacity-[0.05]" />
-      <div className="bg-glow-orb glow-orb-amber w-[250px] h-[250px] top-[40%] -right-20 opacity-[0.04]" />
-      <div className="bg-glow-orb glow-orb-emerald w-[300px] h-[300px] bottom-10 -left-10 opacity-[0.05]" />
-
       <HeaderTitle collapsible={true}>{title}</HeaderTitle>
       <HeaderActions>{actions}</HeaderActions>
       <InstallPromptBanner />
@@ -329,14 +324,15 @@ const Home = () => {
 
         {/* Tab Content */}
         {timeTab === 'month' ? (
-          <div
-            onClick={() => navigate('/summary-history')}
-            className="p-5 cursor-pointer active:bg-white/[0.02] transition-all"
-          >
+          <div className="p-5">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-xs font-semibold text-accent flex items-center gap-0.5">
-                Historique complet →
-              </span>
+              <span className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Ce mois</span>
+              <button
+                onClick={() => navigate('/summary-history')}
+                className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
+              >
+                Historique complet
+              </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {/* Revenus */}
@@ -419,9 +415,12 @@ const Home = () => {
                 </p>
                 <p className="text-[10px] text-muted mt-1">dépensés sur les 7 derniers jours</p>
               </div>
-              <span className="text-[11px] font-bold text-accent flex items-center gap-0.5 shrink-0 mt-0.5">
-                Analyses détaillées →
-              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate('/charts'); }}
+                className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200 shrink-0 mt-0.5"
+              >
+                Analyses
+              </button>
             </div>
 
             {last7DaysExpenses.length > 0 && (
@@ -567,7 +566,7 @@ const Home = () => {
                 {/* Card Bottom: Balance & Last Transaction */}
                 <div className="flex justify-between items-end relative z-10 mt-auto pt-2 pl-1">
                   <div className="flex flex-col gap-1 min-w-0">
-                    <span className={`font-mono font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
+                    <span className={`font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
                       {formatCurrency(acc.balance, acc.currency)}
                     </span>
                     {acc.lastTransactionDate ? (
@@ -626,7 +625,7 @@ const Home = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-secondary">Transactions classées</span>
-              <span className="text-primary font-mono font-premium-numbers">{categorizationRate}%</span>
+              <span className="text-primary font-premium-numbers">{categorizationRate}%</span>
             </div>
             <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
               <div 
@@ -676,19 +675,19 @@ const Home = () => {
 
       {/* ── Raccourcis de Navigation Rapide (Carrousel horizontal) ─────────── */}
       <section className="mb-6">
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1 -mx-4 px-4">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 -mx-4 px-5">
           {SHORTCUTS.map((item, idx) => {
             const Icon = item.icon;
             return (
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-1 rounded-[20px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
+                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 rounded-[20px] bg-surface-2 border border-white/15 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
                   <Icon size={18} />
                 </div>
-                <span className="text-[10px] font-bold text-secondary tracking-tight truncate w-full px-1 leading-none">
+                <span className="text-[10px] font-bold text-secondary tracking-tight w-full px-1 leading-tight line-clamp-2 break-words">
                   {item.label}
                 </span>
               </button>
@@ -750,7 +749,7 @@ const Home = () => {
                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                     <span className="truncate">{item.label}</span>
                   </div>
-                  <span className="text-xs font-extrabold text-primary font-mono mt-0.5 ml-3 font-premium-numbers">
+                  <span className="text-xs font-extrabold text-primary mt-0.5 ml-3 font-premium-numbers">
                     {formatCurrency(item.amount, user?.currency?.code)}
                   </span>
                 </div>
@@ -903,7 +902,7 @@ const Home = () => {
                       <span className="text-xl shrink-0">{goal.icon || '🎯'}</span>
                       <span className="text-sm font-bold text-primary truncate">{goal.name}</span>
                     </div>
-                    <span className="font-mono text-xs font-extrabold text-accent">{roundedPct}%</span>
+                    <span className="text-xs font-extrabold text-accent font-premium-numbers">{roundedPct}%</span>
                   </div>
                   <div className="h-2 w-full bg-surface-2 border border-border/20 rounded-lg overflow-hidden mb-2">
                     <div

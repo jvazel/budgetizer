@@ -222,11 +222,11 @@ const AiInsights = () => {
                         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/10">
                           <div>
                             <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Ce mois-ci</p>
-                            <p className="text-xs font-extrabold text-primary font-mono">{formatCurrency(anomaly.currentAmount)}</p>
+                            <p className="text-xs font-extrabold text-primary font-premium-numbers">{formatCurrency(anomaly.currentAmount)}</p>
                           </div>
                           <div>
                             <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Moyenne (3 mois)</p>
-                            <p className="text-xs font-bold text-secondary font-mono">{formatCurrency(anomaly.averageAmount)}</p>
+                            <p className="text-xs font-bold text-secondary font-premium-numbers">{formatCurrency(anomaly.averageAmount)}</p>
                           </div>
                         </div>
                       </div>
@@ -275,7 +275,7 @@ const AiInsights = () => {
                           <div className="min-w-0">
                             <h4 className="text-xs font-extrabold text-primary truncate uppercase tracking-wider">{suggestion.name}</h4>
                             <p className="text-[10px] text-muted leading-tight mt-0.5">
-                              Moyenne mensuelle habituelle : <span className="font-bold text-secondary font-mono">{formatCurrency(suggestion.averageMonthlyAmount)}</span>
+                              Moyenne mensuelle habituelle : <span className="font-bold text-secondary font-premium-numbers">{formatCurrency(suggestion.averageMonthlyAmount)}</span>
                             </p>
                           </div>
                         </div>
@@ -308,7 +308,7 @@ const AiInsights = () => {
                             </div>
                             <span className="text-[10px] text-secondary font-bold">Économie annuelle</span>
                           </div>
-                          <span className="text-sm font-extrabold text-accent font-mono font-premium-numbers">
+                          <span className="text-sm font-extrabold text-accent font-premium-numbers">
                             {formatCurrency(savings)} / an
                           </span>
                         </div>

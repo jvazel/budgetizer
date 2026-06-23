@@ -21,7 +21,7 @@ const Splash = ({ onComplete }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-[#030816] flex flex-col items-center justify-center z-50 overflow-hidden"
+          className="fixed inset-0 bg-base flex flex-col items-center justify-center z-50 overflow-hidden"
         >
           {/* Ambient Background Glow Orbs */}
           <div className="bg-glow-orb glow-orb-amber w-[300px] h-[300px] -top-20 -left-20" />
@@ -36,8 +36,8 @@ const Splash = ({ onComplete }) => {
             >
               <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
             </motion.div>
-            <h1 className="font-condensed-tight text-3xl text-white mb-2">Budgetizer</h1>
-            <p className="text-[#888888] text-sm">Vos finances, simplement.</p>
+            <h1 className="font-condensed-tight text-3xl text-primary mb-2">Budgetizer</h1>
+            <p className="text-secondary text-sm">Vos finances, simplement.</p>
           </div>
         </motion.div>
       )}

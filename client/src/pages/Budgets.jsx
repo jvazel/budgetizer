@@ -198,7 +198,7 @@ const Budgets = () => {
       <section className="mb-6">
         {/* Weekly Budgets Section */}
         {selectedPeriod === 'weekly' && (
-          <div className="mb-6 animate-fadeIn">
+          <div className="mb-6">
             {showSkeleton ? (
               <div className="space-y-4">
                 <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
@@ -227,7 +227,7 @@ const Budgets = () => {
 
         {/* Monthly Budgets Section */}
         {selectedPeriod === 'monthly' && (
-          <div className="mb-6 animate-fadeIn">
+          <div className="mb-6">
             {showSkeleton ? (
               <div className="space-y-4">
                 <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
@@ -256,7 +256,7 @@ const Budgets = () => {
 
         {/* Yearly Budgets Section */}
         {selectedPeriod === 'yearly' && (
-          <div className="mb-6 animate-fadeIn">
+          <div className="mb-6">
             {showSkeleton ? (
               <div className="space-y-4">
                 <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
