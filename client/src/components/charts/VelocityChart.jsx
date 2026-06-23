@@ -281,21 +281,24 @@ const VelocityChart = () => {
                   strokeDasharray="3 3"
                 />
                 
-                {/* Aiguille rotative animée */}
-                <line
-                  x1="120"
-                  y1="110"
-                  x2="120"
-                  y2="32"
-                  stroke="var(--text-primary)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
+                {/* Aiguille rotative animée enveloppée pour compatibilité mobile webview */}
+                <g
                   style={{
                     transform: `rotate(${angle - 90}deg)`,
                     transformOrigin: '120px 110px',
-                    transition: 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    transition: 'transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
                   }}
-                />
+                >
+                  <line
+                    x1="120"
+                    y1="110"
+                    x2="120"
+                    y2="32"
+                    stroke="var(--text-primary)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </g>
 
                 {/* Pivot central */}
                 <circle

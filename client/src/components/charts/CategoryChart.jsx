@@ -404,6 +404,20 @@ const CategoryChart = () => {
   const hasMoreLegendItems = pieData.length > 4;
   const hiddenLegendCount = pieData.length - 4;
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-chart-tooltip text-left">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+            {formatCurrency(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Selectors */}
@@ -439,60 +453,62 @@ const CategoryChart = () => {
         </div>
 
         {/* Period navigation or choices */}
-        {isMonthly() ? (
-          <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-              title="Mois précédent"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setIsMonthSheetOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
-            >
-              <Calendar size={14} className="text-accent" />
-              <span>{formatPeriodLabel(period)}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              disabled={isCurrentMonth()}
-              className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-                isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
-              }`}
-              title="Mois suivant"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: '3months', label: '3 mois' },
-              { id: '6months', label: '6 mois' },
-              { id: 'year', label: 'Cette année' }
-            ].map(p => (
+        <div className="min-h-[48px] flex flex-col justify-center">
+          {isMonthly() ? (
+            <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
               <button
-                key={p.id}
                 type="button"
-                onClick={() => setPeriod(p.id)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                  period === p.id 
-                    ? 'bg-copper text-white shadow-sm font-extrabold' 
-                    : 'bg-surface-2-glass text-secondary hover:text-primary'
-                }`}
+                onClick={handlePrevMonth}
+                className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+                title="Mois précédent"
               >
-                {p.label}
+                <ChevronLeft size={16} />
               </button>
-            ))}
-          </div>
-        )}
+              
+              <button
+                type="button"
+                onClick={() => setIsMonthSheetOpen(true)}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+              >
+                <Calendar size={14} className="text-accent" />
+                <span>{formatPeriodLabel(period)}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                disabled={isCurrentMonth()}
+                className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+                  isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+                title="Mois suivant"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: '3months', label: '3 mois' },
+                { id: '6months', label: '6 mois' },
+                { id: 'year', label: 'Cette année' }
+              ].map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPeriod(p.id)}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                    period === p.id 
+                      ? 'bg-copper text-white shadow-sm font-extrabold' 
+                      : 'bg-surface-2-glass text-secondary hover:text-primary'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Exact date range helper text */}
         <div className="text-[10px] text-muted text-center font-medium opacity-85">
@@ -603,17 +619,8 @@ const CategoryChart = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(val) => formatCurrency(val)} 
+                    content={<CustomTooltip />} 
                     wrapperStyle={{ pointerEvents: 'none' }}
-                    contentStyle={{
-                      borderRadius: '20px',
-                      background: 'rgba(11, 21, 45, 0.90)',
-                      backdropFilter: 'blur(16px)',
-                      border: '1px solid rgba(229, 233, 240, 0.08)',
-                      color: '#fff',
-                      fontSize: '11px',
-                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)'
-                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>

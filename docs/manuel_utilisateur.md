@@ -285,6 +285,8 @@ Les graphiques interactifs transforment vos données financières brutes en info
 * **Navigation par onglets horizontaux** : Un sélecteur d'onglets horizontaux défilant en haut de la page donne un accès direct aux 5 graphiques prioritaires : *Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*. Un bouton *"Autres"* (en pointillés) ouvre un tiroir (BottomSheet) pour sélectionner parmi l'ensemble des autres types de graphiques.
 * **Conseil IA contextuel** : Une carte d'insight IA en haut de la page s'actualise dynamiquement pour fournir un conseil de coach financier adapté à l'analyse active que vous visualisez.
 * **Titre de page collapsible** : Le titre se rétracte et fusionne proprement dans la barre supérieure au scroll.
+* **Infobulles Interactives Premium** : Lors du survol ou du toucher d'un élément d'un graphique (barre, courbe, secteur), une infobulle (tooltip) translucide de type glassmorphism s'affiche de manière réactive. Ces infobulles s'adaptent automatiquement au thème sélectionné (mode sombre et mode clair) pour garantir un excellent contraste et une lisibilité parfaite des valeurs et des dates.
+* **Stabilité et Confort Mobile** : Pour éliminer tout tremblement ou saut vertical inconfortable (Layout Shift) lors de l'interaction ou du changement de mois/catégories, les contrôles et boutons de filtres des graphiques sont maintenus dans des conteneurs à hauteur verrouillée.
 
 ### 7.1 Répartition catégorielle (Pie Chart)
 * **Visualisation** : Un camembert dynamique présente le pourcentage de vos dépenses par catégorie.
@@ -362,6 +364,7 @@ Tachymètre de Vélocité Budgétaire :
   2. **Vitesse Réelle** : La moyenne de vos dépenses réelles par jour sur les 7 derniers jours.
   3. **Estimation du crash** : Si votre vitesse réelle dépasse la vitesse cible, le système estime la date précise d'épuisement complet de votre budget.
 * **Lecture de la jauge** :
+  * **Aiguille Elastique** : L'aiguille du compteur réagit instantanément aux changements avec un mouvement physique amorti réaliste (effet ressort), sans saccades.
   * **Zone verte** (à gauche) : Votre vitesse réelle est inférieure à la limite. Le diagnostic indique *"Vitesse sous contrôle"*.
   * **Zone rouge** (à droite) : L'aiguille bascule vers la droite. Le diagnostic affiche *"⚠️ Excès de vitesse détecté"* et calcule la date d'épuisement théorique.
   * **Conseil correctif** : Une fiche d'aide recalcule en direct la nouvelle limite quotidienne à ne pas dépasser pour le reste du mois pour redresser la barre et finir dans le vert. Si le budget est déjà épuisé, la limite corrective conseillée passe à `0 € / jour`.

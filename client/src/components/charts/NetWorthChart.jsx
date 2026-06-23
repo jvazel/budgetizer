@@ -50,6 +50,38 @@ const NetWorthChart = () => {
   const peakNetWorth = history.length > 0 ? Math.max(...history.map(h => h.netWorth)) : 0;
   const lowestNetWorth = history.length > 0 ? Math.min(...history.map(h => h.netWorth)) : 0;
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const labelMap = {
+        checking: 'Compte Courant',
+        savings: 'Épargne',
+        cash: 'Espèces',
+        investment: 'Investissements',
+        credit: 'Carte Crédit (Dette)',
+        netWorth: 'Richesse Nette'
+      };
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Date : {label}</p>
+          {payload.map((item, idx) => {
+            const labelName = labelMap[item.name] || item.name;
+            const valColor = item.name === 'netWorth' ? '#8b5cf6' : (item.color || item.stroke);
+            const val = item.name === 'credit' ? Math.abs(item.value) : item.value;
+            return (
+              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+                <span className="text-secondary">{labelName} :</span>
+                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                  {formatCurrency(val)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Period Selector */}
@@ -175,29 +207,8 @@ const NetWorthChart = () => {
                   tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
                 />
                  <Tooltip 
+                  content={<CustomTooltip />}
                   wrapperStyle={{ pointerEvents: 'none' }}
-                  formatter={(val, name) => {
-                    const labelMap = {
-                      checking: 'Compte Courant',
-                      savings: 'Épargne',
-                      cash: 'Espèces',
-                      investment: 'Investissements',
-                      credit: 'Carte Crédit (Dette)',
-                      netWorth: 'Richesse Nette'
-                    };
-                    const formattedVal = formatCurrency(name === 'credit' ? Math.abs(val) : val);
-                    return [formattedVal, labelMap[name] || name];
-                  }}
-                  labelFormatter={(lbl) => `Date : ${lbl}`}
-                  contentStyle={{
-                    borderRadius: '16px',
-                    background: 'rgba(10, 10, 12, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    color: '#fff',
-                    fontSize: '11px',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-                  }}
                 />
                 <Legend 
                   verticalAlign="top" 

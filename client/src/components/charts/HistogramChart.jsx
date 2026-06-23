@@ -113,6 +113,45 @@ const HistogramChart = () => {
 
   const { history = [], metrics = {} } = data;
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      let formattedLabel = label;
+      if (data.groupBy === 'month' && label.includes('-')) {
+        const [year, month] = label.split('-');
+        const date = new Date(year, parseInt(month) - 1, 1);
+        formattedLabel = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      } else if (data.groupBy === 'day' && label.includes('-')) {
+        const date = new Date(label);
+        formattedLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      } else {
+        const item = history.find(h => h.key === label);
+        if (item) formattedLabel = item.label;
+      }
+
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{formattedLabel}</p>
+          {payload.map((item, idx) => {
+            let labelName = item.name;
+            let valColor = item.color;
+            if (item.name === 'income') { labelName = 'Recettes'; valColor = '#10b981'; }
+            else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#ef4444'; }
+            else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
+            return (
+              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+                <span className="text-secondary">{labelName} :</span>
+                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                  {formatCurrency(item.value)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Filters Card */}
@@ -305,37 +344,8 @@ const HistogramChart = () => {
                   tickLine={false}
                 />
                 <Tooltip
+                  content={<CustomTooltip />}
                   wrapperStyle={{ pointerEvents: 'none' }}
-                  labelFormatter={(lbl) => {
-                    // Try to format label in long style
-                    if (data.groupBy === 'month' && lbl.includes('-')) {
-                      const [year, month] = lbl.split('-');
-                      const date = new Date(year, parseInt(month) - 1, 1);
-                      return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                    }
-                    if (data.groupBy === 'day' && lbl.includes('-')) {
-                      const date = new Date(lbl);
-                      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-                    }
-                    // For week or custom week starting date
-                    const item = history.find(h => h.key === lbl);
-                    return item ? item.label : lbl;
-                  }}
-                  formatter={(val, name) => {
-                    if (name === 'income') return [formatCurrency(val), 'Recettes'];
-                    if (name === 'expenses') return [formatCurrency(val), 'Dépenses'];
-                    if (name === 'net') return [formatCurrency(val), 'Solde Net'];
-                    return [formatCurrency(val), name];
-                  }}
-                  contentStyle={{
-                    borderRadius: '16px',
-                    background: 'rgba(10, 10, 12, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    color: '#fff',
-                    fontSize: '11px',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-                  }}
                   cursor={{ stroke: 'rgba(255, 255, 255, 0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Legend

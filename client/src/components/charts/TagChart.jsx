@@ -227,6 +227,52 @@ const TagChart = () => {
     ? data.cumulativeEvolution[data.cumulativeEvolution.length - 1].cumulative 
     : 0;
 
+  const CustomTooltip1 = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-chart-tooltip text-left">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+            {formatCurrency(payload[0].value || payload[0].amount)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomTooltip2 = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const formattedDate = new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Le : {formattedDate}</p>
+          <div className="flex items-center justify-between gap-6 text-[11px] font-medium">
+            <span className="text-secondary">Cumulé :</span>
+            <span className="font-premium-numbers font-bold text-accent">
+              {formatCurrency(payload[0].value)}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomTooltip3 = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-chart-tooltip text-left">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+            {formatCurrency(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Date and Type Selectors */}
@@ -406,7 +452,10 @@ const TagChart = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(val) => formatCurrency(val)} wrapperStyle={{ pointerEvents: 'none' }} />
+                      <Tooltip 
+                        content={<CustomTooltip1 />} 
+                        wrapperStyle={{ pointerEvents: 'none' }} 
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </>
@@ -459,14 +508,9 @@ const TagChart = () => {
                       tickLine={false}
                     />
                     <Tooltip 
+                      content={<CustomTooltip2 />}
                       wrapperStyle={{ pointerEvents: 'none' }}
-                      formatter={(val, name) => [
-                        formatCurrency(val), 
-                        name === 'cumulative' ? 'Cumulé' : 'Montant'
-                      ]}
-                      labelFormatter={(lbl) => `Le : ${new Date(lbl).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`}
-                      contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
-                    />
+                     />
                     <Area 
                       type="monotone" 
                       dataKey="cumulative" 
@@ -547,10 +591,9 @@ const TagChart = () => {
                     width={80}
                   />
                   <Tooltip 
+                    content={<CustomTooltip3 />}
                     wrapperStyle={{ pointerEvents: 'none' }}
-                    formatter={(val) => formatCurrency(val)}
-                    contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
-                  />
+                   />
                   <Bar 
                     dataKey="amount" 
                     radius={[0, 6, 6, 0]}

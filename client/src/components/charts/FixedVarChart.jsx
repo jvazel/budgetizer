@@ -201,16 +201,18 @@ const FixedVarChart = () => {
     return groups;
   };
 
-  // Tooltip content for the donut chart
-  const tooltipStyle = {
-    borderRadius: '16px',
-    background: 'rgba(10, 10, 12, 0.88)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    color: '#fff',
-    fontSize: '11px',
-    fontFamily: 'monospace',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.37)'
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-chart-tooltip text-left">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+            {formatCurrency(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Hovered donut segment info
@@ -362,9 +364,8 @@ const FixedVarChart = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(val) => [formatCurrency(val)]}
+                    content={<CustomTooltip />}
                     wrapperStyle={{ pointerEvents: 'none' }}
-                    contentStyle={tooltipStyle}
                   />
                 </PieChart>
               </ResponsiveContainer>

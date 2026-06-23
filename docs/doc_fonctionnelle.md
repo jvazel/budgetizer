@@ -223,6 +223,8 @@ La page **Statistiques (Charts)** propose des visualisations interactives basée
 - **Barre d'onglets horizontaux (Top 5)** : Permet de basculer instantanément d'un simple geste entre les 5 analyses de base les plus importantes : *Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*. Un bouton de menu en pointillés *"Autres"* déploie un panel BottomSheet avec tous les autres types de graphiques.
 - **Conseils IA dynamiques** : Un bandeau de recommandation de Coach financier s'adapte en temps réel selon le graphique d'analyse sélectionné pour guider l'utilisateur.
 - **Titre de page collapsible** : Le titre se rétracte et fusionne proprement dans la barre d'en-tête collante lors du défilement vertical.
+- **Infobulles Interactives Premium** : Lors du survol ou du clic sur les graphiques, des infobulles sur mesure affichent les montants, les pourcentages et les dates avec une typographie soignée et un style visuel translucide (glassmorphism) qui s'adapte parfaitement au thème de l'application (mode sombre et mode clair), assurant une lisibilité maximale sans rupture de style.
+- **Fluidité & Réactivité Tactile** : Les graphiques sont optimisés pour une manipulation tactile fluide sur mobile, sans sauts intempestifs de l'écran lors du basculement d'une catégorie à une autre ou d'une période à une autre (hauteur des contrôleurs verrouillée pour supprimer tout Layout Shift).
 - **Répartition Categorielle (Pie Chart)** : Permet de voir en un coup d'œil où part l'argent (ex: 40% Alimentation, 20% Logement).
 - **Graphique d'Évolution (Area/Line Chart)** : Historique de l'évolution du solde cumulé des comptes au fil des jours.
 - **Prévisions à 30 jours (Forecast)** : Graphique combinant l'historique récent et projetant l'évolution des comptes sur les 30 prochains jours. Ce calcul prend en compte :
@@ -521,6 +523,11 @@ Pour offrir une expérience proche de la fintech **Bankyboard**, Budgetizer a fa
 *   Pour éviter la gêne ergonomique d'un grand formulaire écrasé par l'ouverture du clavier mobile, la création de transaction se fait maintenant de manière guidée :
     *   **Étape 1 (Montant)** : L'utilisateur se concentre uniquement sur la somme à saisir, avec un accès direct à ses favoris rapides et à un bouton pour répéter sa dernière transaction en un seul clic.
     *   **Étape 2 (Détails)** : Une fois le montant saisi, l'utilisateur accède aux détails avancés. Le champ note propose des suggestions basées sur son historique de dépenses. Les sélecteurs de comptes et catégories s'ouvrent dans des panneaux glissants complets, dotés d'onglets pour naviguer directement de l'un à l'autre sans perdre sa saisie.
+
+### 19.5 Graphiques d'Analyses & Fluidité Mobile
+*   **Zéro Saut de Contenu (Layout Shifts)** : Les contrôleurs et filtres des graphiques d'analyses sont logés dans des conteneurs à hauteur verrouillée. Ainsi, le passage entre différents filtres ou options n'entraîne aucun saut vertical de l'affichage sur mobile, offrant une expérience stable et haut de gamme.
+*   **Aiguille Elastique pour Jauge de Vélocité** : L'aiguille du tachymètre réagit instantanément aux sélections avec une animation fluide amortie en ressort (type physique réaliste), apportant une micro-interaction plaisante et interactive.
+*   **Infobulles Uniformisées** : Finis les encadrés par défaut Recharts gris ou sombres illisibles. Les infobulles partagent désormais le même style d'infobulle premium, adapté dynamiquement au thème sombre/clair pour garantir une continuité esthétique sur toutes les pages d'analyses.
 
 
 

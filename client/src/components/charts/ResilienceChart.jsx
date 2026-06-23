@@ -119,7 +119,7 @@ const ResilienceChart = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-2xl bg-[#0a0a0c]/90 border border-border/40 p-4 shadow-xl backdrop-blur-md text-[11px] text-[#fff] space-y-1.5 font-sans min-w-[160px]">
+        <div className="custom-chart-tooltip text-left text-[11px] space-y-1.5 min-w-[160px]">
           <p className="font-extrabold text-secondary tracking-wide border-b border-border/20 pb-1 mb-1">
             Année {data.year}
           </p>

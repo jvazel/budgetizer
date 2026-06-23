@@ -63,14 +63,7 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div
-        className="p-3 rounded-2xl border shadow-xl backdrop-blur-md text-left text-xs font-bold"
-        style={{
-          background: 'rgba(10, 10, 12, 0.88)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          color: '#fff'
-        }}
-      >
+      <div className="custom-chart-tooltip text-left text-xs font-bold">
         <p className="opacity-70 uppercase text-[9px] tracking-wider font-extrabold mb-0.5">{data.name}</p>
         <p className="font-mono text-sm" style={{ color: data.color }}>
           {data.displayVal > 0 ? '+' : ''}{formatCurrency(data.displayVal)}

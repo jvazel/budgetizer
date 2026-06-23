@@ -54,6 +54,47 @@ const FutureChart = () => {
     groupedTransactions[key].push(tx);
   });
 
+  const CustomTooltip1 = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const formattedDate = new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Le : {formattedDate}</p>
+          <div className="flex items-center justify-between gap-6 text-[11px] font-medium">
+            <span className="text-secondary">Solde estimé :</span>
+            <span className="font-premium-numbers font-bold text-accent">
+              {formatCurrency(payload[0].value)}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomTooltip2 = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{label}</p>
+          {payload.map((item, idx) => {
+            const labelName = item.name === 'income' ? 'Revenus' : 'Dépenses';
+            const valColor = item.name === 'income' ? '#10b981' : '#ef4444';
+            return (
+              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+                <span className="text-secondary">{labelName} :</span>
+                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                  {formatCurrency(item.value)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       
@@ -119,10 +160,8 @@ const FutureChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  content={<CustomTooltip1 />}
                   wrapperStyle={{ pointerEvents: 'none' }}
-                  formatter={(val) => [formatCurrency(val), 'Solde estimé']}
-                  labelFormatter={(lbl) => `Le : ${new Date(lbl).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
-                  contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
                 />
                 <Area 
                   type="monotone" 
@@ -161,9 +200,8 @@ const FutureChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  content={<CustomTooltip2 />}
                   wrapperStyle={{ pointerEvents: 'none' }}
-                  formatter={(val) => formatCurrency(val)}
-                  contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
                 />
                 <Bar dataKey="income" name="Revenus" fill="#10b981" radius={[6, 6, 0, 0]} fillOpacity={0.7} />
                 <Bar dataKey="expenses" name="Dépenses" fill="#ef4444" radius={[6, 6, 0, 0]} fillOpacity={0.7} />

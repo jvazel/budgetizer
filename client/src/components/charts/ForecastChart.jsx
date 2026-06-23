@@ -160,6 +160,35 @@ const ForecastChart = () => {
   const finalProjectedBalance = data.forecast.length > 0 ? data.forecast[data.forecast.length - 1].projectedBalance : 0;
   const confidenceMargin = data.forecast.length > 0 ? (data.forecast[data.forecast.length - 1].confidenceInterval.high - finalProjectedBalance) : 0;
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const monthLabel = formatMonthLabel(label);
+      return (
+        <div className="custom-chart-tooltip text-left space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
+          {payload.map((item, idx) => {
+            if (item.name === "confidence" || item.dataKey === "confidence") return null;
+            let labelName = item.name;
+            let valColor = item.color || item.stroke;
+            if (item.name === 'balance') { labelName = 'Solde Réel'; valColor = '#10b981'; }
+            else if (item.name === 'projBalance') { labelName = 'Solde Projeté'; valColor = '#8b5cf6'; }
+            else if (item.name === 'income') { labelName = 'Revenus Réels'; valColor = '#10b981'; }
+            else if (item.name === 'expenses') { labelName = 'Dépenses Réelles'; valColor = '#ef4444'; }
+            return (
+              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+                <span className="text-secondary">{labelName} :</span>
+                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                  {formatCurrency(item.value)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
 
@@ -257,16 +286,8 @@ const ForecastChart = () => {
                   tickLine={false}
                 />
                 <Tooltip 
+                  content={<CustomTooltip />}
                   wrapperStyle={{ pointerEvents: 'none' }}
-                  labelFormatter={formatMonthLabel}
-                  formatter={(val, name) => {
-                    if (name === 'balance') return [formatCurrency(val), 'Solde Réel'];
-                    if (name === 'projBalance') return [formatCurrency(val), 'Solde Projeté'];
-                    if (name === 'income') return [formatCurrency(val), 'Revenus Réels'];
-                    if (name === 'expenses') return [formatCurrency(val), 'Dépenses Réelles'];
-                    return [formatCurrency(val), name];
-                  }}
-                  contentStyle={{ borderRadius: '16px', background: 'rgba(30, 41, 59, 0.95)', border: 'none', color: '#fff', fontSize: '11px' }}
                 />
                 
                 {/* Confidence Interval (Area) */}
