@@ -105,10 +105,10 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
                           navigate(item.path);
                           onClose();
                         }}
-                        className={`w-full p-2.5 rounded-xl flex items-center gap-3 transition-all duration-200 text-left font-medium text-xs relative overflow-hidden group ${
+                        className={`w-full p-2.5 rounded-xl flex items-center gap-3 transition-all duration-150 text-left font-medium text-xs relative overflow-hidden active:scale-[0.98] active-spring-sm ${
                           isActive 
                             ? 'bg-copper-dim text-copper font-semibold shadow-sm shadow-copper/5' 
-                            : 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                            : 'text-secondary active:text-primary active:bg-surface-2/40'
                         }`}
                       >
                         {/* Left active accent indicator bar */}
@@ -117,19 +117,19 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
                         )}
                         
                         {/* Icon wrapper */}
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 ${
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 ${
                           isActive 
                             ? 'bg-copper/15 text-copper' 
-                            : 'bg-surface-2 text-secondary group-hover:text-primary group-hover:bg-border/30'
+                            : 'bg-surface-2 text-secondary active:scale-105'
                         }`}>
                           <Icon size={14} />
                         </div>
                         
                         {/* Label */}
-                        <span className="transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
+                        <span className="font-semibold">{item.label}</span>
                         
-                        {/* Micro Chevron pointer on hover */}
-                        <span className="ml-auto opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-copper text-[8px] font-bold">
+                        {/* Static indicator */}
+                        <span className="ml-auto text-secondary/30 text-[9px] font-bold">
                           ➔
                         </span>
                       </button>

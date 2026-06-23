@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
-import { Plus, CreditCard, HelpCircle, Edit, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { Plus, CreditCard, Edit, Trash2 } from 'lucide-react';
 
 const SubscriptionsPage = () => {
   const { 
@@ -15,6 +16,7 @@ const SubscriptionsPage = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [deleteItemId, setDeleteItemId] = useState(null);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -39,10 +41,15 @@ const SubscriptionsPage = () => {
     setIsFormOpen(false);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Résilier cet abonnement planifié ?')) {
-      await deleteScheduled(id);
+  const handleDeleteConfirm = async () => {
+    if (deleteItemId) {
+      await deleteScheduled(deleteItemId);
+      setDeleteItemId(null);
     }
+  };
+
+  const handleDelete = (id) => {
+    setDeleteItemId(id);
   };
 
   // Filter subscriptions from scheduled transactions
@@ -68,7 +75,7 @@ const SubscriptionsPage = () => {
   const actions = (
     <button 
       onClick={handleOpenAdd}
-      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent active-spring-sm transition-all duration-200"
+      className="p-1.5 bg-copper-dim hover:bg-copper/20 rounded-full text-copper active-spring-sm transition-all duration-200"
     >
       <Plus size={16} />
     </button>
@@ -82,25 +89,25 @@ const SubscriptionsPage = () => {
       
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
-        <div className="bg-gradient-to-br from-accent to-emerald-600 p-6 rounded-[24px] text-white shadow-xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#0b152d] to-[#070e20] border border-border/40 p-6 rounded-[24px] text-primary shadow-xl relative overflow-hidden">
           {/* Glass reflection shine overlay */}
-          <div className="glass-reflection opacity-50" />
+          <div className="glass-reflection opacity-20" />
           {/* Subtle light bubble background */}
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-copper/5 rounded-full blur-xl" />
           
           <div className="flex justify-between items-start mb-4">
-            <span className="text-xs uppercase tracking-wider font-extrabold text-white/80 flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-wider font-extrabold text-secondary flex items-center gap-1.5">
               <CreditCard size={14} /> Total abonnements
             </span>
-            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold">
+            <span className="text-xs bg-copper-dim text-copper border border-copper/20 px-2.5 py-0.5 rounded-full font-bold">
               {activeSubscriptions.length} actifs
             </span>
           </div>
 
-          <h2 className="font-mono text-3xl font-extrabold mb-1">
-            {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-white/85">/ mois</span>
+          <h2 className="font-mono text-3xl font-black text-primary mb-1 font-premium-numbers">
+            {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-secondary">/ mois</span>
           </h2>
-          <p className="text-xs text-white/80 font-medium">
+          <p className="text-xs text-muted font-medium">
             Soit {formatCurrency(totalAnnualCost)} par an
           </p>
         </div>
@@ -125,7 +132,7 @@ const SubscriptionsPage = () => {
             <p className="text-muted text-[10px] max-w-[200px] mb-3">Ajoutez un abonnement pour suivre vos coûts récurrents.</p>
             <button 
               onClick={handleOpenAdd}
-              className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active-spring-sm transition-all"
+              className="py-2.5 px-4 bg-copper text-white font-bold text-xs rounded-xl shadow-md shadow-copper/20 active-spring-sm transition-all"
             >
               Ajouter un abonnement
             </button>
@@ -187,6 +194,23 @@ const SubscriptionsPage = () => {
         defaultIsSubscription={true}
       />
 
+      <ConfirmModal
+        isOpen={!!deleteItemId}
+        onClose={() => setDeleteItemId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Résilier l'abonnement"
+        confirmText="Résilier"
+        type="danger"
+      >
+        <div className="text-xs text-secondary leading-relaxed space-y-2">
+          <p>
+            Êtes-vous sûr de vouloir résilier cet abonnement planifié ?
+          </p>
+          <p className="font-semibold text-danger">
+            Cette action annulera le suivi de toutes les occurrences futures de ce service récurrent.
+          </p>
+        </div>
+      </ConfirmModal>
     </>
   );
 };

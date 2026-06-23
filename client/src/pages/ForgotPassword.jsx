@@ -29,7 +29,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-base flex flex-col p-6 max-w-md mx-auto">
       <div className="flex-1 flex flex-col justify-center">
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(74,222,128,0.15)] bg-surface border border-border/30">
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(217,119,6,0.25)] bg-surface border border-border/30">
             <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
           </div>
         </div>

@@ -46,12 +46,12 @@ Afin de concilier une sécurité maximale et une expérience utilisateur fluide,
 Le tableau de bord est la page d'accueil principale après connexion. Il regroupe les informations de synthèse financière indispensables :
 
 - **Solde Net Global** : Affiche la somme des soldes de tous les comptes actifs inclus dans le total.
-- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée premium avec défilement fluide et recentrage automatique (snap scroll). Chaque carte dispose d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures semi-transparentes (`border-white/10`). Elle affiche :
+- **Carrousel des Comptes** : Présentation visuelle horizontale de chaque compte sous forme de carte bancaire stylisée premium avec défilement fluide et recentrage automatique (snap scroll). Chaque carte utilise désormais un style solide à dégradé métallique premium (`var(--bg-surface)` vers `var(--bg-surface-2)`) avec une fine bordure colorée selon le thème du compte, une barre latérale colorée sur le flanc gauche et un halo lumineux d'accentuation en haut à droite. Elle affiche :
   - Le nom du compte.
   - Le solde actuel mis en valeur en chiffres tabulaires `font-premium-numbers`.
-  - Un fond dégradé premium translucide basé sur la couleur du compte.
+  - La date de la dernière transaction sous le solde ("Dernière op. : DD MMM" ou "Aucune opération").
   - Une icône visuelle moderne représentant son type (🐷 pour l'Épargne, 💳 pour les Crédits, 🪙 pour le Cash, 📈 pour les Investissements, 💼 pour le Courant).
-  - Un voyant vert clignotant animé (`.animate-pulse-live`) avec la mention `Live` indiquant que la synchronisation en temps réel est active.
+  - Un voyant de synchronisation live discret (pulsation verte `.animate-pulse-live` sur l'icône).
 - **Carte des Statistiques Temporelles (Timeframe Statistics Card)** : Un composant compact à onglets qui regroupe la synthèse mensuelle (Revenus, Dépenses, Solde net) et le graphique de vélocité hebdomadaire (Sparkline courbe d'aire Recharts des 7 derniers jours) dans un espace visuel unifié et interactif pour mobile.
 - **Raccourcis Tactiles Compacts (Hub Raccourcis)** : Une barre de raccourcis sur une seule ligne offrant un accès rapide aux 4 fonctionnalités principales (Budgets, Épargne, Analyses, Conseils IA) complétée par un bouton "Plus" (BottomSheet) pour les autres raccourcis secondaires.
 - **Formulaire d'ajout rapide (Action Sheet)** : Un bouton d'action flottant central permet d'ouvrir instantanément un panneau de saisie rapide (Bottom Sheet) pour ajouter une transaction (Dépense, Revenu ou Virement interne) sans quitter l'écran d'accueil.

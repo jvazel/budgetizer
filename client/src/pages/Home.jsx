@@ -481,7 +481,7 @@ const Home = () => {
         </div>
 
         {/* Horizontal scrollable carrousel */}
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-3 -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4 pt-1 px-1">
           {accounts.map((acc) => {
             const isNegative = acc.balance < 0;
             const trend = getAccountTrend(acc);
@@ -494,27 +494,33 @@ const Home = () => {
                     ? navigate(`/accounts/${acc._id}/credit`)
                      : navigate(`/accounts/${acc._id}`)
                 }
-                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-glass backdrop-blur-md"
+                className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none transition-all duration-300"
                 style={{
-                  background: `linear-gradient(135deg, ${acc.color || '#10b981'}22 0%, ${acc.color || '#10b981'}08 100%)`,
-                  borderColor: `${acc.color || '#10b981'}30`,
-                  boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.2), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.08)',
+                  background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)',
+                  borderColor: `${acc.color || '#10b981'}40`,
+                  boxShadow: '0 8px 24px -10px rgba(0, 0, 0, 0.12), inset 0 1px 1.5px rgba(255, 255, 255, 0.05)',
                 }}
               >
+                {/* Dynamic Left accent bar */}
+                <div 
+                  className="absolute left-0 top-0 bottom-0 w-[4px] pointer-events-none" 
+                  style={{ backgroundColor: acc.color || '#10b981' }}
+                />
+
                 {/* Glass reflection shine overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.08] pointer-events-none z-0" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.04] pointer-events-none z-0" />
                 
                 {/* Background glow orb */}
                 <div 
-                  className="absolute -right-12 -bottom-12 w-28 h-28 rounded-full blur-3xl pointer-events-none opacity-25"
+                  className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20 dark:opacity-30"
                   style={{ backgroundColor: acc.color || '#10b981' }}
                 />
 
                 {/* Card Top: Brand / Name & Type */}
                 <div className="flex justify-between items-start gap-2 relative z-10">
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
-                    <span className="inline-block text-[8.5px] font-bold text-secondary bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider mt-1">
+                  <div className="min-w-0 pl-1">
+                    <p className="text-xs font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
+                    <span className="inline-block text-[8px] font-black text-secondary bg-surface-2 border border-border/40 px-1.5 py-0.5 rounded-[6px] uppercase tracking-wider mt-1.5">
                       {acc.type === 'checking' ? 'Courant' :
                        acc.type === 'savings' ? 'Épargne' :
                        acc.type === 'credit' ? 'Crédit' :
@@ -539,7 +545,7 @@ const Home = () => {
                 </div>
 
                 {/* Card Middle: Chip & Trend delta */}
-                <div className="flex justify-between items-end relative z-10 mt-1">
+                <div className="flex justify-between items-end relative z-10 mt-1 pl-1">
                   {/* Golden Chip */}
                   <div className="w-8 h-6 rounded-md bg-gradient-to-br from-[#FFE082] via-[#FFD54F] to-[#FFB300] border border-[#FFC107]/40 relative overflow-hidden shadow-inner shrink-0">
                     <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-[#B58A00]/30" />
@@ -551,26 +557,34 @@ const Home = () => {
                   {/* Trend Percentage */}
                   <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
                     trend.isPositive 
-                      ? 'bg-accent/15 border border-accent/25 text-accent' 
-                      : 'bg-danger/15 border border-danger/25 text-danger'
+                      ? 'bg-accent/10 border border-accent/20 text-accent' 
+                      : 'bg-danger/10 border border-danger/20 text-danger'
                   }`}>
                     {trend.label}
                   </span>
                 </div>
 
-                {/* Card Bottom: Balance */}
-                <div className="relative z-10 mt-auto pt-2">
-                  <span className={`font-mono font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
-                    {formatCurrency(acc.balance, acc.currency)}
-                  </span>
-                </div>
+                {/* Card Bottom: Balance & Last Transaction */}
+                <div className="flex justify-between items-end relative z-10 mt-auto pt-2 pl-1">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span className={`font-mono font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
+                      {formatCurrency(acc.balance, acc.currency)}
+                    </span>
+                    {acc.lastTransactionDate ? (
+                      <span className="text-[9px] text-secondary opacity-60 font-semibold tracking-wide uppercase mt-1 block">
+                        Dernière op. : {new Date(acc.lastTransactionDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-secondary opacity-30 font-semibold tracking-wide uppercase mt-1 block">
+                        Aucune opération
+                      </span>
+                    )}
+                  </div>
 
-                {/* Card footer logo */}
-                <div className="flex justify-end items-center relative z-10 mt-1 pb-0.5">
-                  {/* Mastercard-like generic overlapping circles */}
-                  <div className="flex -space-x-1.5 opacity-40 shrink-0">
-                    <div className="w-4 h-4 rounded-full bg-white/40" />
-                    <div className="w-4 h-4 rounded-full bg-white/20" />
+                  {/* Card footer logo */}
+                  <div className="flex -space-x-1.5 opacity-30 shrink-0 pb-1.5">
+                    <div className="w-4 h-4 rounded-full bg-secondary/30 border border-border/20" />
+                    <div className="w-4 h-4 rounded-full bg-secondary/15 border border-border/10" />
                   </div>
                 </div>
               </div>
@@ -580,12 +594,12 @@ const Home = () => {
           {/* "+ Ajouter un compte" Card at the end of the carousel */}
           <div
             onClick={handleOpenAdd}
-            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
+            className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/60 bg-surface-2/20 hover:border-copper/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2.5 select-none"
           >
-            <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
-              <span className="text-lg font-bold">+</span>
+            <div className="w-9 h-9 rounded-full bg-surface-2 border border-border/40 flex items-center justify-center text-secondary hover:text-copper hover:border-copper/30 transition-all shadow-sm">
+              <span className="text-sm font-bold text-secondary">+</span>
             </div>
-            <span className="text-xs font-bold text-secondary group-hover:text-accent transition-all">
+            <span className="text-xs font-bold text-secondary">
               Ajouter un compte
             </span>
           </div>
@@ -660,75 +674,28 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Raccourcis de Navigation Rapide ─────────────────────────────────── */}
+      {/* ── Raccourcis de Navigation Rapide (Carrousel horizontal) ─────────── */}
       <section className="mb-6">
-        <div className="grid grid-cols-5 gap-2">
-          {SHORTCUTS.slice(0, 4).map((item, idx) => {
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1 -mx-4 px-4">
+          {SHORTCUTS.map((item, idx) => {
             const Icon = item.icon;
             return (
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
+                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-1 rounded-[20px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
-                  <Icon size={16} />
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
+                  <Icon size={18} />
                 </div>
-                <span className="text-[10px] font-semibold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
+                <span className="text-[10px] font-bold text-secondary tracking-tight truncate w-full px-1 leading-none">
                   {item.label}
                 </span>
               </button>
             );
           })}
-          {/* Bouton Plus */}
-          <button
-            onClick={() => setIsShortcutsOpen(true)}
-            className="flex flex-col items-center justify-center py-2.5 px-1 rounded-[16px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-1.5 group select-none shadow-sm"
-          >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center border text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05] shrink-0 transition-transform duration-200 group-active:scale-90">
-              <MoreHorizontal size={16} />
-            </div>
-            <span className="text-[10px] font-semibold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
-              Plus
-            </span>
-          </button>
         </div>
       </section>
-
-      {/* Bottom Sheet pour les raccourcis additionnels */}
-      <BottomSheet
-        isOpen={isShortcutsOpen}
-        onClose={() => setIsShortcutsOpen(false)}
-      >
-        <div className="space-y-4">
-          <div className="pb-2 border-b border-border/40">
-            <h3 className="text-sm font-extrabold text-primary">Tous les services</h3>
-            <p className="text-xs text-muted">Accéder rapidement aux autres fonctionnalités</p>
-          </div>
-          <div className="grid grid-cols-4 gap-2.5 py-2">
-            {SHORTCUTS.slice(4).map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setIsShortcutsOpen(false);
-                    navigate(item.path);
-                  }}
-                  className="flex flex-col items-center justify-center py-3 px-1 rounded-[16px] bg-surface border border-border/40 active-spring-sm active:bg-white/[0.03] active:border-border/60 transition-all text-center gap-2 group select-none shadow-sm"
-                >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200 group-active:scale-90`}>
-                    <Icon size={18} />
-                  </div>
-                  <span className="text-[10px] font-semibold text-secondary tracking-tight truncate max-w-full leading-none group-active:text-primary">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </BottomSheet>
 
       {/* ── Alertes Budget ───────────────────────────────────────────────────── */}
       {budgetAlerts && budgetAlerts.length > 0 && (

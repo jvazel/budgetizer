@@ -1,10 +1,11 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { HeaderTitle, HeaderActions, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
-import { Plus, Clock, HelpCircle, Check, AlertCircle, RefreshCw, Trash2, Edit, CreditCard } from 'lucide-react';
+import BottomSheet from '../components/ui/BottomSheet';
+import { Plus, Clock, Check, RefreshCw, Trash2, Edit, CreditCard } from 'lucide-react';
 
 const ScheduledPage = () => {
   const { isScrolled } = useContext(HeaderPortalContext);
@@ -23,6 +24,9 @@ const ScheduledPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [deleteItemId, setDeleteItemId] = useState(null);
+  const [skipItemId, setSkipItemId] = useState(null);
+  const [customConfirmTxId, setCustomConfirmTxId] = useState(null);
+  const [customConfirmAmount, setCustomConfirmAmount] = useState('');
 
   const handleDeleteConfirm = async () => {
     if (deleteItemId) {
@@ -62,27 +66,39 @@ const ScheduledPage = () => {
     await confirmPending(id);
   };
 
-  const handleConfirmCustom = async (id, currentAmount) => {
-    const newAmountStr = window.prompt("Modifier le montant à confirmer (ou laisser vide pour conserver le montant prévu) :", currentAmount);
-    if (newAmountStr === null) return; // User cancelled prompt
-    const parsed = parseFloat(newAmountStr);
-    if (!isNaN(parsed) && parsed > 0) {
-      await confirmPending(id, parsed);
-    } else {
-      await confirmPending(id);
+  const handleSkipConfirm = async () => {
+    if (skipItemId) {
+      await skipPending(skipItemId);
+      setSkipItemId(null);
     }
   };
 
-  const handleSkip = async (id) => {
-    if (window.confirm("Ignorer cette occurrence et passer à la suivante ? Elle ne sera pas ajoutée à l'historique.")) {
-      await skipPending(id);
+  const handleSkip = (id) => {
+    setSkipItemId(id);
+  };
+
+  const handleConfirmCustomClick = (id, currentAmount) => {
+    setCustomConfirmTxId(id);
+    setCustomConfirmAmount(String(currentAmount));
+  };
+
+  const handleCustomConfirmSubmit = async (e) => {
+    e.preventDefault();
+    if (customConfirmTxId) {
+      const parsed = parseFloat(customConfirmAmount);
+      if (!isNaN(parsed) && parsed > 0) {
+        await confirmPending(customConfirmTxId, parsed);
+      } else {
+        await confirmPending(customConfirmTxId);
+      }
+      setCustomConfirmTxId(null);
     }
   };
 
   const actions = (
     <button 
       onClick={handleOpenAdd}
-      className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
+      className="p-1.5 bg-copper-dim hover:bg-copper/20 rounded-full text-copper transition-colors"
     >
       <Plus size={16} />
     </button>
@@ -183,7 +199,7 @@ const ScheduledPage = () => {
                         <Check size={14} /> Confirmer
                       </button>
                       <button 
-                        onClick={() => handleConfirmCustom(tx._id, tx.amount)}
+                        onClick={() => handleConfirmCustomClick(tx._id, tx.amount)}
                         className="px-3 bg-surface border border-border/40 text-primary py-2 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-border/20 transition-colors"
                       >
                         Modifier
@@ -220,7 +236,7 @@ const ScheduledPage = () => {
                 <p className="text-muted text-[10px] max-w-[200px] mb-3">Planifiez des factures récurrentes ou virements automatiques.</p>
                 <button 
                   onClick={handleOpenAdd}
-                  className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
+                  className="py-2.5 px-4 bg-copper text-white font-bold text-xs rounded-xl shadow-md shadow-copper/20 active:scale-95 transition-all"
                 >
                   Ajouter une planification
                 </button>
@@ -320,22 +336,23 @@ const ScheduledPage = () => {
         <>
           {/* Subscription Total Monthly / Yearly Cost Card */}
           <section className="mb-6">
-            <div className="bg-gradient-to-br from-accent to-emerald-600 p-6 rounded-[24px] text-white shadow-xl relative overflow-hidden">
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
+            <div className="bg-gradient-to-br from-[#0b152d] to-[#070e20] border border-border/40 p-6 rounded-[24px] text-primary shadow-xl relative overflow-hidden">
+              <div className="glass-reflection opacity-20" />
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-copper/5 rounded-full blur-xl" />
               
               <div className="flex justify-between items-start mb-4">
-                <span className="text-xs uppercase tracking-wider font-extrabold text-white/80 flex items-center gap-1.5">
+                <span className="text-xs uppercase tracking-wider font-extrabold text-secondary flex items-center gap-1.5">
                   <CreditCard size={14} /> Total abonnements
                 </span>
-                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                <span className="text-xs bg-copper-dim text-copper border border-copper/20 px-2.5 py-0.5 rounded-full font-bold">
                   {activeSubscriptions.length} actifs
                 </span>
               </div>
 
-              <h2 className="font-mono text-3xl font-extrabold mb-1">
-                {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-white/85">/ mois</span>
+              <h2 className="font-mono text-3xl font-black text-primary mb-1 font-premium-numbers">
+                {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-secondary">/ mois</span>
               </h2>
-              <p className="text-xs text-white/80 font-medium">
+              <p className="text-xs text-muted font-medium">
                 Soit {formatCurrency(totalAnnualCost)} par an
               </p>
             </div>
@@ -360,7 +377,7 @@ const ScheduledPage = () => {
                 <p className="text-muted text-[10px] max-w-[200px] mb-3">Ajoutez un abonnement pour suivre vos coûts récurrents.</p>
                 <button 
                   onClick={handleOpenAdd}
-                  className="py-2.5 px-4 bg-accent text-white font-bold text-xs rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all"
+                  className="py-2.5 px-4 bg-copper text-white font-bold text-xs rounded-xl shadow-md shadow-copper/20 active:scale-95 transition-all"
                 >
                   Ajouter un abonnement
                 </button>
@@ -444,6 +461,65 @@ const ScheduledPage = () => {
           </p>
         </div>
       </ConfirmModal>
+
+      <ConfirmModal
+        isOpen={!!skipItemId}
+        onClose={() => setSkipItemId(null)}
+        onConfirm={handleSkipConfirm}
+        title="Ignorer l'occurrence"
+        confirmText="Ignorer"
+        type="warning"
+      >
+        <div className="text-xs text-secondary leading-relaxed space-y-2">
+          <p>
+            Voulez-vous ignorer cette occurrence et passer directement à la suivante ?
+          </p>
+          <p className="font-semibold text-warning">
+            Note : Elle ne sera pas ajoutée à l'historique des transactions.
+          </p>
+        </div>
+      </ConfirmModal>
+
+      <BottomSheet
+        isOpen={!!customConfirmTxId}
+        onClose={() => setCustomConfirmTxId(null)}
+      >
+        <form onSubmit={handleCustomConfirmSubmit} className="space-y-4">
+          <div className="pb-2 border-b border-border/40">
+            <h3 className="text-sm font-extrabold text-primary">Confirmer avec modification</h3>
+            <p className="text-[11px] text-muted mt-0.5">Saisissez le montant réel débité pour cette transaction</p>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-secondary uppercase tracking-wider">Montant (€)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={customConfirmAmount}
+              onChange={(e) => setCustomConfirmAmount(e.target.value)}
+              className="w-full h-[52px] px-4 bg-surface border border-border rounded-2xl text-primary font-bold text-lg focus:outline-none focus:border-copper transition-colors"
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setCustomConfirmTxId(null)}
+              className="flex-1 py-3 bg-surface border border-border/40 text-secondary hover:text-primary rounded-xl text-xs font-bold active:scale-95 transition-all"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-3 bg-copper text-white rounded-xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-copper/10"
+            >
+              Confirmer
+            </button>
+          </div>
+        </form>
+      </BottomSheet>
     </>
   );
 };

@@ -12,13 +12,14 @@ const Button = ({
   const baseStyles = 'flex items-center justify-center font-medium rounded-2xl transition-all duration-200';
   
   const variants = {
-    primary: 'bg-accent text-white hover:opacity-95 active:scale-[0.98] shadow-sm',
+    primary: 'bg-copper text-white hover:bg-copper-hover active:scale-[0.98] shadow-sm',
     secondary: 'bg-surface-2 text-primary border border-border/40 hover:bg-elevated hover:border-border/80 active:scale-[0.98]',
     danger: 'bg-danger text-white hover:opacity-95 active:scale-[0.98]',
     info: 'bg-info text-white hover:opacity-95 active:scale-[0.98] shadow-sm',
     ghost: 'bg-transparent text-primary hover:bg-surface-2 active:opacity-80',
     icon: 'p-3 bg-surface-2 text-primary hover:bg-elevated rounded-full active:scale-95',
     copper: 'bg-copper text-white hover:bg-copper-hover active:scale-[0.98] shadow-sm',
+    accent: 'bg-accent text-white hover:opacity-95 active:scale-[0.98] shadow-sm',
   };
 
   const sizes = {

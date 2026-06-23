@@ -218,18 +218,46 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
     return `${activePending.length} charge${activePending.length > 1 ? 's prévues' : ' prévue'} d'ici ta paye — tout est sous contrôle. ✓`;
   }, [nextPaycheckDate, hasRiskOfNegative, isComfortable, pendingRecurringExpenses, excludedIds]);
 
-  const cardGradientClass = useMemo(() => {
-    if (hasRiskOfNegative) return 'bg-gradient-to-br from-red-500/10 via-red-500/5 to-rose-500/10 dark:from-[#1C050A] dark:via-[#0F0204] dark:to-[#250308] border border-danger/30 shadow-[0_12px_30px_-5px_rgba(244,63,94,0.15)] text-primary';
-    if (!isComfortable) return 'bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-warning/10 dark:from-[#1C0F02] dark:via-[#0F0701] dark:to-[#251203] border border-warning/30 shadow-[0_12px_30px_-5px_rgba(245,158,11,0.15)] text-primary';
-    return 'bg-gradient-to-br from-info/10 via-info/5 to-indigo-500/10 dark:from-[#03223F] dark:via-[#0A2A52] dark:to-[#1E3A8A] border border-border/40 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(10,26,47,0.15)] dark:shadow-[0_12px_30px_-5px_rgba(10,26,47,0.35)] text-primary';
+  const cardTheme = useMemo(() => {
+    if (hasRiskOfNegative) {
+      return {
+        cardClass: 'bg-gradient-to-br from-[#fff5f5] via-[#ffebeb] to-[#fed7d7] border-red-200/60 dark:from-[#2a0e12] dark:via-[#19080b] dark:to-[#0f0406] dark:border-danger/30 shadow-[0_12px_36px_-6px_rgba(244,63,94,0.12)] text-primary',
+        textTitle: 'text-red-800/90 dark:text-red-300',
+        textValue: 'text-red-950 dark:text-white',
+        textSubLabel: 'text-red-700/80 dark:text-red-400/80',
+        textSubValue: 'text-red-950 dark:text-red-200',
+        dividerClass: 'bg-red-200/40 dark:bg-rose-500/10',
+        innerBoxClass: 'bg-red-100/30 border border-red-200/20 dark:bg-rose-950/15 dark:border-rose-900/10',
+      };
+    }
+    if (!isComfortable) {
+      return {
+        cardClass: 'bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#fde68a] border-amber-200/60 dark:from-[#2a1b0e] dark:via-[#190f08] dark:to-[#0f0905] dark:border-warning/30 shadow-[0_12px_36px_-6px_rgba(245,158,11,0.12)] text-primary',
+        textTitle: 'text-amber-800/90 dark:text-amber-300',
+        textValue: 'text-amber-950 dark:text-white',
+        textSubLabel: 'text-amber-700/80 dark:text-amber-400/80',
+        textSubValue: 'text-amber-950 dark:text-amber-200',
+        dividerClass: 'bg-amber-200/40 dark:bg-amber-500/10',
+        innerBoxClass: 'bg-amber-100/30 border border-amber-200/20 dark:bg-amber-950/15 dark:border-amber-900/10',
+      };
+    }
+    return {
+      cardClass: 'bg-gradient-to-br from-[#f0f4ff] via-[#e1e7ff] to-[#d0d7ff] border-indigo-200/60 dark:from-[#091a3c] dark:via-[#040c20] dark:to-[#020510] dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(10,26,47,0.16)] text-primary',
+      textTitle: 'text-indigo-800/90 dark:text-blue-300',
+      textValue: 'text-indigo-950 dark:text-white',
+      textSubLabel: 'text-indigo-700/80 dark:text-blue-400/80',
+      textSubValue: 'text-indigo-950 dark:text-blue-200',
+      dividerClass: 'bg-indigo-200/40 dark:bg-blue-500/10',
+      innerBoxClass: 'bg-indigo-100/30 border border-indigo-200/20 dark:bg-blue-950/15 dark:border-blue-900/10',
+    };
   }, [hasRiskOfNegative, isComfortable]);
 
   return (
     <section className="mb-6 mt-4">
-      <div className={`relative overflow-hidden rounded-[24px] p-5 space-y-4 transition-all duration-300 active-card-feedback ${cardGradientClass}`}>
+      <div className={`relative overflow-hidden rounded-[24px] p-5 space-y-4 transition-all duration-300 active-card-feedback border ${cardTheme.cardClass}`}>
 
         {/* Absolute Background Projection Chart Wave */}
-        <div className="absolute inset-x-0 bottom-0 h-[100px] opacity-[0.14] pointer-events-none select-none z-0">
+        <div className="absolute inset-x-0 bottom-0 h-[100px] opacity-[0.06] pointer-events-none select-none z-0">
           {projectionData.length > 0 && (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={projectionData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
@@ -265,51 +293,57 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         <div className="absolute -right-16 -bottom-16 w-36 h-36 rounded-full blur-[40px] pointer-events-none bg-emerald-400/10 z-0" />
         <div className="absolute -left-16 -top-16 w-36 h-36 bg-blue-400/15 rounded-full blur-[40px] pointer-events-none z-0" />
 
-        {/* Header Title & Config button */}
+        {/* Header Title & Config trigger */}
         <div className="flex justify-between items-center relative z-10">
-          <div className="flex items-center gap-1.5">
-            <p className="text-[10px] text-secondary font-extrabold tracking-wider uppercase">Solde disponible</p>
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-live" title="Données synchronisées en temps réel" />
-          </div>
           <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active-spring-sm shrink-0 ${
-              showSettings
-                ? 'bg-copper/20 border-copper/30 text-copper'
-                : 'bg-surface-2/65 border border-border/40 text-secondary hover:text-primary hover:bg-surface-2/80 dark:bg-white/10 dark:border-white/10 dark:text-blue-200 dark:hover:text-white'
+            onClick={() => {
+              triggerHaptic('light');
+              setShowSettings(!showSettings);
+            }}
+            className={`flex items-center gap-1.5 active:scale-98 active-spring-sm transition-all px-2.5 py-1 rounded-xl border ${
+              showSettings 
+                ? 'bg-copper/20 border-copper/30 text-copper font-bold' 
+                : 'bg-white/40 border-white/20 text-indigo-900/80 dark:bg-white/5 dark:border-white/5 dark:text-blue-200'
             }`}
-            aria-label="Configurer le jour de paye"
+            title="Configurer le solde disponible"
           >
-            <Settings size={14} />
+            <span className={`text-[10px] font-extrabold tracking-wider uppercase ${cardTheme.textTitle}`}>Solde disponible</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-live" />
           </button>
         </div>
 
         {/* Level 1: Balance Amount */}
         <div className="relative z-10 flex flex-col items-center justify-center py-1 text-center select-none">
-          <h2 className="text-5xl font-black font-premium-numbers tracking-tight text-primary dark:text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+          <h2 className={`text-5xl font-black font-premium-numbers tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.06)] ${cardTheme.textValue}`}>
             {formatCurrency(floorBalance)}
           </h2>
         </div>
 
         {/* Level 2: Sub-balances and contexts (dimmed grey slate) */}
-        <div className="relative z-10 flex items-center justify-center gap-2 flex-wrap text-center pb-2 text-[11px] text-secondary">
+        <div className={`relative z-10 flex items-center justify-center gap-2 flex-wrap text-center pb-2 text-[11px] font-semibold ${cardTheme.textSubLabel}`}>
           <span>
             Bancaire :&nbsp;
-            <span className="font-semibold text-primary font-premium-numbers">{formatCurrency(actualBalance)}</span>
+            <span className={`font-bold font-premium-numbers ${cardTheme.textSubValue}`}>{formatCurrency(actualBalance)}</span>
           </span>
           {totalPendingExpenses > 0 && (
             <>
               <span className="opacity-40">•</span>
-              <span className="font-semibold text-primary font-premium-numbers">
-                −{formatCurrency(totalPendingExpenses)} réservés
+              <span>
+                Réservés :&nbsp;
+                <span className={`font-bold font-premium-numbers ${cardTheme.textSubValue}`}>
+                  −{formatCurrency(totalPendingExpenses)}
+                </span>
               </span>
             </>
           )}
           {creditBalance !== 0 && (
             <>
               <span className="opacity-40">•</span>
-              <span className="font-semibold text-primary font-premium-numbers">
-                {formatCurrency(Math.abs(creditBalance))} en cartes
+              <span>
+                En cartes :&nbsp;
+                <span className={`font-bold font-premium-numbers ${cardTheme.textSubValue}`}>
+                  {formatCurrency(Math.abs(creditBalance))}
+                </span>
               </span>
             </>
           )}
@@ -429,13 +463,15 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         )}
 
         {/* Level 3: Visually detached sub-block containing IA insights & Deadlines list */}
-        <div className="relative z-10 bg-surface-2/40 border border-border/20 rounded-2xl p-3.5 space-y-3.5 shadow-inner">
+        <div className={`relative z-10 rounded-2xl p-3.5 space-y-3.5 shadow-inner ${cardTheme.innerBoxClass}`}>
           
           {/* Contextual micro-phrase */}
           <div className={`flex flex-col gap-2 p-3.5 rounded-2xl border transition-colors ${
-            hasRiskOfNegative || !isComfortable
-              ? 'bg-rose-500/10 border-rose-500/15 text-rose-600 dark:text-rose-200'
-              : 'bg-surface/50 border-border/20 text-primary'
+            hasRiskOfNegative
+              ? 'bg-red-500/10 border-red-500/15 text-red-950 dark:text-red-200'
+              : !isComfortable
+                ? 'bg-amber-500/10 border-amber-500/15 text-amber-950 dark:text-amber-200'
+                : 'bg-white/60 border-indigo-200/30 text-indigo-950 dark:bg-black/30 dark:border-white/5 dark:text-blue-100'
           }`}>
             <div className="flex items-center justify-between">
               {hasRiskOfNegative || !isComfortable ? (
@@ -448,12 +484,18 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             </div>
             <p className="text-[11px] font-semibold leading-relaxed">{contextPhrase}</p>
           </div>
-
+ 
           {/* Accordion — Échéances avant la paye */}
           <div className="border-t border-border/10 pt-3">
             <button
               onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-              className="w-full flex justify-between items-center px-3 py-2 text-xs font-bold text-primary focus:outline-none rounded-xl bg-surface/50 border border-border/20 hover:bg-surface-2 active:bg-surface-2 active-spring-sm transition-all"
+              className={`w-full flex justify-between items-center px-3 py-2 text-xs font-bold focus:outline-none rounded-xl border transition-all active-spring-sm ${
+                hasRiskOfNegative
+                  ? 'bg-white/70 border-red-200/40 text-red-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
+                  : !isComfortable
+                    ? 'bg-white/70 border-amber-200/40 text-amber-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
+                    : 'bg-white/70 border-indigo-200/40 text-indigo-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
+              }`}
               aria-expanded={isAccordionExpanded}
             >
               <span className="flex items-center gap-2">
@@ -468,7 +510,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                 <ChevronDown size={16} className="text-secondary" />
               )}
             </button>
-
+ 
             <AnimatePresence>
               {isAccordionExpanded && (
                 <motion.div
@@ -488,7 +530,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                         const isExcluded = excludedIds.includes(tx._id);
                         const catColor = tx.categoryId?.color || '#a1a1aa';
                         const catIcon = tx.categoryId?.icon || '🔁';
-
+ 
                         return (
                           <div
                             key={tx._id}

@@ -77,10 +77,10 @@ graph TD
 * **Geste interactif (Snap Scroll)** : Faites glisser horizontalement les cartes avec votre doigt. Elles se recentrent automatiquement (snap scroll).
 * **Codes visuels des cartes** :
   * Les soldes positifs s'affichent dans une police de chiffres tabulaires à fort contraste (`.font-premium-numbers`). S'ils sont négatifs, ils passent automatiquement en rouge vif.
-  * Chaque carte bénéficie d'un style glassmorphic brillant (`.bg-surface-glass` et `.backdrop-blur-md`) avec des reflets et des bordures de couleur semi-transparentes assorties au compte.
-  * Un **reflet satiné de verre (`.glass-reflection`)** diagonal et une **puce électronique dorée virtuelle** (imitant une vraie carte bancaire physique) ornent le devant de chaque carte pour renforcer l'immersion.
-  * Chaque carte arbore une icône adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements).
-  * Un voyant vert clignotant animé (`.animate-pulse-live`) accompagné du label `Live` en haut à droite indique la date et l'état de synchronisation en temps réel du compte.
+  * Chaque carte utilise désormais un style solide à dégradé métallique premium (`var(--bg-surface)` vers `var(--bg-surface-2)`) avec une fine bordure colorée assortie au compte, une barre latérale colorée épurée sur le flanc gauche et un halo lumineux de couleur d'accentuation en haut à droite.
+  * Une **puce électronique dorée virtuelle** (imitant une vraie carte bancaire physique) orne le devant de chaque carte pour renforcer l'immersion.
+  * Chaque carte arbore la date de la dernière opération enregistrée sous le solde ("Dernière op. : DD MMM" ou "Aucune opération").
+  * Chaque carte arbore une icône adaptée à son type (ex. : 💼 pour un compte courant, 🐷 pour l'épargne, 📈 pour les investissements) avec un voyant vert clignotant discret (`.animate-pulse-live` sur l'icône).
 * **Gestes interactifs sur les cartes** :
   * **Tapez sur une carte standard** (courant, épargne, espèces) ou de crédit pour ouvrir son détail. Toutes les cartes intègrent une **animation tactile de rebond élastique (`.active-spring-sm`)** simulée au toucher.
   * **Tapez sur une carte de crédit (bordeaux / rouge foncé)** pour être automatiquement redirigé vers sa page d'analyse de prêt dédiée.
