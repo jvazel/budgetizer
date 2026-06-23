@@ -46,16 +46,20 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base flex flex-col p-6 max-w-md mx-auto">
-      <div className="flex-1 flex flex-col justify-center py-8">
+    <div className="min-h-screen bg-base flex flex-col p-6 max-w-md mx-auto relative overflow-hidden">
+      {/* Ambient Background Glow Orbs */}
+      <div className="bg-glow-orb glow-orb-indigo w-[300px] h-[300px] -top-20 -left-20" />
+      <div className="bg-glow-orb glow-orb-amber w-[250px] h-[250px] top-[40%] -right-20" />
+
+      <div className="flex-1 flex flex-col justify-center py-8 relative z-10">
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(74,222,128,0.15)] bg-surface border border-border/30">
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(217,119,6,0.25)] bg-surface border border-border/30">
             <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
           </div>
         </div>
         
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-primary mb-2">Créer un compte 🚀</h1>
+          <h1 className="text-3xl font-extrabold text-primary mb-2 tracking-tight">Créer un compte 🚀</h1>
           <p className="text-secondary">Prenez le contrôle de vos finances</p>
         </div>
 

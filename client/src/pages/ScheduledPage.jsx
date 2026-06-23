@@ -336,7 +336,7 @@ const ScheduledPage = () => {
         <>
           {/* Subscription Total Monthly / Yearly Cost Card */}
           <section className="mb-6">
-            <div className="bg-gradient-to-br from-[#0b152d] to-[#070e20] border border-border/40 p-6 rounded-[24px] text-primary shadow-xl relative overflow-hidden">
+            <div className="bg-premium-gradient p-6 rounded-[24px] text-primary relative overflow-hidden">
               <div className="glass-reflection opacity-20" />
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-copper/5 rounded-full blur-xl" />
               

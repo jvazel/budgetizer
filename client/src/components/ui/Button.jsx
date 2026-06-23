@@ -1,4 +1,5 @@
 import React from 'react';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 const Button = ({
   children,
@@ -36,10 +37,17 @@ const Button = ({
     ${className}
   `;
 
+  const handleClick = (e) => {
+    triggerHaptic('light');
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <button
       type={type}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={classes}
     >

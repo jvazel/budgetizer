@@ -682,7 +682,7 @@ const Home = () => {
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 rounded-[20px] bg-surface-2 border border-white/15 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
+                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 rounded-[20px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
                   <Icon size={18} />

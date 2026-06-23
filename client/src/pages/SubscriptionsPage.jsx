@@ -89,7 +89,7 @@ const SubscriptionsPage = () => {
       
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
-        <div className="bg-gradient-to-br from-[#0b152d] to-[#070e20] border border-border/40 p-6 rounded-[24px] text-primary shadow-xl relative overflow-hidden">
+        <div className="bg-premium-gradient p-6 rounded-[24px] text-primary relative overflow-hidden">
           {/* Glass reflection shine overlay */}
           <div className="glass-reflection opacity-20" />
           {/* Subtle light bubble background */}

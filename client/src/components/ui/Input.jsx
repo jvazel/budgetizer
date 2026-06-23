@@ -52,7 +52,7 @@ const Input = ({
           required={required}
           className={`
             w-full h-[52px] bg-surface-2 border border-border rounded-2xl
-            text-primary placeholder:text-muted focus:outline-none focus:border-accent
+            text-primary placeholder:text-muted focus:outline-none focus:border-copper
             transition-colors font-semibold text-sm
             ${Icon ? 'pl-12' : 'pl-4'}
             ${RightIcon || suffix ? 'pr-12' : 'pr-4'}
