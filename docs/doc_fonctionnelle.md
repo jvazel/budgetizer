@@ -214,6 +214,13 @@ Les abonnements (Netflix, électricité, salle de sport) sont des cas particulie
 - Un écran dédié **Abonnements** liste l'ensemble des services récurrents actifs.
 - L'application calcule le **coût cumulé mensuel** et **annuel** de tous les abonnements pour aider l'utilisateur à prendre conscience de sa charge fixe récurrente.
 
+### 8.3 Modèles d'Abonnements Rapides (Templates)
+Lors de la création d'une nouvelle planification, un carrousel de **modèles rapides** s'affiche en haut du formulaire pour pré-remplir automatiquement les champs courants :
+- **Modèles populaires par défaut** : Un jeu de modèles préconfigurés (Netflix, Spotify, Amazon Prime, etc.) est disponible immédiatement sans configuration.
+- **Création de modèles personnalisés** : L'utilisateur peut sauvegarder ses propres modèles en renseignant le nom, le montant et la catégorie de la planification, puis en cliquant sur **"Sauver modèle"**. Le modèle s'ajoute instantanément au carrousel et est persisté dans le `localStorage` sous la clé `budgetizer_subscription_templates`.
+- **Application d'un modèle** : Un simple clic sur un bouton du carrousel pré-remplit les champs du formulaire (description, montant, catégorie) pour accélérer la saisie.
+- **Suppression d'un modèle** : Un **appui long (> 800 ms)** sur un bouton de modèle personnalisé déclenche une boîte de dialogue de confirmation. Après validation, le modèle est retiré du carrousel et supprimé du `localStorage`.
+
 ---
 
 ## 9. Graphiques et Analyses Prévisionnelles
@@ -459,11 +466,18 @@ La page **Rapports d'Activité** permet à l'utilisateur de configurer, de gén�
 ### 18.1 Configuration de l'Exportation
 L'utilisateur peut définir :
 1. **La période d'analyse** : Saisie d'une date de début et d'une date de fin personnalisées.
-2. **Les sections à inclure** dans le PDF via 4 cases à cocher :
+2. **Les sections à inclure** dans le rapport via 4 cases à cocher :
    - *Graphique Cascade (Waterfall)* : Visualisation des flux financiers.
    - *Charges Fixes vs Variables* : Analyse des charges incompressibles vs dépenses discrétionnaires.
    - *Prévisions à 30 jours* : Projection stochastique de l'évolution de la trésorerie.
    - *Journal des transactions* : Liste exhaustive de toutes les écritures de la période (à cocher facultativement).
+
+### 18.1bis Affichage Interactif du Rapport (Dashboard In-App)
+En plus de l'exportation PDF, l'utilisateur peut afficher le rapport **directement dans l'application** sans générer de fichier :
+- **Bouton "Analyser et afficher le rapport"** : Lance le calcul des métriques financières (revenus, dépenses, épargne, catégories, anomalies) et affiche le **Diagnostic Global** sous forme de dashboard interactif à l'écran.
+- **Navigation retour** : Un bouton **"Filtres"** dans l'en-tête du rapport affiché permet de revenir à l'écran de paramétrage pour modifier la période ou les filtres sans recharger la page.
+- **Journal des transactions** : Si la case *Journal des transactions* a été cochée dans les paramètres, la liste complète des flux de la période (avec catégorie et compte) est affichée dans le dashboard interactif.
+- **Aucun PDF généré** : L'affichage interactif et l'export PDF sont deux actions distinctes. L'affichage du rapport en mode dashboard ne déclenche pas la bibliothèque `html2pdf`.
 
 ### 18.2 Contenu et Structure du Rapport Premium (Format A4)
 Le rapport PDF est découpé en pages A4 bien distinctes, reprenant le code visuel de l'application :

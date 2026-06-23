@@ -12,7 +12,7 @@ Ce guide adopte une approche **chronologique et pédagogique** pensée pour un n
 2. [Découverte du Tableau de Bord (Dashboard)](#2-découverte-du-tableau-de-bord-dashboard)
 3. [Mise en place de votre structure financière (Comptes, Catégories, Tags)](#3-mise-en-place-de-votre-structure-financière-comptes-catégories-tags)
 4. [Saisie et suivi des mouvements au quotidien](#4-saisie-et-suivi-des-mouvements-au-quotidien)
-5. [Planification : Budgets (Enveloppes) et Abonnements](#5-planification--budgets-enveloppes-et-abonnements)
+5. [Planification : Budgets (Enveloppes) et Abonnements](#5-planification--budgets-enveloppes-et-abonnements) *(incluant 5.2bis Modèles d'Abonnements Rapides)*
 6. [Épargne et Réalisation de Projets](#6-épargne-et-réalisation-de-projets)
 7. [Analyses Graphiques Avancées](#7-analyses-graphiques-avancées)
 8. [Pilotage Proactif : Rapports Mensuels & Tachymètre de Vélocité](#8-pilotage-proactif--rapports-mensuels--tachymètre-de-vélocité)
@@ -260,6 +260,15 @@ Pour anticiper vos dépenses et revenus récurrents (loyer, abonnements, salaire
   * **Auto-confirmer = Activé** : Dès que l'échéance arrive, la transaction est enregistrée en historique et vos soldes sont ajustés automatiquement.
   * **Auto-confirmer = Désactivé** : La transaction apparaît sous le statut **"À confirmer"**. Vous devez valider manuellement son prélèvement effectif en ajustant le montant si nécessaire, ou choisir de l'ignorer.
 
+### 5.2bis Modèles d'Abonnements Rapides (Templates)
+Pour accélérer la saisie de vos abonnements courants, Budgetizer propose un carrousel de **modèles rapides** en haut du formulaire de planification :
+* **Utiliser un modèle prédéfini** : Cliquez simplement sur un bouton du carrousel (ex. : *Netflix*, *Spotify*, *Amazon Prime*). Les champs du formulaire (description, montant, catégorie) sont pré-remplis instantanément.
+* **Créer votre propre modèle** :
+  1. Renseignez le nom, le montant et la catégorie de votre abonnement dans le formulaire.
+  2. Cliquez sur le bouton **"Sauver modèle"** (icône de sauvegarde en haut du formulaire).
+  3. Votre modèle personnel apparaît immédiatement dans le carrousel et sera disponible lors de vos prochaines créations de planification (mémorisé dans votre navigateur).
+* **Supprimer un modèle** : **Maintenez votre doigt appuyé (appui long)** sur le bouton du modèle personnalisé pendant plus de 800 ms. Une boîte de dialogue de confirmation s'affiche. Cliquez sur **"Supprimer"** pour retirer définitivement ce modèle de votre carrousel.
+
 ### 5.3 Suivi des Abonnements (Subscriptions)
 Le panneau **Abonnements** regroupe tous vos contrats et charges récurrentes actives (Netflix, électricité, salle de sport).
 * **Indicateur de charge fixe** : Il affiche en haut de page le cumul de vos abonnements traduits en **coût mensuel total** et **coût annuel total** pour vous faire prendre conscience du poids de vos charges contractuelles. Le panneau de totalisation bénéficie d'un **reflet satiné brillant (`.glass-reflection`)** qui le met en relief.
@@ -382,9 +391,13 @@ Pour vous assurer de garder le contrôle total de vos données financières pers
 * **Exporter** : Dans les paramètres, choisissez le format **CSV** ou **JSON** pour télécharger l'intégralité de vos écritures bancaires et paramétrages sur votre appareil.
 * **Importer** : Glissez-déposez ou sélectionnez un fichier CSV de transactions pour peupler instantanément vos comptes et graphiques.
 
-### 9.2 Génération de Rapports PDF Premium 📊📄
+### 9.2 Génération de Rapports PDF Premium 📈📄
 Depuis l'onglet **Rapports**, configurez et exportez des rapports d'activité au format PDF A4 haute définition, parfaits pour l'impression ou l'archivage.
 * **Options de personnalisation** : Cochez ou décochez les modules à inclure (graphique en cascade, ratio fixes vs variables, prévisions à 30 jours, journal complet des transactions).
+* **Affichage interactif à l'écran** : Cliquez sur le bouton **"Analyser et afficher le rapport"** pour visualiser le rapport directement dans l'application, sans générer de PDF :
+  * Le **Diagnostic Global** s'affiche : revenus, dépenses, taux d'épargne, répartition par catégories et anomalies détectées.
+  * Si la case *Journal des transactions* est cochée, la liste intégrale de tous vos flux de la période apparaît en dessous.
+  * Le bouton **"Filtres"** en haut du rapport vous ramène à l'écran de paramétrage pour affiner votre période sans recharger la page.
 * **Mise en page Premium (A4)** :
   * **Page de garde automatique** intégrant le logo officiel en Base64 pour éviter les erreurs d'affichage, vos métadonnées personnelles (nom, volume d'écritures) et les dates d'analyse.
   * **Priorité aux notes personnelles** : Les tableaux du PDF privilégient vos notes personnelles et explicites (ex. : *"Restaurant avec Marie"*) plutôt que la catégorie brute ou l'intitulé technique.

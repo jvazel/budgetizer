@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
+import { useState, useContext } from 'react';
+import { HeaderTitle, HeaderActions, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { Plus, CreditCard, Edit, Trash2 } from 'lucide-react';
 
 const SubscriptionsPage = () => {
+  const { isScrolled } = useContext(HeaderPortalContext);
   const { 
     scheduled, 
     loading, 
@@ -83,10 +84,20 @@ const SubscriptionsPage = () => {
 
   return (
     <>
-      <HeaderTitle>Abonnements</HeaderTitle>
+      <HeaderTitle collapsible={true}>Abonnements</HeaderTitle>
       <HeaderBackButton to="/scheduled" />
       <HeaderActions>{actions}</HeaderActions>
       
+      {/* Large Collapsible Header Title on Page */}
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Abonnements</h1>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Suivi de vos échéances et coûts de souscriptions récurrentes.</p>
+      </div>
+
       {/* 1. Summary Card */}
       <section className="mb-8 mt-2">
         <div className="bg-premium-gradient p-6 rounded-[24px] text-primary relative overflow-hidden">

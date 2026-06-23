@@ -1,19 +1,22 @@
 import { useState, useEffect, useContext } from 'react';
-import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 import { AuthContext } from '../context/AuthContext';
 import { useAccounts } from '../hooks/useAccounts';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { 
-  Download, ListFilter
+  Download, ListFilter, CalendarDays, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, 
-  BarChart, Bar, Cell, PieChart, Pie
+  BarChart, Bar, Cell, PieChart, Pie, ResponsiveContainer, Tooltip
 } from 'recharts';
 
 const ReportsPage = () => {
   const { user } = useContext(AuthContext);
+  const { isScrolled } = useContext(HeaderPortalContext);
   const { accounts, totalBalance: currentTotalBalance } = useAccounts();
   
   // Helper format Currency
@@ -38,6 +41,7 @@ const ReportsPage = () => {
   const [endDate, setEndDate] = useState(getTodayStr());
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [showParams, setShowParams] = useState(true);
   const [logoBase64, setLogoBase64] = useState('');
 
   // PDF Export options
@@ -452,6 +456,7 @@ const ReportsPage = () => {
       logDebug("Prévisions à 30 jours calculées.");
 
       setHasGenerated(true);
+      setShowParams(false);
       toast.dismiss(toastId);
       logDebug("Génération des données du rapport terminée avec succès.");
       return true;
@@ -582,6 +587,11 @@ const ReportsPage = () => {
     }
   };
 
+  const handleShowReportOnly = async () => {
+    logDebug("Affichage du rapport à l'écran demandé...");
+    await handleGenerateReport();
+  };
+
   const handleExportProcess = async () => {
     logDebug("Début du processus d'exportation...");
     try {
@@ -602,8 +612,18 @@ const ReportsPage = () => {
 
   return (
     <>
-      <HeaderTitle>Rapports d'Activité</HeaderTitle>
+      <HeaderTitle collapsible={true}>Rapports d'Activité</HeaderTitle>
       <HeaderBackButton to="/" />
+      
+      {/* Large Collapsible Header Title on Page */}
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left print:hidden ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Rapports d'Activité</h1>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Générez et exportez des bilans financiers au format PDF.</p>
+      </div>
       {/* CSS overrides specifically for printing */}
       <style>{`
         /* Force light theme variables and font styles on the print container */
@@ -684,105 +704,487 @@ const ReportsPage = () => {
 
       <div className="space-y-6 mb-6">
         
-        {/* Parameters Form - Hidden during printing */}
-        <section className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm print:hidden">
-          <div className="flex items-center gap-2 mb-4">
-            <ListFilter size={18} className="text-accent" />
-            <h3 className="text-sm font-bold text-primary">Paramètres du rapport</h3>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-extrabold text-secondary tracking-wider block">Date de début</label>
-              <div className="relative">
-                <input 
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-surface border border-border/40 p-3 rounded-xl text-xs font-bold text-primary focus:border-accent outline-none"
-                />
-              </div>
+        {/* Collapsed Parameters - Shown when dashboard is active */}
+        {!showParams && hasGenerated && !loading && (
+          <div className="bg-surface-2 p-4 rounded-[28px] border border-border/40 shadow-sm print:hidden flex items-center justify-between gap-4 transition-all duration-200">
+            <div className="space-y-1">
+              <span className="text-[10px] text-muted font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                <CalendarDays size={12} className="text-copper" /> Période d'analyse
+              </span>
+              <p className="text-xs font-bold text-primary">
+                Du {startDate.split('-').reverse().join('/')} au {endDate.split('-').reverse().join('/')}
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-extrabold text-secondary tracking-wider block">Date de fin</label>
-              <input 
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowParams(true)}
+                variant="secondary"
+                className="!h-9 !px-3.5 !rounded-xl text-[11px] font-extrabold uppercase tracking-wide border border-border/40 hover:bg-border/20 text-primary"
+              >
+                Filtres
+              </Button>
+              <Button
+                onClick={handleDownloadPDF}
+                variant="copper"
+                className="!h-9 !px-3.5 !rounded-xl text-[11px] font-extrabold uppercase tracking-wide"
+              >
+                <Download size={12} className="mr-1" /> PDF
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Parameters Form - Hidden during printing, shown only when active */}
+        {(showParams || !hasGenerated) && (
+          <section className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm print:hidden">
+            <div className="flex items-center gap-2 mb-4">
+              <ListFilter size={18} className="text-copper" />
+              <h3 className="text-sm font-bold text-primary">Paramètres du rapport</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Input
                 type="date"
+                label="Date de début"
+                id="startDate-input"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                uppercaseLabel={true}
+              />
+              <Input
+                type="date"
+                label="Date de fin"
+                id="endDate-input"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-surface border border-border/40 p-3 rounded-xl text-xs font-bold text-primary focus:border-accent outline-none"
+                required
+                uppercaseLabel={true}
               />
             </div>
-          </div>
 
-          {/* Options de contenu du rapport */}
-          <div className="mt-6 space-y-3 pt-4 border-t border-border/20">
-            <span className="text-[10px] uppercase font-extrabold text-secondary tracking-wider block">Contenu du rapport PDF</span>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
-                <input 
-                  type="checkbox"
-                  checked={includeWaterfall}
-                  onChange={(e) => setIncludeWaterfall(e.target.checked)}
-                  className="rounded border-border/40 text-accent focus:ring-accent w-4 h-4"
-                />
-                Graphique Cascade (Waterfall)
-              </label>
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
-                <input 
-                  type="checkbox"
-                  checked={includeFixedVar}
-                  onChange={(e) => setIncludeFixedVar(e.target.checked)}
-                  className="rounded border-border/40 text-accent focus:ring-accent w-4 h-4"
-                />
-                Charges Fixes vs Variables
-              </label>
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
-                <input 
-                  type="checkbox"
-                  checked={includeForecast}
-                  onChange={(e) => setIncludeForecast(e.target.checked)}
-                  className="rounded border-border/40 text-accent focus:ring-accent w-4 h-4"
-                />
-                Prévisions à 30 jours
-              </label>
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
-                <input 
-                  type="checkbox"
-                  checked={includeTransactions}
-                  onChange={(e) => setIncludeTransactions(e.target.checked)}
-                  className="rounded border-border/40 text-accent focus:ring-accent w-4 h-4"
-                />
-                Journal des transactions
-              </label>
+            {/* Options de contenu du rapport */}
+            <div className="mt-6 space-y-3 pt-4 border-t border-border/20">
+              <span className="text-[10px] uppercase font-extrabold text-secondary tracking-wider block">Contenu du rapport PDF</span>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
+                  <input 
+                    type="checkbox"
+                    checked={includeWaterfall}
+                    onChange={(e) => setIncludeWaterfall(e.target.checked)}
+                    className="rounded border-border/40 text-copper focus:ring-copper accent-copper w-4 h-4 cursor-pointer"
+                  />
+                  Graphique Cascade (Waterfall)
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
+                  <input 
+                    type="checkbox"
+                    checked={includeFixedVar}
+                    onChange={(e) => setIncludeFixedVar(e.target.checked)}
+                    className="rounded border-border/40 text-copper focus:ring-copper accent-copper w-4 h-4 cursor-pointer"
+                  />
+                  Charges Fixes vs Variables
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
+                  <input 
+                    type="checkbox"
+                    checked={includeForecast}
+                    onChange={(e) => setIncludeForecast(e.target.checked)}
+                    className="rounded border-border/40 text-copper focus:ring-copper accent-copper w-4 h-4 cursor-pointer"
+                  />
+                  Prévisions à 30 jours
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-primary font-semibold py-1">
+                  <input 
+                    type="checkbox"
+                    checked={includeTransactions}
+                    onChange={(e) => setIncludeTransactions(e.target.checked)}
+                    className="rounded border-border/40 text-copper focus:ring-copper accent-copper w-4 h-4 cursor-pointer"
+                  />
+                  Journal des transactions
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-8">
-            <button
-              onClick={handleExportProcess}
-              disabled={loading}
-              className="w-full py-3 bg-accent text-white font-extrabold text-xs rounded-xl hover:bg-accent/80 transition-all flex items-center justify-center gap-1.5 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                  Génération du PDF...
-                </>
-              ) : (
-                <>
-                  <Download size={14} className="shrink-0" />
-                  Exporter le rapport en PDF
-                </>
-              )}
-            </button>
-          </div>
-        </section>
+            <div className="mt-8 space-y-3">
+              <Button
+                onClick={handleShowReportOnly}
+                disabled={loading}
+                variant="copper"
+                fullWidth
+              >
+                {loading ? (
+                  <span className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                    Calcul en cours...
+                  </span>
+                ) : (
+                  <span className="text-xs font-extrabold uppercase tracking-wide">
+                    Analyser et afficher le rapport
+                  </span>
+                )}
+              </Button>
+
+              <Button
+                onClick={handleExportProcess}
+                disabled={loading}
+                variant="secondary"
+                fullWidth
+              >
+                {loading ? (
+                  <span className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-primary">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                    Génération du PDF...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-primary">
+                    <Download size={14} className="shrink-0" />
+                    Exporter le rapport en PDF
+                  </span>
+                )}
+              </Button>
+            </div>
+          </section>
+        )}
 
         {/* Global Loading Spinner */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
             <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
             <p className="text-xs text-secondary font-bold">Calcul de la santé financière...</p>
+          </div>
+        )}
+
+        {/* On-Screen Dashboard - Interactive presentation of the generated report */}
+        {!showParams && hasGenerated && !loading && transactions.length > 0 && (
+          <div className="space-y-6 animate-fade-in print:hidden">
+            
+            {/* Header / Summary Card */}
+            <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted font-extrabold uppercase tracking-widest block">Score de santé</span>
+                  <span className="text-2xl font-black text-primary tracking-tight">Diagnostic Global</span>
+                </div>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${
+                  metrics.healthScore >= 85
+                    ? 'text-accent border-accent/20 bg-accent/5'
+                    : metrics.healthScore >= 70
+                    ? 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5'
+                    : metrics.healthScore >= 50
+                    ? 'text-warning border-warning/20 bg-warning/5'
+                    : metrics.healthScore >= 30
+                    ? 'text-orange-400 border-orange-400/20 bg-orange-400/5'
+                    : 'text-danger border-danger/20 bg-danger/5'
+                }`}>
+                  {metrics.healthLabel}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-6 pt-2 border-t border-border/10">
+                <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
+                  <svg className="w-20 h-20 transform -rotate-90">
+                    <circle cx="40" cy="40" r="32" stroke="var(--border)" strokeWidth="6" fill="transparent" />
+                    <circle 
+                      cx="40" 
+                      cy="40" 
+                      r="32" 
+                      stroke={
+                        metrics.healthScore >= 70 
+                          ? 'var(--accent)' 
+                          : metrics.healthScore >= 50 
+                          ? 'var(--warning)' 
+                          : 'var(--danger)'
+                      } 
+                      strokeWidth="6" 
+                      fill="transparent" 
+                      strokeDasharray={2 * Math.PI * 32} 
+                      strokeDashoffset={2 * Math.PI * 32 * (1 - metrics.healthScore / 100)} 
+                      strokeLinecap="round" 
+                    />
+                  </svg>
+                  <span className="absolute text-lg font-black text-primary font-premium-numbers">{metrics.healthScore}</span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-secondary leading-relaxed font-medium">
+                    Votre indice de santé financière est calculé en analysant votre taux d'épargne, la récurrence de vos dépenses et les anomalies détectées.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Revenus</span>
+                <span className="text-sm font-extrabold text-accent font-premium-numbers block mt-1.5">
+                  {formatCurrency(metrics.totalIncome)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Dépenses</span>
+                <span className="text-sm font-extrabold text-danger font-premium-numbers block mt-1.5">
+                  -{formatCurrency(metrics.totalExpenses)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Épargne Nette</span>
+                <span className={`text-sm font-extrabold font-premium-numbers block mt-1.5 ${
+                  metrics.netSavings >= 0 ? 'text-accent' : 'text-danger'
+                }`}>
+                  {metrics.netSavings >= 0 ? '+' : ''}{formatCurrency(metrics.netSavings)}
+                </span>
+              </div>
+              <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm">
+                <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Taux d'épargne</span>
+                <span className="text-sm font-extrabold text-primary font-premium-numbers block mt-1.5">
+                  {metrics.savingsRate}%
+                </span>
+              </div>
+            </div>
+
+            {/* On-screen Charts Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Category Breakdown Progress Bars */}
+              <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+                <div>
+                  <h4 className="text-xs font-extrabold text-primary uppercase tracking-wider">Postes de dépenses majeurs</h4>
+                  <p className="text-[10px] text-muted mt-0.5 font-medium">Répartition par catégorie de dépenses</p>
+                </div>
+                <div className="space-y-3.5 pt-1">
+                  {categoryData.slice(0, 4).map(cat => {
+                    const percentage = metrics.totalExpenses > 0 ? (cat.value / metrics.totalExpenses) * 100 : 0;
+                    return (
+                      <div key={cat.id} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-primary">{cat.icon} {cat.name}</span>
+                          <span className="font-premium-numbers font-extrabold text-secondary">
+                            {formatCurrency(cat.value)} ({percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="h-2 w-full bg-surface border border-border/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500" 
+                            style={{ 
+                              width: `${percentage}%`, 
+                              backgroundColor: cat.color || '#3b82f6' 
+                            }} 
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {categoryData.length === 0 && (
+                    <p className="text-xs text-muted text-center py-4">Aucune dépense sur cette période.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Balance History Area Chart */}
+              <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+                <div>
+                  <h4 className="text-xs font-extrabold text-primary uppercase tracking-wider">Évolution du solde</h4>
+                  <p className="text-[10px] text-muted mt-0.5 font-medium">Historique quotidien sur tous vos comptes courants</p>
+                </div>
+                <div className="h-44 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dailyBalances} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="screenBalanceGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--copper)" stopOpacity={0.2}/>
+                          <stop offset="95%" stopColor="var(--copper)" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="label" 
+                        tick={{ fontSize: 9, fill: 'var(--text-secondary)', fontWeight: 500 }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        interval={Math.ceil(dailyBalances.length / 5)} 
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 9, fill: 'var(--text-secondary)', fontWeight: 500 }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'var(--bg-elevated)', 
+                          borderColor: 'var(--border)', 
+                          borderRadius: '12px', 
+                          fontSize: '11px',
+                          color: 'var(--text-primary)',
+                          fontWeight: 600
+                        }} 
+                        formatter={(value) => [formatCurrency(value), 'Solde']}
+                        labelFormatter={(label) => `Date : ${label}`}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="balance" 
+                        stroke="var(--copper)" 
+                        strokeWidth={2} 
+                        fillOpacity={1} 
+                        fill="url(#screenBalanceGrad)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Diagnostic Points of Attention */}
+            <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-copper animate-pulse" />
+                <h4 className="text-xs font-extrabold text-primary uppercase tracking-wider">Diagnostic & Conseils Proactifs</h4>
+              </div>
+              <div className="border-t border-border/10 pt-3.5 space-y-3">
+                {attentionPoints.map((pt, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`p-3 rounded-2xl border text-xs leading-relaxed font-medium flex gap-2.5 items-start ${
+                      pt.type === 'warning' 
+                        ? 'bg-danger/5 border-danger/20 text-danger' 
+                        : pt.type === 'success' 
+                        ? 'bg-accent/5 border-accent/20 text-accent' 
+                        : 'bg-info/5 border-info/20 text-info'
+                    }`}
+                  >
+                    <span className="text-sm shrink-0">
+                      {pt.type === 'warning' ? '⚠️' : pt.type === 'success' ? '✅' : 'ℹ️'}
+                    </span>
+                    <p>{pt.text}</p>
+                  </div>
+                ))}
+                {attentionPoints.length === 0 && (
+                  <p className="text-xs text-muted text-center py-2">Aucun point de vigilance particulier.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Unusual Expenses detected on screen */}
+            <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} className="text-warning animate-pulse" />
+                <h4 className="text-xs font-extrabold text-primary uppercase tracking-wider">Dépenses inhabituelles détectées</h4>
+              </div>
+              <div className="border-t border-border/10 pt-3.5 space-y-2.5">
+                {unusualExpenses.length === 0 ? (
+                  <p className="text-xs text-muted text-center py-4">Aucune dépense inhabituelle ou anomalie détectée sur la période.</p>
+                ) : (
+                  unusualExpenses.map(tx => (
+                    <div 
+                      key={tx._id} 
+                      className="flex justify-between items-center bg-surface p-3.5 rounded-2xl border border-border/30 hover:border-border/60 transition-all"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-primary">
+                          {tx.type === 'transfer' 
+                            ? (tx.description || tx.note || 'Virement') 
+                            : (tx.note || tx.description || 'Transaction')
+                          }
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted font-bold bg-surface-2 px-2 py-0.5 rounded border border-border/20">
+                            {tx.categoryId?.name || 'Non catégorisé'}
+                          </span>
+                          <span className="text-[9px] text-muted font-medium">
+                            {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1 shrink-0">
+                        <span className="text-xs font-extrabold text-danger font-premium-numbers block">
+                          -{formatCurrency(tx.amount)}
+                        </span>
+                        {tx.amount > 200 && (
+                          <span className="text-[9px] font-extrabold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20 inline-block">
+                            Montant élevé ({'>'} 200€)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Transactions Journal (Optionnel) - Shown when includeTransactions is checked */}
+            {includeTransactions && (
+              <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4">
+                <div>
+                  <h4 className="text-xs font-extrabold text-primary uppercase tracking-wider">Journal des transactions</h4>
+                  <p className="text-[10px] text-muted mt-0.5 font-medium">{transactions.length} flux enregistrés sur la période</p>
+                </div>
+                <div className="border-t border-border/10 pt-3.5 space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                  {transactions.length === 0 ? (
+                    <p className="text-xs text-muted text-center py-4">Aucune transaction trouvée.</p>
+                  ) : (
+                    transactions.map(tx => (
+                      <div 
+                        key={tx._id} 
+                        className="flex justify-between items-center bg-surface p-3.5 rounded-2xl border border-border/30 hover:border-border/60 transition-all"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-primary">
+                            {tx.type === 'transfer' 
+                              ? (tx.description || tx.note || 'Virement') 
+                              : (tx.note || tx.description || 'Transaction')
+                            }
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-muted font-bold bg-surface-2 px-2 py-0.5 rounded border border-border/20">
+                              {tx.type === 'transfer' ? 'Virement' : (tx.categoryId?.name || 'Non catégorisé')}
+                            </span>
+                            <span className="text-[9px] text-muted font-medium">
+                              {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-xs font-extrabold font-premium-numbers block ${
+                            tx.type === 'income' ? 'text-accent' : tx.type === 'expense' ? 'text-danger' : 'text-info'
+                          }`}>
+                            {tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : ''}
+                            {formatCurrency(tx.amount)}
+                          </span>
+                          <span className="text-[8px] text-muted block mt-0.5 font-medium">
+                            {tx.accountId?.name || 'Compte'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions Panel */}
+            <div className="pt-2 flex flex-col gap-3">
+              <Button
+                onClick={handleDownloadPDF}
+                variant="copper"
+                fullWidth
+              >
+                <span className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide">
+                  <Download size={14} className="shrink-0" />
+                  Exporter le rapport complet en PDF
+                </span>
+              </Button>
+              <Button
+                onClick={() => setShowParams(true)}
+                variant="secondary"
+                fullWidth
+              >
+                <span className="text-xs font-extrabold uppercase tracking-wide text-primary">
+                  Modifier les dates ou paramètres
+                </span>
+              </Button>
+            </div>
+
           </div>
         )}
 
@@ -809,23 +1211,23 @@ const ReportsPage = () => {
             >
               {/* PAGE 1: Page de Garde */}
               <div className="pdf-page bg-white" style={{ minHeight: '1020px', justifyContent: 'space-between' }}>
-                <div style={{ height: '4px', background: 'linear-gradient(90deg, #10b981, #3b82f6)', width: '100%' }}></div>
+                <div style={{ height: '4px', background: 'linear-gradient(90deg, #d97706, #070e20)', width: '100%' }}></div>
                 
                 <div style={{ marginTop: '120px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '24px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.2)', marginBottom: '24px', overflow: 'hidden' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '24px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', boxShadow: '0 10px 25px rgba(217, 119, 6, 0.2)', marginBottom: '24px', overflow: 'hidden' }}>
                     <img src={logoBase64 || '/pwa-192x192.png'} alt="Logo Budgetizer" style={{ width: '80px', height: '80px', objectFit: 'cover' }} />
                   </div>
                   <h1 style={{ fontSize: '38px', fontWeight: '900', color: '#09090b', letterSpacing: '-0.03em', margin: '0' }}>BUDGETIZER</h1>
-                  <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#059669', fontWeight: '800', marginTop: '6px' }}>Gestion Financière Personnelle</p>
+                  <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#d97706', fontWeight: '800', marginTop: '6px' }}>Gestion Financière Personnelle</p>
                 </div>
-
+ 
                 <div style={{ marginTop: '100px', textAlign: 'center' }}>
                   <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#18181b', margin: '0' }}>Rapport d'Activité Financière</h2>
                   <p style={{ fontSize: '14px', color: '#52525b', marginTop: '8px' }}>
                     Période du <strong style={{ color: '#09090b' }}>{new Date(startDate).toLocaleDateString('fr-FR')}</strong> au <strong style={{ color: '#09090b' }}>{new Date(endDate).toLocaleDateString('fr-FR')}</strong>
                   </p>
                 </div>
-
+ 
                 <div style={{ marginTop: '120px', display: 'flex', justifyContent: 'center' }}>
                   <div style={{ width: '420px', padding: '24px', borderRadius: '20px', border: '1px solid #e4e4e7', backgroundColor: '#fafafa', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
@@ -842,7 +1244,7 @@ const ReportsPage = () => {
                     </div>
                     <div>
                       <span style={{ fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', color: '#71717a', display: 'block' }}>Statut Rapport</span>
-                      <strong style={{ fontSize: '13px', color: '#059669' }}>Finalisé</strong>
+                      <strong style={{ fontSize: '13px', color: '#d97706' }}>Finalisé</strong>
                     </div>
                   </div>
                 </div>
@@ -1028,13 +1430,13 @@ const ReportsPage = () => {
                         <AreaChart width={410} height={150} data={dailyBalances} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                           <defs>
                             <linearGradient id="printBalanceGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
-                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#d97706" stopOpacity={0.15}/>
+                              <stop offset="95%" stopColor="#d97706" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <XAxis dataKey="label" tick={{ fontSize: 7, fill: '#71717a' }} axisLine={false} tickLine={false} interval={Math.ceil(dailyBalances.length / 6)} />
                           <YAxis tick={{ fontSize: 8, fill: '#71717a' }} axisLine={false} tickLine={false} />
-                          <Area type="monotone" dataKey="balance" stroke="#3b82f6" strokeWidth={1.5} fillOpacity={1} fill="url(#printBalanceGrad)" isAnimationActive={false} />
+                          <Area type="monotone" dataKey="balance" stroke="#d97706" strokeWidth={1.5} fillOpacity={1} fill="url(#printBalanceGrad)" isAnimationActive={false} />
                         </AreaChart>
                       </div>
                     </div>

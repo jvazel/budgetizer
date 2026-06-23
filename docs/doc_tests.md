@@ -39,13 +39,17 @@ Ce panneau gère la saisie, la validation et l'ajout/modification d'une transact
 ---
 
 ### 1.3 Formulaire des Transactions Planifiées (`ScheduledFormSheet.jsx`)
-Ce panneau gère la planification récurrente de transactions ou d'abonnements.
+Ce panneau gère la planification récurrente de transactions ou d'abonnements, ainsi que la gestion des modèles d'abonnements rapides personnalisés (sauvegardés en `localStorage`).
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
 | **Rendu fermé** | `isOpen={false}` | Rendu conditionnel du composant | Le DOM renvoyé est entièrement vide (`toBeEmptyDOMElement`). |
-| **Création de planification** | `isOpen={true}`, montant `"29.99"`, description `"Netflix"`, catégorie `"cat1"`, clic sur `"Créer"` | Association et validation des champs du formulaire, puis appel du callback `onSave` | La fonction `onSave` est déclenchée avec l'objet de planification complet (type, montant, fréquence mensuelle, autoConfirm, etc.). |
+| **Création de planification** | `isOpen={true}`, montant `"29.99"`, description `"Abonnement Netflix"`, catégorie `"cat1"`, clic sur `"Créer"` | Association et validation des champs du formulaire, puis appel du callback `onSave` | La fonction `onSave` est déclenchée avec l'objet de planification complet (type `expense`, montant `29.99`, fréquence mensuelle, `autoConfirm: true`, etc.). |
 | **Commutation en virement** | Clic sur l'onglet `"Virement"` | Commutation du type vers `transfer` | Le sélecteur `"Vers le compte"` s'affiche dans le DOM tandis que le bouton de choix de catégorie disparait. |
+| **Chargement des modèles par défaut** | `localStorage` vide, rendu du panneau ouvert | Initialisation des modèles populaires codés en dur | Les boutons `"Netflix"` et `"Spotify"` s'affichent dans le carrousel de modèles rapides. |
+| **Sauvegarde d'un modèle personnalisé** | Saisie montant `"45.00"`, description `"Abonnement Gym"`, catégorie `"Alimentation"`, clic sur `"Sauver modèle"` | Ajout du nouveau modèle à la liste et écriture dans `localStorage` | Le bouton `"Abonnement Gym"` s'affiche dans le carrousel. La clé `budgetizer_subscription_templates` en `localStorage` contient un objet avec `{ name: "Abonnement Gym", amount: 45 }`. |
+| **Auto-remplissage depuis un modèle** | Clic sur le bouton `"Netflix"` du carrousel | Pré-remplissage des champs du formulaire à partir des données du modèle | Le champ description contient `"Netflix"` et le champ montant affiche `"15.99"`. |
+| **Suppression d'un modèle par appui long** | Modèle `"My Special Sub"` présent en `localStorage`, `mousedown` maintenu pendant 850 ms sur son bouton | Déclenchement du timer de suppression, ouverture d'une confirmation, clic sur `"Supprimer"` | Le bouton du modèle disparaît du DOM. La clé `budgetizer_subscription_templates` en `localStorage` ne contient plus d'entrée avec `name: "My Special Sub"`. |
 
 ---
 
@@ -205,6 +209,48 @@ Ce composant affiche le tachymètre et les insights sous forme visuelle réactiv
 | **Vitesse sous contrôle (Cas 1)** | Budget restant avec vitesse réelle < vitesse cible | Calculs et rendu de la jauge | Le titre, la jauge verte, et le badge `"Vitesse sous contrôle"` sont affichés avec les montants formatés. |
 | **Excès de vitesse (Cas 2 & 3)** | Dépenses élevées avec vitesse réelle > vitesse cible | Rendu des alertes et actions | Le badge `"⚠️ Excès de vitesse détecté"` s'affiche avec la date estimée de crash (ex: `"25 juin 2026"`), ainsi que la fiche `"Action corrective proposée"` avec le montant quotidien recalculé. |
 | **Interaction sélecteur** | Clic sur le dropdown, clic sur une catégorie (ex: "Loisirs") | Déclenchement de l'événement et mise à jour de l'état `selectedCategoryId` | Le dropdown affiche le nom de la catégorie sélectionnée et ferme la liste d'options. |
+
+---
+
+### 1.16 Composant de Saisie Générique (`Input.jsx`)
+Ce composant UI générique gère les champs de saisie standard (texte, date, curseur range) utilisés dans les formulaires de l'application.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu par défaut** | `label="Username"`, `placeholder="Enter username"` | Rendu initial du composant | Le libellé `"Username"` et le placeholder sont visibles dans le document. |
+| **Astérisque requis** | `required={true}`, `label="Email"` | Rendu conditionnel de l'indicateur de champ obligatoire | L'astérisque `"*"` est visible dans le DOM à côté du libellé. |
+| **Message d'erreur** | `error="Invalid password"` | Rendu du message d'erreur sous le champ | Le texte `"Invalid password"` est affiché sous le champ de saisie. |
+| **Déclenchement onChange** | Saisie de `"Query"` dans le champ | Appel du gestionnaire d'événement `onChange` | La fonction `onChange` mockée est appelée au changement de valeur. |
+| **Curseur Range** | `rangeMin=0`, `rangeMax=100`, `value=50` | Rendu d'un curseur de type `range` avec libellés min/max | L'élément de rôle `"slider"` est présent, ainsi que les labels `"Min"` et `"Max"`. |
+| **Ouverture du sélecteur de date (showPicker)** | `type="date"`, clic puis focus sur le champ | Appel de `HTMLInputElement.prototype.showPicker` | La méthode `showPicker` est appelée une fois lors du clic et une seconde fois lors du focus. |
+| **Résilience sans showPicker** | `type="date"`, `showPicker` absent ou levant une exception | Gestion silencieuse de l'absence ou de l'erreur de la méthode native | Ni le clic ni le focus ne provoquent d'exception (`not.toThrow`). |
+
+---
+
+### 1.17 Page de Rapports d'Activité (`ReportsPage.jsx`)
+Cette page permet de configurer des filtres, de générer et d'afficher un rapport financier interactif à l'écran ou de l'exporter en PDF.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu du formulaire de paramètres** | Chargement initial de la page | Rendu des champs de configuration | Le titre `"Rapports d'Activité"`, la section `"Paramètres du rapport"`, les champs `"Date de début"` / `"Date de fin"` et le bouton `"Exporter le rapport en PDF"` sont présents. |
+| **Génération et appels API** | Clic sur `"Exporter le rapport en PDF"` avec données mockées (revenu 100 €, dépense 20 €) | Appel aux endpoints `/transactions` et `/charts/balance-history`, affichage du toast de chargement | `api.get` est bien appelé pour les deux routes. Le toast `"Analyse des données en cours..."` est déclenché. |
+| **Dashboard interactif (sans PDF)** | Clic sur `"Analyser et afficher le rapport"` | Calcul des métriques et affichage du dashboard intégré à l'écran sans déclencher `html2pdf` | La section `"Diagnostic Global"` s'affiche. Le toast de génération PDF `"Génération du rapport PDF..."` n'est **pas** appelé. |
+| **Journal des transactions dans le dashboard** | Case `"Journal des transactions"` cochée avant de cliquer sur `"Analyser et afficher le rapport"` | Inclusion de la liste exhaustive des transactions dans le rapport affiché | Le titre `"Journal des transactions"`, le sous-titre `"1 flux enregistrés sur la période"` et la catégorie `"Alimentation"` sont visibles. |
+| **Retour aux filtres** | Clic sur le bouton `"Filtres"` depuis le dashboard affiché | Basculement de l'état d'affichage du composant | La section `"Paramètres du rapport"` réapparaît. La section `"Diagnostic Global"` disparaît du DOM. |
+
+---
+
+### 1.18 Page de Réinitialisation de Mot de Passe (`ResetPassword.jsx`)
+Cette page permet à l'utilisateur de définir un nouveau mot de passe via un lien de réinitialisation sécurisé (token dans l'URL).
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Rendu initial** | Chargement de la page avec token `my-reset-token` dans les params | Rendu des deux champs de saisie et du bouton de soumission | Les champs `"Nouveau mot de passe"`, `"Confirmer le nouveau mot de passe"` et le bouton `"Enregistrer le nouveau mot de passe"` sont présents. |
+| **Bascule de visibilité du mot de passe** | Clic sur l'icône de visibilité à droite du champ | Commutation du type de champ de `password` à `text` puis retour | Le type du champ bascule correctement entre `password` et `text` à chaque clic. |
+| **Validation de la longueur** | Mot de passe `"12345"` (5 caractères, trop court) | Vérification locale avant tout appel API | Le toast d'erreur `"Le mot de passe doit contenir au moins 6 caractères"` est affiché. `api.post` n'est **pas** appelé. |
+| **Validation de la correspondance** | Mot de passe `"password123"` et confirmation `"different123"` | Comparaison des deux champs | Le toast d'erreur `"Les mots de passe ne correspondent pas"` est affiché. `api.post` n'est **pas** appelé. |
+| **Succès et redirection** | Mots de passe valides et correspondants, API renvoyant un succès | Appel à `POST /auth/reset-password/:token`, affichage de l'écran de succès, puis redirection après 3 s | `api.post` est appelé avec le bon token et le nouveau mot de passe. Le toast de succès `"Mot de passe réinitialisé !"` est affiché. L'écran `"Réinitialisation réussie"` s'affiche. Après 3000 ms, `navigate("/login")` est appelé. |
+| **Erreur API (token expiré)** | Mots de passe valides, API renvoyant une erreur HTTP avec `"Token de réinitialisation invalide ou expiré"` | Capture de l'exception et affichage du message serveur | Le toast d'erreur avec le message du serveur est affiché. |
 
 ---
 

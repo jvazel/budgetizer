@@ -15,6 +15,7 @@ const Select = ({
   label,
   align = 'left',
   required = false,
+  variant = 'copper', // 'copper' | 'accent' (Bankyboard identity vs semantic green)
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,13 +84,17 @@ const Select = ({
   // Check if we are using an inline compact style (typically filters) or full form style
   const isFilter = className.includes('py-2') || className.includes('px-3') || (className.includes('h-') === false && className.includes('py-1'));
 
+  const focusClass = variant === 'accent' ? 'focus:border-accent' : 'focus:border-copper';
+  const openClass = variant === 'accent' ? 'border-accent ring-2 ring-accent/10' : 'border-copper ring-2 ring-copper/10';
+  const activeTextClass = variant === 'accent' ? 'text-accent' : 'text-copper';
+
   // Clean trigger classes to build a nice trigger button
   const triggerClasses = `
     flex items-center justify-between text-left transition-all duration-200 cursor-pointer w-full
-    ${className || 'h-[52px] bg-surface-2 border border-border rounded-2xl px-4 text-primary focus:outline-none focus:border-accent'}
+    ${className || `h-[52px] bg-surface-2 border border-border rounded-2xl px-4 text-primary focus:outline-none ${focusClass}`}
     ${error ? 'border-danger focus:border-danger' : ''}
     ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-    ${isOpen ? 'border-accent ring-2 ring-accent/10' : ''}
+    ${isOpen ? openClass : ''}
   `;
 
   return (
@@ -120,7 +125,7 @@ const Select = ({
         <span className="truncate pr-2">{displayLabel}</span>
         <ChevronDown 
           size={isFilter ? 14 : 18} 
-          className={`text-muted transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-accent' : ''}`}
+          className={`text-muted transition-transform duration-200 shrink-0 ${isOpen ? `rotate-180 ${activeTextClass}` : ''}`}
         />
       </button>
 
@@ -189,6 +194,9 @@ const Select = ({
                 }
 
                 const isSelected = String(opt.value) === String(value);
+                const selectedItemClass = variant === 'accent' ? 'bg-accent/10 text-accent' : 'bg-copper-dim text-copper';
+                const checkColorClass = variant === 'accent' ? 'text-accent' : 'text-copper';
+
                 return (
                   <button
                     key={`${opt.value}-${idx}`}
@@ -197,12 +205,12 @@ const Select = ({
                     className={`
                       w-full flex items-center justify-between px-4 py-2.5 text-left text-xs font-semibold
                       transition-colors duration-150 group
-                      ${isSelected ? 'bg-accent/10 text-accent' : 'text-primary hover:bg-surface-2'}
+                      ${isSelected ? selectedItemClass : 'text-primary hover:bg-surface-2'}
                     `}
                   >
                     <span className="truncate">{opt.label}</span>
                     {isSelected && (
-                      <Check size={14} className="text-accent shrink-0 ml-2 animate-fadeIn" />
+                      <Check size={14} className={`${checkColorClass} shrink-0 ml-2 animate-fadeIn`} />
                     )}
                   </button>
                 );

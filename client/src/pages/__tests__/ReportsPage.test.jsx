@@ -44,6 +44,22 @@ vi.mock('react-hot-toast', () => ({
   }
 }));
 
+// Mock recharts to avoid layout engine errors in jsdom environment
+vi.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }) => <div data-testid="recharts-responsive-container">{children}</div>,
+  AreaChart: ({ children }) => <div data-testid="recharts-area-chart">{children}</div>,
+  Area: () => null,
+  BarChart: ({ children }) => <div data-testid="recharts-bar-chart">{children}</div>,
+  Bar: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  Tooltip: () => null,
+  LabelList: () => null,
+  PieChart: ({ children }) => <div data-testid="recharts-pie-chart">{children}</div>,
+  Pie: () => null,
+  Cell: () => null
+}));
+
 vi.mock('html2pdf.js/dist/html2pdf.min.js', () => {
   return {
     default: vi.fn().mockImplementation(() => {
@@ -79,7 +95,7 @@ describe('ReportsPage Component', () => {
   it('renders parameters form correctly', () => {
     renderComponent();
 
-    expect(screen.getByText("Rapports d'Activité")).toBeInTheDocument();
+    expect(screen.getAllByText("Rapports d'Activité")[0]).toBeInTheDocument();
     expect(screen.getByText('Paramètres du rapport')).toBeInTheDocument();
     expect(screen.getByText('Date de début')).toBeInTheDocument();
     expect(screen.getByText('Date de fin')).toBeInTheDocument();
@@ -154,5 +170,117 @@ describe('ReportsPage Component', () => {
       // We can check if those values are computed correctly
       expect(toast.dismiss).toHaveBeenCalled();
     });
+  });
+
+  it('renders interactive dashboard on screen and does not trigger PDF generation when clicking Analyser et afficher le rapport', async () => {
+    const mockTxs = [
+      {
+        _id: 'tx1',
+        type: 'expense',
+        amount: 30,
+        accountId: { _id: 'acc_inc' },
+        categoryId: { _id: 'cat1', name: 'Alimentation', color: '#ff0000', icon: '🍔' },
+        date: new Date()
+      }
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/transactions') return Promise.resolve({ data: { transactions: mockTxs } });
+      if (url === '/charts/balance-history') return Promise.resolve({ data: [] });
+      return Promise.resolve({ data: {} });
+    });
+
+    renderComponent();
+
+    // Select the "Analyser et afficher le rapport" button
+    const analyzeBtn = screen.getByRole('button', { name: 'Analyser et afficher le rapport' });
+    fireEvent.click(analyzeBtn);
+
+    // Wait for the diagnostic dashboard to render on screen
+    await waitFor(() => {
+      expect(screen.getByText('Diagnostic Global')).toBeInTheDocument();
+    });
+
+    // Make sure we didn't call html2pdf (no toast.loading for PDF generation, which is separate)
+    expect(toast.loading).not.toHaveBeenCalledWith('Génération du rapport PDF...');
+  });
+
+  it('renders the transaction journal when includeTransactions is checked', async () => {
+    const mockTxs = [
+      {
+        _id: 'tx1',
+        type: 'expense',
+        amount: 30,
+        accountId: { _id: 'acc_inc', name: 'Compte Courant' },
+        categoryId: { _id: 'cat1', name: 'Alimentation', color: '#ff0000', icon: '🍔' },
+        date: new Date()
+      }
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/transactions') return Promise.resolve({ data: { transactions: mockTxs } });
+      if (url === '/charts/balance-history') return Promise.resolve({ data: [] });
+      return Promise.resolve({ data: {} });
+    });
+
+    renderComponent();
+
+    // Check the "Journal des transactions" checkbox
+    const checkbox = screen.getByLabelText('Journal des transactions');
+    fireEvent.click(checkbox);
+
+    // Click on show report button
+    const analyzeBtn = screen.getByRole('button', { name: 'Analyser et afficher le rapport' });
+    fireEvent.click(analyzeBtn);
+
+    // Should show the transactions list header
+    await waitFor(() => {
+      expect(screen.getByText('Journal des transactions')).toBeInTheDocument();
+      expect(screen.getByText('1 flux enregistrés sur la période')).toBeInTheDocument();
+      expect(screen.getByText('Alimentation')).toBeInTheDocument();
+    });
+  });
+
+  it('handles toggling back to filters form when clicking the Filtres button on the generated dashboard', async () => {
+    const mockTxs = [
+      {
+        _id: 'tx1',
+        type: 'expense',
+        amount: 30,
+        accountId: { _id: 'acc_inc' },
+        categoryId: { _id: 'cat1', name: 'Alimentation', color: '#ff0000', icon: '🍔' },
+        date: new Date()
+      }
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/transactions') return Promise.resolve({ data: { transactions: mockTxs } });
+      if (url === '/charts/balance-history') return Promise.resolve({ data: [] });
+      return Promise.resolve({ data: {} });
+    });
+
+    renderComponent();
+
+    // The filter settings card should be initially visible
+    expect(screen.getByText('Paramètres du rapport')).toBeInTheDocument();
+
+    // Click on "Analyser et afficher le rapport" to generate the report
+    const analyzeBtn = screen.getByRole('button', { name: 'Analyser et afficher le rapport' });
+    fireEvent.click(analyzeBtn);
+
+    // Wait for the diagnostic dashboard to render and make sure settings card is hidden
+    await waitFor(() => {
+      expect(screen.getByText('Diagnostic Global')).toBeInTheDocument();
+      expect(screen.queryByText('Paramètres du rapport')).not.toBeInTheDocument();
+    });
+
+    // Click on "Filtres" button in the summary header
+    const filtresBtn = screen.getByRole('button', { name: 'Filtres' });
+    fireEvent.click(filtresBtn);
+
+    // The settings card should be visible again
+    expect(screen.getByText('Paramètres du rapport')).toBeInTheDocument();
+    // The dashboard elements should be hidden
+    expect(screen.queryByText('Diagnostic Global')).not.toBeInTheDocument();
   });
 });

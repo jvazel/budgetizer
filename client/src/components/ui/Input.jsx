@@ -50,6 +50,22 @@ const Input = ({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          onClick={(e) => {
+            if (type === 'date') {
+              try {
+                e.target.showPicker();
+              } catch (err) {}
+            }
+            if (props.onClick) props.onClick(e);
+          }}
+          onFocus={(e) => {
+            if (type === 'date') {
+              try {
+                e.target.showPicker();
+              } catch (err) {}
+            }
+            if (props.onFocus) props.onFocus(e);
+          }}
           className={`
             w-full h-[52px] bg-surface-2 border border-border rounded-2xl
             text-primary placeholder:text-muted focus:outline-none focus:border-copper

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import AmountInput from '../components/ui/AmountInput';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions } from '../hooks/useTransactions';
@@ -8,9 +8,12 @@ import { ArrowLeftRight, ArrowRight, AlertCircle, Calendar, Trash2, CheckCircle2
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import Select from '../components/ui/Select';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 
 const TransfersPage = () => {
   const { user } = useContext(AuthContext);
+  const { isScrolled } = useContext(HeaderPortalContext);
   const { accounts, loading: accountsLoading, fetchAccounts } = useAccounts();
   const { transactions: transfers, loading: transfersLoading, addTransaction, deleteTransaction } = useTransactions({ type: 'transfer' });
 
@@ -23,6 +26,8 @@ const TransfersPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastTransferDetails, setLastTransferDetails] = useState(null);
 
   // Set default accounts when loaded
   useEffect(() => {
@@ -86,6 +91,16 @@ const TransfersPage = () => {
       });
 
       toast.success('Virement effectué avec succès !');
+      
+      // Save details for success visual modal
+      setLastTransferDetails({
+        from: activeFromAccount?.name,
+        to: activeToAccount?.name,
+        amount: numericAmount,
+        currency: activeFromAccount?.currency
+      });
+      setShowSuccessModal(true);
+
       setAmount('');
       setNote('');
       setDescription('Virement instantané');
@@ -123,8 +138,19 @@ const TransfersPage = () => {
 
   return (
     <>
-      <HeaderTitle>Virements Instantanés</HeaderTitle>
+      <HeaderTitle collapsible={true}>Virements Instantanés</HeaderTitle>
       <HeaderBackButton to="/" />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
+        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Virements Instantanés</h1>
+        <p className="text-xs text-secondary mt-0.5 font-medium">Déplacez vos fonds instantanément entre vos comptes.</p>
+      </div>
+
       <div className="space-y-6 mb-6 px-1">
         
         {/* Main interactive transfer card */}
@@ -143,55 +169,64 @@ const TransfersPage = () => {
           ) : (
             <div className="space-y-4">
               {/* Source and Destination selection cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative">
-                {/* Source Account Box */}
-                <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <label htmlFor="fromAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Débiter (Source) <span className="text-danger ml-0.5">*</span></label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start relative">
+                
+                {/* Source Account Selector */}
+                <div className="flex flex-col w-full">
                   <Select
                     id="fromAccountId-select"
+                    label="Débiter (Source)"
                     value={fromAccountId}
                     onChange={(e) => setFromAccountId(e.target.value)}
-                    className="bg-transparent text-sm font-bold text-primary focus:outline-none w-full"
+                    required
                   >
                     {accounts.map(acc => (
-                      <option key={acc._id} value={acc._id} className="bg-surface-2">
+                      <option key={acc._id} value={acc._id}>
                         {acc.name} ({formatCurrency(acc.balance, acc.currency)})
                       </option>
                     ))}
                   </Select>
                   {activeFromAccount && (
-                    <div className="text-[10px] text-muted font-medium mt-2">
-                      Disponible : <span className="font-mono font-bold text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
+                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
+                      Disponible : <span className="font-mono text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
                     </div>
                   )}
                 </div>
 
-                {/* Arrow Connector */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-surface-2 border border-border/40 flex items-center justify-center text-accent shadow-sm hidden md:flex">
+                {/* Desktop Arrow Connector */}
+                <div className="absolute left-1/2 top-[34px] -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-surface-2 border border-border/40 flex items-center justify-center text-copper shadow-sm hidden md:flex">
                   <ArrowRight size={16} />
                 </div>
+
+                {/* Mobile Arrow Connector */}
+                <div className="flex md:hidden justify-center my-1 relative z-10">
+                  <div className="w-8 h-8 rounded-full bg-surface border border-border/40 flex items-center justify-center text-copper shadow-sm">
+                    <ArrowRight size={16} className="rotate-90" />
+                  </div>
+                </div>
                 
-                {/* Destination Account Box */}
-                <div className="flex flex-col bg-surface p-4 rounded-2xl border border-border/30 relative">
-                  <label htmlFor="toAccountId-select" className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">Créditer (Destination) <span className="text-danger ml-0.5">*</span></label>
+                {/* Destination Account Selector */}
+                <div className="flex flex-col w-full">
                   <Select
                     id="toAccountId-select"
+                    label="Créditer (Destination)"
                     value={toAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
-                    className="bg-transparent text-sm font-bold text-primary focus:outline-none w-full"
+                    required
                   >
                     {accounts.filter(acc => acc._id !== fromAccountId).map(acc => (
-                      <option key={acc._id} value={acc._id} className="bg-surface-2">
+                      <option key={acc._id} value={acc._id}>
                         {acc.name} ({formatCurrency(acc.balance, acc.currency)})
                       </option>
                     ))}
                   </Select>
                   {activeToAccount && (
-                    <div className="text-[10px] text-muted font-medium mt-2">
-                      Disponible : <span className="font-mono font-bold text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
+                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
+                      Disponible : <span className="font-mono text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
                     </div>
                   )}
                 </div>
+
               </div>
 
               {/* Amount Input */}
@@ -205,46 +240,44 @@ const TransfersPage = () => {
                 />
               </div>
 
-              {/* Description and Note */}
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex flex-col space-y-1">
-                  <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Description <span className="text-danger ml-0.5">*</span></label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Virement mensuel..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="bg-surface border border-border/40 px-4 py-2.5 rounded-xl text-xs text-primary focus:outline-none focus:border-accent"
-                  />
-                </div>
-                <div className="flex flex-col space-y-1">
-                  <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Note (optionnel)</label>
-                  <input
-                    type="text"
-                    placeholder="Notes supplémentaires..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="bg-surface border border-border/40 px-4 py-2.5 rounded-xl text-xs text-primary focus:outline-none focus:border-accent"
-                  />
-                </div>
+              {/* Description and Note standard inputs */}
+              <div className="grid grid-cols-1 gap-4">
+                <Input
+                  label="Description"
+                  id="description-input"
+                  placeholder="Ex: Virement mensuel..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                  uppercaseLabel={true}
+                />
+                <Input
+                  label="Note (optionnel)"
+                  id="note-input"
+                  placeholder="Notes supplémentaires..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  uppercaseLabel={true}
+                />
               </div>
 
               {/* Confirm CTA */}
-              <button
-                type="button"
+              <Button
                 onClick={handleTransfer}
                 disabled={isSubmitting}
-                className="w-full bg-accent text-white py-3.5 rounded-2xl font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 mt-4 text-xs tracking-wide uppercase disabled:opacity-55 disabled:pointer-events-none"
+                variant="copper"
+                fullWidth
+                className="mt-4 font-bold"
               >
                 {isSubmitting ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <>
+                  <span className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide">
                     <CheckCircle2 size={16} />
-                    <span>Confirmer le virement</span>
-                  </>
+                    Confirmer le virement
+                  </span>
                 )}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -318,6 +351,7 @@ const TransfersPage = () => {
         </div>
 
       </div>
+
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
@@ -335,6 +369,7 @@ const TransfersPage = () => {
         </p>
       </ConfirmModal>
 
+      {/* Execute Confirmation Modal */}
       {activeFromAccount && activeToAccount && (
         <ConfirmModal
           isOpen={isConfirmModalOpen}
@@ -382,6 +417,29 @@ const TransfersPage = () => {
           </div>
         </ConfirmModal>
       )}
+
+      {/* Success Visual Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        onConfirm={() => setShowSuccessModal(false)}
+        title="Virement Effectué !"
+        confirmText="Super !"
+        cancelText=""
+        type="info"
+      >
+        <div className="text-center py-6 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center text-accent mx-auto animate-bounce">
+            <CheckCircle2 size={36} />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-extrabold text-primary">Transfert Réussi</h4>
+            <p className="text-[11px] text-secondary leading-relaxed">
+              Le montant de <span className="font-mono font-bold text-accent">{formatCurrency(lastTransferDetails?.amount || 0, lastTransferDetails?.currency)}</span> a été transféré de <strong>{lastTransferDetails?.from}</strong> vers <strong>{lastTransferDetails?.to}</strong>.
+            </p>
+          </div>
+        </div>
+      </ConfirmModal>
     </>
   );
 };

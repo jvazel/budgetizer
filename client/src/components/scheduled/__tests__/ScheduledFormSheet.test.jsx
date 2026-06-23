@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ScheduledFormSheet from '../ScheduledFormSheet';
 
 // Mock hooks
@@ -26,8 +26,17 @@ vi.mock('../../../hooks/useCategories', () => ({
 }));
 
 describe('ScheduledFormSheet Component', () => {
+  let store = {};
   beforeEach(() => {
     vi.clearAllMocks();
+    store = {};
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => store[key] || null),
+      setItem: vi.fn((key, value) => { store[key] = value.toString(); }),
+      removeItem: vi.fn((key) => { delete store[key]; }),
+      clear: vi.fn(() => { store = {}; })
+    });
+    vi.stubGlobal('alert', vi.fn());
   });
 
   it('renders nothing when closed', () => {
@@ -100,5 +109,83 @@ describe('ScheduledFormSheet Component', () => {
     expect(screen.getByLabelText('Vers le compte')).toBeInTheDocument();
     // Category select should be hidden in transfer mode
     expect(screen.queryByRole('button', { name: 'Choisir une catégorie' })).not.toBeInTheDocument();
+  });
+
+  it('loads popular default templates when localStorage has no data', async () => {
+    render(<ScheduledFormSheet isOpen={true} onClose={() => {}} onSave={() => {}} />);
+    
+    expect(screen.getByText('Netflix')).toBeInTheDocument();
+    expect(screen.getByText('Spotify')).toBeInTheDocument();
+  });
+
+  it('saves custom subscription template and updates carrousel', async () => {
+    render(<ScheduledFormSheet isOpen={true} onClose={() => {}} onSave={() => {}} />);
+
+    const amountInput = screen.getByPlaceholderText('0.00');
+    fireEvent.change(amountInput, { target: { value: '45.00' } });
+
+    const descInput = screen.getByLabelText(/Nom \/ Description/);
+    fireEvent.change(descInput, { target: { value: 'Abonnement Gym' } });
+
+    const selectCatBtn = screen.getByRole('button', { name: 'Choisir une catégorie' });
+    fireEvent.click(selectCatBtn);
+    const catOption = screen.getByRole('button', { name: /Alimentation/ });
+    fireEvent.click(catOption);
+
+    const saveTmplBtn = screen.getByRole('button', { name: 'Sauver modèle' });
+    fireEvent.click(saveTmplBtn);
+
+    expect(screen.getByText('Abonnement Gym')).toBeInTheDocument();
+
+    const stored = JSON.parse(localStorage.getItem('budgetizer_subscription_templates'));
+    expect(stored).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: 'Abonnement Gym',
+        amount: 45
+      })
+    ]));
+  });
+
+  it('autofills fields when clicking a quick template', async () => {
+    render(<ScheduledFormSheet isOpen={true} onClose={() => {}} onSave={() => {}} />);
+
+    const netflixBtn = screen.getByRole('button', { name: /Netflix/ });
+    fireEvent.click(netflixBtn);
+
+    const descInput = screen.getByLabelText(/Nom \/ Description/);
+    expect(descInput.value).toBe('Netflix');
+
+    const amountInput = screen.getByPlaceholderText('0.00');
+    expect(amountInput.value).toBe('15.99');
+  });
+
+  it('deletes a template via long press', async () => {
+    vi.useFakeTimers();
+
+    const customTemplates = [{ id: 'tmpl-custom', name: 'My Special Sub', amount: 8.99, icon: '💡', categoryName: 'Loisirs' }];
+    localStorage.setItem('budgetizer_subscription_templates', JSON.stringify(customTemplates));
+
+    render(<ScheduledFormSheet isOpen={true} onClose={() => {}} onSave={() => {}} />);
+
+    const subBtn = screen.getByRole('button', { name: /My Special Sub/ });
+    expect(subBtn).toBeInTheDocument();
+
+    fireEvent.mouseDown(subBtn);
+    act(() => {
+      vi.advanceTimersByTime(850);
+    });
+    fireEvent.mouseUp(subBtn);
+
+    expect(screen.getByText('Supprimer le modèle ?')).toBeInTheDocument();
+
+    const deleteBtn = screen.getByRole('button', { name: 'Supprimer' });
+    fireEvent.click(deleteBtn);
+
+    expect(screen.queryByRole('button', { name: /My Special Sub/ })).not.toBeInTheDocument();
+    
+    const stored = JSON.parse(localStorage.getItem('budgetizer_subscription_templates'));
+    expect(stored.find(t => t.name === 'My Special Sub')).toBeUndefined();
+
+    vi.useRealTimers();
   });
 });
