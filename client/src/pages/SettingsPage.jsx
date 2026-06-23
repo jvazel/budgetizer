@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FolderTree, Tag, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 import ProfileForm from '../components/settings/ProfileForm';
 import PasswordForm from '../components/settings/PasswordForm';
@@ -63,25 +64,41 @@ const SettingsPage = () => {
 
         {/* Categories & Tags Management */}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1 flex items-center gap-1.5">
+          <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1">
             Structure & Catégorisation
           </h3>
-          <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4 shadow-sm">
-            <p className="text-[10px] text-muted">Gère tes catégories de transactions et tes étiquettes personnalisées.</p>
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button 
-                onClick={() => navigate('/categories')}
-                className="bg-surface border border-border/40 hover:bg-surface-2/80 py-3 rounded-2xl text-xs font-bold active:scale-98 transition-all text-center text-primary"
-              >
-                Catégories
-              </button>
-              <button 
-                onClick={() => navigate('/tags')}
-                className="bg-surface border border-border/40 hover:bg-surface-2/80 py-3 rounded-2xl text-xs font-bold active:scale-98 transition-all text-center text-primary"
-              >
-                Étiquettes (Tags)
-              </button>
-            </div>
+          <div className="space-y-2.5">
+            <button 
+              onClick={() => navigate('/categories')}
+              className="w-full flex items-center justify-between p-4 bg-surface-2 rounded-2xl border border-border/40 hover:bg-border/10 transition-all text-left active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-copper/10 text-copper group-hover:bg-copper group-hover:text-white transition-colors">
+                  <FolderTree size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-primary">Catégories</h4>
+                  <p className="text-[10px] text-muted">Gère l'organisation et l'arborescence de tes transactions.</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted group-hover:text-primary transition-colors" />
+            </button>
+
+            <button 
+              onClick={() => navigate('/tags')}
+              className="w-full flex items-center justify-between p-4 bg-surface-2 rounded-2xl border border-border/40 hover:bg-border/10 transition-all text-left active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                  <Tag size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-primary">Étiquettes (Tags)</h4>
+                  <p className="text-[10px] text-muted">Personnalise les tags transversaux pour un suivi plus fin.</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted group-hover:text-primary transition-colors" />
+            </button>
           </div>
         </div>
 
@@ -129,62 +146,34 @@ const SettingsPage = () => {
       </div>
 
       {/* Confirmation Dialog Clear Data */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-surface border border-border rounded-[32px] p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
-            <AlertTriangle className="text-danger mx-auto" size={42} />
-            <div>
-              <h3 className="text-sm font-extrabold text-primary">Effacer toutes les données ?</h3>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                Cette action supprimera l'intégralité de tes comptes, transactions, budgets et planifications. Tes identifiants de profil seront conservés.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
-                onClick={() => setShowClearConfirm(false)}
-                className="bg-surface-2 border border-border/40 py-3 rounded-2xl text-xs font-bold text-primary active:scale-95 transition-all"
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={handleClearAllData}
-                className="bg-danger text-white py-3 rounded-2xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-danger/20"
-              >
-                Tout effacer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={handleClearAllData}
+        title="Effacer toutes les données ?"
+        confirmText="Tout effacer"
+        cancelText="Annuler"
+        type="danger"
+      >
+        <p className="text-xs text-secondary leading-relaxed">
+          Cette action supprimera l'intégralité de tes comptes, transactions, budgets et planifications. Tes identifiants de profil seront conservés.
+        </p>
+      </ConfirmModal>
 
       {/* Confirmation Dialog Delete Account */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-surface border border-border rounded-[32px] p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
-            <AlertTriangle className="text-danger mx-auto" size={42} />
-            <div>
-              <h3 className="text-sm font-extrabold text-primary">Supprimer mon compte ?</h3>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                Cette opération est définitive et irréversible. Ton compte d'utilisateur et l'intégralité de tes enregistrements financiers seront effacés en cascade.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
-                onClick={() => setShowDeleteConfirm(false)}
-                className="bg-surface-2 border border-border/40 py-3 rounded-2xl text-xs font-bold text-primary active:scale-95 transition-all"
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={handleDeleteAccount}
-                className="bg-danger text-white py-3 rounded-2xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-danger/20"
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteAccount}
+        title="Supprimer mon compte ?"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        type="danger"
+      >
+        <p className="text-xs text-secondary leading-relaxed">
+          Cette opération est définitive et irréversible. Ton compte d'utilisateur et l'intégralité de tes enregistrements financiers seront effacés en cascade.
+        </p>
+      </ConfirmModal>
 
     </>
   );

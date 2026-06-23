@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layout/AppShell';
+import { useState, useContext } from 'react';
+import { HeaderTitle, HeaderActions, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import BudgetCard from '../components/budgets/BudgetCard';
 import BudgetFormSheet from '../components/budgets/BudgetFormSheet';
 import { useBudgets } from '../hooks/useBudgets';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CreditCard } from 'lucide-react';
+import EmptyState from '../components/ui/EmptyState';
 
 const Budgets = () => {
+  const { isScrolled } = useContext(HeaderPortalContext);
+  const [selectedPeriod, setSelectedPeriod] = useState('monthly'); // 'weekly' | 'monthly' | 'yearly'
+
   // Initialize to Monday of current week
   const getInitialWeekStart = () => {
     const today = new Date();
@@ -110,18 +114,6 @@ const Budgets = () => {
   const monthlyBudgets = budgets.filter(b => b.period === 'monthly' || !b.period);
   const yearlyBudgets = budgets.filter(b => b.period === 'yearly');
 
-  const renderSectionHeader = (title, onPrev, onNext) => (
-    <div className="w-[calc(100%+32px)] bg-surface-2 text-primary py-3 px-4 flex justify-between items-center font-bold text-sm select-none border-y border-border mx-[-16px] mb-4">
-      <button onClick={onPrev} className="p-1.5 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all">
-        <ChevronLeft size={18} />
-      </button>
-      <span className="text-xs font-bold uppercase tracking-wider text-primary">{title}</span>
-      <button onClick={onNext} className="p-1.5 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all">
-        <ChevronRight size={18} />
-      </button>
-    </div>
-  );
-
   const showSkeleton = loading && budgets.length === 0;
 
   const actions = (
@@ -141,103 +133,155 @@ const Budgets = () => {
       <HeaderBackButton to="/" />
 
       {/* Large Collapsible Header Title on Page */}
-      <div className="mb-5 mt-2 px-1">
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
         <div className="text-2xl font-extrabold text-primary tracking-tight">Budgets</div>
         <p className="text-[11px] text-secondary mt-0.5 font-medium">Définissez et suivez vos enveloppes budgétaires périodiques.</p>
       </div>
+
+      {/* Segmented control for active period */}
+      <div className="flex bg-surface p-1 rounded-2xl border border-border/40 gap-1 mb-5 select-none">
+        {[
+          { key: 'weekly', label: 'Semaine' },
+          { key: 'monthly', label: 'Mois' },
+          { key: 'yearly', label: 'Année' }
+        ].map((period) => (
+          <button
+            key={period.key}
+            type="button"
+            onClick={() => setSelectedPeriod(period.key)}
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm ${
+              selectedPeriod === period.key
+                ? 'bg-copper text-white shadow-sm font-extrabold'
+                : 'text-secondary hover:text-primary hover:bg-border/10'
+            }`}
+          >
+            {period.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Period Navigation Bar */}
+      <div className="flex justify-between items-center bg-surface-2-glass backdrop-blur-md border border-border/40 rounded-2xl p-3 mb-6 select-none shadow-sm">
+        <button 
+          onClick={selectedPeriod === 'weekly' ? prevWeek : selectedPeriod === 'monthly' ? prevMonth : prevYear} 
+          className="p-2 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        
+        <div className="flex flex-col items-center">
+          <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted/60">
+            Période active
+          </span>
+          <span className="text-xs font-bold text-primary">
+            {selectedPeriod === 'weekly' 
+              ? `Semaine du ${new Date(weekDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
+              : selectedPeriod === 'monthly'
+                ? new Date(monthDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())
+                : new Date(yearDate).getFullYear()
+            }
+          </span>
+        </div>
+
+        <button 
+          onClick={selectedPeriod === 'weekly' ? nextWeek : selectedPeriod === 'monthly' ? nextMonth : nextYear} 
+          className="p-2 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
       <section className="mb-6">
         {/* Weekly Budgets Section */}
-        <div className="mb-6">
-          {renderSectionHeader("Budgets hebdomadaires", prevWeek, nextWeek)}
-          {showSkeleton ? (
-            <div className="space-y-4">
-              <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
-            </div>
-          ) : weeklyBudgets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
-              <p className="text-primary text-xs font-bold mb-1">Aucun budget hebdomadaire</p>
-              <p className="text-muted text-[10px] mb-3">Suivez vos dépenses sur un cycle de 7 jours.</p>
-              <button
-                onClick={handleOpenAdd}
-                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
-              >
-                Créer un budget hebdomadaire
-              </button>
-            </div>
-          ) : (
-            weeklyBudgets.map(budget => (
-              <BudgetCard 
-                key={budget._id} 
-                budget={budget} 
-                onEdit={handleOpenEdit}
-                onDelete={deleteBudget}
-                selectedWeekStart={weekStartStr}
+        {selectedPeriod === 'weekly' && (
+          <div className="mb-6 animate-fadeIn">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
+              </div>
+            ) : weeklyBudgets.length === 0 ? (
+              <EmptyState
+                icon={CreditCard}
+                title="Aucun budget hebdomadaire"
+                description="Suivez vos dépenses sur un cycle de 7 jours en définissant une limite."
+                actionLabel="Créer un budget hebdomadaire"
+                onAction={handleOpenAdd}
               />
-            ))
-          )}
-        </div>
+            ) : (
+              weeklyBudgets.map(budget => (
+                <BudgetCard 
+                  key={budget._id} 
+                  budget={budget} 
+                  onEdit={handleOpenEdit}
+                  onDelete={deleteBudget}
+                  selectedWeekStart={weekStartStr}
+                />
+              ))
+            )}
+          </div>
+        )}
 
         {/* Monthly Budgets Section */}
-        <div className="mb-6">
-          {renderSectionHeader("Budgets mensuels", prevMonth, nextMonth)}
-          {showSkeleton ? (
-            <div className="space-y-4">
-              <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
-            </div>
-          ) : monthlyBudgets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
-              <p className="text-primary text-xs font-bold mb-1">Aucun budget mensuel</p>
-              <p className="text-muted text-[10px] mb-3">Définissez une limite de dépenses pour le mois.</p>
-              <button
-                onClick={handleOpenAdd}
-                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
-              >
-                Créer un budget mensuel
-              </button>
-            </div>
-          ) : (
-            monthlyBudgets.map(budget => (
-              <BudgetCard 
-                key={budget._id} 
-                budget={budget} 
-                onEdit={handleOpenEdit}
-                onDelete={deleteBudget}
-                selectedMonth={monthStr}
+        {selectedPeriod === 'monthly' && (
+          <div className="mb-6 animate-fadeIn">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
+              </div>
+            ) : monthlyBudgets.length === 0 ? (
+              <EmptyState
+                icon={CreditCard}
+                title="Aucun budget mensuel"
+                description="Définissez une limite de dépenses pour le mois en cours."
+                actionLabel="Créer un budget mensuel"
+                onAction={handleOpenAdd}
               />
-            ))
-          )}
-        </div>
+            ) : (
+              monthlyBudgets.map(budget => (
+                <BudgetCard 
+                  key={budget._id} 
+                  budget={budget} 
+                  onEdit={handleOpenEdit}
+                  onDelete={deleteBudget}
+                  selectedMonth={monthStr}
+                />
+              ))
+            )}
+          </div>
+        )}
 
         {/* Yearly Budgets Section */}
-        <div className="mb-6">
-          {renderSectionHeader("Budgets annuels", prevYear, nextYear)}
-          {showSkeleton ? (
-            <div className="space-y-4">
-              <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
-            </div>
-          ) : yearlyBudgets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-6 px-4 bg-surface-2/40 rounded-[16px] border border-border/20 shadow-inner mb-5">
-              <p className="text-primary text-xs font-bold mb-1">Aucun budget annuel</p>
-              <p className="text-muted text-[10px] mb-3">Projetez vos limites financières sur l'année.</p>
-              <button
-                onClick={handleOpenAdd}
-                className="py-2 px-3 bg-accent/10 hover:bg-accent/15 text-accent font-bold text-[10px] rounded-xl transition-all"
-              >
-                Créer un budget annuel
-              </button>
-            </div>
-          ) : (
-            yearlyBudgets.map(budget => (
-              <BudgetCard 
-                key={budget._id} 
-                budget={budget} 
-                onEdit={handleOpenEdit}
-                onDelete={deleteBudget}
-                selectedYear={yearStr}
+        {selectedPeriod === 'yearly' && (
+          <div className="mb-6 animate-fadeIn">
+            {showSkeleton ? (
+              <div className="space-y-4">
+                <div className="h-[120px] bg-surface-2 rounded-2xl animate-pulse" />
+              </div>
+            ) : yearlyBudgets.length === 0 ? (
+              <EmptyState
+                icon={CreditCard}
+                title="Aucun budget annuel"
+                description="Projetez vos limites financières sur l'année complète."
+                actionLabel="Créer un budget annuel"
+                onAction={handleOpenAdd}
               />
-            ))
-          )}
-        </div>
+            ) : (
+              yearlyBudgets.map(budget => (
+                <BudgetCard 
+                  key={budget._id} 
+                  budget={budget} 
+                  onEdit={handleOpenEdit}
+                  onDelete={deleteBudget}
+                  selectedYear={yearStr}
+                />
+              ))
+            )}
+          </div>
+        )}
       </section>
 
       <BudgetFormSheet 

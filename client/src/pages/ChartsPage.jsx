@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
-import { HeaderTitle } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderPortalContext } from '../components/layout/AppShell';
 import CategoryChart from '../components/charts/CategoryChart';
 import FutureChart from '../components/charts/FutureChart';
 import ForecastChart from '../components/charts/ForecastChart';
@@ -23,6 +23,7 @@ const ChartsPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'category'); // category, cashflow, ranking, networth, future, forecast, budgetactual
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const { isScrolled } = useContext(HeaderPortalContext);
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -57,12 +58,49 @@ const ChartsPage = () => {
     </div>
   );
 
+  const getAiAdvice = (tab) => {
+    switch (tab) {
+      case 'category':
+        return "Visualise la répartition de tes dépenses par catégorie. Repère tes plus gros postes de dépenses pour identifier des opportunités d'optimisation ! 📊";
+      case 'cashflow':
+        return "Le Cash Flow compare tes revenus à tes dépenses réelles. Un cash flow positif récurrent est le moteur principal de ton enrichissement. 💸";
+      case 'networth':
+        return "Ta Richesse Nette est la somme de tes actifs moins tes dettes. Suivre sa progression sur le long terme est crucial pour ta liberté financière ! 📈";
+      case 'budgetactual':
+        return "Compare tes dépenses réelles avec les limites de budget que tu t'es fixées. Ajuste le tir sur les enveloppes qui débordent fréquemment. 🎯";
+      case 'forecast':
+        return "Grâce à tes historiques, l'IA projette tes dépenses à venir. Anticipe les mois difficiles pour lisser ta trésorerie sans stress. 🔮";
+      case 'velocity':
+        return "Le rythme des dépenses montre la vitesse à laquelle tu consommes ton budget au fil des jours. Garde un rythme régulier ! ⚡";
+      case 'tags':
+        return "Analyse tes dépenses regroupées par tags transversaux. Parfait pour suivre le coût réel d'un projet, de vacances ou de travaux ! 🏷️";
+      case 'fixedvar':
+        return "Distingue tes charges fixes (obligatoires) de tes dépenses variables (discrétionnaires). Réduire les variables est le moyen le plus rapide d'économiser. 🔒";
+      case 'waterfall':
+        return "Découvre comment ton solde évolue pas à pas ce mois-ci, de tes revenus initiaux jusqu'au reste à vivre final. 🌊";
+      case 'future':
+        return "La projection de trésorerie te permet de voir l'impact de tes opérations planifiées et récurrentes sur ton solde futur. ⏰";
+      case 'resilience':
+        return "Le stress-test évalue ta résilience financière face à des imprévus. Assure-toi d'avoir un fond d'urgence suffisant ! 🛡️";
+      case 'histogram':
+        return "Personnalise ton histogramme pour comparer des périodes spécifiques ou analyser les variations temporelles de tes flux. 📊";
+      case 'ranking':
+        return "Découvre le classement de tes transactions les plus importantes. Idéal pour repérer les dépenses exceptionnelles qui plombent ton mois. 🏆";
+      default:
+        return "Explore les différents graphiques pour comprendre la structure de tes dépenses. Suivre tes habitudes est le premier pas vers une épargne sereine ! 💡";
+    }
+  };
+
   return (
     <>
       <HeaderTitle collapsible={true}>{titleElement}</HeaderTitle>
 
       {/* Large Collapsible Header Title on Page */}
-      <div className="mb-5 mt-2 px-1 space-y-4">
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
         <div 
           onClick={() => setIsSelectorOpen(true)}
           className="flex items-center gap-2 cursor-pointer group active:scale-98 select-none"
@@ -74,16 +112,46 @@ const ChartsPage = () => {
             <ChevronDown size={12} className="text-secondary shrink-0 mt-0.5 ml-1" />
           </div>
         </div>
-        <p className="text-[11px] text-secondary font-medium leading-none">Visualise tes données financières sous différentes perspectives analytiques.</p>
+        <p className="text-[11px] text-secondary font-medium leading-none mt-1">Visualise tes données financières sous différentes perspectives analytiques.</p>
+      </div>
 
-        {/* Coach IA recommendation */}
-        <div className="bg-surface-2 p-4 rounded-[24px] border border-border/40 flex gap-3 items-start select-none shadow-sm">
-          <AiBadge text="Conseil IA" className="mt-0.5" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] text-secondary font-semibold leading-relaxed">
-              Explore les différents graphiques pour comprendre la structure de tes dépenses. Suivre tes habitudes est le premier pas vers une épargne sereine ! 💡
-            </p>
-          </div>
+      {/* Horizontal Scrollable Tabs for Top 5 + Autres */}
+      <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 no-scrollbar scroll-smooth select-none">
+        {[
+          { key: 'category', label: 'Catégories' },
+          { key: 'cashflow', label: 'Cash Flow' },
+          { key: 'networth', label: 'Richesse Nette' },
+          { key: 'budgetactual', label: 'Budget vs Réel' },
+          { key: 'forecast', label: 'Prévisions' }
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`whitespace-nowrap px-4 py-2 text-xs font-bold rounded-full border transition-all active:scale-95 shrink-0 ${
+              activeTab === tab.key
+                ? 'bg-copper border-copper text-white shadow-sm shadow-copper/20 font-extrabold'
+                : 'bg-surface-2 border-border/40 hover:bg-border/10 text-secondary hover:text-primary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+        <button
+          onClick={() => setIsSelectorOpen(true)}
+          className="whitespace-nowrap px-4 py-2 text-xs font-bold rounded-full border border-dashed border-border/60 bg-transparent hover:bg-border/10 text-secondary hover:text-primary transition-all active:scale-95 shrink-0 flex items-center gap-1.5"
+        >
+          <Sliders size={12} className="shrink-0" />
+          <span>Autres</span>
+        </button>
+      </div>
+
+      {/* Coach IA recommendation */}
+      <div className="bg-surface-2 p-4 rounded-[24px] border border-border/40 flex gap-3 items-start select-none shadow-sm mb-5">
+        <AiBadge text="Conseil IA" className="mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] text-secondary font-semibold leading-relaxed">
+            {getAiAdvice(activeTab)}
+          </p>
         </div>
       </div>
 

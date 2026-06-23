@@ -184,6 +184,9 @@ Accessible via l'option "Transactions" du menu de navigation :
 
 La gestion de budget repose sur le système des enveloppes mensuelles ou périodiques.
 
+- **Sélecteur de Période (Segmented Control)** : Un contrôle segmenté supérieur permet de basculer instantanément entre les enveloppes hebdomadaires, mensuelles et annuelles, avec un navigateur de période ← Période active → unifié.
+- **Titre de page collapsible** : Le titre se rétracte dans la barre supérieure lors du défilement vertical.
+- **EmptyState illustré** : Si aucun budget n'est défini pour la période sélectionnée, une carte de statut vide structurée avec icône invite l'utilisateur à en créer un.
 - **Configuration d'un Budget** :
   - **Catégorie cible** : Le budget s'applique aux dépenses de cette catégorie (et ses sous-catégories).
   - **Montant limite** : Somme maximale allouée pour la période.
@@ -217,6 +220,9 @@ Les abonnements (Netflix, électricité, salle de sport) sont des cas particulie
 
 La page **Statistiques (Charts)** propose des visualisations interactives basées sur les données réelles et planifiées :
 
+- **Barre d'onglets horizontaux (Top 5)** : Permet de basculer instantanément d'un simple geste entre les 5 analyses de base les plus importantes : *Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*. Un bouton de menu en pointillés *"Autres"* déploie un panel BottomSheet avec tous les autres types de graphiques.
+- **Conseils IA dynamiques** : Un bandeau de recommandation de Coach financier s'adapte en temps réel selon le graphique d'analyse sélectionné pour guider l'utilisateur.
+- **Titre de page collapsible** : Le titre se rétracte et fusionne proprement dans la barre d'en-tête collante lors du défilement vertical.
 - **Répartition Categorielle (Pie Chart)** : Permet de voir en un coup d'œil où part l'argent (ex: 40% Alimentation, 20% Logement).
 - **Graphique d'Évolution (Area/Line Chart)** : Historique de l'évolution du solde cumulé des comptes au fil des jours.
 - **Prévisions à 30 jours (Forecast)** : Graphique combinant l'historique récent et projetant l'évolution des comptes sur les 30 prochains jours. Ce calcul prend en compte :

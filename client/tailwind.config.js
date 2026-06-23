@@ -22,6 +22,9 @@ export default {
         warning: "var(--warning)",
         info: "var(--info)",
         purple: "var(--purple)",
+        copper: "var(--copper)",
+        "copper-hover": "var(--copper-hover)",
+        "copper-dim": "var(--copper-dim)",
       },
       fontFamily: {
         sans: ['"Manrope"', "sans-serif"],

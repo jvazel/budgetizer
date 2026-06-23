@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useMemo } from 'react';
 import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
 import TransactionList from '../components/transactions/TransactionList';
 import { useTransactions } from '../hooks/useTransactions';
@@ -23,6 +23,8 @@ const Transactions = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [txToDelete, setTxToDelete] = useState(null);
+  const [filterToDelete, setFilterToDelete] = useState(null);
+  const [confirmDeleteFilterOpen, setConfirmDeleteFilterOpen] = useState(false);
 
   // Filter state values
   const [search, setSearch] = useState('');
@@ -231,19 +233,48 @@ const Transactions = () => {
   };
 
   // Delete saved filter handler
-  const handleDeleteFilter = async (sf) => {
-    if (window.confirm(`Supprimer le filtre enregistré "${sf.name}" ?`)) {
-      try {
-        await deleteSavedFilter(sf._id);
-        if (activeSavedFilterId === sf._id) {
-          setActiveSavedFilterId(null);
-        }
-        toast.success('Filtre supprimé');
-      } catch (err) {
-        toast.error('Erreur lors de la suppression');
+  const handleDeleteFilter = (sf) => {
+    setFilterToDelete(sf);
+    setConfirmDeleteFilterOpen(true);
+  };
+
+  const handleConfirmDeleteFilter = async () => {
+    if (!filterToDelete) return;
+    try {
+      await deleteSavedFilter(filterToDelete._id);
+      if (activeSavedFilterId === filterToDelete._id) {
+        setActiveSavedFilterId(null);
       }
+      toast.success('Filtre supprimé');
+    } catch (err) {
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setConfirmDeleteFilterOpen(false);
+      setFilterToDelete(null);
     }
   };
+
+  const stats = useMemo(() => {
+    let income = 0;
+    let expenses = 0;
+    const count = transactions.length;
+
+    transactions.forEach(tx => {
+      const amount = Number(tx.amount || 0);
+      if (tx.type === 'income') {
+        income += amount;
+      } else if (tx.type === 'expense') {
+        expenses += amount;
+      }
+    });
+
+    return {
+      income,
+      expenses,
+      net: income - expenses,
+      count
+    };
+  }, [transactions]);
 
   const actions = (
     <>
@@ -320,6 +351,28 @@ const Transactions = () => {
             <ChevronRight size={16} />
           </button>
         </div>
+
+        {/* Stats Summary Bar */}
+        <div className="grid grid-cols-3 gap-2 bg-surface-2-glass backdrop-blur-md border border-border/40 rounded-2xl p-3 text-center select-none shadow-sm animate-fadeIn">
+          <div>
+            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Revenus</span>
+            <span className="text-xs font-extrabold text-accent font-premium-numbers block mt-0.5">
+              +{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.income)}
+            </span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Dépenses</span>
+            <span className="text-xs font-extrabold text-danger font-premium-numbers block mt-0.5">
+              -{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.expenses)}
+            </span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Net ({stats.count})</span>
+            <span className={`text-xs font-extrabold font-premium-numbers block mt-0.5 ${stats.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+              {stats.net >= 0 ? '+' : ''}{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.net)}
+            </span>
+          </div>
+        </div>
         
         {/* Dynamic sliding Search Bar */}
         {showSearch && (
@@ -344,304 +397,6 @@ const Transactions = () => {
           </div>
         )}
 
-        {/* Dynamic sliding Advanced Filters section */}
-        {showFilters && (
-          <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 shadow-sm space-y-4 animate-fadeIn">
-            
-            {/* Filter title / Reset button */}
-            <div className="flex justify-between items-center pb-2 border-b border-border/20">
-              <h3 className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Filter size={14} className="text-accent" /> Filtres Avancés
-              </h3>
-              <button 
-                onClick={handleResetFilters}
-                className="text-[10px] font-bold text-muted hover:text-danger flex items-center gap-1 transition-colors"
-              >
-                <RotateCcw size={10} /> Réinitialiser
-              </button>
-            </div>
-
-            {/* Saved Filters Dropdown */}
-            {savedFilters.length > 0 && (
-              <div className="space-y-1 pb-1">
-                <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
-                  <Bookmark size={10} className="text-accent" /> Charger un filtre enregistré
-                </label>
-                <div className="flex gap-2">
-                  <Select
-                    value={activeSavedFilterId || ''}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      if (id === '') {
-                        handleResetFilters();
-                        setShowFilters(true); // Keep filters open
-                      } else {
-                        const sf = savedFilters.find(f => f._id === id);
-                        if (sf) handleLoadFilter(sf);
-                      }
-                    }}
-                    className="flex-1 bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                  >
-                    <option value="">-- Choisir un filtre --</option>
-                    {[...savedFilters]
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map(sf => (
-                        <option key={sf._id} value={sf._id}>
-                          {sf.name}
-                        </option>
-                      ))
-                    }
-                  </Select>
-                  
-                  {activeSavedFilterId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const sf = savedFilters.find(f => f._id === activeSavedFilterId);
-                        if (sf) handleDeleteFilter(sf);
-                      }}
-                      className="px-3 py-2 rounded-xl bg-surface border border-border/40 text-muted hover:text-danger hover:border-danger/35 transition-colors focus:outline-none flex items-center justify-center shadow-sm"
-                      title="Supprimer ce filtre"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Selection Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Filter by Type (Segmented control style Bankyboard) */}
-              <div className="space-y-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
-                <div className="flex bg-surface p-1 rounded-xl border border-border/40 gap-1 select-none">
-                  {[
-                    { key: '', label: 'Tous' },
-                    { key: 'expense', label: 'Dépenses 🔴' },
-                    { key: 'income', label: 'Revenus 🟢' },
-                    { key: 'transfer', label: 'Virements 🔵' }
-                  ].map((opt) => {
-                    const isSelected = type === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => {
-                          setType(opt.key);
-                          setCategoryId('');
-                        }}
-                        className={`flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition-all active:scale-95 ${
-                          isSelected
-                            ? 'bg-copper text-white shadow-sm font-extrabold'
-                            : 'text-secondary hover:text-primary hover:bg-border/10'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Filter by Account */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase">Compte bancaire</label>
-                <Select
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                  align="right"
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                >
-                  <option value="">Tous les comptes</option>
-                  {accounts.map(acc => (
-                    <option key={acc._id} value={acc._id}>{acc.name}</option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Filter by Category */}
-              {type !== 'transfer' && (
-                <div className="space-y-1 col-span-2">
-                  <label className="text-[10px] font-bold text-muted uppercase">Catégorie</label>
-                  <Select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                  >
-                    <option value="">Toutes les catégories</option>
-                    {categories
-                      .filter(cat => !type || cat.type === type)
-                      .map(cat => (
-                        <option key={cat._id} value={cat._id}>
-                          {cat.icon} {cat.name}
-                        </option>
-                      ))
-                    }
-                  </Select>
-                </div>
-              )}
-
-              {/* Filter by Tag (Tactile selection pills) */}
-              {tags && tags.length > 0 && (
-                <div className="space-y-1.5 col-span-2 pb-1">
-                  <label className="text-[10px] font-bold text-muted uppercase">Filtrer par Étiquettes</label>
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-0.5">
-                    {tags.map(tag => {
-                      const isSelected = selectedTags.includes(tag._id);
-                      const textColor = isSelected ? getContrastColor(tag.color) : 'var(--color-text-secondary)';
-                      return (
-                        <button
-                          key={tag._id}
-                          type="button"
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedTags(selectedTags.filter(id => id !== tag._id));
-                            } else {
-                              setSelectedTags([...selectedTags, tag._id]);
-                            }
-                          }}
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95 select-none`}
-                          style={{
-                            backgroundColor: isSelected ? tag.color : 'rgba(255, 255, 255, 0.03)',
-                            color: textColor,
-                            borderColor: isSelected ? 'transparent' : 'rgba(255, 255, 255, 0.08)'
-                          }}
-                        >
-                          {tag.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-               {/* Start Date */}
-              <div className="space-y-1">
-                <label 
-                  htmlFor="startDateFilter"
-                  className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
-                >
-                  <Calendar size={10} /> Du
-                </label>
-                <input
-                  id="startDateFilter"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setPeriod('all');
-                  }}
-                  onClick={(e) => {
-                    try {
-                      e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  onFocus={(e) => {
-                    try {
-                      e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                />
-              </div>
-
-              {/* End Date */}
-              <div className="space-y-1">
-                <label 
-                  htmlFor="endDateFilter"
-                  className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
-                >
-                  <Calendar size={10} /> Au
-                </label>
-                <input
-                  id="endDateFilter"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setPeriod('all');
-                  }}
-                  onClick={(e) => {
-                    try {
-                      e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  onFocus={(e) => {
-                    try {
-                      e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Save / Update Filter action */}
-            <div className="pt-2 border-t border-border/20 flex flex-col gap-2">
-              {!isSavingFilter ? (
-                <div className="flex gap-2 justify-end text-xs">
-                  {activeSavedFilterId && (
-                    <button
-                      type="button"
-                      onClick={handleUpdateFilter}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-primary transition-colors font-bold"
-                    >
-                      <RotateCcw size={13} className="text-purple" />
-                      Mettre à jour "{savedFilters.find(f => f._id === activeSavedFilterId)?.name}"
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSavingFilter(true);
-                      setNewFilterName(activeSavedFilterId ? `${savedFilters.find(f => f._id === activeSavedFilterId)?.name} (copie)` : '');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-accent font-bold transition-colors"
-                  >
-                    <Save size={13} />
-                    {activeSavedFilterId ? 'Enregistrer sous...' : 'Enregistrer ce filtre'}
-                  </button>
-                </div>
-              ) : (
-                <form 
-                  onSubmit={handleSaveFilterSubmit} 
-                  className="flex items-center gap-2 bg-surface p-2 rounded-xl border border-border/40 animate-fadeIn"
-                >
-                  <input
-                    type="text"
-                    placeholder="Nom du filtre (ex: Courses de Mai)"
-                    value={newFilterName}
-                    onChange={e => setNewFilterName(e.target.value)}
-                    className="flex-1 bg-transparent text-xs text-primary focus:outline-none placeholder-muted px-2 font-semibold"
-                    required
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    className="p-1.5 rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors"
-                    title="Enregistrer"
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSavingFilter(false);
-                      setNewFilterName('');
-                    }}
-                    className="p-1.5 rounded-lg bg-surface-2 hover:bg-border/40 text-secondary transition-colors"
-                    title="Annuler"
-                  >
-                    <X size={14} />
-                  </button>
-                </form>
-              )}
-            </div>
-
-          </div>
-        )}
-
         {/* Real-time Loader / Transactions lists output */}
         {loading ? (
           <div className="space-y-4">
@@ -650,51 +405,348 @@ const Transactions = () => {
             <div className="h-16 bg-surface-2 rounded-2xl animate-pulse" />
           </div>
         ) : (
-          <div>
-            {transactions.length === 0 ? (
-              <div className="bg-surface-2 border border-border/40 rounded-[28px] p-8 text-center text-muted">
-                <p className="text-xs">Aucune transaction ne correspond à tes critères de recherche.</p>
-              </div>
-            ) : (
-              <TransactionList 
-                transactions={transactions} 
-                currentAccountId={accountId}
-                onDelete={(tx) => {
-                  setTxToDelete(tx);
-                  setConfirmDeleteOpen(true);
-                }} 
-                onEdit={(tx) => {
-                  setSelectedTransaction(tx);
-                  setIsEditOpen(true);
-                }}
-              />
-            )}
-          </div>
+          <TransactionList 
+            transactions={transactions} 
+            onEditClick={(tx) => { setSelectedTransaction(tx); setIsEditOpen(true); }}
+            onDeleteClick={(tx) => { setTxToDelete(tx); setConfirmDeleteOpen(true); }}
+            showFiltersActive={Object.keys(activeFilters).length > (period !== 'all' ? 2 : 0)}
+          />
         )}
-
       </div>
 
-      <TransactionFormSheet 
+      {/* Advanced Filters BottomSheet */}
+      <BottomSheet
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+      >
+        <div className="space-y-4 pt-1">
+          {/* Filter title / Reset button */}
+          <div className="flex justify-between items-center pb-2 border-b border-border/20">
+            <h3 className="text-xs font-bold text-primary flex items-center gap-1.5">
+              <Filter size={14} className="text-accent" /> Filtres Avancés
+            </h3>
+            <button 
+              onClick={handleResetFilters}
+              className="text-[10px] font-bold text-muted hover:text-danger flex items-center gap-1 transition-colors"
+            >
+              <RotateCcw size={10} /> Réinitialiser
+            </button>
+          </div>
+
+          {/* Saved Filters Dropdown */}
+          {savedFilters.length > 0 && (
+            <div className="space-y-1 pb-1">
+              <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
+                <Bookmark size={10} className="text-accent" /> Charger un filtre enregistré
+              </label>
+              <div className="flex gap-2">
+                <Select
+                  value={activeSavedFilterId || ''}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (id === '') {
+                      handleResetFilters();
+                      setShowFilters(true); // Keep filters open
+                    } else {
+                      const sf = savedFilters.find(f => f._id === id);
+                      if (sf) handleLoadFilter(sf);
+                    }
+                  }}
+                  className="flex-1 bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                >
+                  <option value="">-- Choisir un filtre --</option>
+                  {[...savedFilters]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(sf => (
+                      <option key={sf._id} value={sf._id}>
+                        {sf.name}
+                      </option>
+                    ))
+                  }
+                </Select>
+                
+                {activeSavedFilterId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sf = savedFilters.find(f => f._id === activeSavedFilterId);
+                      if (sf) handleDeleteFilter(sf);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-surface border border-border/40 text-muted hover:text-danger hover:border-danger/35 transition-colors focus:outline-none flex items-center justify-center shadow-sm"
+                    title="Supprimer ce filtre"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Selection Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Filter by Type (Segmented control style Bankyboard) */}
+            <div className="space-y-1.5 col-span-2">
+              <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
+              <div className="flex bg-surface p-1 rounded-xl border border-border/40 gap-1 select-none">
+                {[
+                  { key: '', label: 'Tous' },
+                  { key: 'expense', label: 'Dépenses', colorClass: 'bg-danger' },
+                  { key: 'income', label: 'Revenus', colorClass: 'bg-accent' },
+                  { key: 'transfer', label: 'Virements', colorClass: 'bg-info' }
+                ].map((opt) => {
+                  const isSelected = type === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setType(opt.key);
+                        setCategoryId('');
+                      }}
+                      className={`flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-copper text-white shadow-sm font-extrabold'
+                          : 'text-secondary hover:text-primary hover:bg-border/10'
+                      }`}
+                    >
+                      {opt.colorClass && (
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.colorClass}`} />
+                      )}
+                      <span>{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Filter by Account */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted uppercase">Compte bancaire</label>
+              <Select
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                align="right"
+                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              >
+                <option value="">Tous les comptes</option>
+                {accounts.map(acc => (
+                  <option key={acc._id} value={acc._id}>{acc.name}</option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Filter by Category */}
+            {type !== 'transfer' && (
+              <div className="space-y-1 col-span-2">
+                <label className="text-[10px] font-bold text-muted uppercase">Catégorie</label>
+                <Select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                >
+                  <option value="">Toutes les catégories</option>
+                  {categories
+                    .filter(cat => !type || cat.type === type)
+                    .map(cat => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.icon} {cat.name}
+                      </option>
+                    ))
+                  }
+                </Select>
+              </div>
+            )}
+
+            {/* Filter by Tag (Tactile selection pills) */}
+            {tags && tags.length > 0 && (
+              <div className="space-y-1.5 col-span-2 pb-1">
+                <label className="text-[10px] font-bold text-muted uppercase">Filtrer par Étiquettes</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-0.5">
+                  {tags.map(tag => {
+                    const isSelected = selectedTags.includes(tag._id);
+                    const textColor = isSelected ? getContrastColor(tag.color) : 'var(--color-text-secondary)';
+                    return (
+                      <button
+                        key={tag._id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTags(selectedTags.filter(id => id !== tag._id));
+                          } else {
+                            setSelectedTags([...selectedTags, tag._id]);
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95 select-none`}
+                        style={{
+                          backgroundColor: isSelected ? tag.color : 'rgba(255, 255, 255, 0.03)',
+                          color: textColor,
+                          borderColor: isSelected ? 'transparent' : 'rgba(255, 255, 255, 0.08)'
+                        }}
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+             {/* Start Date */}
+            <div className="space-y-1">
+              <label 
+                htmlFor="startDateFilter"
+                className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
+              >
+                <Calendar size={10} /> Du
+              </label>
+              <input
+                id="startDateFilter"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPeriod('all');
+                }}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                onFocus={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-1">
+              <label 
+                htmlFor="endDateFilter"
+                className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
+              >
+                <Calendar size={10} /> Au
+              </label>
+              <input
+                id="endDateFilter"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPeriod('all');
+                }}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                onFocus={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Save / Update Filter action */}
+          <div className="pt-2 border-t border-border/20 flex flex-col gap-2">
+            {!isSavingFilter ? (
+              <div className="flex gap-2 justify-end text-xs">
+                {activeSavedFilterId && (
+                  <button
+                    type="button"
+                    onClick={handleUpdateFilter}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-primary transition-colors font-bold"
+                  >
+                    <RotateCcw size={13} className="text-purple" />
+                    Mettre à jour "{savedFilters.find(f => f._id === activeSavedFilterId)?.name}"
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSavingFilter(true);
+                    setNewFilterName(activeSavedFilterId ? `${savedFilters.find(f => f._id === activeSavedFilterId)?.name} (copie)` : '');
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-accent font-bold transition-colors"
+                >
+                  <Save size={13} />
+                  {activeSavedFilterId ? 'Enregistrer sous...' : 'Enregistrer ce filtre'}
+                </button>
+              </div>
+            ) : (
+              <form 
+                onSubmit={handleSaveFilterSubmit} 
+                className="flex items-center gap-2 bg-surface p-2 rounded-xl border border-border/40 animate-fadeIn"
+              >
+                <input
+                  type="text"
+                  placeholder="Nom du filtre (ex: Courses de Mai)"
+                  value={newFilterName}
+                  onChange={e => setNewFilterName(e.target.value)}
+                  className="flex-1 bg-transparent text-xs text-primary focus:outline-none placeholder-muted px-2 font-semibold"
+                  required
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="p-1.5 rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors"
+                  title="Enregistrer"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSavingFilter(false);
+                    setNewFilterName('');
+                  }}
+                  className="p-1.5 rounded-lg bg-surface-2 hover:bg-border/40 text-secondary transition-colors"
+                  title="Annuler"
+                >
+                  <X size={14} />
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={() => setShowFilters(false)}
+              className="w-full py-3.5 bg-copper hover:bg-copper-hover text-white rounded-2xl text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-copper/10 active-spring-sm"
+            >
+              Appliquer les filtres
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Global Transaction Edit Form Sheet */}
+      <TransactionFormSheet
         isOpen={isEditOpen}
-        onClose={() => {
-          setIsEditOpen(false);
-          setSelectedTransaction(null);
-        }}
-        transactionToEdit={selectedTransaction}
+        onClose={() => { setSelectedTransaction(null); setIsEditOpen(false); }}
+        initialData={selectedTransaction}
       />
 
+      {/* Confirmation Dialog Delete Transaction */}
       <ConfirmModal
         isOpen={confirmDeleteOpen}
-        onClose={() => {
-          setConfirmDeleteOpen(false);
-          setTxToDelete(null);
-        }}
+        onClose={() => { setTxToDelete(null); setConfirmDeleteOpen(false); }}
         onConfirm={async () => {
-          if (txToDelete) {
+          if (!txToDelete) return;
+          try {
             await deleteTransaction(txToDelete._id);
+            toast.success('Transaction supprimée');
+          } catch (err) {
+            toast.error('Erreur lors de la suppression');
+          } finally {
+            setTxToDelete(null);
+            setConfirmDeleteOpen(false);
           }
-          setConfirmDeleteOpen(false);
-          setTxToDelete(null);
         }}
         title="Supprimer la transaction ?"
         confirmText="Supprimer"
@@ -707,6 +759,26 @@ const Transactions = () => {
             <br />
             <br />
             Cette action est irréversible et réajustera le solde de ton compte.
+          </p>
+        )}
+      </ConfirmModal>
+
+      {/* Confirmation Dialog Delete Saved Filter */}
+      <ConfirmModal
+        isOpen={confirmDeleteFilterOpen}
+        onClose={() => { setFilterToDelete(null); setConfirmDeleteFilterOpen(false); }}
+        onConfirm={handleConfirmDeleteFilter}
+        title="Supprimer le filtre enregistré ?"
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        type="danger"
+      >
+        {filterToDelete && (
+          <p className="text-xs text-secondary leading-relaxed">
+            Es-tu sûr de vouloir supprimer le filtre enregistré <span className="text-primary font-semibold">"{filterToDelete.name}"</span> ?
+            <br />
+            <br />
+            Cette action est définitive et irréversible.
           </p>
         )}
       </ConfirmModal>
@@ -782,4 +854,3 @@ const Transactions = () => {
 };
 
 export default Transactions;
-

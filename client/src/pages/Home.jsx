@@ -101,14 +101,14 @@ const getAccountTrend = (acc) => {
 
 // ─── Quick shortcuts ──────────────────────────────────────────────────────────
 const SHORTCUTS = [
-  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
-  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-secondary bg-white/[0.03] border-white/[0.06] group-hover:text-primary group-hover:border-white/[0.12] group-hover:bg-white/[0.05]' },
+  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-copper bg-copper/10 border-copper/20 group-hover:text-white group-hover:bg-copper group-hover:border-copper/45' },
+  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-accent bg-accent/10 border-accent/20 group-hover:text-white group-hover:bg-accent group-hover:border-accent/45' },
+  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-info bg-info/10 border-info/20 group-hover:text-white group-hover:bg-info group-hover:border-info/45' },
+  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-purple bg-purple/10 border-purple/20 group-hover:text-white group-hover:bg-purple group-hover:border-purple/45' },
+  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-warning bg-warning/10 border-warning/20 group-hover:text-white group-hover:bg-warning group-hover:border-warning/45' },
+  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-purple bg-purple/10 border-purple/20 group-hover:text-white group-hover:bg-purple group-hover:border-purple/45' },
+  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-info bg-info/10 border-info/20 group-hover:text-white group-hover:bg-info group-hover:border-info/45' },
+  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-accent bg-accent/10 border-accent/20 group-hover:text-white group-hover:bg-accent group-hover:border-accent/45' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -347,14 +347,15 @@ const Home = () => {
                 </p>
                 {incomeGrowth !== null && (
                   <div className="mt-1">
-                    <span className={`text-[11px] font-bold ${
+                    <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
                       incomeGrowth >= 0 
                         ? 'text-accent/80' 
                         : incomeGrowth >= -10 
                           ? 'text-warning/80' 
                           : 'text-danger/80'
                     }`}>
-                      {incomeGrowth >= 0 ? '▲' : '▼'} {Math.abs(incomeGrowth)}%
+                      {incomeGrowth >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                      <span>{Math.abs(incomeGrowth)}%</span>
                     </span>
                     <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
                   </div>
@@ -368,14 +369,15 @@ const Home = () => {
                 </p>
                 {expenseGrowth !== null && (
                   <div className="mt-1">
-                    <span className={`text-[11px] font-bold ${
+                    <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
                       expenseGrowth <= 0 
                         ? 'text-accent/80' 
                         : expenseGrowth <= 10 
                           ? 'text-warning/80' 
                           : 'text-danger/80'
                     }`}>
-                      {expenseGrowth <= 0 ? '▼' : '▲'} {Math.abs(expenseGrowth)}%
+                      {expenseGrowth <= 0 ? <TrendingDown size={11} /> : <TrendingUp size={11} />}
+                      <span>{Math.abs(expenseGrowth)}%</span>
                     </span>
                     <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
                   </div>
@@ -389,14 +391,15 @@ const Home = () => {
                 </p>
                 {netGrowth !== null && (
                   <div className="mt-1">
-                    <span className={`text-[11px] font-bold ${
+                    <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
                       netGrowth >= 0 
                         ? 'text-accent/80' 
                         : netGrowth >= -15 
                           ? 'text-warning/80' 
                           : 'text-danger/80'
                     }`}>
-                      {netGrowth >= 0 ? '▲' : '▼'} {Math.abs(netGrowth)}%
+                      {netGrowth >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                      <span>{Math.abs(netGrowth)}%</span>
                     </span>
                     <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
                   </div>
@@ -458,6 +461,135 @@ const Home = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* ── Comptes ──────────────────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4 px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-accent-dim border border-accent/20 flex items-center justify-center text-accent">
+              <Wallet size={13} />
+            </div>
+            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Comptes</h3>
+          </div>
+          <button
+            onClick={() => navigate('/accounts')}
+            className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
+          >
+            Gérer
+          </button>
+        </div>
+
+        {/* Horizontal scrollable carrousel */}
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-3 -mx-4 px-4">
+          {accounts.map((acc) => {
+            const isNegative = acc.balance < 0;
+            const trend = getAccountTrend(acc);
+
+            return (
+              <div
+                key={acc._id}
+                onClick={() =>
+                  acc.type === 'credit'
+                    ? navigate(`/accounts/${acc._id}/credit`)
+                     : navigate(`/accounts/${acc._id}`)
+                }
+                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-glass backdrop-blur-md"
+                style={{
+                  background: `linear-gradient(135deg, ${acc.color || '#10b981'}22 0%, ${acc.color || '#10b981'}08 100%)`,
+                  borderColor: `${acc.color || '#10b981'}30`,
+                  boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.2), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.08)',
+                }}
+              >
+                {/* Glass reflection shine overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.08] pointer-events-none z-0" />
+                
+                {/* Background glow orb */}
+                <div 
+                  className="absolute -right-12 -bottom-12 w-28 h-28 rounded-full blur-3xl pointer-events-none opacity-25"
+                  style={{ backgroundColor: acc.color || '#10b981' }}
+                />
+
+                {/* Card Top: Brand / Name & Type */}
+                <div className="flex justify-between items-start gap-2 relative z-10">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
+                    <span className="inline-block text-[8.5px] font-bold text-secondary bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider mt-1">
+                      {acc.type === 'checking' ? 'Courant' :
+                       acc.type === 'savings' ? 'Épargne' :
+                       acc.type === 'credit' ? 'Crédit' :
+                       acc.type === 'cash' ? 'Espèces' :
+                       acc.type === 'investment' ? 'Bourse' : acc.type}
+                    </span>
+                  </div>
+                  
+                  {/* Account Type Icon with Pulsing live indicator */}
+                  <div className="relative shrink-0 z-10">
+                    <div 
+                      className="w-7 h-7 rounded-full flex items-center justify-center border backdrop-blur-md relative shrink-0"
+                      style={{
+                        backgroundColor: `${acc.color || '#10b981'}15`,
+                        borderColor: `${acc.color || '#10b981'}25`
+                      }}
+                    >
+                      {getAccountIcon(acc.type, 13)}
+                    </div>
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent border border-white/20 animate-pulse-live" />
+                  </div>
+                </div>
+
+                {/* Card Middle: Chip & Trend delta */}
+                <div className="flex justify-between items-end relative z-10 mt-1">
+                  {/* Golden Chip */}
+                  <div className="w-8 h-6 rounded-md bg-gradient-to-br from-[#FFE082] via-[#FFD54F] to-[#FFB300] border border-[#FFC107]/40 relative overflow-hidden shadow-inner shrink-0">
+                    <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-[#B58A00]/30" />
+                    <div className="absolute inset-y-0 left-1/3 w-[0.5px] bg-[#B58A00]/30" />
+                    <div className="absolute inset-y-0 right-1/3 w-[0.5px] bg-[#B58A00]/30" />
+                    <div className="absolute top-0.5 bottom-0.5 left-1/2 w-1.5 rounded-xs border border-[#B58A00]/20" />
+                  </div>
+                  
+                  {/* Trend Percentage */}
+                  <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
+                    trend.isPositive 
+                      ? 'bg-accent/15 border border-accent/25 text-accent' 
+                      : 'bg-danger/15 border border-danger/25 text-danger'
+                  }`}>
+                    {trend.label}
+                  </span>
+                </div>
+
+                {/* Card Bottom: Balance */}
+                <div className="relative z-10 mt-auto pt-2">
+                  <span className={`font-mono font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
+                    {formatCurrency(acc.balance, acc.currency)}
+                  </span>
+                </div>
+
+                {/* Card footer logo */}
+                <div className="flex justify-end items-center relative z-10 mt-1 pb-0.5">
+                  {/* Mastercard-like generic overlapping circles */}
+                  <div className="flex -space-x-1.5 opacity-40 shrink-0">
+                    <div className="w-4 h-4 rounded-full bg-white/40" />
+                    <div className="w-4 h-4 rounded-full bg-white/20" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* "+ Ajouter un compte" Card at the end of the carousel */}
+          <div
+            onClick={handleOpenAdd}
+            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
+          >
+            <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
+              <span className="text-lg font-bold">+</span>
+            </div>
+            <span className="text-xs font-bold text-secondary group-hover:text-accent transition-all">
+              Ajouter un compte
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ── Assistant Intelligent IA ────────────────────────────────────────── */}
@@ -624,134 +756,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* ── Comptes ──────────────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-accent-dim border border-accent/20 flex items-center justify-center text-accent">
-              <Wallet size={13} />
-            </div>
-            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Comptes</h3>
-          </div>
-          <button
-            onClick={() => navigate('/accounts')}
-            className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
-          >
-            Gérer
-          </button>
-        </div>
 
-        {/* Horizontal scrollable carrousel */}
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-3 -mx-4 px-4">
-          {accounts.map((acc) => {
-            const isNegative = acc.balance < 0;
-            const trend = getAccountTrend(acc);
-
-            return (
-              <div
-                key={acc._id}
-                onClick={() =>
-                  acc.type === 'credit'
-                    ? navigate(`/accounts/${acc._id}/credit`)
-                     : navigate(`/accounts/${acc._id}`)
-                }
-                className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-glass backdrop-blur-md"
-                style={{
-                  background: `linear-gradient(135deg, ${acc.color || '#10b981'}22 0%, ${acc.color || '#10b981'}08 100%)`,
-                  borderColor: `${acc.color || '#10b981'}30`,
-                  boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.2), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.08)',
-                }}
-              >
-                {/* Glass reflection shine overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.08] pointer-events-none z-0" />
-                
-                {/* Background glow orb */}
-                <div 
-                  className="absolute -right-12 -bottom-12 w-28 h-28 rounded-full blur-3xl pointer-events-none opacity-25"
-                  style={{ backgroundColor: acc.color || '#10b981' }}
-                />
-
-                {/* Card Top: Brand / Name & Type */}
-                <div className="flex justify-between items-start gap-2 relative z-10">
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
-                    <span className="inline-block text-[8.5px] font-bold text-secondary bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider mt-1">
-                      {acc.type === 'checking' ? 'Courant' :
-                       acc.type === 'savings' ? 'Épargne' :
-                       acc.type === 'credit' ? 'Crédit' :
-                       acc.type === 'cash' ? 'Espèces' :
-                       acc.type === 'investment' ? 'Bourse' : acc.type}
-                    </span>
-                  </div>
-                  
-                  {/* Account Type Icon with Pulsing live indicator */}
-                  <div className="relative shrink-0 z-10">
-                    <div 
-                      className="w-7 h-7 rounded-full flex items-center justify-center border backdrop-blur-md relative shrink-0"
-                      style={{
-                        backgroundColor: `${acc.color || '#10b981'}15`,
-                        borderColor: `${acc.color || '#10b981'}25`
-                      }}
-                    >
-                      {getAccountIcon(acc.type, 13)}
-                    </div>
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent border border-white/20 animate-pulse-live" />
-                  </div>
-                </div>
-
-                {/* Card Middle: Chip & Trend delta */}
-                <div className="flex justify-between items-end relative z-10 mt-1">
-                  {/* Golden Chip */}
-                  <div className="w-8 h-6 rounded-md bg-gradient-to-br from-[#FFE082] via-[#FFD54F] to-[#FFB300] border border-[#FFC107]/40 relative overflow-hidden shadow-inner shrink-0">
-                    <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute inset-y-0 left-1/3 w-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute inset-y-0 right-1/3 w-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute top-0.5 bottom-0.5 left-1/2 w-1.5 rounded-xs border border-[#B58A00]/20" />
-                  </div>
-                  
-                  {/* Trend Percentage */}
-                  <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
-                    trend.isPositive 
-                      ? 'bg-accent/15 border border-accent/25 text-accent' 
-                      : 'bg-danger/15 border border-danger/25 text-danger'
-                  }`}>
-                    {trend.label}
-                  </span>
-                </div>
-
-                {/* Card Bottom: Balance */}
-                <div className="relative z-10 mt-auto pt-2">
-                  <span className={`font-mono font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
-                    {formatCurrency(acc.balance, acc.currency)}
-                  </span>
-                </div>
-
-                {/* Card footer logo */}
-                <div className="flex justify-end items-center relative z-10 mt-1 pb-0.5">
-                  {/* Mastercard-like generic overlapping circles */}
-                  <div className="flex -space-x-1.5 opacity-40 shrink-0">
-                    <div className="w-4 h-4 rounded-full bg-white/40" />
-                    <div className="w-4 h-4 rounded-full bg-white/20" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* "+ Ajouter un compte" Card at the end of the carousel */}
-          <div
-            onClick={handleOpenAdd}
-            className="snap-start shrink-0 w-[270px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/80 bg-surface-2/30 hover:bg-surface-2/50 hover:border-accent/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2 select-none group"
-          >
-            <div className="w-9 h-9 rounded-full bg-surface/80 border border-border/60 flex items-center justify-center text-secondary group-hover:text-accent group-hover:border-accent/30 transition-all">
-              <span className="text-lg font-bold">+</span>
-            </div>
-            <span className="text-xs font-bold text-secondary group-hover:text-accent transition-all">
-              Ajouter un compte
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* ── Patrimoine & Allocation ────────────────────────────────────────── */}
       <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 select-none">
@@ -768,8 +773,8 @@ const Home = () => {
           <p className="text-xs text-muted text-center py-6">Ajoutez des comptes pour voir votre répartition.</p>
         ) : (
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full relative flex-shrink-0 shadow-inner" style={donutBackgroundStyle}>
-              <div className="absolute inset-[18px] rounded-full bg-surface-2 shadow-sm" />
+            <div className="w-28 h-28 rounded-full relative flex-shrink-0 shadow-inner" style={donutBackgroundStyle}>
+              <div className="absolute inset-[22px] rounded-full bg-surface-2 shadow-sm" />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
               {allocationData.map(item => (

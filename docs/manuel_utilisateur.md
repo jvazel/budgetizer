@@ -241,6 +241,9 @@ Le module **Calendrier** offre une vision temporelle globale de vos finances.
 
 ### 5.1 La Méthode des Enveloppes Budgétaires
 Cette technique éprouvée consiste à allouer une somme limite mensuelle, hebdomadaire ou annuelle à une catégorie spécifique (ex. : `400 € / mois` pour l'Alimentation).
+* **Navigation par Période active (Segmented Control)** : Un sélecteur d'enveloppes en haut de la page (Semaine | Mois | Année) permet de filtrer rapidement les enveloppes selon leur durée. Un navigateur commun (← Période active →) permet de faire défiler les périodes de manière unifiée sur un seul écran.
+* **Titre de page collapsible** : Le titre "Budgets" se rétracte et fusionne proprement dans la barre supérieure au scroll.
+* **EmptyState illustré** : Si aucun budget n'est défini pour la période sélectionnée, une carte illustrée de statut vide invite l'utilisateur à en créer un.
 * **Création** : Dans la section **Budgets**, cliquez sur `+` et définissez la catégorie, le montant limite et la périodicité.
 * **Option de report (Rollover)** : Activez le report pour que le solde restant non consommé (économie) s'ajoute au budget du mois suivant. Si vous êtes en dépassement (déficit), le montant du dépassement sera déduit de votre enveloppe du mois suivant pour compenser l'écart.
 * **Lecture visuelle de la barre de progression** :
@@ -278,6 +281,10 @@ L'onglet **Épargne** vous aide à concrétiser vos projets financiers (ex. : "A
 ## 7. Analyses Graphiques Avancées
 
 Les graphiques interactifs transforment vos données financières brutes en informations stratégiques.
+
+* **Navigation par onglets horizontaux** : Un sélecteur d'onglets horizontaux défilant en haut de la page donne un accès direct aux 5 graphiques prioritaires : *Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*. Un bouton *"Autres"* (en pointillés) ouvre un tiroir (BottomSheet) pour sélectionner parmi l'ensemble des autres types de graphiques.
+* **Conseil IA contextuel** : Une carte d'insight IA en haut de la page s'actualise dynamiquement pour fournir un conseil de coach financier adapté à l'analyse active que vous visualisez.
+* **Titre de page collapsible** : Le titre se rétracte et fusionne proprement dans la barre supérieure au scroll.
 
 ### 7.1 Répartition catégorielle (Pie Chart)
 * **Visualisation** : Un camembert dynamique présente le pourcentage de vos dépenses par catégorie.
@@ -384,6 +391,7 @@ Depuis l'onglet **Rapports**, configurez et exportez des rapports d'activité au
 ### 9.3 Configuration Générale & Profil
 Dans la rubrique **Paramètres**, personnalisez vos options courantes :
 * **Profil** : Modifiez votre nom d'affichage ou mettez à jour votre mot de passe d'accès.
+* **Structure & Catégorisation** : Configurez vos catégories (arborescence générale) et étiquettes/tags sous forme de menu à boutons détaillés avec description et icônes.
 * **Préférences** : Thème d'affichage (Clair, Sombre ou Système), devise par défaut, format de date et premier jour de la semaine (lundi ou dimanche).
 * **Sensibilité de détection des anomalies** : Réglez le curseur de sensibilité (par défaut fixé à +30 %). C'est ce seuil qui déclenchera les alertes d'anomalies de dépenses sur votre espace *Conseils*.
 

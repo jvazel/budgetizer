@@ -6,6 +6,7 @@ import BottomTabBar from './BottomTabBar';
 import TransactionFormSheet from '../transactions/TransactionFormSheet';
 import MenuSheet from './MenuSheet';
 import { AuthContext } from '../../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const HeaderPortalContext = createContext({
   titleTarget: null,
@@ -116,7 +117,7 @@ const AppShell = () => {
         
         {/* Header Centralisé */}
         <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top,0px)] h-[calc(56px+env(safe-area-inset-top,0px))] flex items-center px-4 max-w-md mx-auto justify-between pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             {/* Back Target Portal */}
             <div ref={setBackTarget} className="peer flex items-center shrink-0" />
             
@@ -144,8 +145,18 @@ const AppShell = () => {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-md mx-auto p-4 pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]">
-          <Outlet />
+        <main className="max-w-md mx-auto p-4 pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))] relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Navigation */}

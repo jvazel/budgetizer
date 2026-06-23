@@ -1,11 +1,14 @@
 import { useState, useContext } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
+import { HeaderTitle, HeaderBackButton, HeaderPortalContext } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import { useMonthlySummaries } from '../hooks/useMonthlySummaries';
+import { Calendar } from 'lucide-react';
+import EmptyState from '../components/ui/EmptyState';
 
 const SummaryHistory = () => {
   const { user } = useContext(AuthContext);
+  const { isScrolled } = useContext(HeaderPortalContext);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { summaries, availableYears, loading, error, refreshHistory } = useMonthlySummaries(selectedYear);
 
@@ -31,15 +34,15 @@ const SummaryHistory = () => {
         ];
     
     return (
-      <div className="w-[75px] h-[75px] flex items-center justify-center relative overflow-hidden shrink-0">
+      <div className="w-[90px] h-[90px] flex items-center justify-center relative overflow-hidden shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={22}
-              outerRadius={32}
+              innerRadius={26}
+              outerRadius={36}
               startAngle={90}
               endAngle={450}
               dataKey="value"
@@ -57,8 +60,19 @@ const SummaryHistory = () => {
 
   return (
     <>
-      <HeaderTitle>Historique</HeaderTitle>
+      <HeaderTitle collapsible={true}>Historique</HeaderTitle>
       <HeaderBackButton to="/" />
+
+      {/* Large Collapsible Header Title on Page */}
+      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
+        isScrolled 
+          ? 'opacity-0 -translate-y-2 pointer-events-none' 
+          : 'opacity-100 translate-y-0'
+      }`}>
+        <div className="text-2xl font-extrabold text-primary tracking-tight">Historique</div>
+        <p className="text-[11px] text-secondary mt-0.5 font-medium">Consulte tes bilans financiers et historiques mensuels.</p>
+      </div>
+
       {/* Year Filter List */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
         {availableYears.map(year => (
@@ -95,8 +109,8 @@ const SummaryHistory = () => {
           {[1, 2, 3].map(i => (
             <div key={i} className="space-y-2 animate-pulse">
               <div className="h-4 bg-surface-2 w-32 rounded-full px-1" />
-              <div className="bg-surface-2 p-5 rounded-[24px] border border-border/20 h-[115px] flex items-center justify-between gap-4">
-                <div className="w-[75px] h-[75px] rounded-full bg-border/20 shrink-0" />
+              <div className="bg-surface-2 p-5 rounded-[24px] border border-border/20 h-[120px] flex items-center justify-between gap-4">
+                <div className="w-[90px] h-[90px] rounded-full bg-border/20 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3 bg-border/20 w-full rounded" />
                   <div className="h-3 bg-border/20 w-3/4 rounded" />
@@ -108,10 +122,11 @@ const SummaryHistory = () => {
         </div>
       ) : summaries.length === 0 ? (
         /* Empty State */
-        <div className="text-center py-16 bg-surface-2 rounded-[28px] border border-dashed border-border/40">
-          <p className="text-muted text-sm font-medium mb-1">Aucune transaction trouvée</p>
-          <p className="text-muted text-xs">Il n'y a pas de données pour l'année {selectedYear}.</p>
-        </div>
+        <EmptyState
+          icon={Calendar}
+          title="Aucune transaction trouvée"
+          description={`Il n'y a pas de données pour l'année ${selectedYear}.`}
+        />
       ) : (
         /* Summaries List */
         <div className="space-y-6">
