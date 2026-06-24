@@ -35,6 +35,7 @@ Ce panneau gère la saisie, la validation et l'ajout/modification d'une transact
 | **Filtre dynamique des catégories** | Clic sur le bouton de type `"Revenu"` | Commutation de la variable d'état `type` et mise à jour de la liste des catégories | L'option de catégorie `"Salaire"` (revenu) est présente, tandis que la catégorie `"Alimentation"` (dépense) a disparu. |
 | **Saisie et validation (Ajout)** | Saisie du montant `"45.50"`, note `"Courses"`, sélection catégorie `"cat1"`, clic sur `"Ajouter"` | Validation de la présence d'un montant, compte, catégorie, puis appel au hook `addTransaction` | La fonction `addTransaction` est appelée avec les paramètres de la transaction. Les callbacks `onSuccess` et `onClose` sont exécutés. |
 | **Peuplement en mode édition** | `transactionToEdit` contenant un objet transaction, `isOpen={true}` | Remplissage des champs du formulaire avec les données existantes dans le cycle de vie `useEffect` | Le titre devient `"Modifier la transaction"`, le montant affiche `"1500"`, la note affiche le texte d'origine, et le bouton d'action devient `"Enregistrer les modifications"`. |
+| **Initialisation date locale** | `defaultDate` (objet Date) fourni en paramètre | Remplissage du champ de date sans subir de décalage de fuseau horaire | La valeur du champ de date du formulaire est au format `YYYY-MM-DD` local correspondant exactement à la date sélectionnée. |
 
 ---
 

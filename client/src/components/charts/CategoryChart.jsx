@@ -944,7 +944,7 @@ const CategoryChart = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-mono text-lg font-black text-primary">
+                <span className="font-premium-numbers text-lg font-black text-primary">
                   {formatCurrency(detailSheet.category.amount)}
                 </span>
               </div>
@@ -1015,7 +1015,7 @@ const CategoryChart = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] font-bold text-secondary">
                         <span>{formatPeriodLabel(period)}</span>
-                        <span className="font-mono">{formatCurrency(detailSheet.category.amount)}</span>
+                        <span className="font-premium-numbers">{formatCurrency(detailSheet.category.amount)}</span>
                       </div>
                       <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
                         <div 
@@ -1032,7 +1032,7 @@ const CategoryChart = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] text-muted">
                         <span>Moyenne 3 mois</span>
-                        <span className="font-mono">{formatCurrency(detailSheet.category.movingAvg3M || 0)}</span>
+                        <span className="font-premium-numbers">{formatCurrency(detailSheet.category.movingAvg3M || 0)}</span>
                       </div>
                       <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
                         <div 
@@ -1048,7 +1048,7 @@ const CategoryChart = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] text-muted">
                         <span>Moyenne 6 mois</span>
-                        <span className="font-mono">{formatCurrency(detailSheet.category.movingAvg6M || 0)}</span>
+                        <span className="font-premium-numbers">{formatCurrency(detailSheet.category.movingAvg6M || 0)}</span>
                       </div>
                       <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
                         <div 
@@ -1086,7 +1086,7 @@ const CategoryChart = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-primary">{formatCurrency(sub.amount)}</span>
+                        <span className="font-premium-numbers text-xs font-bold text-primary">{formatCurrency(sub.amount)}</span>
                         <ChevronRight size={14} className="text-muted" />
                       </div>
                     </button>
@@ -1107,7 +1107,7 @@ const CategoryChart = () => {
                             <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                           </p>
                         </div>
-                        <span className="font-mono text-xs font-bold text-primary">
+                        <span className="font-premium-numbers text-xs font-bold text-primary">
                           {formatCurrency(tx.amount)}
                         </span>
                       </div>

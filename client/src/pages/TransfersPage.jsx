@@ -188,7 +188,7 @@ const TransfersPage = () => {
                   </Select>
                   {activeFromAccount && (
                     <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
-                      Disponible : <span className="font-mono text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
+                      Disponible : <span className="font-premium-numbers text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
                     </div>
                   )}
                 </div>
@@ -222,7 +222,7 @@ const TransfersPage = () => {
                   </Select>
                   {activeToAccount && (
                     <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
-                      Disponible : <span className="font-mono text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
+                      Disponible : <span className="font-premium-numbers text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
                     </div>
                   )}
                 </div>
@@ -333,7 +333,7 @@ const TransfersPage = () => {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0 ml-3">
-                    <span className="font-mono font-bold text-sm text-primary">
+                    <span className="font-premium-numbers font-bold text-sm text-primary">
                       {formatCurrency(tx.amount, tx.accountId?.currency)}
                     </span>
                     <button
@@ -382,7 +382,7 @@ const TransfersPage = () => {
         >
           <div className="space-y-4">
             <p className="text-xs text-secondary leading-relaxed">
-              Vous êtes sur le point de transférer <span className="font-mono font-bold text-accent">{formatCurrency(parseFloat(amount || '0'), activeFromAccount.currency)}</span> de <strong>{activeFromAccount.name}</strong> vers <strong>{activeToAccount.name}</strong>.
+              Vous êtes sur le point de transférer <span className="font-premium-numbers font-bold text-accent">{formatCurrency(parseFloat(amount || '0'), activeFromAccount.currency)}</span> de <strong>{activeFromAccount.name}</strong> vers <strong>{activeToAccount.name}</strong>.
             </p>
             
             <div className="space-y-2.5 bg-surface p-4 rounded-2xl border border-border/30">
@@ -393,7 +393,7 @@ const TransfersPage = () => {
               {/* Source Account Balance Preview */}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-secondary font-semibold truncate max-w-[120px]">{activeFromAccount.name}</span>
-                <div className="flex items-center gap-1.5 font-mono">
+                <div className="flex items-center gap-1.5 font-premium-numbers">
                   <span className="text-secondary">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
                   <ArrowRight size={10} className="text-muted" />
                   <span className="text-danger font-bold">
@@ -405,7 +405,7 @@ const TransfersPage = () => {
               {/* Destination Account Balance Preview */}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-secondary font-semibold truncate max-w-[120px]">{activeToAccount.name}</span>
-                <div className="flex items-center gap-1.5 font-mono">
+                <div className="flex items-center gap-1.5 font-premium-numbers">
                   <span className="text-secondary">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
                   <ArrowRight size={10} className="text-muted" />
                   <span className="text-accent font-bold">
@@ -435,7 +435,7 @@ const TransfersPage = () => {
           <div className="space-y-1">
             <h4 className="text-sm font-extrabold text-primary">Transfert Réussi</h4>
             <p className="text-[11px] text-secondary leading-relaxed">
-              Le montant de <span className="font-mono font-bold text-accent">{formatCurrency(lastTransferDetails?.amount || 0, lastTransferDetails?.currency)}</span> a été transféré de <strong>{lastTransferDetails?.from}</strong> vers <strong>{lastTransferDetails?.to}</strong>.
+              Le montant de <span className="font-premium-numbers font-bold text-accent">{formatCurrency(lastTransferDetails?.amount || 0, lastTransferDetails?.currency)}</span> a été transféré de <strong>{lastTransferDetails?.from}</strong> vers <strong>{lastTransferDetails?.to}</strong>.
             </p>
           </div>
         </div>

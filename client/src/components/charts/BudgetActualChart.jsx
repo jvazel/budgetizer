@@ -24,12 +24,31 @@ const BudgetActualChart = () => {
   const [month, setMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState([]);
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
 
   // Drill-down states
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState(null);
   const [budgetTransactions, setBudgetTransactions] = useState([]);
   const [txLoading, setTxLoading] = useState(false);
   const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const year = d.getFullYear().toString();
+      const key = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ key, label: capitalizedLabel });
+    }
+    return groups;
+  };
 
   const fetchBudgets = useCallback(async () => {
     try {
@@ -124,13 +143,32 @@ const BudgetActualChart = () => {
   return (
     <div className="space-y-6">
       {/* 1. Month Navigator */}
-      <div className="w-[calc(100%+32px)] bg-surface-2 text-primary py-3 px-4 flex justify-between items-center font-bold text-sm select-none border-y border-border mx-[-16px] mb-4">
-        <button onClick={prevMonth} className="p-1.5 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all">
-          <ChevronLeft size={18} />
+      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform mb-4" style={{ transform: 'translate3d(0, 0, 0)' }}>
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          title="Mois précédent"
+        >
+          <ChevronLeft size={16} />
         </button>
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">{getMonthLabel(month)}</span>
-        <button onClick={nextMonth} className="p-1.5 hover:bg-surface text-secondary hover:text-primary rounded-xl active:scale-95 transition-all">
-          <ChevronRight size={18} />
+        
+        <button
+          type="button"
+          onClick={() => setIsMonthSheetOpen(true)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs focus:outline-none"
+        >
+          <Calendar size={14} className="text-accent" />
+          <span>{getMonthLabel(month)}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          title="Mois suivant"
+        >
+          <ChevronRight size={16} />
         </button>
       </div>
 
@@ -140,8 +178,8 @@ const BudgetActualChart = () => {
         <div className="bg-surface-2 p-4.5 rounded-[24px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Total Budgété / Dépensé</p>
-            <h4 className="text-base font-extrabold text-primary mt-1">
-              {formatCurrency(totalSpent)} <span className="text-xs font-normal text-muted">/ {formatCurrency(totalBudgeted)}</span>
+            <h4 className="text-base font-extrabold text-primary font-premium-numbers mt-1">
+              {formatCurrency(totalSpent)} <span className="text-xs font-normal text-muted font-premium-numbers">/ {formatCurrency(totalBudgeted)}</span>
             </h4>
           </div>
           <div className="flex items-center gap-1 mt-2 text-[10px] font-extrabold">
@@ -217,10 +255,10 @@ const BudgetActualChart = () => {
                         <h4 className="text-xs font-bold text-primary truncate leading-tight group-hover:text-accent transition-colors">{entry.name}</h4>
                       </div>
                       <div className="text-right">
-                        <span className="font-mono text-xs font-bold text-primary">
+                        <span className="font-premium-numbers text-xs font-bold text-primary">
                           {formatCurrency(entry.real)}
                         </span>
-                        <span className="text-[10px] text-muted"> / {formatCurrency(entry.budget)}</span>
+                        <span className="text-[10px] text-muted font-premium-numbers"> / {formatCurrency(entry.budget)}</span>
                       </div>
                     </div>
 
@@ -241,7 +279,7 @@ const BudgetActualChart = () => {
 
                     {/* Exceed details warning if any */}
                     <div className="flex justify-between items-center text-[9px] font-bold">
-                      <span className={`${isExceeded ? 'text-danger' : 'text-muted'}`}>
+                      <span className={`${isExceeded ? 'text-danger' : 'text-muted'} font-premium-numbers`}>
                         {isExceeded 
                           ? `Dépassement de ${formatCurrency(entry.real - entry.budget)}` 
                           : `${percentage}% consommé`}
@@ -269,7 +307,7 @@ const BudgetActualChart = () => {
                 <span className="text-base">{selectedBudgetCategory?.icon || '📁'}</span>
                 <span>Dépenses : {selectedBudgetCategory?.name}</span>
               </h3>
-              <p className="text-[10px] text-muted mt-0.5">
+              <p className="text-[10px] text-muted mt-0.5 font-premium-numbers">
                 {selectedBudgetCategory?.spent ? formatCurrency(selectedBudgetCategory.spent) : '0,00 €'} sur {selectedBudgetCategory?.budget ? formatCurrency(selectedBudgetCategory.budget) : '0,00 €'} ({Math.round(selectedBudgetCategory?.percentage || 0)}%)
               </p>
             </div>
@@ -302,12 +340,60 @@ const BudgetActualChart = () => {
                       )}
                     </p>
                   </div>
-                  <span className="font-mono text-xs font-black text-danger shrink-0">
+                  <span className="font-premium-numbers text-xs font-black text-danger shrink-0">
                     -{formatCurrency(tx.amount)}
                   </span>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </BottomSheet>
+      {/* Custom Month Picker Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthSheetOpen}
+        onClose={() => setIsMonthSheetOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="pb-2 border-b border-border/40">
+            <h3 className="text-sm font-extrabold text-primary">Choisir un mois</h3>
+            <p className="text-xs text-muted">Sélectionnez un mois spécifique à analyser</p>
+          </div>
+
+          <div className="space-y-4 max-h-80 overflow-y-auto no-scrollbar py-1">
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, months]) => {
+              const currentD = new Date();
+              const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+              
+              return (
+                <div key={year} className="space-y-2">
+                  <div className="text-[10px] font-black text-secondary/80 px-1 border-l-2 border-accent pl-2 mt-3 uppercase tracking-wider">{year}</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {months.map((m) => {
+                      const [yVal, mVal] = m.key.split('-').map(Number);
+                      const isActive = month.getFullYear() === yVal && (month.getMonth() + 1) === mVal;
+                      return (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => {
+                            setMonth(new Date(yVal, mVal - 1, 1));
+                            setIsMonthSheetOpen(false);
+                          }}
+                          className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                            isActive
+                              ? 'bg-accent text-white shadow-sm'
+                              : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </BottomSheet>

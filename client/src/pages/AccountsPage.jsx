@@ -136,7 +136,7 @@ const AccountsPage = () => {
                     </div>
                     
                     <div className="text-right shrink-0">
-                      <span className={`font-mono font-bold text-sm ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
+                      <span className={`font-premium-numbers font-bold text-sm ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
                         {formatCurrency(acc.balance, acc.currency)}
                       </span>
                       {acc.type === 'credit' && acc.creditLimit && (

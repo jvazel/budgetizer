@@ -184,17 +184,17 @@ const CreditDetailPage = () => {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
               <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Capital Initial</p>
-              <p className="text-sm font-bold text-primary mt-1 font-mono">{formatCurrency(summary.initialAmount)}</p>
+              <p className="text-sm font-bold text-primary mt-1 font-premium-numbers">{formatCurrency(summary.initialAmount)}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] text-muted font-bold uppercase tracking-wider">Capital Remboursé</p>
-              <p className="text-sm font-bold text-accent mt-1 font-mono">{formatCurrency(summary.capitalPaid)}</p>
+              <p className="text-sm font-bold text-accent mt-1 font-premium-numbers">{formatCurrency(summary.capitalPaid)}</p>
             </div>
           </div>
 
           <div className="border-t border-border/20 pt-4 mb-4">
             <p className="text-xs text-secondary font-bold uppercase tracking-wide">Capital Restant Dû</p>
-            <h2 className="text-3xl font-extrabold text-danger font-mono tracking-tight mt-1" style={{ color: 'var(--danger)' }}>
+            <h2 className="text-3xl font-extrabold text-danger font-premium-numbers tracking-tight mt-1" style={{ color: 'var(--danger)' }}>
               {formatCurrency(summary.currentBalance)}
             </h2>
           </div>
@@ -286,7 +286,7 @@ const CreditDetailPage = () => {
               <div className="p-1 rounded bg-danger/10 text-danger text-[10px]"><ArrowUpRight size={12} /></div>
             </div>
             <div className="mt-2">
-              <p className="text-lg font-bold text-primary font-mono">{formatCurrency(summary.totalInterestPaid)}</p>
+              <p className="text-lg font-bold text-primary font-premium-numbers">{formatCurrency(summary.totalInterestPaid)}</p>
               <p className="text-[9px] text-muted mt-0.5">est. restants : {formatCurrency(Math.max(0, summary.totalInterestEstimated - summary.totalInterestPaid))}</p>
             </div>
           </div>
@@ -297,7 +297,7 @@ const CreditDetailPage = () => {
               <div className="p-1 rounded bg-accent/10 text-accent text-[10px]"><Percent size={12} /></div>
             </div>
             <div className="mt-2">
-              <p className="text-lg font-bold text-primary font-mono">{summary.interestRate}%</p>
+              <p className="text-lg font-bold text-primary font-premium-numbers">{summary.interestRate}%</p>
               <p className="text-[9px] text-muted mt-0.5">{summary.monthsRemaining} mois restants</p>
             </div>
           </div>
@@ -316,7 +316,7 @@ const CreditDetailPage = () => {
                 </p>
                 <p className="text-[10px] text-muted mt-0.5">Automatique (Confirmation auto)</p>
               </div>
-              <span className="text-xl font-extrabold text-primary font-mono">{formatCurrency(summary.nextPaymentAmount)}</span>
+              <span className="text-xl font-extrabold text-primary font-premium-numbers">{formatCurrency(summary.nextPaymentAmount)}</span>
             </div>
             
             {/* Decomposition */}
@@ -356,7 +356,7 @@ const CreditDetailPage = () => {
                         {new Date(pay.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-primary font-mono">{formatCurrency(pay.amount)}</span>
+                    <span className="text-xs font-bold text-primary font-premium-numbers">{formatCurrency(pay.amount)}</span>
                   </div>
                   
                   {/* Part Details */}
@@ -364,7 +364,7 @@ const CreditDetailPage = () => {
                     <span>├ Capital : <span className="font-semibold text-secondary">{formatCurrency(pay.principalPart)}</span></span>
                     <span>└ Intérêts : <span className="font-semibold text-secondary">{formatCurrency(pay.interestPart)}</span></span>
                   </div>
-                  <div className="text-[9px] text-muted/60 text-right font-mono mt-0.5">
+                  <div className="text-[9px] text-muted/60 text-right font-premium-numbers mt-0.5">
                     Solde après : {formatCurrency(pay.balanceAfter)}
                   </div>
                 </div>

@@ -104,7 +104,7 @@ const SavingsPage = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xl font-mono font-extrabold text-accent">{formatCurrency(totalSaved)}</span>
+                <span className="text-xl font-premium-numbers font-extrabold text-accent">{formatCurrency(totalSaved)}</span>
                 <p className="text-[10px] text-muted font-bold mt-0.5">sur {formatCurrency(totalTarget)}</p>
               </div>
             </div>
@@ -118,7 +118,7 @@ const SavingsPage = () => {
             
             <div className="flex justify-between items-center mt-2.5 text-[10px] font-bold text-secondary">
               <span>Progression totale</span>
-              <span className="text-accent font-mono font-extrabold">{roundedOverallPct}%</span>
+              <span className="text-accent font-premium-numbers font-extrabold">{roundedOverallPct}%</span>
             </div>
           </div>
         )}

@@ -120,9 +120,19 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
     <div className="bg-surface-2/80 backdrop-blur-md border border-border/40 rounded-[28px] p-4 shadow-md">
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-2 mb-2.5 text-center">
-        {daysOfWeek.map(d => (
-          <span key={d} className="text-[10px] font-bold text-muted/70 uppercase tracking-wider">{d}</span>
-        ))}
+        {daysOfWeek.map((d, idx) => {
+          const isWeekendHeader = idx === 5 || idx === 6;
+          return (
+            <span 
+              key={d} 
+              className={`text-[10px] font-bold uppercase tracking-wider ${
+                isWeekendHeader ? 'text-danger/80' : 'text-muted/70'
+              }`}
+            >
+              {d}
+            </span>
+          );
+        })}
       </div>
 
       {/* Grid cells */}
@@ -132,6 +142,7 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
           const today = isToday(date);
           const isCurrentMonth = date.getMonth() === month;
           const futureNoCharge = !selected && !today && isCurrentMonth && isFuture(date) && getDayTransactions(date).length === 0;
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
           return (
             <button
@@ -143,10 +154,16 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
                   : today 
                     ? 'border border-copper/50 text-copper font-bold' 
                     : futureNoCharge
-                      ? 'bg-accent/[0.03] text-accent font-semibold border border-accent/10 hover:bg-accent/[0.08]'
+                      ? isWeekend
+                        ? 'bg-danger/[0.03] text-danger font-semibold border border-danger/10 hover:bg-danger/[0.08]'
+                        : 'bg-accent/[0.03] text-accent font-semibold border border-accent/10 hover:bg-accent/[0.08]'
                       : !isCurrentMonth
-                        ? 'text-primary/20 opacity-40 hover:bg-surface/50'
-                        : 'text-primary hover:bg-surface'
+                        ? isWeekend
+                          ? 'text-danger/30 opacity-40 hover:bg-surface/50 font-medium'
+                          : 'text-primary/20 opacity-40 hover:bg-surface/50'
+                        : isWeekend
+                          ? 'text-danger font-semibold hover:bg-surface'
+                          : 'text-primary hover:bg-surface'
               }`}
             >
               <span className="text-xs sm:text-sm">{date.getDate()}</span>

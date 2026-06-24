@@ -98,7 +98,7 @@ const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
           {/* Progress Percent row */}
           <div className="flex justify-between items-center text-[10px] font-bold">
             <span className="text-muted">{formatCurrency(goal.currentAmount)}</span>
-            <span className={`${textColor} text-sm font-mono font-extrabold tracking-tight`}>{roundedPct}%</span>
+            <span className={`${textColor} text-sm font-premium-numbers font-extrabold tracking-tight`}>{roundedPct}%</span>
             <span className="text-muted">{formatCurrency(goal.targetAmount)}</span>
           </div>
 
@@ -115,19 +115,19 @@ const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
             {!isCompleted ? (
               <div className="flex justify-between">
                 <span>Reste à économiser :</span>
-                <span className="text-primary font-mono">{formatCurrency(remainingAmount)}</span>
+                <span className="text-primary font-premium-numbers">{formatCurrency(remainingAmount)}</span>
               </div>
             ) : (
               <div className="text-emerald-400 font-extrabold flex justify-between">
                 <span>Félicitations ! Objectif atteint.</span>
-                <span className="font-mono">{formatCurrency(goal.currentAmount)}</span>
+                <span className="font-premium-numbers">{formatCurrency(goal.currentAmount)}</span>
               </div>
             )}
 
             {monthlySuggestion !== null && (
               <div className="flex justify-between items-center bg-surface-3/50 px-2 py-1 rounded-lg mt-1 text-[9px]">
                 <span className="text-muted uppercase tracking-wider">Versement mensuel suggéré :</span>
-                <span className="text-accent font-extrabold font-mono">{formatCurrency(monthlySuggestion)} / mois</span>
+                <span className="text-accent font-extrabold font-premium-numbers">{formatCurrency(monthlySuggestion)} / mois</span>
               </div>
             )}
           </div>

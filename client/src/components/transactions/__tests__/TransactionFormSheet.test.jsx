@@ -438,4 +438,22 @@ describe('TransactionFormSheet Component', () => {
     // The "Suggéré" badge should disappear because of manual override
     expect(screen.queryByText('Suggéré')).not.toBeInTheDocument();
   });
+
+  it('correctly sets date in local timezone when defaultDate is provided', () => {
+    const defaultDate = new Date(2026, 5, 24); // June 24, 2026 local
+    
+    render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={() => {}} 
+        defaultDate={defaultDate}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '15' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    const dateInput = screen.getByLabelText(/Date/);
+    expect(dateInput.value).toBe('2026-06-24');
+  });
 });

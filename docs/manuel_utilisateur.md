@@ -230,9 +230,11 @@ Compte Épargne : 5 000 € ───[Crédit de 500 €]───> Nouveau Sold
 
 ### 4.4 Le Calendrier des Transactions (Calendar)
 Le module **Calendrier** offre une vision temporelle globale de vos finances.
+* **Distinction des week-ends** : Pour une meilleure lisibilité et pour séparer visuellement la semaine, les samedis et dimanches s'affichent en rouge (en-têtes "Sa" et "Di" ainsi que les chiffres des jours) sur la grille.
 * Sélectionnez un mois à l'aide des flèches directionnelles `←` et `→` en haut de page.
-* Les jours contenant des flux sont marqués d'indicateurs visuels.
+* Les jours contenant des flux sont marqués d'indicateurs visuels (points colorés : vert pour les revenus, rouge pour les débits).
 * Tapez sur un jour pour voir s'afficher la liste des transactions de cette date spécifique au bas du calendrier.
+* **Saisie rapide de transactions** : À tout moment et pour n'importe quel jour sélectionné, vous pouvez insérer une opération en cliquant sur le bouton **« Ajouter »** situé à droite du titre de la liste journalière ou via le bouton **« + »** dans le coin supérieur droit du header de l'application.
 * Les **transactions planifiées récurrentes** (échéances à venir) s'affichent avec un fond violet distinctif et un badge `"Planifié"`.
 
 ---

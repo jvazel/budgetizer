@@ -344,7 +344,7 @@ const ForecastChart = () => {
         <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 flex items-center justify-between shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-extrabold text-muted tracking-wider">Solde Estimé à {horizon} mois</span>
-            <h4 className="font-mono text-2xl font-black text-primary">{formatCurrency(finalProjectedBalance)}</h4>
+            <h4 className="font-premium-numbers text-2xl font-black text-primary">{formatCurrency(finalProjectedBalance)}</h4>
             <p className="text-[10px] text-muted">Marge de confiance : ± {formatCurrency(confidenceMargin)}</p>
           </div>
 

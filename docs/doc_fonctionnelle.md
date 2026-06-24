@@ -178,6 +178,17 @@ Accessible via l'option "Transactions" du menu de navigation :
   - 🗑️ **Supprimer** (fond rouge) : supprime immédiatement. Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).
 - **Chargement Infini** : Un `IntersectionObserver` charge 30 transactions supplémentaires au bas de la liste lors du scroll.
 
+### 6.3 Le Calendrier Interactif
+Le module **Calendrier** propose une vue mensuelle globale et intuitive pour suivre et planifier ses flux de trésorerie au jour le jour :
+- **Navigation par Mois** : Une barre de navigation épurée dotée d'un flou d'arrière-plan (`backdrop-blur-md`) permet de basculer facilement d'un mois à l'autre grâce aux boutons fléchés directionnels.
+- **Distinction des week-ends** : Les samedis et dimanches (en-têtes de colonnes "Sa" et "Di", ainsi que les dates elles-mêmes) s'affichent en rouge (`text-danger`) pour séparer visuellement la semaine et le week-end. Les jours de week-end des mois adjacents sont estompés en rouge semi-transparent.
+- **Indicateurs Visuels (Dots)** : Chaque jour ayant des mouvements financiers affiche des points de couleur sous son chiffre (vert pour les revenus, rouge pour les dépenses ou virements). La taille des points s'adapte en fonction du volume financier de la journée (petit point < 100 €, point moyen ≥ 100 €).
+- **Planification future** : Les jours futurs du mois en cours sans transaction planifiée s'affichent dans une déclinaison subtile (fond vert translucide pour la semaine, rouge pour le week-end) pour encourager l'épargne.
+- **Liste journalière détaillée & Actions directes** :
+  - Cliquer sur une date met la cellule en valeur en cuivre (`bg-copper`) et affiche au bas du calendrier la liste chronologique des transactions associées.
+  - **Ajout Direct** : Un bouton « Ajouter » à droite du titre de la section et un bouton « + » portalisé en haut à droite du header permettent d'ouvrir directement le formulaire d'ajout pour le jour sélectionné, peu importe si la journée possède déjà des écritures.
+  - **Suppression rapide** : Le survol (ou swipe) d'une transaction réelle révèle l'icône de corbeille rouge pour la supprimer instantanément.
+
 ---
 
 ## 7. Planification Budgétaire (Enveloppes)

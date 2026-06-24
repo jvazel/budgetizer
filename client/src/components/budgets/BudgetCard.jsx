@@ -210,11 +210,11 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
           {/* Bottom Info & Dates */}
           <div className="pt-2 border-t border-border/20 flex flex-wrap items-center justify-between gap-1">
             {isOverBudget ? (
-              <span className="text-[10px] font-bold text-danger flex items-center gap-1">
+              <span className="text-[10px] font-bold text-danger flex items-center gap-1 font-premium-numbers">
                 ⚠️ Dépassement : {formatCurrency(budget.spent - budget.amount)}
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-secondary">
+              <span className="text-[10px] font-bold text-secondary font-premium-numbers">
                 Reste : {formatCurrency(budget.remaining)}
               </span>
             )}

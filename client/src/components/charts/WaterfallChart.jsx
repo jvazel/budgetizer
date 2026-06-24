@@ -184,11 +184,11 @@ const WaterfallChart = () => {
   return (
     <div className="space-y-6">
       {/* ── 1. Month navigation ── */}
-      <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-xl border border-border/40">
+      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
         <button
           type="button"
           onClick={handlePrev}
-          className="p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
           title="Mois précédent"
         >
           <ChevronLeft size={16} />
@@ -197,7 +197,7 @@ const WaterfallChart = () => {
         <button
           type="button"
           onClick={() => setIsMonthSheetOpen(true)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
         >
           <Calendar size={14} className="text-accent" />
           <span>{formatPeriodLabel(period)}</span>
@@ -207,7 +207,7 @@ const WaterfallChart = () => {
           type="button"
           onClick={handleNext}
           disabled={isCurrentMonth(period)}
-          className={`p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+          className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
             isCurrentMonth(period) ? 'opacity-40 cursor-not-allowed' : ''
           }`}
           title="Mois suivant"

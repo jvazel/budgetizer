@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import MiniCalendar from '../components/calendar/MiniCalendar';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Plus } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -18,6 +18,16 @@ const CalendarPage = () => {
   const [txToDelete, setTxToDelete] = useState(null);
 
   const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const actions = (
+    <button 
+      onClick={() => setIsFormOpen(true)}
+      className="p-1.5 bg-copper-dim hover:bg-copper/20 rounded-full text-copper transition-colors active:scale-95"
+      title="Ajouter une transaction"
+    >
+      <Plus size={16} />
+    </button>
+  );
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', 'calendar', monthStr],
@@ -69,6 +79,7 @@ const CalendarPage = () => {
   return (
     <>
       <HeaderTitle>Calendrier</HeaderTitle>
+      <HeaderActions>{actions}</HeaderActions>
       
       {/* Large Page Title */}
       <div className="mb-5 mt-2 px-1">
@@ -135,20 +146,21 @@ const CalendarPage = () => {
           <h3 className="font-bold text-secondary text-sm">
             Transactions du {selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
           </h3>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="text-xs font-bold text-copper bg-copper-dim border border-copper/15 hover:bg-copper hover:text-white px-3 py-1.5 rounded-xl transition-all active:scale-95 flex items-center gap-1"
+          >
+            <Plus size={12} />
+            <span>Ajouter</span>
+          </button>
         </div>
 
         <div className="space-y-3">
           {selectedDayTxs.length === 0 ? (
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="w-full text-center py-8 text-muted bg-surface-2/20 hover:bg-surface-2/40 hover:text-secondary rounded-[24px] border border-dashed border-border/60 transition-all flex flex-col items-center justify-center gap-2 group cursor-pointer focus:outline-none"
-            >
-              <span className="text-lg opacity-60 group-hover:scale-110 transition-transform">📅</span>
+            <div className="w-full text-center py-8 text-muted bg-surface-2/20 rounded-[24px] border border-dashed border-border/60 flex flex-col items-center justify-center gap-1.5 select-none">
+              <span className="text-lg opacity-60">📅</span>
               <p className="text-xs font-bold">Aucune transaction pour ce jour.</p>
-              <span className="text-[10px] text-accent font-bold bg-accent-dim px-2 py-0.5 rounded-lg border border-accent/15 group-hover:bg-accent group-hover:text-white transition-all">
-                Ajouter une opération +
-              </span>
-            </button>
+            </div>
           ) : (
             selectedDayTxs.map(tx => {
               const isPlanned = tx.isPlanned === true;

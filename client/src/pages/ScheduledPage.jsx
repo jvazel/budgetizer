@@ -187,7 +187,7 @@ const ScheduledPage = () => {
                           </p>
                         </div>
                       </div>
-                      <span className="font-mono font-bold text-primary shrink-0 pl-1">{formatCurrency(tx.amount)}</span>
+                      <span className="font-premium-numbers font-bold text-primary shrink-0 pl-1">{formatCurrency(tx.amount)}</span>
                     </div>
 
                     {/* Actions inside card */}
@@ -278,7 +278,7 @@ const ScheduledPage = () => {
                         </div>
                         
                         <div className="text-right shrink-0 pl-1">
-                          <span className={`font-mono font-bold ${
+                          <span className={`font-premium-numbers font-bold ${
                             st.type === 'expense' || (st.type === 'transfer' && st.toAccountId?.type === 'credit')
                               ? 'text-primary'
                               : 'text-accent'
@@ -409,7 +409,7 @@ const ScheduledPage = () => {
                       </div>
 
                       <div className="flex items-center gap-3 text-right shrink-0 ml-auto pl-1">
-                        <span className="font-mono font-bold text-primary">
+                        <span className="font-premium-numbers font-bold text-primary">
                           -{formatCurrency(sub.amount)}
                         </span>
                         <div className="flex gap-1.5 shrink-0">

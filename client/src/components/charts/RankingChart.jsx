@@ -231,11 +231,11 @@ const RankingChart = () => {
 
         {/* Period navigation */}
         {isMonthly() ? (
-          <div className="flex items-center justify-between bg-surface-2 p-1.5 rounded-xl border border-border/40">
+          <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary"
+              className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary"
             >
               <ChevronLeft size={16} />
             </button>
@@ -243,7 +243,7 @@ const RankingChart = () => {
             <button
               type="button"
               onClick={() => setIsMonthSheetOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-lg hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
             >
               <Calendar size={14} className="text-accent" />
               <span>{formatPeriodLabel(period)}</span>
@@ -253,7 +253,7 @@ const RankingChart = () => {
               type="button"
               onClick={handleNextMonth}
               disabled={isCurrentMonth()}
-              className={`p-2 rounded-lg bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary ${
+              className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary ${
                 isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
               }`}
             >

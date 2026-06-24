@@ -15,6 +15,27 @@ import AiBadge from '../ui/AiBadge';
 const formatCurrencyShort = (amount) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
 
+const formatDateLocal = (dateInput) => {
+  if (!dateInput) return '';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getFormReadyDate = (d) => {
+  if (!d) return formatDateLocal(new Date());
+  if (typeof d === 'string') {
+    if (d.includes('T')) {
+      return d.split('T')[0];
+    }
+    return d;
+  }
+  return formatDateLocal(d);
+};
+
 const DEFAULT_TEMPLATES = [
   { id: 't-cafe', name: 'Café', type: 'expense', amount: '2.50', note: 'Café', icon: '☕' },
   { id: 't-midi', name: 'Déjeuner', type: 'expense', amount: '15.00', note: 'Midi', icon: '🍔' },
@@ -27,7 +48,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
   const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getFormReadyDate());
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [categorySearch, setCategorySearch] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -215,7 +236,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         setAccountId(transactionToEdit.accountId?._id || transactionToEdit.accountId || '');
         setCategoryId(transactionToEdit.categoryId?._id || transactionToEdit.categoryId || '');
         setNote(transactionToEdit.note || '');
-        setDate(transactionToEdit.date ? new Date(transactionToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setDate(getFormReadyDate(transactionToEdit.date));
         setSelectedTagIds(transactionToEdit.tags?.map(t => t._id || t) || []);
         userHasManuallySelectedCategory.current = true;
         setIsCategoryPredicted(false);
@@ -223,7 +244,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
         setType('expense');
         setAmount('');
         setNote('');
-        setDate(defaultDate ? new Date(defaultDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setDate(getFormReadyDate(defaultDate));
         setSelectedTagIds([]);
         userHasManuallySelectedCategory.current = false;
         setIsCategoryPredicted(false);

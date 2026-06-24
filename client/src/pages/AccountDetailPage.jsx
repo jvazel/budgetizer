@@ -188,7 +188,7 @@ const AccountDetailPage = () => {
 
           <div className="mt-6">
             <span className="text-[10px] text-muted font-extrabold uppercase tracking-widest block leading-none">Solde Disponible</span>
-            <h2 className={`text-3xl font-extrabold font-mono tracking-tight mt-2 leading-none ${
+            <h2 className={`text-3xl font-extrabold font-premium-numbers tracking-tight mt-2 leading-none ${
               account.balance < 0 ? 'text-danger' : 'text-primary'
             }`}>
               {formatCurrency(account.balance, account.currency)}
@@ -265,7 +265,7 @@ const AccountDetailPage = () => {
               <div className="p-1 rounded bg-accent/10 text-accent"><ArrowDownRight size={12} /></div>
             </div>
             <div className="mt-2">
-              <p className="text-lg font-bold text-accent font-mono">+{formatCurrency(stats.income, account.currency)}</p>
+              <p className="text-lg font-bold text-accent font-premium-numbers">+{formatCurrency(stats.income, account.currency)}</p>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ const AccountDetailPage = () => {
               <div className="p-1 rounded bg-danger/10 text-danger"><ArrowUpRight size={12} /></div>
             </div>
             <div className="mt-2">
-              <p className="text-lg font-bold text-danger font-mono">-{formatCurrency(stats.expense, account.currency)}</p>
+              <p className="text-lg font-bold text-danger font-premium-numbers">-{formatCurrency(stats.expense, account.currency)}</p>
             </div>
           </div>
         </div>
@@ -353,7 +353,7 @@ const AccountDetailPage = () => {
       >
         {txToDelete && (
           <p className="text-xs text-secondary leading-relaxed">
-            Es-tu sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name}"</span> d'un montant de <span className="text-danger font-mono font-semibold">{formatCurrency(txToDelete.amount, account.currency)}</span> ?
+            Es-tu sûr de vouloir supprimer la transaction <span className="text-primary font-semibold">"{txToDelete.description || txToDelete.note || txToDelete.categoryId?.name}"</span> d'un montant de <span className="text-danger font-premium-numbers font-semibold">{formatCurrency(txToDelete.amount, account.currency)}</span> ?
             <br />
             <br />
             Cette action est irréversible et réajustera le solde de ton compte.
