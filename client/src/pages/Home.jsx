@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from 'recharts';
+import { motion } from 'framer-motion';
 
 // ─── Notification helpers ────────────────────────────────────────────────────
 const NotificationIcon = ({ type, name, size = 20 }) => {
@@ -297,27 +298,41 @@ const Home = () => {
       {/* ── KPIs & Sparkline fusionnés (Timeframe Statistics Card) ──────────── */}
       <div className="bg-surface-2 rounded-[24px] border border-border/40 mb-6 shadow-sm overflow-hidden select-none">
         {/* Tab switcher segmented control */}
-        <div className="flex bg-surface p-1 rounded-t-[24px] border-b border-border/20 gap-1">
+        <div className="flex bg-surface p-1 rounded-t-[24px] border-b border-border/20 gap-1 relative">
           <button
             type="button"
             onClick={() => setTimeTab('month')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm ${
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm relative z-10 ${
               timeTab === 'month'
-                ? 'bg-copper text-white shadow-sm font-extrabold'
+                ? 'text-white font-extrabold'
                 : 'text-secondary hover:text-primary hover:bg-border/10'
             }`}
           >
+            {timeTab === 'month' && (
+              <motion.div
+                layoutId="timeframeActiveTab"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                className="absolute inset-0 bg-copper rounded-xl -z-10"
+              />
+            )}
             Ce mois ({currentMonthLabel})
           </button>
           <button
             type="button"
             onClick={() => setTimeTab('week')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm ${
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm relative z-10 ${
               timeTab === 'week'
-                ? 'bg-copper text-white shadow-sm font-extrabold'
+                ? 'text-white font-extrabold'
                 : 'text-secondary hover:text-primary hover:bg-border/10'
             }`}
           >
+            {timeTab === 'week' && (
+              <motion.div
+                layoutId="timeframeActiveTab"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                className="absolute inset-0 bg-copper rounded-xl -z-10"
+              />
+            )}
             Cette semaine
           </button>
         </div>
@@ -543,16 +558,8 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Card Middle: Chip & Trend delta */}
-                <div className="flex justify-between items-end relative z-10 mt-1 pl-1">
-                  {/* Golden Chip */}
-                  <div className="w-8 h-6 rounded-md bg-gradient-to-br from-[#FFE082] via-[#FFD54F] to-[#FFB300] border border-[#FFC107]/40 relative overflow-hidden shadow-inner shrink-0">
-                    <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute inset-y-0 left-1/3 w-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute inset-y-0 right-1/3 w-[0.5px] bg-[#B58A00]/30" />
-                    <div className="absolute top-0.5 bottom-0.5 left-1/2 w-1.5 rounded-xs border border-[#B58A00]/20" />
-                  </div>
-                  
+                {/* Card Middle: Trend delta */}
+                <div className="flex justify-end items-center relative z-10 mt-1 pr-1">
                   {/* Trend Percentage */}
                   <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
                     trend.isPositive 
@@ -580,10 +587,10 @@ const Home = () => {
                     )}
                   </div>
 
-                  {/* Card footer logo */}
-                  <div className="flex -space-x-1.5 opacity-30 shrink-0 pb-1.5">
-                    <div className="w-4 h-4 rounded-full bg-secondary/30 border border-border/20" />
-                    <div className="w-4 h-4 rounded-full bg-secondary/15 border border-border/10" />
+                  {/* Card footer logo replaced by clean minimalist branding pill */}
+                  <div className="flex items-center gap-1.5 opacity-20 shrink-0 pb-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
                   </div>
                 </div>
               </div>

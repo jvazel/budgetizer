@@ -240,7 +240,7 @@ const MonthlyReportPage = () => {
               {/* Income card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Revenus</span>
-                <span className="text-sm font-extrabold text-accent font-premium-numbers block mt-1.5">
+                <span className="text-lg font-extrabold text-accent font-premium-numbers block mt-1">
                   {formatCurrency(report.financialStats?.income || 0)}
                 </span>
               </div>
@@ -248,7 +248,7 @@ const MonthlyReportPage = () => {
               {/* Expenses card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Dépenses</span>
-                <span className="text-sm font-extrabold text-danger font-premium-numbers block mt-1.5">
+                <span className="text-lg font-extrabold text-danger font-premium-numbers block mt-1">
                   -{formatCurrency(report.financialStats?.expenses || 0)}
                 </span>
               </div>
@@ -256,7 +256,7 @@ const MonthlyReportPage = () => {
               {/* Net Savings card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Épargne Nette</span>
-                <span className={`text-sm font-extrabold font-premium-numbers block mt-1.5 ${
+                <span className={`text-lg font-extrabold font-premium-numbers block mt-1 ${
                   (report.financialStats?.net || 0) >= 0 ? 'text-accent' : 'text-danger'
                 }`}>
                   {(report.financialStats?.net || 0) >= 0 ? '+' : ''}
@@ -267,7 +267,7 @@ const MonthlyReportPage = () => {
               {/* Savings Rate card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Taux d'Épargne</span>
-                <span className="text-sm font-extrabold text-primary font-premium-numbers block mt-1.5">
+                <span className="text-lg font-extrabold text-primary font-premium-numbers block mt-1">
                   {(report.financialStats?.savingsRate || 0).toFixed(1)}%
                 </span>
               </div>

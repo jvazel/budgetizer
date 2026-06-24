@@ -14,10 +14,10 @@
   --text-primary: #f8fafc;     /* Blanc bleuté */
   --text-secondary: #94a3b8;   /* Slate-400 */
   --text-muted: #64748b;       /* Slate-500 pour une meilleure lisibilité */
-  --accent: #10b981;           /* Conserver le vert émeraude pour les soldes/revenus */
-  --accent-dim: rgba(16, 185, 129, 0.08);
-  --danger: #f43f5e;           /* Rose-rouge Stripe/Linear */
-  --danger-dim: rgba(244, 63, 94, 0.08);
+  --accent: #0fa573;           /* Vert émeraude raffiné et moins saturé */
+  --accent-dim: rgba(15, 165, 115, 0.08);
+  --danger: #e24a64;           /* Rose-rouge élégant, plus sophistiqué */
+  --danger-dim: rgba(226, 74, 100, 0.08);
   --warning: #f59e0b;          /* Ambre */
   --info: #3b82f6;             /* Bleu info */
   --purple: #8b5cf6;           /* Violet */
@@ -36,14 +36,14 @@
   --bg-surface: #ffffff;
   --bg-surface-2: #f1f4f9;     /* Slate-100 (au lieu de Gray-100 pour plus de fraîcheur) */
   --bg-elevated: #ffffff;
-  --border: rgba(10, 26, 47, 0.08); /* Augmentation du contraste (0.04 -> 0.08) */
+  --border: rgba(10, 26, 47, 0.06); /* Bordure subtile */
   --text-primary: #0a1a2f;     /* Slate-900 */
   --text-secondary: #475569;   /* Slate-600 */
   --text-muted: #64748b;       /* Slate-400 */
-  --accent: #059669;           /* Vert émeraude plus sombre */
-  --accent-dim: rgba(5, 150, 105, 0.06);
-  --danger: #e11d48;
-  --danger-dim: rgba(225, 29, 72, 0.06);
+  --accent: #0d8c5a;           /* Vert forêt émeraude premium */
+  --accent-dim: rgba(13, 140, 90, 0.06);
+  --danger: #d93856;           /* Rouge doux */
+  --danger-dim: rgba(217, 56, 86, 0.06);
   --warning: #d97706;
   --info: #2563eb;
   --purple: #7c3aed;
@@ -71,14 +71,14 @@ body {
 /* Chiffres tabulaires alignés pour montants financiers */
 .font-premium-numbers {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 /* En-têtes secondaires premium */
 .premium-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
 }

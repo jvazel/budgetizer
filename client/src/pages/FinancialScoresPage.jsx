@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, Award } from '
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { useFinancialScoreHistory } from '../hooks/useFinancialScore';
 import CircularScoreGauge from '../components/ui/CircularScoreGauge';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -177,39 +178,49 @@ const ScoreCard = ({ scoreData, prevScore }) => {
         </div>
 
         {/* Accordion Detail */}
-        {expanded && (
-          <div className="px-5 pb-5 pt-0 border-t border-border/20 space-y-4">
-            {/* Pillars */}
-            <div className="space-y-3 pt-4">
-              <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Détail des 5 piliers</p>
-              {pillarRows.map(row => (
-                <PillarRow key={row.key} {...row} />
-              ))}
-            </div>
-
-            {/* Bonus */}
-            {savingsGoalsBonus.goals.length > 0 && (
-              <div className="pt-3 border-t border-border/20 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
-                    <Award size={11} /> Bonus objectifs
-                  </p>
-                  <span className={`text-xs font-extrabold ${
-                    savingsGoalsBonus.bonusScore > 0 ? 'text-accent' : 'text-muted'
-                  }`}>
-                    +{savingsGoalsBonus.bonusScore} / 5 pts
-                  </span>
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="px-5 pb-5 pt-0 border-t border-border/20 space-y-4 pt-4">
+                {/* Pillars */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-wider font-premium-numbers">Détail des 5 piliers</p>
+                  {pillarRows.map(row => (
+                    <PillarRow key={row.key} {...row} />
+                  ))}
                 </div>
-                {savingsGoalsBonus.goals.map(g => (
-                  <div key={g.goalId} className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-secondary font-medium truncate">{g.name}</span>
-                    <BonusGoalStatus status={g.status} />
+
+                {/* Bonus */}
+                {savingsGoalsBonus.goals.length > 0 && (
+                  <div className="pt-3 border-t border-border/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+                        <Award size={11} /> Bonus objectifs
+                      </p>
+                      <span className={`text-xs font-extrabold ${
+                        savingsGoalsBonus.bonusScore > 0 ? 'text-accent' : 'text-muted'
+                      }`}>
+                        +{savingsGoalsBonus.bonusScore} / 5 pts
+                      </span>
+                    </div>
+                    {savingsGoalsBonus.goals.map(g => (
+                      <div key={g.goalId} className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-secondary font-medium truncate">{g.name}</span>
+                        <BonusGoalStatus status={g.status} />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -231,17 +242,24 @@ const FinancialScoresPage = () => {
       </div>
 
       {/* Year Filter */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 mb-6 relative">
         {availableYears.map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
-            className={`px-5 py-2 rounded-full text-xs font-bold transition-all border shrink-0 ${
+            className={`px-5 py-2 rounded-full text-xs font-bold transition-all border shrink-0 relative z-10 ${
               selectedYear === year
-                ? 'bg-accent text-white border-accent shadow-[0_4px_12px_rgba(74,222,128,0.25)]'
+                ? 'text-white border-transparent font-extrabold'
                 : 'bg-surface-2 text-secondary border-border/40 hover:text-primary hover:border-border'
             }`}
           >
+            {selectedYear === year && (
+              <motion.div
+                layoutId="activeYearPill"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                className="absolute inset-0 bg-accent rounded-full -z-10 shadow-[0_4px_12px_rgba(15,165,115,0.25)]"
+              />
+            )}
             {year}
           </button>
         ))}

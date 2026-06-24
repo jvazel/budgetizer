@@ -1111,8 +1111,8 @@ export const getHistogramData = async (req, res) => {
       const key = getBucketKey(tx.date);
       if (buckets[key]) {
         if (accountId) {
-          const isFrom = tx.accountId.toString() === accountId;
-          const isTo = tx.toAccountId && tx.toAccountId.toString() === accountId;
+          const isFrom = tx.accountId && (tx.accountId._id || tx.accountId).toString() === accountId;
+          const isTo = tx.toAccountId && (tx.toAccountId._id || tx.toAccountId).toString() === accountId;
 
           if (tx.type === 'income') {
             if (isFrom) buckets[key].income += tx.amount;

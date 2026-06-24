@@ -466,7 +466,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
         <div className={`relative z-10 rounded-2xl p-3.5 space-y-3.5 shadow-inner ${cardTheme.innerBoxClass}`}>
           
           {/* Contextual micro-phrase */}
-          <div className={`flex flex-col gap-2 p-3.5 rounded-2xl border transition-colors ${
+          <div className={`flex flex-col gap-2 p-3.5 rounded-xl border transition-colors ${
             hasRiskOfNegative
               ? 'bg-red-500/10 border-red-500/15 text-red-950 dark:text-red-200'
               : !isComfortable
@@ -522,7 +522,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                 >
                   <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1 no-scrollbar pt-1 pb-1">
                     {pendingRecurringExpenses.length === 0 ? (
-                      <div className="text-center py-6 text-muted text-xs border border-dashed border-border/40 rounded-2xl bg-base/20">
+                      <div className="text-center py-6 text-muted text-xs border border-dashed border-border/40 rounded-xl bg-base/20">
                         Aucune charge planifiée détectée d'ici la paye.
                       </div>
                     ) : (
@@ -535,7 +535,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                           <div
                             key={tx._id}
                             onClick={() => toggleExpenseExclusion(tx._id)}
-                            className={`min-h-[48px] py-2.5 px-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer select-none ${
+                            className={`min-h-[48px] py-2.5 px-3 rounded-xl border transition-all flex items-center justify-between cursor-pointer select-none ${
                               isExcluded
                                 ? 'bg-surface/30 border-border/20 opacity-40'
                                 : 'bg-surface border-border/40 active-spring-sm hover:bg-surface-2'

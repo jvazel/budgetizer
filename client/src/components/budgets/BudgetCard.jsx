@@ -145,13 +145,13 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   return (
     <div 
       onClick={onEdit ? () => onEdit(budget) : undefined}
-      className={`bg-surface-2 p-5 rounded-[20px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${borderLeftClass} ${onEdit ? 'cursor-pointer active-scale-sm' : ''}`}
+      className={`bg-surface-2 p-5 rounded-[24px] mb-4 border border-border/40 relative group overflow-hidden shadow-sm hover:border-border/80 transition-all ${borderLeftClass} ${onEdit ? 'cursor-pointer active-scale-sm' : ''}`}
     >
       <div className="flex gap-4 items-start">
         
         {/* Category Icon */}
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 shadow-sm border border-border/10"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm border border-border/10"
           style={{ backgroundColor: `${budget.color || '#3b82f6'}15`, color: budget.color || '#3b82f6' }}
         >
           {budget.categoryId?.icon || '📦'}

@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getChartsByCategory, getForecastCharts, getTagChartsData, getWaterfallData } from '../chartController.js';
+import { getChartsByCategory, getForecastCharts, getTagChartsData, getWaterfallData, getHistogramData } from '../chartController.js';
 import Category from '../../models/Category.js';
 import Transaction from '../../models/Transaction.js';
 import Account from '../../models/Account.js';
@@ -259,6 +259,104 @@ describe('Chart Controller', () => {
           expect.objectContaining({ categoryId: 'cat_food', amount: 150 })
         ]
       });
+    });
+  });
+
+  describe('getHistogramData', () => {
+    it('should aggregate income, expenses and transfers in buckets', async () => {
+      req.query = {
+        startDate: '2026-06-01',
+        endDate: '2026-06-03',
+        groupBy: 'day'
+      };
+
+      const mockTransactions = [
+        { type: 'income', amount: 1000, date: new Date('2026-06-01') },
+        { type: 'expense', amount: 300, date: new Date('2026-06-02') },
+        { type: 'transfer', amount: 150, date: new Date('2026-06-02'), toAccountId: { type: 'credit', _id: 'acc_credit' } }
+      ];
+
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getHistogramData(req, res);
+
+      expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'user_123'
+      }));
+
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        groupBy: 'day',
+        metrics: expect.objectContaining({
+          totalIncome: 1000,
+          totalExpenses: 450, // 300 expense + 150 transfer to credit card
+          netSavings: 550
+        })
+      }));
+    });
+
+    it('should filter correctly when accountId is specified (handling populated objects)', async () => {
+      req.query = {
+        startDate: '2026-06-01',
+        endDate: '2026-06-03',
+        accountId: 'acc_checking',
+        groupBy: 'day'
+      };
+
+      const mockTransactions = [
+        // Income to checking
+        { 
+          type: 'income', 
+          amount: 2000, 
+          date: new Date('2026-06-01'),
+          accountId: { _id: 'acc_checking', type: 'checking' }
+        },
+        // Expense from checking
+        { 
+          type: 'expense', 
+          amount: 500, 
+          date: new Date('2026-06-02'),
+          accountId: { _id: 'acc_checking', type: 'checking' }
+        },
+        // Expense from another account (should be ignored for checking stats)
+        { 
+          type: 'expense', 
+          amount: 100, 
+          date: new Date('2026-06-02'),
+          accountId: { _id: 'acc_savings', type: 'savings' }
+        },
+        // Transfer from checking to savings
+        { 
+          type: 'transfer', 
+          amount: 300, 
+          date: new Date('2026-06-03'),
+          accountId: { _id: 'acc_checking', type: 'checking' },
+          toAccountId: { _id: 'acc_savings', type: 'savings' }
+        }
+      ];
+
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getHistogramData(req, res);
+
+      // Verify the query checks $or conditions
+      expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
+        $or: [
+          { accountId: 'acc_checking' },
+          { toAccountId: 'acc_checking' }
+        ]
+      }));
+
+      // When accountId = acc_checking:
+      // - income is 2000 (checking is From)
+      // - expense is 500 (checking is From) + 300 transfer (checking is From) = 800
+      // - savings expense (100) is ignored because isFrom is false (acc_savings !== acc_checking) and isTo is false
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        metrics: expect.objectContaining({
+          totalIncome: 2000,
+          totalExpenses: 800,
+          netSavings: 1200
+        })
+      }));
     });
   });
 });

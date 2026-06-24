@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, Banknote, Plus, BarChart2, Calendar } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { triggerHaptic } from '../../utils/hapticHelper';
+import { motion } from 'framer-motion';
 
 const BottomTabBar = ({ onPlusClick }) => {
   const location = useLocation();
@@ -34,9 +35,13 @@ const BottomTabBar = ({ onPlusClick }) => {
         onClick={() => handleTabClick(tab.path)}
         className="flex flex-col items-center justify-center w-14 h-14 rounded-xl active:scale-90 transition-all select-none gap-0.5 relative"
       >
-        {/* Active pill indicator */}
+        {/* Active pill indicator with spring layout animation */}
         {isActive && (
-          <div className="absolute inset-x-0.5 inset-y-1 rounded-xl bg-copper-dim -z-10 transition-all duration-300" />
+          <motion.div
+            layoutId="activeTabPill"
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            className="absolute inset-x-0.5 inset-y-1 rounded-xl bg-copper-dim -z-10"
+          />
         )}
         <Icon
           size={20}
@@ -59,13 +64,13 @@ const BottomTabBar = ({ onPlusClick }) => {
         {renderTab(tabs[0])}
         {renderTab(tabs[1])}
 
-        {/* Center Plus Button */}
+        {/* Center Plus Button with refined copper style and subtle glow */}
         <div className="relative flex justify-center w-16">
           <button
             onClick={handlePlusClick}
-            className="absolute -top-7 w-[56px] h-[56px] bg-gradient-to-b from-[#d97706] to-[#b45309] border border-white/10 rounded-full flex items-center justify-center text-white shadow-[0_8px_24px_rgba(0,0,0,0.5),0_2px_8px_rgba(217,119,6,0.35)] transition-all duration-300 hover:scale-105 active:scale-90"
+            className="absolute -top-7 w-[52px] h-[52px] bg-copper border border-white/10 rounded-full flex items-center justify-center text-white shadow-[0_6px_20px_rgba(217,119,6,0.25)] transition-all duration-300 hover:scale-105 active:scale-90"
           >
-            <Plus size={26} />
+            <Plus size={24} />
           </button>
         </div>
 

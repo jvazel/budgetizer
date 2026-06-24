@@ -11,6 +11,7 @@ import {
   ArrowRight,
   TrendingUp
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const AiInsights = () => {
   const { user } = useContext(AuthContext);
@@ -78,12 +79,12 @@ const AiInsights = () => {
       <div className="space-y-6 mb-6">
         
         {/* Header Introduction Card */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-accent/20 to-purple/20 p-5 rounded-[28px] border border-accent/20 shadow-md">
-          <div className="absolute top-0 right-0 p-4 opacity-15 pointer-events-none">
+        <div className="relative overflow-hidden bg-gradient-to-br from-accent/10 to-purple/10 p-5 rounded-[24px] border border-accent/15 shadow-sm">
+          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
             <Sparkles size={100} className="text-accent" />
           </div>
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+            <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
               <Sparkles size={20} className="animate-pulse" />
             </div>
             <div className="space-y-1">
@@ -155,17 +156,24 @@ const AiInsights = () => {
                 <h3 className="text-xs font-bold text-primary">Sensibilité d'alerte</h3>
                 <p className="text-[9px] text-muted">Alerte si dépassement de +{threshold}%</p>
               </div>
-              <div className="flex bg-surface p-1 rounded-xl border border-border/40">
+              <div className="flex bg-surface p-1 rounded-xl border border-border/40 relative">
                 {[30, 40, 50, 60].map(val => (
                   <button
                     key={val}
                     onClick={() => setThreshold(val)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all relative z-10 ${
                       threshold === val 
-                        ? 'bg-accent text-white shadow-sm' 
+                        ? 'text-white font-extrabold' 
                         : 'text-secondary hover:text-primary'
                     }`}
                   >
+                    {threshold === val && (
+                      <motion.div
+                        layoutId="sensitivityActiveTab"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        className="absolute inset-0 bg-accent rounded-lg -z-10"
+                      />
+                    )}
                     +{val}%
                   </button>
                 ))}
@@ -288,12 +296,19 @@ const AiInsights = () => {
                               <button
                                 key={pct}
                                 onClick={() => handleSelectReduction(suggestion.categoryId, pct)}
-                                className={`py-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center active-scale-sm ${
+                                className={`py-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center active-scale-sm relative ${
                                   activePct === pct
-                                    ? 'bg-copper text-white border-transparent font-extrabold shadow-sm'
+                                    ? 'text-white font-extrabold border-transparent'
                                     : 'bg-surface border-border/40 text-secondary hover:text-primary hover:bg-surface/85'
                                 }`}
                               >
+                                {activePct === pct && (
+                                  <motion.div
+                                    layoutId={`reductionActiveTab-${suggestion.categoryId}`}
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                    className="absolute inset-0 bg-copper rounded-xl -z-10"
+                                  />
+                                )}
                                 <span>-{pct}%</span>
                               </button>
                             ))}
