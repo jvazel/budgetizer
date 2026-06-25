@@ -398,7 +398,6 @@ const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
             </button>
           </div>
         </div>
-      </div>
 
       {loading ? (
         <div className="space-y-4">
