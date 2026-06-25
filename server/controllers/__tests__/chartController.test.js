@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getChartsByCategory, getForecastCharts, getTagChartsData, getWaterfallData, getHistogramData } from '../chartController.js';
+import { getChartsByCategory, getForecastCharts, getTagChartsData, getWaterfallData, getHistogramData, getNetWorthHistory, getCashFlowHistory } from '../chartController.js';
 import Category from '../../models/Category.js';
 import Transaction from '../../models/Transaction.js';
 import Account from '../../models/Account.js';
@@ -129,6 +129,29 @@ describe('Chart Controller', () => {
       const responseData = res.json.mock.calls[0][0];
       // Should have projected 3 months of data
       expect(responseData.forecast.length).toBe(3);
+    });
+
+    it('should anchor projection when endDate is provided', async () => {
+      req.query = {
+        months: '3',
+        method: 'regression',
+        endDate: '2026-05-15'
+      };
+
+      const mockAccounts = [
+        { _id: 'acc1', balance: 2000 }
+      ];
+
+      Account.find.mockImplementation(() => mockQuery(mockAccounts));
+      Transaction.find.mockImplementation(() => mockQuery([]));
+
+      await getForecastCharts(req, res);
+
+      expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
+        date: expect.objectContaining({
+          $lte: new Date('2026-05-15')
+        })
+      }));
     });
   });
 
@@ -355,6 +378,93 @@ describe('Chart Controller', () => {
           totalIncome: 2000,
           totalExpenses: 800,
           netSavings: 1200
+        })
+      }));
+    });
+  });
+
+  describe('getNetWorthHistory', () => {
+    it('should calculate net worth history and reverse balances correctly', async () => {
+      req.query = {
+        days: '5'
+      };
+
+      const mockAccounts = [
+        { _id: 'acc1', balance: 1000, type: 'checking', includeInTotal: true },
+        { _id: 'acc2', balance: 500, type: 'savings', includeInTotal: true }
+      ];
+
+      const mockTransactions = [
+        { accountId: 'acc1', amount: 100, type: 'expense', date: new Date() }
+      ];
+
+      Account.find.mockImplementation(() => mockQuery(mockAccounts));
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getNetWorthHistory(req, res);
+
+      expect(res.json).toHaveBeenCalled();
+      const history = res.json.mock.calls[0][0];
+      expect(history.length).toBe(6); // 5 days + today
+      // The last day (today) should match initial balances: 1000 + 500 = 1500
+      expect(history[5].netWorth).toBe(1500);
+    });
+
+    it('should anchor net worth history when endDate is provided', async () => {
+      req.query = {
+        days: '5',
+        endDate: '2026-05-10'
+      };
+
+      Account.find.mockImplementation(() => mockQuery([]));
+      Transaction.find.mockImplementation(() => mockQuery([]));
+
+      await getNetWorthHistory(req, res);
+
+      expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
+        date: expect.objectContaining({
+          $lte: new Date('2026-05-10')
+        })
+      }));
+    });
+  });
+
+  describe('getCashFlowHistory', () => {
+    it('should aggregate income and expenses into monthly cash flow buckets', async () => {
+      req.query = {
+        months: '3'
+      };
+
+      const mockTransactions = [
+        { amount: 1200, type: 'income', date: new Date() },
+        { amount: 400, type: 'expense', date: new Date() }
+      ];
+
+      Transaction.find.mockImplementation(() => mockQuery(mockTransactions));
+
+      await getCashFlowHistory(req, res);
+
+      expect(res.json).toHaveBeenCalled();
+      const result = res.json.mock.calls[0][0];
+      expect(result.history.length).toBe(3);
+      expect(result.metrics.totalIncome).toBe(1200);
+      expect(result.metrics.totalExpenses).toBe(400);
+      expect(result.metrics.netSavings).toBe(800);
+    });
+
+    it('should anchor cash flow history when endDate is provided', async () => {
+      req.query = {
+        months: '3',
+        endDate: '2026-05-15'
+      };
+
+      Transaction.find.mockImplementation(() => mockQuery([]));
+
+      await getCashFlowHistory(req, res);
+
+      expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
+        date: expect.objectContaining({
+          $lte: new Date('2026-05-15')
         })
       }));
     });
