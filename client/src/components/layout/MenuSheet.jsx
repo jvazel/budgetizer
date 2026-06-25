@@ -67,7 +67,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
           >
             {/* Ambient Background Glow Flares */}
             <div className="absolute -top-12 -left-12 w-40 h-40 bg-copper/5 rounded-full blur-[60px] pointer-events-none" />
-            <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-purple/5 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-copper/5 rounded-full blur-[60px] pointer-events-none" />
 
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-border/20 mb-6 mt-1 relative z-10">
@@ -92,7 +92,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
             <div className="flex-1 space-y-6 overflow-y-auto no-scrollbar relative z-10 pr-1">
               {menuGroups.map((group, groupIdx) => (
                 <div key={groupIdx} className="space-y-1">
-                  <span className="px-3 text-[9px] font-bold text-muted uppercase tracking-widest block mb-1">
+                  <span className="premium-label px-3 block mb-1 text-[9px]">
                     {group.title}
                   </span>
                   {group.items.map((item, idx) => {

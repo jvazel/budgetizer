@@ -155,110 +155,113 @@ const Login = () => {
       <div className="bg-glow-orb glow-orb-indigo w-[300px] h-[300px] -top-20 -left-20" />
       <div className="bg-glow-orb glow-orb-amber w-[250px] h-[250px] top-[40%] -right-20" />
 
-      <div className="flex-1 flex flex-col justify-center relative z-10">
-        <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(217,119,6,0.25)] bg-surface border border-border/30">
+      <div className="flex-1 flex flex-col justify-center relative z-10 py-6">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 premium-card-inner flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(217,119,6,0.2)] bg-surface border border-border/30">
             <img src="/pwa-192x192.png" alt="Logo Budgetizer" className="w-full h-full object-cover" />
           </div>
         </div>
-        
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-primary mb-2">Bon retour 👋</h1>
-          <p className="text-secondary">Entrez vos identifiants pour continuer</p>
-        </div>
 
-        <form onSubmit={handleSubmit} className={`space-y-4 ${shouldShake ? 'animate-shake' : ''}`}>
-          {error && (
-            <div className="bg-danger-dim border border-danger/20 text-danger rounded-2xl p-4 text-sm flex items-start gap-3 shadow-[0_0_20px_rgba(244,63,94,0.03)] transition-all">
-              <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-danger" />
-              <div className="flex-1 text-left">
-                <p className="font-semibold text-primary">Échec de la connexion</p>
-                <p className="text-xs text-secondary mt-0.5">{error}</p>
+        <div className="banky-card p-6 relative overflow-hidden select-none">
+          <div className="glass-reflection" />
+          
+          <div className="text-center mb-6 relative z-10">
+            <h1 className="text-2xl font-extrabold text-primary mb-1">Bon retour 👋</h1>
+            <p className="text-xs text-secondary">Entrez vos identifiants pour continuer</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className={`space-y-4 relative z-10 ${shouldShake ? 'animate-shake' : ''}`}>
+            {error && (
+              <div className="bg-danger-dim border border-danger/20 text-danger rounded-xl p-3 text-xs flex items-start gap-2 shadow-[0_0_20px_rgba(244,63,94,0.03)] transition-all">
+                <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-danger" />
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-primary">Échec de la connexion</p>
+                  <p className="text-[10px] text-secondary mt-0.5">{error}</p>
+                </div>
+              </div>
+            )}
+
+            <Input
+              id="email"
+              type="email"
+              placeholder="Adresse email"
+              value={email}
+              onChange={handleEmailChange}
+              icon={Mail}
+              error={!!error}
+              required
+            />
+            
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Mot de passe"
+              value={password}
+              onChange={handlePasswordChange}
+              icon={Lock}
+              rightIcon={showPassword ? EyeOff : Eye}
+              onRightIconClick={() => setShowPassword(!showPassword)}
+              error={!!error}
+              required
+            />
+
+            <div className="text-right px-1">
+              <Link 
+                to="/forgot-password" 
+                className="text-xs font-bold text-copper hover:text-copper-hover transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
+
+            <div className="pt-2">
+              <Button type="submit" variant="copper" fullWidth>
+                Se connecter
+              </Button>
+            </div>
+          </form>
+
+          {isWebAuthnSupported && (
+            <div className="relative z-10">
+              <div className="flex items-center my-5">
+                <div className="flex-1 border-t border-border/40"></div>
+                <span className="px-3 text-[10px] text-muted font-bold uppercase tracking-wider">ou</span>
+                <div className="flex-1 border-t border-border/40"></div>
+              </div>
+
+              <Button 
+                type="button" 
+                variant="secondary" 
+                fullWidth 
+                onClick={handleWebAuthnLogin}
+                className="flex items-center justify-center gap-2"
+              >
+                <Fingerprint size={16} className="text-copper" />
+                Se connecter avec la biométrie
+              </Button>
+
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={handleResetWebAuthn}
+                  className="text-[9px] font-bold text-muted hover:text-copper transition-colors"
+                >
+                  Problème avec la biométrie ? Réinitialiser l'appareil
+                </button>
               </div>
             </div>
           )}
+        </div>
 
-          <Input
-            id="email"
-            type="email"
-            placeholder="Adresse email"
-            value={email}
-            onChange={handleEmailChange}
-            icon={Mail}
-            error={!!error}
-            required
-          />
-          
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Mot de passe"
-            value={password}
-            onChange={handlePasswordChange}
-            icon={Lock}
-            rightIcon={showPassword ? EyeOff : Eye}
-            onRightIconClick={() => setShowPassword(!showPassword)}
-            error={!!error}
-            required
-          />
-
-          <div className="text-right px-1">
-            <Link 
-              to="/forgot-password" 
-              className="text-xs font-bold text-accent hover:text-accent/80 transition-colors"
-            >
-              Mot de passe oublié ?
-            </Link>
-          </div>
-
-          <div className="pt-2">
-            <Button type="submit" variant="copper" fullWidth>
-              Se connecter
-            </Button>
-          </div>
-        </form>
-
-        {isWebAuthnSupported && (
-          <>
-            <div className="flex items-center my-6">
-              <div className="flex-1 border-t border-border/40"></div>
-              <span className="px-3 text-xs text-muted font-bold uppercase tracking-wider">ou</span>
-              <div className="flex-1 border-t border-border/40"></div>
-            </div>
-
-            <Button 
-              type="button" 
-              variant="secondary" 
-              fullWidth 
-              onClick={handleWebAuthnLogin}
-              className="flex items-center justify-center gap-2"
-            >
-              <Fingerprint size={16} className="text-accent" />
-              Se connecter avec la biométrie
-            </Button>
-
-            <div className="text-center mt-3">
-              <button
-                type="button"
-                onClick={handleResetWebAuthn}
-                className="text-[10px] font-bold text-muted hover:text-accent transition-colors"
-              >
-                Problème avec la biométrie ? Réinitialiser l'appareil
-              </button>
-            </div>
-          </>
-        )}
-
-        <div className="mt-8 text-center">
-          <p className="text-secondary text-sm">
+        <div className="mt-6 text-center relative z-10">
+          <p className="text-secondary text-xs">
             Pas encore de compte ?{' '}
-            <Link to="/register" className="text-accent font-medium hover:underline">
+            <Link to="/register" className="text-copper font-medium hover:underline">
               S'inscrire
             </Link>
           </p>
         </div>
-        </div>
-
+      </div>
     </div>
   );
 };

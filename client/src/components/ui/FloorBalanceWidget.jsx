@@ -221,34 +221,34 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
   const cardTheme = useMemo(() => {
     if (hasRiskOfNegative) {
       return {
-        cardClass: 'bg-gradient-to-br from-[#fff5f5] via-[#ffebeb] to-[#fed7d7] border-red-200/60 dark:from-[#2a0e12] dark:via-[#19080b] dark:to-[#0f0406] dark:border-danger/30 shadow-[0_12px_36px_-6px_rgba(244,63,94,0.12)] text-primary',
-        textTitle: 'text-red-800/90 dark:text-red-300',
-        textValue: 'text-red-950 dark:text-white',
-        textSubLabel: 'text-red-700/80 dark:text-red-400/80',
-        textSubValue: 'text-red-950 dark:text-red-200',
-        dividerClass: 'bg-red-200/40 dark:bg-rose-500/10',
-        innerBoxClass: 'bg-red-100/30 border border-red-200/20 dark:bg-rose-950/15 dark:border-rose-900/10',
+        cardClass: 'banky-hero-card-danger text-white',
+        textTitle: 'text-red-200 font-bold uppercase tracking-wider',
+        textValue: 'text-white',
+        textSubLabel: 'text-red-200/80',
+        textSubValue: 'text-red-100',
+        dividerClass: 'bg-red-500/10',
+        innerBoxClass: 'bg-white/5 border border-white/10',
       };
     }
     if (!isComfortable) {
       return {
-        cardClass: 'bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#fde68a] border-amber-200/60 dark:from-[#2a1b0e] dark:via-[#190f08] dark:to-[#0f0905] dark:border-warning/30 shadow-[0_12px_36px_-6px_rgba(245,158,11,0.12)] text-primary',
-        textTitle: 'text-amber-800/90 dark:text-amber-300',
-        textValue: 'text-amber-950 dark:text-white',
-        textSubLabel: 'text-amber-700/80 dark:text-amber-400/80',
-        textSubValue: 'text-amber-950 dark:text-amber-200',
-        dividerClass: 'bg-amber-200/40 dark:bg-amber-500/10',
-        innerBoxClass: 'bg-amber-100/30 border border-amber-200/20 dark:bg-amber-950/15 dark:border-amber-900/10',
+        cardClass: 'banky-hero-card-warning text-white',
+        textTitle: 'text-amber-200 font-bold uppercase tracking-wider',
+        textValue: 'text-white',
+        textSubLabel: 'text-amber-200/80',
+        textSubValue: 'text-amber-100',
+        dividerClass: 'bg-warning/10',
+        innerBoxClass: 'bg-white/5 border border-white/10',
       };
     }
     return {
-      cardClass: 'bg-gradient-to-br from-[#f0f4ff] via-[#e1e7ff] to-[#d0d7ff] border-indigo-200/60 dark:from-[#091a3c] dark:via-[#040c20] dark:to-[#020510] dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(10,26,47,0.16)] text-primary',
-      textTitle: 'text-indigo-800/90 dark:text-blue-300',
-      textValue: 'text-indigo-950 dark:text-white',
-      textSubLabel: 'text-indigo-700/80 dark:text-blue-400/80',
-      textSubValue: 'text-indigo-950 dark:text-blue-200',
-      dividerClass: 'bg-indigo-200/40 dark:bg-blue-500/10',
-      innerBoxClass: 'bg-indigo-100/30 border border-indigo-200/20 dark:bg-blue-950/15 dark:border-blue-900/10',
+      cardClass: 'banky-hero-card text-white',
+      textTitle: 'text-white/70 font-bold uppercase tracking-wider',
+      textValue: 'text-white',
+      textSubLabel: 'text-white/60',
+      textSubValue: 'text-white',
+      dividerClass: 'bg-white/10',
+      innerBoxClass: 'bg-white/5 border border-white/10',
     };
   }, [hasRiskOfNegative, isComfortable]);
 
@@ -303,7 +303,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             className={`flex items-center gap-1.5 active:scale-98 active-spring-sm transition-all px-2.5 py-1 rounded-xl border ${
               showSettings 
                 ? 'bg-copper/20 border-copper/30 text-copper font-bold' 
-                : 'bg-white/40 border-white/20 text-indigo-900/80 dark:bg-white/5 dark:border-white/5 dark:text-blue-200'
+                : 'bg-white/10 border-white/10 text-white/90 hover:bg-white/15'
             }`}
             title="Configurer le solde disponible"
           >
@@ -351,10 +351,10 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="relative z-10 bg-surface-2/95 border border-border/40 rounded-2xl p-4 space-y-4 animate-fade-in text-primary shadow-xl">
+          <div className="relative z-10 bg-[#070e20] border border-white/10 rounded-2xl p-4 space-y-4 animate-fade-in text-white shadow-xl">
             {/* Header Settings */}
-            <div className="flex justify-between items-center pb-2 border-b border-border/20">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Configuration du solde</span>
+            <div className="flex justify-between items-center pb-2 border-b border-white/10">
+              <span className="text-xs font-semibold uppercase tracking-wide text-white">Configuration du solde</span>
               <button
                 onClick={() => setShowSettings(false)}
                 className="text-xs font-bold text-copper hover:underline"
@@ -366,14 +366,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
             {/* Section 1: Accounts */}
             <div className="space-y-2.5">
               <div className="flex justify-between items-center flex-wrap gap-2">
-                <label className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
                   <Wallet size={14} className="text-copper" /> Comptes inclus
                 </label>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={handleSelectAllAccounts}
-                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-surface border border-border/40 rounded hover:bg-surface-2 active:scale-95 text-primary transition-all"
+                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/5 border border-white/10 rounded hover:bg-white/10 active:scale-95 text-white transition-all"
                   >
                     Tous
                   </button>
@@ -381,17 +381,17 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                     <button
                       type="button"
                       onClick={handleSelectOnlyCheckingAccounts}
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-surface border border-border/40 rounded hover:bg-surface-2 active:scale-95 text-primary transition-all"
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/5 border border-white/10 rounded hover:bg-white/10 active:scale-95 text-white transition-all"
                     >
                       Courants
                   </button>
                   )}
                 </div>
               </div>
-              <p className="text-[11px] text-secondary leading-relaxed">
+              <p className="text-[11px] text-white/60 leading-relaxed">
                 Sélectionnez les comptes à inclure dans le calcul du solde disponible.
               </p>
-              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-border/40 rounded-xl p-1.5 bg-base/30">
+              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-white/10 rounded-xl p-1.5 bg-[#030816]/50">
                 {accounts.length === 0 ? (
                   <p className="text-[11px] text-muted text-center py-4">Aucun compte disponible.</p>
                 ) : (
@@ -403,27 +403,27 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                         onClick={() => handleAccountToggle(acc._id)}
                         className={`flex items-center justify-between p-2 rounded-lg border transition-all active-spring-sm cursor-pointer select-none ${
                           isSelected
-                            ? 'bg-surface border-border/60 shadow-sm'
+                            ? 'bg-white/10 border-white/10 shadow-sm'
                             : 'bg-transparent border-transparent opacity-50 hover:opacity-85'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                           <div className="text-secondary shrink-0">
+                           <div className="text-white/70 shrink-0">
                             {isSelected ? (
                               <CheckCircle2 size={14} className="text-copper" />
                             ) : (
-                              <Circle size={14} className="text-secondary/30" />
+                              <Circle size={14} className="text-white/20" />
                             )}
                           </div>
                           <div
-                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] border border-border/40 shrink-0"
+                            className="w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] border border-white/10 shrink-0"
                             style={{ backgroundColor: `${acc.color || '#10b981'}25`, color: acc.color || '#10b981' }}
                           >
                             {acc.type === 'credit' ? <CreditCard size={11} /> : <Wallet size={11} />}
                           </div>
-                          <span className="text-xs font-semibold text-primary truncate max-w-[130px]">{acc.name}</span>
+                          <span className="text-xs font-semibold text-white/90 truncate max-w-[130px]">{acc.name}</span>
                         </div>
-                        <span className="font-premium-numbers font-semibold text-xs text-primary shrink-0">
+                        <span className="font-premium-numbers font-semibold text-xs text-white/90 shrink-0">
                           {formatCurrency(acc.balance)}
                         </span>
                       </div>
@@ -433,14 +433,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
               </div>
             </div>
 
-            <div className="h-[1px] bg-border/20" />
+            <div className="h-[1px] bg-white/10" />
 
             {/* Section 2: Paycheck Day */}
             <div className="space-y-2.5">
-              <label htmlFor="paycheck-select" className="text-xs font-semibold text-primary flex items-center gap-1.5">
+              <label htmlFor="paycheck-select" className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
                 <Calendar size={14} className="text-copper" /> Jour récurrent de paye
               </label>
-              <p className="text-[11px] text-secondary leading-relaxed">
+              <p className="text-[11px] text-white/60 leading-relaxed">
                 Le Solde Plancher déduit les factures prévues entre aujourd'hui et votre prochaine paye. Configurez le jour ou laissez en automatique.
               </p>
               <div className="relative z-10">
@@ -448,7 +448,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                   id="paycheck-select"
                   value={paycheckDayConfig}
                   onChange={(e) => handlePaycheckDayChange(e.target.value)}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+                  className="w-full bg-[#030816] border border-white/10 px-3 py-2 rounded-xl text-xs font-bold text-white focus:outline-none"
                 >
                   <option value="auto">Automatique (Détecter via les revenus)</option>
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
@@ -468,14 +468,14 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           {/* Contextual micro-phrase */}
           <div className={`flex flex-col gap-2 p-3.5 rounded-xl border transition-colors ${
             hasRiskOfNegative
-              ? 'bg-red-500/10 border-red-500/15 text-red-950 dark:text-red-200'
+              ? 'bg-red-950/40 border-red-900/30 text-red-200'
               : !isComfortable
-                ? 'bg-amber-500/10 border-amber-500/15 text-amber-950 dark:text-amber-200'
-                : 'bg-white/60 border-indigo-200/30 text-indigo-950 dark:bg-black/30 dark:border-white/5 dark:text-blue-100'
+                ? 'bg-amber-950/40 border-amber-900/30 text-amber-200'
+                : 'bg-white/10 border-white/10 text-white/90'
           }`}>
             <div className="flex items-center justify-between">
               {hasRiskOfNegative || !isComfortable ? (
-                <span className="flex items-center gap-1.5 text-[10px] font-black text-rose-500 dark:text-rose-300 uppercase tracking-wide">
+                <span className="flex items-center gap-1.5 text-[10px] font-black text-rose-300 uppercase tracking-wide">
                   <AlertTriangle size={12} /> Alerte
                 </span>
               ) : (
@@ -486,28 +486,22 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
           </div>
  
           {/* Accordion — Échéances avant la paye */}
-          <div className="border-t border-border/10 pt-3">
+          <div className="border-t border-white/10 pt-3">
             <button
               onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-              className={`w-full flex justify-between items-center px-3 py-2 text-xs font-bold focus:outline-none rounded-xl border transition-all active-spring-sm ${
-                hasRiskOfNegative
-                  ? 'bg-white/70 border-red-200/40 text-red-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
-                  : !isComfortable
-                    ? 'bg-white/70 border-amber-200/40 text-amber-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
-                    : 'bg-white/70 border-indigo-200/40 text-indigo-950 dark:bg-white/5 dark:border-white/5 dark:text-white dark:hover:bg-white/10'
-              }`}
+              className="w-full flex justify-between items-center px-3 py-2 text-xs font-bold focus:outline-none rounded-xl border transition-all active-spring-sm bg-white/5 border-white/10 text-white/90 hover:bg-white/10"
               aria-expanded={isAccordionExpanded}
             >
               <span className="flex items-center gap-2">
                 Échéances avant la paye
-                <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-surface-2 text-secondary border border-border/40 font-premium-numbers">
+                <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/10 text-white/90 border border-white/10 font-premium-numbers">
                   {pendingRecurringExpenses.length}
                 </span>
               </span>
               {isAccordionExpanded ? (
-                <ChevronUp size={16} className="text-secondary" />
+                <ChevronUp size={16} className="text-white/60" />
               ) : (
-                <ChevronDown size={16} className="text-secondary" />
+                <ChevronDown size={16} className="text-white/60" />
               )}
             </button>
  
@@ -522,7 +516,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                 >
                   <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto pr-1 no-scrollbar pt-1 pb-1">
                     {pendingRecurringExpenses.length === 0 ? (
-                      <div className="text-center py-6 text-muted text-xs border border-dashed border-border/40 rounded-xl bg-base/20">
+                      <div className="text-center py-6 text-white/40 text-xs border border-dashed border-white/10 rounded-xl bg-white/2">
                         Aucune charge planifiée détectée d'ici la paye.
                       </div>
                     ) : (
@@ -537,31 +531,31 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                             onClick={() => toggleExpenseExclusion(tx._id)}
                             className={`min-h-[48px] py-2.5 px-3 rounded-xl border transition-all flex items-center justify-between cursor-pointer select-none ${
                               isExcluded
-                                ? 'bg-surface/30 border-border/20 opacity-40'
-                                : 'bg-surface border-border/40 active-spring-sm hover:bg-surface-2'
+                                ? 'bg-white/2 border-white/5 opacity-40'
+                                : 'bg-white/5 border-white/10 active-spring-sm hover:bg-white/10'
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-1 text-secondary">
+                              <div className="p-1 text-white/60">
                                 {isExcluded ? (
                                   <CheckCircle2 size={18} className="text-copper" />
                                 ) : (
-                                  <Circle size={18} className="text-secondary/40" />
+                                  <Circle size={18} className="text-white/40" />
                                 )}
                               </div>
                               <div
-                                className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-border/10"
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 border border-white/10"
                                 style={{ backgroundColor: `${catColor}25`, color: catColor }}
                               >
                                 {catIcon}
                               </div>
                               <div className="min-w-0">
-                                <p className={`text-xs font-bold truncate max-w-[130px] leading-tight text-primary ${
+                                <p className={`text-xs font-bold truncate max-w-[130px] leading-tight text-white/90 ${
                                   isExcluded ? 'line-through opacity-50' : ''
                                 }`}>
                                   {tx.description}
                                 </p>
-                                <p className="text-[9px] text-muted mt-0.5">
+                                <p className="text-[9px] text-white/60 mt-0.5">
                                   Le{' '}
                                   {new Date(tx.date).toLocaleDateString('fr-FR', {
                                     day: 'numeric',
@@ -570,7 +564,7 @@ const FloorBalanceWidget = ({ accounts = [], upcoming = [], loading = false }) =
                                 </p>
                               </div>
                             </div>
-                            <span className={`text-xs font-bold font-premium-numbers shrink-0 text-primary ${
+                            <span className={`text-xs font-bold font-premium-numbers shrink-0 text-white ${
                               isExcluded ? 'opacity-50' : ''
                             }`}>
                               −{formatCurrency(tx.amount)}

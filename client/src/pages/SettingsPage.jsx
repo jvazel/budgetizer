@@ -64,7 +64,7 @@ const SettingsPage = () => {
 
         {/* Categories & Tags Management */}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-secondary uppercase tracking-wider px-1">
+          <h3 className="premium-label px-1">
             Structure & Catégorisation
           </h3>
           <div className="space-y-2.5">
@@ -107,11 +107,11 @@ const SettingsPage = () => {
 
         {/* Danger zone */}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-danger uppercase tracking-wider px-1 flex items-center gap-1.5">
+          <h3 className="premium-label text-danger px-1 flex items-center gap-1.5">
             <AlertTriangle size={14} className="text-danger" /> Zone de danger
           </h3>
 
-          <div className="bg-danger-dim/10 p-5 rounded-[28px] border border-danger/20 space-y-4">
+          <div className="banky-card border-danger/30 p-5 space-y-4">
             <div>
               <h4 className="text-xs font-bold text-danger">Actions irréversibles</h4>
               <p className="text-[10px] text-danger/80">Sois extrêmement prudent avec ces actions.</p>
@@ -120,14 +120,14 @@ const SettingsPage = () => {
             <div className="space-y-2 pt-2">
               <button 
                 onClick={() => setShowClearConfirm(true)}
-                className="w-full bg-danger/10 hover:bg-danger/15 text-danger border border-danger/30 py-3 rounded-2xl text-xs font-bold active:scale-98 transition-all"
+                className="w-full bg-danger/10 hover:bg-danger/15 text-danger border border-danger/30 py-3 rounded-xl text-xs font-bold active:scale-98 transition-all"
               >
                 Effacer toutes les données
               </button>
               
               <button 
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full bg-danger text-white py-3 rounded-2xl text-xs font-bold hover:bg-danger/90 active:scale-98 transition-all shadow-md shadow-danger/20"
+                className="w-full bg-danger text-white py-3 rounded-xl text-xs font-bold hover:bg-danger/90 active:scale-98 transition-all shadow-md shadow-danger/20"
               >
                 Supprimer définitivement mon compte
               </button>

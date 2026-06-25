@@ -102,14 +102,14 @@ const getAccountTrend = (acc) => {
 
 // ─── Quick shortcuts ──────────────────────────────────────────────────────────
 const SHORTCUTS = [
-  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-copper bg-copper/10 border-copper/20 group-hover:text-white group-hover:bg-copper group-hover:border-copper/45' },
-  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-accent bg-accent/10 border-accent/20 group-hover:text-white group-hover:bg-accent group-hover:border-accent/45' },
-  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-info bg-info/10 border-info/20 group-hover:text-white group-hover:bg-info group-hover:border-info/45' },
-  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-purple bg-purple/10 border-purple/20 group-hover:text-white group-hover:bg-purple group-hover:border-purple/45' },
-  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-warning bg-warning/10 border-warning/20 group-hover:text-white group-hover:bg-warning group-hover:border-warning/45' },
-  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-purple bg-purple/10 border-purple/20 group-hover:text-white group-hover:bg-purple group-hover:border-purple/45' },
-  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-info bg-info/10 border-info/20 group-hover:text-white group-hover:bg-info group-hover:border-info/45' },
-  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-accent bg-accent/10 border-accent/20 group-hover:text-white group-hover:bg-accent group-hover:border-accent/45' },
+  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-copper bg-copper-dim border-copper/20' },
+  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-copper bg-copper-dim border-copper/20' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -296,9 +296,9 @@ const Home = () => {
       />
 
       {/* ── KPIs & Sparkline fusionnés (Timeframe Statistics Card) ──────────── */}
-      <div className="bg-surface-2 rounded-[24px] border border-border/40 mb-6 shadow-sm overflow-hidden select-none">
+      <div className="banky-card mb-6 overflow-hidden select-none">
         {/* Tab switcher segmented control */}
-        <div className="flex bg-surface p-1 rounded-t-[24px] border-b border-border/20 gap-1 relative">
+        <div className="flex bg-surface-2 p-1 rounded-t-[24px] border-b border-border/20 gap-1 relative">
           <button
             type="button"
             onClick={() => setTimeTab('month')}
@@ -481,14 +481,14 @@ const Home = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4 px-1">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-accent-dim border border-accent/20 flex items-center justify-center text-accent">
+            <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
               <Wallet size={13} />
             </div>
-            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Comptes</h3>
+            <h3 className="premium-label">Comptes</h3>
           </div>
           <button
             onClick={() => navigate('/accounts')}
-            className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
+            className="px-2.5 py-1 text-[9px] font-extrabold bg-copper-dim border border-copper/20 text-copper rounded-full hover:bg-copper/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
           >
             Gérer
           </button>
@@ -614,16 +614,16 @@ const Home = () => {
 
       {/* ── Assistant Intelligent IA ────────────────────────────────────────── */}
       <section className="mb-6">
-        <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm space-y-4 select-none">
+        <div className="banky-card p-5 space-y-4 select-none">
           {/* Header */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+              <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
                 <Sparkles size={13} className="animate-pulse" />
               </div>
-              <h3 className="text-sm font-bold text-primary">Assistant IA</h3>
+              <h3 className="premium-label text-primary">Assistant IA</h3>
             </div>
-            <span className="text-[10px] font-extrabold text-amber-500 bg-amber-500/10 border border-amber-500/15 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+            <span className="text-[10px] font-extrabold text-copper bg-copper-dim border border-copper/15 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
               Actif
             </span>
           </div>
@@ -634,9 +634,9 @@ const Home = () => {
               <span className="text-secondary">Transactions classées</span>
               <span className="text-primary font-premium-numbers">{categorizationRate}%</span>
             </div>
-            <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-surface-2 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-[#b45309] rounded-full transition-all duration-500" 
+                className="h-full bg-gradient-to-r from-copper to-copper-hover rounded-full transition-all duration-500" 
                 style={{ width: `${categorizationRate}%` }}
               />
             </div>
@@ -689,9 +689,9 @@ const Home = () => {
               <button
                 key={idx}
                 onClick={() => navigate(item.path)}
-                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 rounded-[20px] bg-surface-2 border border-border/40 active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
+                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 premium-card active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
               >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
+                <div className={`w-11 h-11 premium-card-inner flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
                   <Icon size={18} />
                 </div>
                 <span className="text-[10px] font-bold text-secondary tracking-tight w-full px-1 leading-tight line-clamp-2 break-words">
@@ -706,12 +706,12 @@ const Home = () => {
       {/* ── Alertes Budget ───────────────────────────────────────────────────── */}
       {budgetAlerts && budgetAlerts.length > 0 && (
         <section className="mb-6 space-y-3">
-          <h3 className="text-sm font-bold text-secondary px-1">Alertes Budget</h3>
+          <h3 className="premium-label px-1">Alertes Budget</h3>
           {budgetAlerts.map((alert) => (
             <div
               key={alert.id}
               onClick={() => navigate('/budgets')}
-              className="bg-danger/10 border border-danger/20 p-4 rounded-2xl flex items-center gap-3 cursor-pointer active:scale-[0.99] active:bg-danger/15 transition-all select-none"
+              className="banky-card border-danger/30 p-4 flex items-center gap-3 cursor-pointer active-spring-sm active-card-feedback transition-all select-none"
             >
               <AlertTriangle className="text-danger shrink-0" size={22} />
               <div className="flex-1 min-w-0">
@@ -732,13 +732,13 @@ const Home = () => {
 
 
       {/* ── Patrimoine & Allocation ────────────────────────────────────────── */}
-      <div className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 select-none">
+      <div className="banky-card p-5 mb-6 select-none">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-info/10 border border-info/20 flex items-center justify-center text-info">
+            <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
               <TrendingUp size={13} />
             </div>
-            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Allocation Patrimoine</h3>
+            <h3 className="premium-label">Allocation Patrimoine</h3>
           </div>
         </div>
 
@@ -747,7 +747,7 @@ const Home = () => {
         ) : (
           <div className="flex items-center gap-6">
             <div className="w-28 h-28 rounded-full relative flex-shrink-0 shadow-inner" style={donutBackgroundStyle}>
-              <div className="absolute inset-[22px] rounded-full bg-surface-2 shadow-sm" />
+              <div className="absolute inset-[22px] rounded-full bg-surface shadow-sm" />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
               {allocationData.map(item => (
@@ -772,16 +772,16 @@ const Home = () => {
       {expensesByCategory && expensesByCategory.length > 0 && (
         <div
           onClick={() => navigate('/charts')}
-          className="bg-surface-2 p-5 rounded-[24px] border border-border/40 shadow-sm mb-6 cursor-pointer active:scale-[0.99] active:border-border/60 transition-all duration-200 select-none"
+          className="banky-card p-5 mb-6 cursor-pointer active-spring-sm active-card-feedback select-none"
         >
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-danger-dim border border-danger/20 flex items-center justify-center text-danger">
+              <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
                 <TrendingDown size={13} />
               </div>
-              <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Top catégories</h3>
+              <h3 className="premium-label">Top catégories</h3>
             </div>
-            <span className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200">
+            <span className="px-2.5 py-1 text-[9px] font-extrabold bg-copper-dim border border-copper/20 text-copper rounded-full hover:bg-copper/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200">
               Détails
             </span>
           </div>
@@ -796,7 +796,7 @@ const Home = () => {
                   </div>
                   <span className="font-bold text-primary">{formatCurrency(cat.amount, user?.currency?.code)}</span>
                 </div>
-                <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-surface-2 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}

@@ -92,9 +92,10 @@ body {
 
 /* Nesting des arrondis (Border Radius Nesting) */
 .premium-card {
-  border-radius: 20px;
+  border-radius: 24px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .premium-card-inner {
@@ -379,6 +380,28 @@ body {
   background: linear-gradient(135deg, #ffffff 0%, #f1f4f9 55%, #e2e8f0 100%);
   border: 1px solid var(--border);
   box-shadow: 0 4px 20px -2px rgba(10, 26, 47, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Custom Permanent Dark Hero Cards for Available Balance (keeps same design in light/dark themes) */
+.banky-hero-card {
+  background: linear-gradient(135deg, #03223f 0%, #071630 55%, #0a2a52 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 36px -6px rgba(3, 34, 63, 0.28) !important;
+}
+
+.banky-hero-card-warning {
+  background: linear-gradient(135deg, #1c1106 0%, #100903 55%, #040200 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+  box-shadow: 0 12px 36px -6px rgba(245, 158, 11, 0.22) !important;
+}
+
+.banky-hero-card-danger {
+  background: linear-gradient(135deg, #1c080b 0%, #100305 55%, #040001 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(226, 74, 100, 0.25) !important;
+  box-shadow: 0 12px 36px -6px rgba(226, 74, 100, 0.22) !important;
 }
 
 /* === PRINT STYLE SHEETS OPTIMIZATION === */

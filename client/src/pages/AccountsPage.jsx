@@ -45,10 +45,10 @@ const AccountsPage = () => {
       <div className="space-y-6 mb-6">
         
         {/* Total Balance Card */}
-        <div className="bg-surface-2 p-6 rounded-[28px] border border-border/40 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
-          <div className="absolute -top-12 -left-12 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-          <p className="text-xs text-secondary font-bold tracking-wide uppercase">Solde Total Disponible</p>
-          <h2 className="text-3xl font-extrabold text-accent mt-2 tracking-tight">
+        <div className="banky-card p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
+          <div className="absolute -top-12 -left-12 w-32 h-32 bg-copper-dim rounded-full blur-3xl pointer-events-none" />
+          <p className="premium-label">Solde Total Disponible</p>
+          <h2 className="text-3xl font-extrabold text-copper mt-2 tracking-tight font-premium-numbers">
             {formatCurrency(totalBalance, user?.currency?.code)}
           </h2>
           <p className="text-[10px] text-muted mt-1 leading-normal">
@@ -59,10 +59,10 @@ const AccountsPage = () => {
         {/* Accounts List Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1 mb-2">
-            <div className="w-6 h-6 rounded-lg bg-accent-dim border border-accent/20 flex items-center justify-center text-accent">
+            <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
               <Wallet size={13} />
             </div>
-            <h3 className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">
+            <h3 className="premium-label">
               Mes Comptes Bancaires
             </h3>
           </div>
@@ -100,12 +100,12 @@ const AccountsPage = () => {
                   <div 
                     key={acc._id}
                     onClick={() => acc.type === 'credit' ? navigate(`/accounts/${acc._id}/credit`) : navigate(`/accounts/${acc._id}`)}
-                    className="bg-surface-2 hover:bg-surface-2/80 border border-border/40 p-4 rounded-[24px] flex items-center justify-between transition-all cursor-pointer shadow-sm relative group active-card-feedback"
+                    className="banky-card hover:bg-surface-2/80 p-4 flex items-center justify-between transition-all cursor-pointer shadow-sm relative group active-spring-sm active-card-feedback"
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       {/* Icon with customizable background */}
                       <div 
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg shadow-sm shrink-0 border border-border/10"
+                        className="w-11 h-11 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 border border-border/10"
                         style={{ backgroundColor: `${acc.color || '#4ade80'}15`, color: acc.color }}
                       >
                         {acc.type === 'credit' ? <CreditCard size={20} /> : <Wallet size={20} />}

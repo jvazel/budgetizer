@@ -57,6 +57,7 @@ const AppContent = () => {
     if (user && user.preferences && user.preferences.theme) {
       const isLight = user.preferences.theme === 'light';
       document.documentElement.classList.toggle('light', isLight);
+      document.documentElement.classList.toggle('dark', !isLight);
       document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
       // Sync meta theme-color dynamically for mobile status bar
       const meta = document.querySelector('meta[name="theme-color"]');
@@ -66,6 +67,7 @@ const AppContent = () => {
     } else {
       // Par défaut, thème sombre
       document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
       document.documentElement.setAttribute('data-theme', 'dark');
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
