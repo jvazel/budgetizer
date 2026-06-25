@@ -7,8 +7,10 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
-const TagChart = () => {
-  const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
+const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
+  const [localPeriod, setLocalPeriod] = useState('month');
+  const period = externalPeriod || localPeriod;
+  const setPeriod = externalSetPeriod || setLocalPeriod;
   const [type, setType] = useState('expense'); // expense, income
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
   const [selectedTagId, setSelectedTagId] = useState('');
@@ -276,84 +278,87 @@ const TagChart = () => {
   return (
     <div className="space-y-6">
       {/* 1. Date and Type Selectors */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-full">
-          <button
-            type="button"
-            onClick={() => !isMonthly() && setPeriod('month')}
-            className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
-              isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
-            }`}
-          >
-            Vue mensuelle
-          </button>
-          <button
-            type="button"
-            onClick={() => isMonthly() && setPeriod('3months')}
-            className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
-              !isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
-            }`}
-          >
-            Analyses cumulées
-          </button>
-        </div>
-
-        {isMonthly() ? (
-          <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
+      {!externalPeriod && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-1 bg-surface-2 p-1 rounded-xl w-full">
             <button
               type="button"
-              onClick={handlePrevMonth}
-              className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setIsMonthSheetOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
-            >
-              <Calendar size={14} className="text-accent" />
-              <span>{formatPeriodLabel(period)}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              disabled={isCurrentMonth()}
-              className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-                isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
+              onClick={() => !isMonthly() && setPeriod('month')}
+              className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
+                isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
               }`}
             >
-              <ChevronRight size={16} />
+              Vue mensuelle
+            </button>
+            <button
+              type="button"
+              onClick={() => isMonthly() && setPeriod('3months')}
+              className={`py-2 rounded-lg text-xs font-bold transition-all text-center ${
+                !isMonthly() ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-primary'
+              }`}
+            >
+              Analyses cumulées
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: '3months', label: '3 mois' },
-              { id: '6months', label: '6 mois' },
-              { id: 'year', label: 'Cette année' }
-            ].map(p => (
+
+          {isMonthly() ? (
+            <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
               <button
-                key={p.id}
                 type="button"
-                onClick={() => setPeriod(p.id)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
-                  period === p.id 
-                    ? 'bg-accent text-white shadow-sm' 
-                    : 'bg-surface-2 text-secondary hover:text-primary'
+                onClick={handlePrevMonth}
+                className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setIsMonthSheetOpen(true)}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+              >
+                <Calendar size={14} className="text-accent" />
+                <span>{formatPeriodLabel(period)}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                disabled={isCurrentMonth()}
+                className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+                  isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >
-                {p.label}
+                <ChevronRight size={16} />
               </button>
-            ))}
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: '3months', label: '3 mois' },
+                { id: '6months', label: '6 mois' },
+                { id: 'year', label: 'Cette année' }
+              ].map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPeriod(p.id)}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                    period === p.id 
+                      ? 'bg-accent text-white shadow-sm' 
+                      : 'bg-surface-2 text-secondary hover:text-primary'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-        <div className="text-[10px] text-muted text-center font-medium opacity-85">
-          Période {formatDateRange(getDates(period))}
+          <div className="text-[10px] text-muted text-center font-medium opacity-85">
+            Période {formatDateRange(getDates(period))}
+          </div>
         </div>
+      )}
 
         {/* Tag Selector & Flow Type */}
         <div className="flex gap-3 items-center justify-between">

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
-const ForecastChart = () => {
+const ForecastChart = ({ endDate: externalEndDate }) => {
   const [method, setMethod] = useState('regression'); // regression, weighted, mobile, mean
   const [horizon, setHorizon] = useState(6); // 3, 6, 12 months
   const [selectedAccountId, setSelectedAccountId] = useState('');
@@ -27,7 +27,8 @@ const ForecastChart = () => {
     try {
       setLoading(true);
       const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
-      const res = await api.get(`/charts/forecast?months=${horizon}&method=${method}${accountParam}`);
+      const endParam = externalEndDate ? `&endDate=${externalEndDate}` : '';
+      const res = await api.get(`/charts/forecast?months=${horizon}&method=${method}${accountParam}${endParam}`);
       setData(res.data);
     } catch (err) {
       toast.error('Erreur lors du calcul des prévisions statistiques');
@@ -38,7 +39,7 @@ const ForecastChart = () => {
 
   useEffect(() => {
     fetchForecastData();
-  }, [method, horizon, selectedAccountId]);
+  }, [method, horizon, selectedAccountId, externalEndDate]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);

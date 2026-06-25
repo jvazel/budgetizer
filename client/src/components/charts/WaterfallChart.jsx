@@ -74,8 +74,11 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-const WaterfallChart = () => {
-  const [period, setPeriod] = useState(getMonthKey());
+const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
+  const [localPeriod, setLocalPeriod] = useState(getMonthKey());
+  const rawPeriod = externalPeriod || localPeriod;
+  const period = rawPeriod === 'month' ? getMonthKey() : rawPeriod;
+  const setPeriod = externalSetPeriod || setLocalPeriod;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
@@ -183,40 +186,39 @@ const WaterfallChart = () => {
 
   return (
     <div className="space-y-6">
-      {/* ── 1. Month navigation ── */}
-      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
-        <button
-          type="button"
-          onClick={handlePrev}
-          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-          title="Mois précédent"
-        >
-          <ChevronLeft size={16} />
-        </button>
+      {!externalPeriod && (
+        <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+            title="Mois précédent"
+          >
+            <ChevronLeft size={16} />
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsMonthSheetOpen(true)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
-        >
-          <Calendar size={14} className="text-accent" />
-          <span>{formatPeriodLabel(period)}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsMonthSheetOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+          >
+            <Calendar size={14} className="text-accent" />
+            <span>{formatPeriodLabel(period)}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={isCurrentMonth(period)}
-          className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-            isCurrentMonth(period) ? 'opacity-40 cursor-not-allowed' : ''
-          }`}
-          title="Mois suivant"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* ── 2. KPI Cards ── */}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={isCurrentMonth(period)}
+            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+              isCurrentMonth(period) ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
+            title="Mois suivant"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}      {/* ── 2. KPI Cards ── */}
       {loading ? (
         <div className="grid grid-cols-3 gap-3">
           {[0, 1, 2].map(i => (

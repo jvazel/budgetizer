@@ -222,8 +222,16 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 
 ### 3.7 Tableau de bord & Statistiques (`/api/dashboard` & `/api/charts`)
 - `GET /api/dashboard/summary` : Synthèse complète de l'application contenant les soldes cumulés (solde total, solde disponible, solde crédit), la liste des comptes avec date de dernière transaction, les enveloppes budgétaires enrichies avec calculs stochastiques de dépenses à la volée, les objectifs d'épargne récents, l'historique des soldes sur 180 jours, les dernières transactions, les alertes de budgets et les notifications (transactions planifiées, alertes de vélocité de dépenses et anomalies).
-- `GET /api/charts/category` : Répartition catégorielle sur une période.
-- `GET /api/charts/forecast` : Calcul de la projection de solde à 30 jours.
+- `GET /api/charts/by-category` : Répartition catégorielle sur une période définie (`startDate`, `endDate`).
+- `GET /api/charts/tags` : Analyse des dépenses par tag sur une période.
+- `GET /api/charts/ranking` : Classement ordonné des plus gros postes de dépenses.
+- `GET /api/charts/histogram` : Histogramme de distribution des dépenses par montants.
+- `GET /api/charts/fixed-vs-variable` : Répartition des dépenses fixes (`isScheduled = true`) vs variables.
+- `GET /api/charts/waterfall` : Visualisation en cascade de l'allocation des revenus vers les dépenses et l'épargne.
+- `GET /api/charts/forecast` : Projection de trésorerie (solde) à 30 jours. Supporte le paramètre optionnel `endDate` pour ancrer temporellement la simulation.
+- `GET /api/charts/net-worth` : Historique de la richesse nette (évolution du solde global). Supporte le paramètre optionnel `endDate` pour ancrer la fin de la période d'analyse.
+- `GET /api/charts/cash-flow` : Historique mensuel des flux (revenus vs dépenses). Supporte le paramètre optionnel `endDate` pour ancrer la fin de la période d'analyse.
+- `GET /api/charts/balance-history` : Historique de l'évolution quotidienne du solde sur une période.
 
 ### 3.8 IA & Insights (`/api/insights`)
 - `GET /` : Retourne la liste des anomalies détectées (selon le seuil spécifié) et le top 3 des suggestions de réductions budgétaires avec alertes d'abonnements.
@@ -373,6 +381,8 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
   - Écrans d'authentification (`Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`).
 - **Titres de Page Collapsibles et En-tête Collante (`AppShell.jsx` / `Home.jsx` / `Budgets.jsx` / `ChartsPage.jsx` / `SummaryHistory.jsx`)** : Intégration d'un écouteur de défilement (`window.scrollY`) pour basculer dynamiquement l'opacité et l'affichage des titres de page dans le header collant. Pour maintenir le header collant (`sticky`) lors du défilement sans blocage par l'overflow sur mobile, le conteneur racine d'AppShell utilise la classe CSS `overflow-x-clip` (qui ne définit pas un nouveau conteneur de défilement pour le positionnement collant, contrairement à `overflow-x-hidden`).
 - **Sélecteur d'Analyses et Onglets (`ChartsPage.jsx`)** :
+  - **Sélecteur de Mois Centralisé et Propagation de Période** : L'état `period` (ainsi que les dates associées `startDate`/`endDate` calculées localement) est géré de façon centralisée au niveau du composant parent. Cet état est transmis sous forme de props (`externalPeriod`, `externalStartDate`, `externalEndDate`) aux sous-composants graphiques actifs (`CategoryChart`, `FixedVarChart`, `WaterfallChart`, `TagChart`, `RankingChart`, `HistogramChart`, `BudgetActualChart`).
+  - **Masquage Automatique des Doublons Graphiques** : Chaque sous-composant graphique conditionne le rendu de son propre sélecteur de date local (`{!externalPeriod}` / `{!externalStartDate}`). S'il est intégré dans `ChartsPage` (donc avec props transmises), son propre sélecteur est masqué pour assurer un affichage épuré sans doublon.
   - **Onglets Horizontaux défilants** : Affichage d'une barre de 5 onglets fixes pour un basculement instantané entre les analyses de premier plan (*Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*), avec bouton "Autres" d'accès au drawer.
   - **Conseils IA Contextuels** : Repositionnement et liaison réactive du conseil IA, qui s'ajuste dynamiquement selon le type de graphique sélectionné.
 - **Paramètres structurels & Boutons Row-item (`SettingsPage.jsx`)** : Les boutons classiques de catégories et étiquettes ont été réarchitecturés en listes à cartes horizontales premium (icône avec arrière-plan coloré translucide, titre bold, description d'action et chevron de navigation à droite).

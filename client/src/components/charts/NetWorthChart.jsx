@@ -4,7 +4,7 @@ import { ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer }
 import { TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const NetWorthChart = () => {
+const NetWorthChart = ({ endDate: externalEndDate }) => {
   const [duration, setDuration] = useState(180); // 30, 90, 180, 365 days
   const [viewMode, setViewMode] = useState('global'); // 'global', 'assets_vs_debts', 'detail'
   const [hiddenKeys, setHiddenKeys] = useState([]); // Keys to hide in detail mode
@@ -14,7 +14,8 @@ const NetWorthChart = () => {
   const fetchNetWorthData = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/charts/net-worth?days=${duration}`);
+      const endParam = externalEndDate ? `&endDate=${externalEndDate}` : '';
+      const res = await api.get(`/charts/net-worth?days=${duration}${endParam}`);
       setHistory(res.data);
     } catch (err) {
       toast.error('Erreur lors de la récupération de la richesse nette');
@@ -25,7 +26,7 @@ const NetWorthChart = () => {
 
   useEffect(() => {
     fetchNetWorthData();
-  }, [duration]);
+  }, [duration, externalEndDate]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);

@@ -497,7 +497,7 @@ export const getFutureCharts = async (req, res) => {
 // 3. Get statistical mathematical forecast (up to 12 months history, 6 months future)
 export const getForecastCharts = async (req, res) => {
   try {
-    const { months = 6, method = 'regression', accountId } = req.query;
+    const { months = 6, method = 'regression', accountId, endDate: queryEndDate } = req.query;
     const futureMonthsCount = parseInt(months) || 6;
 
     // Get active/starting balance
@@ -511,7 +511,7 @@ export const getForecastCharts = async (req, res) => {
     }
 
     // 1. Gather historical data from last 12 months
-    const now = new Date();
+    const now = queryEndDate ? new Date(queryEndDate) : new Date();
     const historyStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
     const histTransactions = await Transaction.find({
@@ -661,9 +661,10 @@ export const getNetWorthHistory = async (req, res) => {
   try {
     const userId = req.user.id;
     const days = parseInt(req.query.days) || 180;
-    const now = new Date();
+    const { endDate: queryEndDate } = req.query;
+    const now = queryEndDate ? new Date(queryEndDate) : new Date();
     
-    const startDate = new Date();
+    const startDate = new Date(now);
     startDate.setDate(now.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
 
@@ -771,9 +772,9 @@ export const getNetWorthHistory = async (req, res) => {
 export const getCashFlowHistory = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { months = 12, accountId } = req.query;
+    const { months = 12, accountId, endDate: queryEndDate } = req.query;
     const monthsCount = parseInt(months) || 12;
-    const now = new Date();
+    const now = queryEndDate ? new Date(queryEndDate) : new Date();
     
     // Start of the first month in the range
     const startDate = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);

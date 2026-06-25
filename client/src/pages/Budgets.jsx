@@ -3,12 +3,14 @@ import { HeaderTitle, HeaderActions, HeaderBackButton, HeaderPortalContext } fro
 import BudgetCard from '../components/budgets/BudgetCard';
 import BudgetFormSheet from '../components/budgets/BudgetFormSheet';
 import { useBudgets } from '../hooks/useBudgets';
-import { ChevronLeft, ChevronRight, Plus, CreditCard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CreditCard, Calendar, ChevronDown } from 'lucide-react';
 import EmptyState from '../components/ui/EmptyState';
+import BottomSheet from '../components/ui/BottomSheet';
 
 const Budgets = () => {
   const { isScrolled } = useContext(HeaderPortalContext);
   const [selectedPeriod, setSelectedPeriod] = useState('monthly'); // 'weekly' | 'monthly' | 'yearly'
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
   // Initialize to Monday of current week
   const getInitialWeekStart = () => {
@@ -21,6 +23,23 @@ const Budgets = () => {
   const [weekDate, setWeekDate] = useState(getInitialWeekStart());
   const [monthDate, setMonthDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [yearDate, setYearDate] = useState(new Date(new Date().getFullYear(), 0, 1));
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const year = d.getFullYear().toString();
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ date: d, label: capitalizedLabel });
+    }
+    return groups;
+  };
 
   const formatDateStr = (date) => {
     const y = date.getFullYear();
@@ -174,17 +193,26 @@ const Budgets = () => {
         </button>
         
         <div className="flex flex-col items-center">
-          <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted/60">
+          <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted/60 mb-0.5">
             Période active
           </span>
-          <span className="text-xs font-bold text-primary">
-            {selectedPeriod === 'weekly' 
-              ? `Semaine du ${new Date(weekDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
-              : selectedPeriod === 'monthly'
-                ? new Date(monthDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())
+          {selectedPeriod === 'monthly' ? (
+            <button
+              onClick={() => setIsMonthPickerOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface border border-border/20 text-xs font-extrabold text-primary hover:border-copper/30 hover:bg-border/5 active:scale-98 transition-all"
+            >
+              <Calendar size={14} className="text-copper" />
+              <span>{new Date(monthDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
+              <ChevronDown size={12} className="text-secondary shrink-0" />
+            </button>
+          ) : (
+            <span className="text-xs font-bold text-primary">
+              {selectedPeriod === 'weekly' 
+                ? `Semaine du ${new Date(weekDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
                 : new Date(yearDate).getFullYear()
-            }
-          </span>
+              }
+            </span>
+          )}
         </div>
 
         <button 
@@ -297,6 +325,61 @@ const Budgets = () => {
         }}
         onDelete={deleteBudget}
       />
+
+      {/* Month Selection Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthPickerOpen}
+        onClose={() => setIsMonthPickerOpen(false)}
+      >
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-sm font-bold text-primary">Choisir un mois</h2>
+          </div>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar pb-6">
+            <button
+              onClick={() => {
+                setMonthDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+                setIsMonthPickerOpen(false);
+              }}
+              className={`w-full p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
+                monthDate.getMonth() === new Date().getMonth() && monthDate.getFullYear() === new Date().getFullYear()
+                  ? 'bg-copper/10 border-copper text-primary'
+                  : 'bg-surface border-border/40 text-secondary'
+              }`}
+            >
+              Mois en cours (Ce mois)
+            </button>
+
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, monthsList]) => (
+              <div key={year} className="space-y-2">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest block px-1">{year}</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {monthsList.map((m) => {
+                    const isSelected = monthDate.getMonth() === m.date.getMonth() && monthDate.getFullYear() === m.date.getFullYear();
+                    return (
+                      <button
+                        key={m.label + year}
+                        onClick={() => {
+                          setMonthDate(new Date(m.date.getFullYear(), m.date.getMonth(), 1));
+                          setIsMonthPickerOpen(false);
+                        }}
+                        className={`p-2.5 rounded-xl border text-center text-xs font-semibold active:scale-95 transition-all ${
+                          isSelected
+                            ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                            : 'bg-surface border-border/40 text-secondary'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </BottomSheet>
     </>
   );
 };

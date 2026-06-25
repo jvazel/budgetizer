@@ -20,8 +20,19 @@ const getMonthLabel = (date) => {
   return label.charAt(0).toUpperCase() + label.slice(1);
 };
 
-const BudgetActualChart = () => {
+const BudgetActualChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
   const [month, setMonth] = useState(new Date());
+
+  useEffect(() => {
+    if (externalPeriod) {
+      if (externalPeriod === 'month') {
+        setMonth(new Date());
+      } else if (/^\d{4}-\d{2}$/.test(externalPeriod)) {
+        const [year, m] = externalPeriod.split('-').map(Number);
+        setMonth(new Date(year, m - 1, 1));
+      }
+    }
+  }, [externalPeriod]);
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState([]);
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
@@ -143,34 +154,36 @@ const BudgetActualChart = () => {
   return (
     <div className="space-y-6">
       {/* 1. Month Navigator */}
-      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform mb-4" style={{ transform: 'translate3d(0, 0, 0)' }}>
-        <button
-          type="button"
-          onClick={prevMonth}
-          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-          title="Mois précédent"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        
-        <button
-          type="button"
-          onClick={() => setIsMonthSheetOpen(true)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs focus:outline-none"
-        >
-          <Calendar size={14} className="text-accent" />
-          <span>{getMonthLabel(month)}</span>
-        </button>
+      {!externalPeriod && (
+        <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform mb-4" style={{ transform: 'translate3d(0, 0, 0)' }}>
+          <button
+            type="button"
+            onClick={prevMonth}
+            className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+            title="Mois précédent"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setIsMonthSheetOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs focus:outline-none"
+          >
+            <Calendar size={14} className="text-accent" />
+            <span>{getMonthLabel(month)}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={nextMonth}
-          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-          title="Mois suivant"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+            title="Mois suivant"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
 
       {/* 2. Key Metrics Cards */}
       <div className="grid grid-cols-2 gap-3.5">

@@ -15,8 +15,12 @@ import {
   ChevronDown, 
   CalendarDays,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  ChevronLeft,
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
+import BottomSheet from '../components/ui/BottomSheet';
 
 const monthLabels = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -30,6 +34,51 @@ const MonthlyReportPage = () => {
 
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(currentMonthIdx);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const year = d.getFullYear().toString();
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ date: d, label: capitalizedLabel });
+    }
+    return groups;
+  };
+
+  const handlePrevMonth = () => {
+    let nextMonthIdx = selectedMonthIdx - 1;
+    let nextYear = selectedYear;
+    if (nextMonthIdx < 0) {
+      nextMonthIdx = 11;
+      nextYear--;
+    }
+    setSelectedYear(nextYear);
+    setSelectedMonthIdx(nextMonthIdx);
+  };
+
+  const handleNextMonth = () => {
+    if (selectedYear === currentYear && selectedMonthIdx === currentMonthIdx) return;
+    let nextMonthIdx = selectedMonthIdx + 1;
+    let nextYear = selectedYear;
+    if (nextMonthIdx > 11) {
+      nextMonthIdx = 0;
+      nextYear++;
+    }
+    setSelectedYear(nextYear);
+    setSelectedMonthIdx(nextMonthIdx);
+  };
+
+  const formatPeriodLabel = () => {
+    return `${monthLabels[selectedMonthIdx]} ${selectedYear}`;
+  };
 
   // Fetch summaries for the selected year to know which months have data
   const { summaries, availableYears, loading: summariesLoading } = useMonthlySummaries(selectedYear);
@@ -133,39 +182,37 @@ const MonthlyReportPage = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* Year selector */}
-            <Select
-              value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(Number(e.target.value));
-              }}
-              className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+          <div className="flex items-center justify-between bg-surface bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm select-none">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+              title="Mois précédent"
             >
-              {Array.isArray(availableYears) && availableYears.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </Select>
+              <ChevronLeft size={16} />
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setIsMonthPickerOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface border border-border/20 text-xs font-extrabold text-primary hover:border-copper/30 hover:bg-border/5 active:scale-98 transition-all"
+            >
+              <Calendar size={14} className="text-copper" />
+              <span>{formatPeriodLabel()}</span>
+              <ChevronDown size={12} className="text-secondary shrink-0" />
+            </button>
 
-            {/* Month selector */}
-            <Select
-              value={selectedMonthIdx}
-              onChange={(e) => {
-                setSelectedMonthIdx(Number(e.target.value));
-              }}
-              align="right"
-              className="w-full h-11 pl-4 pr-10 bg-surface border border-border rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              disabled={selectedYear === currentYear && selectedMonthIdx === currentMonthIdx}
+              className={`p-2 rounded-xl bg-surface border border-border/20 text-primary active:scale-95 transition-all ${
+                (selectedYear === currentYear && selectedMonthIdx === currentMonthIdx) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-border/20'
+              }`}
+              title="Mois suivant"
             >
-              {monthLabels.map((label, idx) => {
-                // Only allow selecting months that are present in the summaries or current/past months
-                const isFuture = selectedYear === currentYear && idx > currentMonthIdx;
-                return (
-                  <option key={idx} value={idx} disabled={isFuture}>
-                    {label}
-                  </option>
-                );
-              })}
-            </Select>
+              <ChevronRight size={16} />
+            </button>
           </div>
         </div>
 
@@ -365,6 +412,63 @@ const MonthlyReportPage = () => {
         )}
 
       </div>
+
+      {/* Month Selection Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthPickerOpen}
+        onClose={() => setIsMonthPickerOpen(false)}
+      >
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-sm font-bold text-primary">Choisir un mois</h2>
+          </div>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar pb-6">
+            <button
+              onClick={() => {
+                setSelectedYear(currentYear);
+                setSelectedMonthIdx(currentMonthIdx);
+                setIsMonthPickerOpen(false);
+              }}
+              className={`w-full p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
+                selectedYear === currentYear && selectedMonthIdx === currentMonthIdx
+                  ? 'bg-copper/10 border-copper text-primary'
+                  : 'bg-surface border-border/40 text-secondary'
+              }`}
+            >
+              Mois en cours (Ce mois)
+            </button>
+
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, monthsList]) => (
+              <div key={year} className="space-y-2">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest block px-1">{year}</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {monthsList.map((m) => {
+                    const isSelected = selectedYear === m.date.getFullYear() && selectedMonthIdx === m.date.getMonth();
+                    return (
+                      <button
+                        key={m.label + year}
+                        onClick={() => {
+                          setSelectedYear(m.date.getFullYear());
+                          setSelectedMonthIdx(m.date.getMonth());
+                          setIsMonthPickerOpen(false);
+                        }}
+                        className={`p-2.5 rounded-xl border text-center text-xs font-semibold active:scale-95 transition-all ${
+                          isSelected
+                            ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                            : 'bg-surface border-border/40 text-secondary'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </BottomSheet>
     </>
   );
 };

@@ -147,8 +147,11 @@ const CategoryList = ({ title, icon: Icon, iconBg, accentColor, categories, empt
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-const FixedVarChart = () => {
-  const [period, setPeriod] = useState(getMonthKey());
+const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, isWidget = false, onViewDetail }) => {
+  const [localPeriod, setLocalPeriod] = useState(getMonthKey());
+  const rawPeriod = externalPeriod || localPeriod;
+  const period = rawPeriod === 'month' ? getMonthKey() : rawPeriod;
+  const setPeriod = externalSetPeriod || setLocalPeriod;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [activeIndex, setActiveIndex] = useState(null);
@@ -218,42 +221,123 @@ const FixedVarChart = () => {
   // Hovered donut segment info
   const hoveredSlice = activeIndex !== null && pieData[activeIndex] ? pieData[activeIndex] : null;
 
+  if (isWidget) {
+    return (
+      <div 
+        onClick={onViewDetail}
+        className="bg-surface-2 border border-border/40 rounded-[28px] p-5 shadow-sm hover:border-copper/30 active:scale-98 transition-all cursor-pointer select-none space-y-4 group relative overflow-hidden h-[256px] flex flex-col justify-between"
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+              <Lock size={16} />
+            </div>
+            <h3 className="text-xs font-extrabold text-primary group-hover:text-copper transition-colors">Fixes vs Variables</h3>
+          </div>
+          <ChevronRight size={14} className="text-muted group-hover:text-primary transition-colors" />
+        </div>
+
+        {loading || !data ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full border-2 border-copper/30 border-t-copper animate-spin" />
+          </div>
+        ) : pieData.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-[10px] text-muted font-bold">
+            Aucune donnée pour cette période
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 flex-1 h-[150px]">
+            {/* Donut à gauche */}
+            <div className="w-1/2 h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={28}
+                    outerRadius={50}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Légende à droite */}
+            <div className="w-1/2 space-y-4 text-left">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-secondary">
+                  <div className="w-2.5 h-2.5 rounded-md bg-indigo-400" />
+                  <span>Fixes</span>
+                </div>
+                <p className="font-premium-numbers text-xs font-extrabold text-primary ml-4">
+                  {formatCurrency(data.totalFixed)}
+                </p>
+                <p className="text-[8px] text-muted ml-4">
+                  {data.fixedRatio}% des dépenses
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-secondary">
+                  <div className="w-2.5 h-2.5 rounded-md bg-amber-400" />
+                  <span>Variables</span>
+                </div>
+                <p className="font-premium-numbers text-xs font-extrabold text-primary ml-4">
+                  {formatCurrency(data.totalVariable)}
+                </p>
+                <p className="text-[8px] text-muted ml-4">
+                  {data.variableRatio}% des dépenses
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {!externalPeriod && (
+        <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+            title="Mois précédent"
+          >
+            <ChevronLeft size={16} />
+          </button>
 
-      {/* ── 1. Month navigation ── */}
-      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
-        <button
-          type="button"
-          onClick={handlePrev}
-          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-          title="Mois précédent"
-        >
-          <ChevronLeft size={16} />
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsMonthSheetOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
+          >
+            <Calendar size={14} className="text-accent" />
+            <span>{formatPeriodLabel(period)}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsMonthSheetOpen(true)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
-        >
-          <Calendar size={14} className="text-accent" />
-          <span>{formatPeriodLabel(period)}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={isCurrentMonth(period)}
-          className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-            isCurrentMonth(period) ? 'opacity-40 cursor-not-allowed' : ''
-          }`}
-          title="Mois suivant"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={isCurrentMonth(period)}
+            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
+              isCurrentMonth(period) ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
+            title="Mois suivant"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
       {/* ── 2. KPI Cards ── */}
       {loading ? (
         <div className="grid grid-cols-3 gap-3">

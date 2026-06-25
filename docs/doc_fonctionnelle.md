@@ -238,6 +238,7 @@ Lors de la création d'une nouvelle planification, un carrousel de **modèles ra
 
 La page **Statistiques (Charts)** propose des visualisations interactives basées sur les données réelles et planifiées :
 
+- **Sélecteur de Mois / Période Centralisé Unique** : Pour garantir une expérience épurée, la page d'Analyses intègre un unique sélecteur de mois collant en haut. Ce sélecteur synchronise la période active sur tous les graphiques affichés. Les boutons ou curseurs de navigation locale propres aux graphiques individuels (par exemple, dans *Catégories*, *Fixes vs Variables*, *Cascade*) sont automatiquement masqués pour éviter les doublons et assurer la cohérence des calculs de filtres.
 - **Barre d'onglets horizontaux (Top 5)** : Permet de basculer instantanément d'un simple geste entre les 5 analyses de base les plus importantes : *Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*. Un bouton de menu en pointillés *"Autres"* déploie un panel BottomSheet avec tous les autres types de graphiques.
 - **Conseils IA dynamiques** : Un bandeau de recommandation de Coach financier s'adapte en temps réel selon le graphique d'analyse sélectionné pour guider l'utilisateur.
 - **Titre de page collapsible** : Le titre se rétracte et fusionne proprement dans la barre d'en-tête collante lors du défilement vertical.
@@ -320,7 +321,7 @@ Depuis la page **Objectifs d'épargne**, l'utilisateur peut ajouter ou retirer d
 La page **Rapport Mensuel** génère automatiquement un diagnostic financier personnalisé pour chaque mois. Le rapport est entièrement déterministe et ne nécessite aucun service d'IA externe.
 
 ### 14.1 Sélection de la Période
-L'utilisateur peut naviguer entre les mois et les années via deux menus déroulants. Les mois futurs sont désactivés. Un badge « Provisoire » s'affiche pour le mois en cours dont le rapport n'est pas encore finalisé.
+L'utilisateur navigue entre les mois à l'aide d'un sélecteur de période premium unifié sous forme de contrôleur à glissière. Ce sélecteur comprend des flèches directionnelles `←` et `→` pour défiler de mois en mois et un bouton central tactile affichant la période active. Cliquer sur ce bouton ouvre un panneau coulissant (`BottomSheet`) qui propose un calendrier/grille de sélection rapide pour les 18 derniers mois, triés et regroupés par année. Les mois futurs ne peuvent pas être sélectionnés (ils sont désactivés). Un badge « Provisoire » s'affiche pour le mois en cours dont le rapport n'est pas encore finalisé.
 
 ### 14.2 Contenu du Rapport
 Le rapport est structuré en 3 sections narratives :
@@ -411,7 +412,7 @@ Les catégories de chaque groupe sont regroupées par catégorie parente (résol
 
 Le composant `FixedVarChart` est structuré en 5 blocs :
 
-1. **Navigation mensuelle** : Identique au composant `CategoryChart` — flèches `←` / `→` pour changer de mois et sélecteur via `BottomSheet` pour les 18 derniers mois.
+1. **Navigation mensuelle** : Le composant est synchronisé réactivement avec le sélecteur global parent de la page d'Analyses. Son propre sélecteur local (flèches et BottomSheet) est masqué automatiquement lorsqu'il est instancié avec une période externe, empêchant toute redondance visuelle.
 2. **Cartes KPI (3)** :
    - *Total dépenses* — montant brut toutes catégories.
    - *Charges fixes* (fond indigo/violet) — montant et ratio en %.
@@ -457,7 +458,7 @@ La cascade représente le flux financier du mois de la manière suivante :
 
 Le composant `WaterfallChart` est structuré en 5 blocs :
 
-1. **Navigation mensuelle** : Flèches `←` / `→` et sélecteur via `BottomSheet` pour les 18 derniers mois.
+1. **Navigation mensuelle** : Le composant utilise le filtre de période global fourni par le composant parent `ChartsPage`. Le sélecteur local est alors masqué pour éviter d'encombrer l'interface avec des doubles contrôles.
 2. **Cartes KPI (3)** :
    - *Revenus* — montant brut global (fond émeraude).
    - *Dépenses* — montant brut global (fond rose).
@@ -553,6 +554,11 @@ Pour offrir une expérience proche de la fintech **Bankyboard**, Budgetizer a fa
 *   **Zéro Saut de Contenu (Layout Shifts)** : Les contrôleurs et filtres des graphiques d'analyses sont logés dans des conteneurs à hauteur verrouillée. Ainsi, le passage entre différents filtres ou options n'entraîne aucun saut vertical de l'affichage sur mobile, offrant une expérience stable et haut de gamme.
 *   **Aiguille Elastique pour Jauge de Vélocité** : L'aiguille du tachymètre réagit instantanément aux sélections avec une animation fluide amortie en ressort (type physique réaliste), apportant une micro-interaction plaisante et interactive.
 *   **Infobulles Uniformisées** : Finis les encadrés par défaut Recharts gris ou sombres illisibles. Les infobulles partagent désormais le même style d'infobulle premium, adapté dynamiquement au thème sombre/clair pour garantir une continuité esthétique sur toutes les pages d'analyses.
+
+### 19.6 Sélecteur de Mois Premium Centralisé & Harmonisation
+*   **Harmonisation Complète** : Les contrôles de navigation dans le temps (boutons mois précédent/suivant et bouton central d'ouverture du sélecteur calendrier en BottomSheet) sont uniformisés sur l'intégralité du site (Analyses, Calendrier, Budgets, et Rapport Mensuel).
+*   **Contrôle Unique Coordonné** : Dans les pages comportant de multiples graphiques (Analyses) ou des composants dépendants d'une date (Budgets, Calendrier, Rapport Mensuel), l'utilisateur dispose d'un unique bandeau de sélection mensuelle. Le changement de mois applique instantanément la nouvelle période de manière réactive à tous les sous-composants, éliminant les comportements inconsistants et les conflits de filtres.
+*   **Masquage Intuitif des Doublons** : Afin d'éviter les surcharges d'interface et les conflits visuels sur mobile, les sous-composants qui embarquaient historiquement leurs propres sélecteurs locaux masquent ces derniers dès qu'ils reçoivent les informations de date depuis leur composant parent (ex: CategoryChart, FixedVarChart, WaterfallChart, etc.).
 
 
 

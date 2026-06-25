@@ -2,22 +2,46 @@ import React, { useState } from 'react';
 import { HeaderTitle, HeaderActions } from '../components/layout/AppShell';
 import MiniCalendar from '../components/calendar/MiniCalendar';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
-import { ChevronLeft, ChevronRight, Trash2, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Plus, Calendar, ChevronDown } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AiBadge from '../components/ui/AiBadge';
+import BottomSheet from '../components/ui/BottomSheet';
 
 const CalendarPage = () => {
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [txToDelete, setTxToDelete] = useState(null);
 
   const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+  };
+
+  const generateRecentMonthsGrouped = () => {
+    const groups = {};
+    const current = new Date();
+    for (let i = 0; i < 18; i++) {
+      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+      const year = d.getFullYear().toString();
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      if (!groups[year]) {
+        groups[year] = [];
+      }
+      groups[year].push({ date: d, label: capitalizedLabel });
+    }
+    return groups;
+  };
 
   const actions = (
     <button 
@@ -57,6 +81,7 @@ const CalendarPage = () => {
   };
 
   const nextMonth = () => {
+    if (isCurrentMonth()) return;
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
@@ -88,7 +113,7 @@ const CalendarPage = () => {
       </div>
 
       {/* Month Navigation Bar */}
-      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm mb-4">
+      <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm mb-4 select-none">
         <button
           type="button"
           onClick={prevMonth}
@@ -98,14 +123,23 @@ const CalendarPage = () => {
           <ChevronLeft size={16} />
         </button>
         
-        <div className="flex items-center gap-2 px-4 py-1.5 text-primary font-bold text-xs uppercase tracking-wider">
-          <span>{formatMonth(currentDate)}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsMonthPickerOpen(true)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface border border-border/20 text-xs font-extrabold text-primary hover:border-copper/30 hover:bg-border/5 active:scale-98 transition-all"
+        >
+          <Calendar size={14} className="text-copper" />
+          <span className="capitalize">{formatMonth(currentDate)}</span>
+          <ChevronDown size={12} className="text-secondary shrink-0" />
+        </button>
 
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
+          disabled={isCurrentMonth()}
+          className={`p-2 rounded-xl bg-surface border border-border/20 text-primary active:scale-95 transition-all ${
+            isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : 'hover:bg-border/20'
+          }`}
           title="Mois suivant"
         >
           <ChevronRight size={16} />
@@ -312,6 +346,61 @@ const CalendarPage = () => {
           </p>
         )}
       </ConfirmModal>
+
+      {/* Month Selection Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMonthPickerOpen}
+        onClose={() => setIsMonthPickerOpen(false)}
+      >
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-sm font-bold text-primary">Choisir un mois</h2>
+          </div>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar pb-6">
+            <button
+              onClick={() => {
+                setCurrentDate(new Date());
+                setIsMonthPickerOpen(false);
+              }}
+              className={`w-full p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
+                currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear()
+                  ? 'bg-copper/10 border-copper text-primary'
+                  : 'bg-surface border-border/40 text-secondary'
+              }`}
+            >
+              Mois en cours (Ce mois)
+            </button>
+
+            {Object.entries(generateRecentMonthsGrouped()).map(([year, monthsList]) => (
+              <div key={year} className="space-y-2">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest block px-1">{year}</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {monthsList.map((m) => {
+                    const isSelected = currentDate.getMonth() === m.date.getMonth() && currentDate.getFullYear() === m.date.getFullYear();
+                    return (
+                      <button
+                        key={m.label + year}
+                        onClick={() => {
+                          setCurrentDate(m.date);
+                          setIsMonthPickerOpen(false);
+                        }}
+                        className={`p-2.5 rounded-xl border text-center text-xs font-semibold active:scale-95 transition-all ${
+                          isSelected
+                            ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                            : 'bg-surface border-border/40 text-secondary'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </BottomSheet>
     </>
   );
 };

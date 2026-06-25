@@ -2,36 +2,68 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useBudgets } from '../../hooks/useBudgets';
 import { useTransactions } from '../../hooks/useTransactions';
 import { getDaysRemaining, getTargetVelocity, getActualVelocity, getDepletionDate } from '../../utils/velocityHelper';
-import { AlertTriangle, CheckCircle2, ChevronDown, Flame, Info, ShieldCheck, HelpCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Flame, Info, ShieldCheck, HelpCircle, Gauge, ChevronRight } from 'lucide-react';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
 };
 
-const VelocityChart = () => {
-  const today = useMemo(() => new Date(), []);
+const VelocityChart = ({ isWidget = false, onViewDetail, period: externalPeriod }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // 1. Calculer la période d'analyse des dépenses (7 derniers jours ou depuis le début du mois)
+  const isCurrentMonthVal = useMemo(() => {
+    if (!externalPeriod || externalPeriod === 'month') return true;
+    const currentD = new Date();
+    const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
+    return externalPeriod === currentKey;
+  }, [externalPeriod]);
+
+  const today = useMemo(() => {
+    if (isCurrentMonthVal) {
+      return new Date();
+    }
+    if (/^\d{4}-\d{2}$/.test(externalPeriod)) {
+      const [year, month] = externalPeriod.split('-').map(Number);
+      return new Date(year, month, 0); // Last day of that month
+    }
+    return new Date();
+  }, [isCurrentMonthVal, externalPeriod]);
+
   const currentDay = today.getDate();
   const startOfPeriod = useMemo(() => {
-    if (currentDay >= 7) {
-      return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+    if (isCurrentMonthVal) {
+      if (currentDay >= 7) {
+        return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+      } else {
+        return new Date(today.getFullYear(), today.getMonth(), 1);
+      }
     } else {
-      return new Date(today.getFullYear(), today.getMonth(), 1);
+      // Historical month - start at 1st day
+      const [y, m] = externalPeriod.split('-').map(Number);
+      return new Date(y, m - 1, 1);
     }
-  }, [today, currentDay]);
+  }, [today, currentDay, isCurrentMonthVal, externalPeriod]);
 
   const daysCount = useMemo(() => {
-    return currentDay >= 7 ? 7 : currentDay;
-  }, [currentDay]);
+    if (isCurrentMonthVal) {
+      return currentDay >= 7 ? 7 : currentDay;
+    } else {
+      // Total days in the historical month
+      const [y, m] = externalPeriod.split('-').map(Number);
+      return new Date(y, m, 0).getDate();
+    }
+  }, [currentDay, isCurrentMonthVal, externalPeriod]);
 
   const monthStr = useMemo(() => {
-    const y = today.getFullYear();
-    const m = String(today.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
-  }, [today]);
+    if (isCurrentMonthVal) {
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    } else {
+      return externalPeriod;
+    }
+  }, [today, isCurrentMonthVal, externalPeriod]);
 
   const startDateStr = useMemo(() => {
     const y = startOfPeriod.getFullYear();
@@ -107,9 +139,14 @@ const VelocityChart = () => {
     }
 
     const remainingBudget = totalBudget - totalSpentInMonth;
-    const targetVelocity = getTargetVelocity(remainingBudget, daysRemaining);
+    let targetVelocity = 0;
+    if (isCurrentMonthVal) {
+      targetVelocity = getTargetVelocity(remainingBudget, daysRemaining);
+    } else {
+      targetVelocity = totalBudget > 0 ? (totalBudget / daysCount) : 0;
+    }
     const actualVelocity = getActualVelocity(recentSpent, daysCount);
-    const depletionDate = getDepletionDate(remainingBudget, actualVelocity, today);
+    const depletionDate = isCurrentMonthVal ? getDepletionDate(remainingBudget, actualVelocity, today) : null;
 
     return {
       daysRemaining,
@@ -118,9 +155,10 @@ const VelocityChart = () => {
       remainingBudget,
       targetVelocity,
       actualVelocity,
-      depletionDate
+      depletionDate,
+      newAdvisedLimit: isCurrentMonthVal ? targetVelocity : (totalBudget > 0 ? (totalBudget / daysCount) : 0)
     };
-  }, [selectedCategoryId, monthlyBudgets, transactions, daysCount, today]);
+  }, [selectedCategoryId, monthlyBudgets, transactions, daysCount, today, isCurrentMonthVal]);
 
   // Déterminer l'angle de l'aiguille du tachymètre
   // Nous voulons que targetVelocity soit au centre (90 degrés)
@@ -153,6 +191,128 @@ const VelocityChart = () => {
       year: 'numeric'
     });
   }, [data.depletionDate]);
+
+  if (isWidget) {
+    const isCrashing = data.actualVelocity > data.targetVelocity;
+    return (
+      <div 
+        onClick={onViewDetail}
+        className="bg-surface-2 border border-border/40 rounded-[28px] p-5 shadow-sm hover:border-copper/30 active:scale-98 transition-all cursor-pointer select-none space-y-4 group relative overflow-hidden h-[256px] flex flex-col justify-between"
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
+              <Gauge size={16} />
+            </div>
+            <h3 className="text-xs font-extrabold text-primary group-hover:text-copper transition-colors">Rythme des dépenses</h3>
+          </div>
+          <ChevronRight size={14} className="text-muted group-hover:text-primary transition-colors" />
+        </div>
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full border-2 border-copper/30 border-t-copper animate-spin" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 flex-1 h-[150px]">
+            {/* Speedometer à gauche */}
+            <div className="w-1/2 h-full flex items-center justify-center">
+              <div className="w-[140px] h-[80px]">
+                <svg viewBox="0 0 240 135" className="w-full h-full overflow-visible">
+                  {/* Zone verte (Gauche, 0 à 90°) */}
+                  <path
+                    d="M 35 110 A 85 85 0 0 1 120 25"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="10"
+                    strokeOpacity="0.12"
+                    strokeLinecap="round"
+                  />
+                  {/* Zone rouge (Droite, 90 à 180°) */}
+                  <path
+                    d="M 120 25 A 85 85 0 0 1 205 110"
+                    fill="none"
+                    stroke="#f43f5e"
+                    strokeWidth="10"
+                    strokeOpacity="0.12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Arcs Actifs de progression */}
+                  {angle > 0 && (
+                    angle <= 90 ? (
+                      <path
+                        d={`M 35 110 A 85 85 0 0 1 ${arcPath.x} ${arcPath.y}`}
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                      />
+                    ) : (
+                      <>
+                        <path
+                          d="M 35 110 A 85 85 0 0 1 120 25"
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="10"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d={`M 120 25 A 85 85 0 0 1 ${arcPath.x} ${arcPath.y}`}
+                          fill="none"
+                          stroke="#f43f5e"
+                          strokeWidth="10"
+                          strokeLinecap="round"
+                        />
+                      </>
+                    )
+                  )}
+
+                  {/* Limite de vitesse (Ligne pointillée au centre) */}
+                  <line x1="120" y1="25" x2="120" y2="110" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="2" strokeDasharray="3 3" />
+
+                  {/* Aiguille (Pivot = (120, 110)) */}
+                  <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: '120px 110px' }} className="transition-transform duration-500 ease-out">
+                    <line x1="120" y1="110" x2="35" y2="110" stroke="#f97316" strokeWidth="4" strokeLinecap="round" />
+                    <polygon points="35,110 50,106 50,114" fill="#f97316" />
+                  </g>
+
+                  {/* Cache central du pivot */}
+                  <circle cx="120" cy="110" r="10" fill="#1e293b" stroke="#f97316" strokeWidth="3" />
+                  <circle cx="120" cy="110" r="4" fill="#f97316" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Infos à droite */}
+            <div className="w-1/2 space-y-2 text-left">
+              <div className="space-y-0.5">
+                <span className="text-[8px] font-bold text-muted uppercase">Vitesse Réelle</span>
+                <p className="font-premium-numbers text-xs font-extrabold text-primary">
+                  {formatCurrency(data.actualVelocity)}/j
+                </p>
+              </div>
+
+              <div className="space-y-0.5">
+                <span className="text-[8px] font-bold text-muted uppercase">Limite (Cible)</span>
+                <p className="font-premium-numbers text-xs font-bold text-secondary">
+                  {formatCurrency(data.targetVelocity)}/j
+                </p>
+              </div>
+
+              <div className="pt-1.5 border-t border-border/20">
+                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                  isCrashing ? 'bg-danger/10 text-danger border border-danger/20' : 'bg-success/10 text-success border border-success/20'
+                }`}>
+                  {isCrashing ? 'Excès de Vitesse' : 'Rythme OK'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
-const HistogramChart = () => {
+const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate }) => {
   const { accounts } = useAccounts();
 
   // Date helpers
@@ -20,6 +20,11 @@ const HistogramChart = () => {
 
   const [startDate, setStartDate] = useState(getThirtyDaysAgoStr());
   const [endDate, setEndDate] = useState(getTodayStr());
+
+  useEffect(() => {
+    if (externalStartDate) setStartDate(externalStartDate);
+    if (externalEndDate) setEndDate(externalEndDate);
+  }, [externalStartDate, externalEndDate]);
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [groupBy, setGroupBy] = useState(''); // '' (auto), 'day', 'week', 'month'
   
@@ -161,66 +166,70 @@ const HistogramChart = () => {
         </h3>
         
         {/* Date presets */}
-        <div className="flex gap-1.5 py-1 select-none overflow-x-auto no-scrollbar">
-          {[
-            { label: '30 Derniers Jours', id: '30days' },
-            { label: 'Ce Mois', id: 'thisMonth' },
-            { label: 'Cette Année', id: 'thisYear' }
-          ].map(preset => (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => {
-                const today = new Date();
-                const start = new Date();
-                if (preset.id === '30days') {
-                  start.setDate(today.getDate() - 30);
-                } else if (preset.id === 'thisMonth') {
-                  start.setDate(1);
-                } else if (preset.id === 'thisYear') {
-                  start.setMonth(0);
-                  start.setDate(1);
-                }
-                setStartDate(start.toISOString().split('T')[0]);
-                setEndDate(today.toISOString().split('T')[0]);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-surface hover:bg-border/20 border border-border/40 text-[10px] font-bold text-secondary hover:text-primary transition-all active:scale-95 shrink-0"
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
+        {!externalStartDate && (
+          <div className="flex gap-1.5 py-1 select-none overflow-x-auto no-scrollbar">
+            {[
+              { label: '30 Derniers Jours', id: '30days' },
+              { label: 'Ce Mois', id: 'thisMonth' },
+              { label: 'Cette Année', id: 'thisYear' }
+            ].map(preset => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  const start = new Date();
+                  if (preset.id === '30days') {
+                    start.setDate(today.getDate() - 30);
+                  } else if (preset.id === 'thisMonth') {
+                    start.setDate(1);
+                  } else if (preset.id === 'thisYear') {
+                    start.setMonth(0);
+                    start.setDate(1);
+                  }
+                  setStartDate(start.toISOString().split('T')[0]);
+                  setEndDate(today.toISOString().split('T')[0]);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-border/20 border border-border/40 text-[10px] font-bold text-secondary hover:text-primary transition-all active:scale-95 shrink-0"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        )}
         
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="flex flex-col space-y-1">
-            <label className="text-[10px] font-bold text-muted uppercase">Date de début</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              onClick={(e) => {
-                try {
-                  e.target.showPicker();
-                } catch (err) {}
-              }}
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
-            />
+        {!externalStartDate && (
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="flex flex-col space-y-1">
+              <label className="text-[10px] font-bold text-muted uppercase">Date de début</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+            <div className="flex flex-col space-y-1">
+              <label className="text-[10px] font-bold text-muted uppercase">Date de fin</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
+                className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
           </div>
-          <div className="flex flex-col space-y-1">
-            <label className="text-[10px] font-bold text-muted uppercase">Date de fin</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              onClick={(e) => {
-                try {
-                  e.target.showPicker();
-                } catch (err) {}
-              }}
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
-            />
-          </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col space-y-1">

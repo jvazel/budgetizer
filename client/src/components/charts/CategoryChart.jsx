@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
-import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp, PieChart as LucidePieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 
-const CategoryChart = () => {
-  const [period, setPeriod] = useState('month'); // month, 3months, 6months, year
+const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, isWidget = false, onViewDetail }) => {
+  const [localPeriod, setLocalPeriod] = useState('month');
+  const period = externalPeriod || localPeriod;
+  const setPeriod = externalSetPeriod || setLocalPeriod;
   const [type, setType] = useState('expense'); // expense, income
   const [compareMode, setCompareMode] = useState('previous'); // previous, 3m, 6m, none
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
@@ -418,6 +420,83 @@ const CategoryChart = () => {
     return null;
   };
 
+  if (isWidget) {
+    return (
+      <div 
+        onClick={onViewDetail}
+        className="bg-surface-2 border border-border/40 rounded-[28px] p-5 shadow-sm hover:border-copper/30 active:scale-98 transition-all cursor-pointer select-none space-y-4 group relative overflow-hidden h-[256px] flex flex-col justify-between"
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
+              <LucidePieChart size={16} />
+            </div>
+            <h3 className="text-xs font-extrabold text-primary group-hover:text-copper transition-colors">Répartition Catégories</h3>
+          </div>
+          <ChevronRight size={14} className="text-muted group-hover:text-primary transition-colors" />
+        </div>
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full border-2 border-copper/30 border-t-copper animate-spin" />
+          </div>
+        ) : data.categories.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-[10px] text-muted font-bold">
+            Aucune donnée pour cette période
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 flex-1 h-[150px]">
+            {/* PieChart à gauche */}
+            <div className="w-1/2 h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={processedCategories}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={28}
+                    outerRadius={50}
+                    paddingAngle={3}
+                    dataKey="amount"
+                    nameKey="name"
+                  >
+                    {processedCategories.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Top 3 à droite */}
+            <div className="w-1/2 space-y-2">
+              {processedCategories.slice(0, 3).map((cat, idx) => (
+                <div key={idx} className="space-y-0.5">
+                  <div className="flex justify-between items-center text-[9px] font-bold text-secondary">
+                    <span className="truncate max-w-[80px] flex items-center gap-1">
+                      <span>{cat.icon || '📁'}</span>
+                      <span className="truncate text-[8px]">{cat.name}</span>
+                    </span>
+                    <span className="font-premium-numbers text-primary">{formatCurrency(cat.amount)}</span>
+                  </div>
+                  <div className="h-1 w-full bg-surface rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full" 
+                      style={{ 
+                        width: `${cat.percentage}%`, 
+                        backgroundColor: cat.color || '#8b5cf6' 
+                      }} 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 1. Selectors */}
@@ -455,37 +534,8 @@ const CategoryChart = () => {
         {/* Period navigation or choices */}
         <div className="min-h-[48px] flex flex-col justify-center">
           {isMonthly() ? (
-            <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                className="p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary"
-                title="Mois précédent"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setIsMonthSheetOpen(true)}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs"
-              >
-                <Calendar size={14} className="text-accent" />
-                <span>{formatPeriodLabel(period)}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                disabled={isCurrentMonth()}
-                className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-                  isCurrentMonth() ? 'opacity-40 cursor-not-allowed' : ''
-                }`}
-                title="Mois suivant"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            /* Masqué car le sélecteur de mois global du parent est déjà présent */
+            null
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {[

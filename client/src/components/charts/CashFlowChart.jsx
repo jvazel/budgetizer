@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAccounts } from '../../hooks/useAccounts';
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend, CartesianGrid } from 'recharts';
-import { AlertCircle, AlertTriangle, CheckCircle2, Wallet, Scale, Activity, X, Calendar } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Wallet, Scale, Activity, X, Calendar, ArrowUpDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
-const CashFlowChart = () => {
+const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod, endDate: externalEndDate }) => {
   const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,8 @@ const CashFlowChart = () => {
     try {
       setLoading(true);
       const accountParam = selectedAccountId ? `&accountId=${selectedAccountId}` : '';
-      const res = await api.get(`/charts/cash-flow?months=${horizon}${accountParam}`);
+      const endParam = externalEndDate ? `&endDate=${externalEndDate}` : '';
+      const res = await api.get(`/charts/cash-flow?months=${horizon}${accountParam}${endParam}`);
       setData(res.data);
     } catch (err) {
       toast.error('Erreur lors du chargement des données de Cash Flow');
@@ -36,7 +37,7 @@ const CashFlowChart = () => {
 
   useEffect(() => {
     fetchCashFlowData();
-  }, [horizon, selectedAccountId]);
+  }, [horizon, selectedAccountId, externalEndDate]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -147,6 +148,47 @@ const CashFlowChart = () => {
     }
     return null;
   };
+
+  if (isWidget) {
+    return (
+      <div 
+        onClick={onViewDetail}
+        className="bg-surface-2 border border-border/40 rounded-[28px] p-5 shadow-sm hover:border-copper/30 active:scale-98 transition-all cursor-pointer select-none space-y-4 group relative overflow-hidden h-[256px] flex flex-col justify-between"
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <ArrowUpDown size={16} />
+            </div>
+            <h3 className="text-xs font-extrabold text-primary group-hover:text-copper transition-colors">Cash Flow Mensuel</h3>
+          </div>
+          <ChevronRight size={14} className="text-muted group-hover:text-primary transition-colors" />
+        </div>
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full border-2 border-copper/30 border-t-copper animate-spin" />
+          </div>
+        ) : !data.history || data.history.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-[10px] text-muted font-bold">
+            Aucune donnée de Cash Flow
+          </div>
+        ) : (
+          <div className="flex-1 h-[150px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={data.history.slice(-6)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+                <Bar dataKey="income" fill="#10b981" radius={[3, 3, 0, 0]} opacity={0.65} barSize={10} />
+                <Bar dataKey="expenses" fill="#f43f5e" radius={[3, 3, 0, 0]} opacity={0.65} barSize={10} />
+                <Line type="monotone" dataKey="net" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
