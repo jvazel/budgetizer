@@ -8,7 +8,7 @@ import { useSavedFilters } from '../hooks/useSavedFilters';
 import { useTags } from '../hooks/useTags';
 import { getContrastColor } from './Tags';
 import toast from 'react-hot-toast';
-import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BottomSheet from '../components/ui/BottomSheet';
@@ -317,7 +317,7 @@ const Transactions = () => {
       <div className="mt-4 space-y-4">
         
         {/* Month Navigation Bar */}
-        <div className="flex items-center justify-between bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm will-change-transform" style={{ transform: 'translate3d(0, 0, 0)' }}>
+        <div className="flex items-center justify-between bg-surface bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm select-none" style={{ transform: 'translate3d(0, 0, 0)' }}>
           <button
             type="button"
             onClick={handlePrevMonth}
@@ -333,18 +333,19 @@ const Transactions = () => {
           <button
             type="button"
             onClick={() => setIsMonthSheetOpen(true)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-surface/50 transition-all text-primary font-bold text-xs focus:outline-none"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface border border-border/20 text-xs font-extrabold text-primary hover:border-copper/30 hover:bg-border/5 active:scale-98 transition-all"
           >
-            <Calendar size={14} className="text-accent" />
+            <Calendar size={14} className="text-copper" />
             <span>{formatPeriodLabel(period)}</span>
+            <ChevronDown size={12} className="text-secondary shrink-0" />
           </button>
 
           <button
             type="button"
             onClick={handleNextMonth}
             disabled={period === 'all' || isCurrentMonth()}
-            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-              (period === 'all' || isCurrentMonth()) ? 'opacity-30 cursor-not-allowed' : ''
+            className={`p-2 rounded-xl bg-surface border border-border/20 text-primary active:scale-95 transition-all ${
+              (period === 'all' || isCurrentMonth()) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-border/20'
             }`}
             title="Mois suivant"
           >
@@ -788,36 +789,52 @@ const Transactions = () => {
         isOpen={isMonthSheetOpen}
         onClose={() => setIsMonthSheetOpen(false)}
       >
-        <div className="space-y-4">
-          <div className="pb-2 border-b border-border/40 flex justify-between items-center">
-            <div>
-              <h3 className="text-sm font-extrabold text-primary">Choisir la période</h3>
-              <p className="text-xs text-muted">Filtrer l'historique des transactions</p>
-            </div>
-            <button
-              onClick={() => {
-                setPeriod('all');
-                setIsMonthSheetOpen(false);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                period === 'all'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'bg-surface-2 text-secondary hover:text-primary'
-              }`}
-            >
-              Toutes les dates
-            </button>
+        <div className="space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
+            <h2 className="text-sm font-bold text-primary">Choisir la période</h2>
           </div>
 
-          <div className="space-y-4 max-h-80 overflow-y-auto no-scrollbar py-1">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar pb-6">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPeriod('month');
+                  setIsMonthSheetOpen(false);
+                }}
+                className={`p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
+                  period === 'month'
+                    ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                    : 'bg-surface border-border/40 text-secondary'
+                }`}
+              >
+                Mois en cours (Ce mois)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPeriod('all');
+                  setIsMonthSheetOpen(false);
+                }}
+                className={`p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
+                  period === 'all'
+                    ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                    : 'bg-surface border-border/40 text-secondary'
+                }`}
+              >
+                Toutes les dates
+              </button>
+            </div>
+
             {Object.entries(generateRecentMonthsGrouped()).map(([year, months]) => {
               const currentD = new Date();
               const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
               
               return (
                 <div key={year} className="space-y-2">
-                  <div className="text-[10px] font-black text-secondary/80 px-1 border-l-2 border-accent pl-2 mt-3 uppercase tracking-wider">{year}</div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest block px-1">{year}</span>
+                  <div className="grid grid-cols-3 gap-2">
                     {months.map((m) => {
                       const isActive = period === m.key || (m.key === currentKey && period === 'month');
                       return (
@@ -832,10 +849,10 @@ const Transactions = () => {
                             }
                             setIsMonthSheetOpen(false);
                           }}
-                          className={`p-2.5 rounded-xl text-xs font-bold text-center transition-all ${
+                          className={`p-2.5 rounded-xl border text-center text-xs font-semibold active:scale-95 transition-all ${
                             isActive
-                              ? 'bg-accent text-white shadow-sm'
-                              : 'bg-surface-2 text-secondary hover:text-primary hover:bg-surface-2/80'
+                              ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
+                              : 'bg-surface border-border/40 text-secondary'
                           }`}
                         >
                           {m.label}
