@@ -6,7 +6,7 @@ import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useBudgets } from '../../hooks/useBudgets';
 import toast from 'react-hot-toast';
-import { X, Search, Star, ChevronDown, RotateCcw } from 'lucide-react';
+import { X, Search, Star, ChevronDown, RotateCcw, Check, Trash2 } from 'lucide-react';
 import TagSelector from './TagSelector';
 import { triggerHaptic } from '../../utils/hapticHelper';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -805,17 +805,15 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   onClick={() => {
                     if (!amount || parseFloat(amount) <= 0) {
                       triggerHaptic('error');
-                      toast.error('Veuillez saisir un montant');
+                      toast.error('Montant invalide');
                       return;
                     }
                     triggerHaptic('light');
                     setFormStep(2);
                   }}
-                  className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md mt-4 ${
-                    type === 'expense' ? 'bg-danger shadow-danger/10' : 'bg-accent shadow-accent/10'
-                  }`}
+                  className="w-full py-3.5 rounded-2xl bg-copper hover:bg-copper-hover text-white font-bold transition-all duration-300 hover:scale-[1.01] active:scale-95 shadow-md shadow-copper/20 flex items-center justify-center gap-2 text-xs mt-4"
                 >
-                  Continuer
+                  Saisir les détails →
                 </button>
               </div>
             )}
@@ -993,9 +991,16 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                       const spent = activeBudget.spent || 0;
                       const limit = activeBudget.amount || 1;
                       const amountNum = parseFloat(amount) || 0;
-                      const projectedSpent = spent + amountNum;
+
+                      // Fix: avoid double counting the edited transaction's original amount in the category budget spent limit
+                      const isOriginalExpense = transactionToEdit && transactionToEdit.type === 'expense';
+                      const isSameCategory = transactionToEdit && isOriginalExpense && (
+                        (transactionToEdit.categoryId?._id || transactionToEdit.categoryId) === categoryId
+                      );
+                      const adjustedSpent = isSameCategory ? Math.max(0, spent - (transactionToEdit.amount || 0)) : spent;
+
+                      const projectedSpent = adjustedSpent + amountNum;
                       const pct = Math.min((projectedSpent / limit) * 100, 100);
-                      const currentPct = Math.min((spent / limit) * 100, 100);
                       const isOverBudget = projectedSpent > limit;
                       const isWarning = pct >= 80;
                       const color = isOverBudget ? 'text-danger' : isWarning ? 'text-amber-400' : 'text-accent';
@@ -1009,16 +1014,13 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                               {catIcon} Enveloppe {catName}
                             </span>
                             <span className={`text-[11px] font-bold font-premium-numbers ${color}`}>
-                              {amountNum > 0
-                                ? `${formatCurrencyShort(projectedSpent)} / ${formatCurrencyShort(limit)}`
-                                : `${formatCurrencyShort(spent)} / ${formatCurrencyShort(limit)}`
-                              }
+                              {formatCurrencyShort(projectedSpent)} / {formatCurrencyShort(limit)}
                             </span>
                           </div>
                           <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-300 ${barColor} ${isOverBudget ? 'opacity-100' : 'opacity-70'}`}
-                              style={{ width: `${amountNum > 0 ? pct : currentPct}%` }}
+                              style={{ width: `${pct}%` }}
                             />
                           </div>
                           {isOverBudget && (
@@ -1082,33 +1084,28 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                       <button
                         type="button"
                         onClick={handleDelete}
-                        className="flex-1 py-4 rounded-2xl bg-danger/10 hover:bg-danger/15 text-danger font-bold transition-all shadow-sm active:scale-95"
+                        className="flex-1 py-3.5 rounded-2xl bg-danger hover:bg-danger/90 text-white font-bold transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 text-xs shadow-md shadow-danger/20"
                       >
-                        Supprimer
+                        <Trash2 size={14} className="shrink-0" />
+                        <span>Supprimer</span>
                       </button>
                       <button
                         type="button"
                         onClick={handleSubmit}
-                        className={`flex-[2] py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md ${
-                          type === 'expense' 
-                            ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
-                            : 'bg-accent hover:bg-accent/90 shadow-accent/20'
-                        }`}
+                        className="flex-[2] py-3.5 rounded-2xl bg-copper hover:bg-copper-hover text-white font-bold transition-all duration-300 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 text-xs shadow-md shadow-copper/20"
                       >
-                        Enregistrer
+                        <Check size={14} className="shrink-0" />
+                        <span>Enregistrer</span>
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={handleSubmit}
-                      className={`w-full py-4 rounded-2xl text-white font-bold hover:scale-[1.01] active:scale-95 transition-all shadow-md ${
-                        type === 'expense' 
-                          ? 'bg-danger hover:bg-danger/90 shadow-danger/20' 
-                          : 'bg-accent hover:bg-accent/90 shadow-accent/20'
-                      }`}
+                      className="w-full py-3.5 rounded-2xl bg-copper hover:bg-copper-hover text-white font-bold transition-all duration-300 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 text-xs shadow-md shadow-copper/20"
                     >
-                      Ajouter la transaction
+                      <Check size={14} className="shrink-0" />
+                      <span>Ajouter la transaction</span>
                     </button>
                   )}
                 </div>

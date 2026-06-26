@@ -58,11 +58,13 @@ const mockSavedFilters = [
   }
 ];
 
+const mockDeleteTransaction = vi.fn().mockResolvedValue({});
+
 vi.mock('../../hooks/useTransactions', () => ({
   useTransactions: vi.fn((filters) => ({
     transactions: mockTransactions,
     loading: false,
-    deleteTransaction: vi.fn(),
+    deleteTransaction: mockDeleteTransaction,
     addTransaction: vi.fn(),
     updateTransaction: vi.fn()
   }))
@@ -121,6 +123,32 @@ vi.mock('react-hot-toast', () => ({
     success: vi.fn(),
     error: vi.fn()
   }
+}));
+
+vi.mock('../../components/transactions/TransactionFormSheet', () => ({
+  default: vi.fn(({ isOpen, onClose, transactionToEdit }) => {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="mock-transaction-form-sheet">
+        <span>Transaction Form Sheet Open</span>
+        {transactionToEdit && <span data-testid="edit-tx-desc">{transactionToEdit.description}</span>}
+        <button onClick={onClose}>Close Form</button>
+      </div>
+    );
+  })
+}));
+
+vi.mock('../../components/ui/ConfirmModal', () => ({
+  default: vi.fn(({ isOpen, onClose, onConfirm, children }) => {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="mock-confirm-modal">
+        {children}
+        <button onClick={onConfirm}>Confirm Delete</button>
+        <button onClick={onClose}>Cancel Delete</button>
+      </div>
+    );
+  })
 }));
 
 describe('Transactions Page', () => {
@@ -212,5 +240,45 @@ describe('Transactions Page', () => {
 
     // And verify that period was automatically switched to "Toutes les dates"
     expect(screen.getByText('Toutes les dates')).toBeInTheDocument();
+  });
+
+  it('opens edit sheet when clicking modifier button on a transaction', async () => {
+    renderComponent();
+
+    // Verify list rendered
+    expect(screen.getByText('Course alimentaire')).toBeInTheDocument();
+
+    // Click "Modifier" on the first transaction
+    const modifierButtons = screen.getAllByRole('button', { name: /modifier/i });
+    fireEvent.click(modifierButtons[0]);
+
+    // Expect the edit form sheet mock to be open with the correct transaction description
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-transaction-form-sheet')).toBeInTheDocument();
+      expect(screen.getByTestId('edit-tx-desc')).toHaveTextContent('Course alimentaire');
+    });
+  });
+
+  it('opens delete modal and confirms deletion of a transaction', async () => {
+    renderComponent();
+
+    // Click "Supprimer" on the first transaction
+    const supprimerButtons = screen.getAllByRole('button', { name: /supprimer/i });
+    fireEvent.click(supprimerButtons[0]);
+
+    // Expect the confirm modal mock to be open
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-confirm-modal')).toBeInTheDocument();
+    });
+
+    // Click on "Confirm Delete"
+    const confirmButton = screen.getByRole('button', { name: /confirm delete/i });
+    fireEvent.click(confirmButton);
+
+    // Expect mockDeleteTransaction to have been called with tx1 (the first transaction ID)
+    await waitFor(() => {
+      expect(mockDeleteTransaction).toHaveBeenCalledTimes(1);
+      expect(mockDeleteTransaction).toHaveBeenCalledWith('tx1');
+    });
   });
 });

@@ -641,10 +641,26 @@ Afin de fournir une expérience utilisateur mobile de qualité premium, l'applic
 *   **Saisie en Deux Étapes** : Afin de libérer de l'espace écran et de ne pas encombrer le clavier virtuel mobile, [TransactionFormSheet.jsx](file:///c:/Projects/budgetizer/client/src/components/transactions/TransactionFormSheet.jsx) sépare le flux :
     *   **Étape 1** : Saisie ciblée du montant via le clavier virtuel, gestion du type (revenu/dépense) et accès rapide aux favoris tactiles et au bouton "Répéter la dernière transaction" (sauvegardée dans le `localStorage`).
     *   **Étape 2** : Complétion des détails (note prédictive intelligente s'appuyant sur l'historique récent, tags, date en accordéon et sélection de comptes/catégories).
+*   **Prop `transactionToEdit`** : Le formulaire accepte la prop `transactionToEdit` (objet transaction complet) pour pré-remplir les champs en mode édition. Cette prop remplace l'ancienne prop `initialData` (qui n'était pas reconnue). Les pages consommatrices (`Transactions.jsx`, `CalendarPage.jsx`) doivent passer `transactionToEdit={selectedTransaction}` et non `initialData={selectedTransaction}`.
+*   **Correction de la Jauge de Budget en Mode Édition** : Lorsque l'utilisateur modifie une transaction dans une catégorie possédant un budget actif, l'indicateur inline soustrait le montant de la transaction d'origine du total déjà consommé avant de projeter le nouveau montant. Cela évite le double-comptage (`adjustedSpent = isSameCategory ? Math.max(0, spent - transactionToEdit.amount) : spent`).
+*   **Style Premium des Boutons d'Action ("Encre & Cuivre")** : Tous les boutons CTA du formulaire ("Saisir les détails", "Ajouter la transaction", "Enregistrer", "Supprimer") utilisent les classes Tailwind `bg-copper hover:bg-copper-hover text-white font-bold rounded-2xl shadow-md shadow-copper/20` avec `hover:scale-[1.01] active:scale-95` pour un retour tactile prémium cohérent avec le thème global. Le bouton "Supprimer" conserve `bg-danger` pour marquer son caractère destructif.
 *   **Optimisation Accessibilité (A11y) & Tests** : Pour conserver la compatibilité avec les outils d'audit d'accessibilité et les tests unitaires automatisés (qui interrogent le DOM avec `getByLabelText`), des éléments `<select>` natifs et inputs de date invisibles (`sr-only`) restent présents dans le DOM en arrière-plan, synchronisant en temps réel leurs valeurs avec les choix effectués dans l'interface tactile customisée.
 
 ### 12.5 Harmonisation des Graphiques de l'Onglet Analyses
 *   **Infobulles Unifiées & Responsives (`CustomTooltip`)** : Toutes les infobulles Recharts ont été standardisées avec un composant React customisé. Les styles CSS en ligne par défaut (`contentStyle` de Recharts) qui forçaient un fond sombre incohérent ont été supprimés. Les infobulles héritent de la classe `.custom-chart-tooltip` définie dans [index.css](file:///c:/Projects/budgetizer/client/src/index.css), assurant une harmonie parfaite avec le thème actif (mode clair ou sombre, avec bordure translucide et fond flouté en glassmorphism).
 *   **Contrôle des Décalages de Disposition (Layout Shifts)** : Pour éviter les sauts brutaux d'affichage sur les écrans mobiles lors du chargement ou de la commutation des filtres de graphiques, les panneaux de sélecteurs (comme les contrôles du graphique catégoriel dans [CategoryChart.jsx](file:///c:/Projects/budgetizer/client/src/components/charts/CategoryChart.jsx)) sont intégrés dans des conteneurs avec une hauteur minimale fixe (ex: `min-h-[48px] flex flex-col justify-center`).
+
+### 12.6 Contrat de Props du Composant `TransactionList`
+
+Le composant [TransactionList.jsx](file:///c:/Projects/budgetizer/client/src/components/transactions/TransactionList.jsx) expose les props suivantes pour les actions utilisateur :
+
+| Prop | Type | Description |
+| :--- | :--- | :--- |
+| `transactions` | `Array` | Liste des transactions à afficher (requis). |
+| `currentAccountId` | `String` | ID du compte courant pour déterminer le sens d'un virement. |
+| `onEdit` | `Function(transaction)` | Callback déclenché au clic sur "Modifier". Reçoit l'objet transaction complet. |
+| `onDelete` | `Function(transaction)` | Callback déclenché au clic sur "Supprimer". Reçoit l'objet transaction complet. |
+
+> **Important** : Les anciens noms `onEditClick` et `onDeleteClick` n'étaient pas reconnus par le composant et empêchaient les boutons de swipe de fonctionner. Les pages consommatrices (`Transactions.jsx`) utilisent désormais correctement `onEdit` et `onDelete`.
 
 

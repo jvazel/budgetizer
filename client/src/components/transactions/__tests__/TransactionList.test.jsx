@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import TransactionList from '../TransactionList';
 
 describe('TransactionList Component', () => {
@@ -106,5 +106,29 @@ describe('TransactionList Component', () => {
     expect(transferAbove).toHaveClass('text-danger');
     
     localStorage.clear();
+  });
+
+  it('triggers onEdit when modifier button is clicked', () => {
+    const onEditMock = vi.fn();
+    render(<TransactionList transactions={mockTransactions} onEdit={onEditMock} />);
+    
+    const modifierButtons = screen.getAllByRole('button', { name: /modifier/i });
+    expect(modifierButtons.length).toBe(3);
+    
+    fireEvent.click(modifierButtons[0]);
+    expect(onEditMock).toHaveBeenCalledTimes(1);
+    expect(onEditMock).toHaveBeenCalledWith(mockTransactions[0]);
+  });
+
+  it('triggers onDelete when supprimer button is clicked', () => {
+    const onDeleteMock = vi.fn();
+    render(<TransactionList transactions={mockTransactions} onDelete={onDeleteMock} />);
+    
+    const supprimerButtons = screen.getAllByRole('button', { name: /supprimer/i });
+    expect(supprimerButtons.length).toBe(3);
+    
+    fireEvent.click(supprimerButtons[0]);
+    expect(onDeleteMock).toHaveBeenCalledTimes(1);
+    expect(onDeleteMock).toHaveBeenCalledWith(mockTransactions[0]);
   });
 });

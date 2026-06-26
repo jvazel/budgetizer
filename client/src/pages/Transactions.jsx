@@ -408,8 +408,8 @@ const Transactions = () => {
         ) : (
           <TransactionList 
             transactions={transactions} 
-            onEditClick={(tx) => { setSelectedTransaction(tx); setIsEditOpen(true); }}
-            onDeleteClick={(tx) => { setTxToDelete(tx); setConfirmDeleteOpen(true); }}
+            onEdit={(tx) => { setSelectedTransaction(tx); setIsEditOpen(true); }}
+            onDelete={(tx) => { setTxToDelete(tx); setConfirmDeleteOpen(true); }}
             showFiltersActive={Object.keys(activeFilters).length > (period !== 'all' ? 2 : 0)}
           />
         )}
@@ -730,7 +730,7 @@ const Transactions = () => {
       <TransactionFormSheet
         isOpen={isEditOpen}
         onClose={() => { setSelectedTransaction(null); setIsEditOpen(false); }}
-        initialData={selectedTransaction}
+        transactionToEdit={selectedTransaction}
       />
 
       {/* Confirmation Dialog Delete Transaction */}

@@ -152,13 +152,13 @@ La saisie est simplifiée au maximum grâce à une interface de type "Bottom She
   - Chaque sélecteur ouvre un panel dédié avec liste complète.
   - **Navigation directe Compte ↔ Catégorie** : Des onglets `[Compte] [Catégorie]` en haut de chaque panel permettent de basculer directement sans repasser par le formulaire principal.
 
-- **Indicateur de Budget Inline** : Quand la catégorie sélectionnée possède un budget configuré, une mini-barre de progression s'affiche avec la dépense actuelle, le montant saisi projeté, et le plafond. La barre est verte < 80 %, orange 80–99 %, rouge si dépassement. Une alerte ⚠️ est affichée si la saisie ferait déborder l'enveloppe.
+- **Indicateur de Budget Inline** : Quand la catégorie sélectionnée possède un budget configuré, une mini-barre de progression s'affiche avec la dépense actuelle, le montant saisi projeté, et le plafond. La barre est verte < 80 %, orange 80–99 %, rouge si dépassement. Une alerte ⚠️ est affichée si la saisie ferait déborder l'enveloppe. En mode **édition**, la dépense de la transaction d'origine est soustraite du total consommé avant le calcul projeté, évitant un double comptage.
 
 - **Favoris rapides (Templates)** : Chips de raccourcis pré-remplis. Les zones tactiles ont été agrandies (≥ 44 px de hauteur) avec icône emoji agrandie, nom et montant sur deux lignes.
 
 - **Métadonnées** : Date, note (texte libre), tags.
 
-- **Bouton Valider Sticky** : Le bouton d'ajout est fixe en bas du Bottom Sheet (CSS `position: sticky`). Il reste visible même quand le clavier virtuel est ouvert.
+- **Bouton Valider Sticky** : Le bouton d'ajout est fixe en bas du Bottom Sheet (CSS `position: sticky`). Il reste visible même quand le clavier virtuel est ouvert. Les boutons d'action ("Ajouter la transaction", "Enregistrer", "Supprimer", "Saisir les détails") utilisent un style premium cuivré/orange (`bg-copper`) avec un effet de scale au survol et une ombre colorée douce, assurant une cohérence visuelle avec le reste de l'application (thème Bankyboard « Encre & Cuivre »).
 
 - **Toast Enrichi Post-Validation** : Après ajout, un toast affiche le montant débité/crédité ET le nouveau solde projeté du compte débouré, pendant 3 secondes.
 
@@ -174,8 +174,8 @@ Accessible via l'option "Transactions" du menu de navigation :
 - **Montants & Typographie** : Alignement en chiffres tabulaires `.font-premium-numbers` en taille `text-sm sm:text-base` et graisse `font-extrabold`. Les revenus s'affichent en vert émeraude et les débits importants (supérieurs au seuil d'alerte) s'affichent en rouge danger, tandis que les dépenses standard s'affichent sobrement en blanc/bleuté.
 - **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates, étiquettes ou recherche de mots-clés dans la description ou les notes.
 - **Gestion par Swipe** : Sur mobile, le glissement gauche (Swipe Left) révèle désormais **deux boutons** :
-  - ✏️ **Modifier** (fond accent, bleu-violet) : ouvre directement le formulaire pré-rempli.
-  - 🗑️ **Supprimer** (fond rouge) : supprime immédiatement. Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).
+  - ✏️ **Modifier** (fond accent, bleu-violet) : déclenche le callback `onEdit(transaction)` qui ouvre directement le formulaire pré-rempli dans `Transactions.jsx`. La prop s'appelle `onEdit` (et non `onEditClick`).
+  - 🗑️ **Supprimer** (fond rouge) : déclenche le callback `onDelete(transaction)` qui ouvre la boite de confirmation de suppression. La prop s'appelle `onDelete` (et non `onDeleteClick`). Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).
 - **Chargement Infini** : Un `IntersectionObserver` charge 30 transactions supplémentaires au bas de la liste lors du scroll.
 
 ### 6.3 Le Calendrier Interactif

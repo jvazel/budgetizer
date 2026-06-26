@@ -12,7 +12,8 @@ const mockAccounts = [
 ];
 const mockCategoriesTree = {
   expense: [
-    { _id: 'cat1', name: 'Alimentation', icon: '🍔', children: [] }
+    { _id: 'cat1', name: 'Alimentation', icon: '🍔', children: [] },
+    { _id: 'cat3', name: 'Loisirs', icon: '🎮', children: [] }
   ],
   income: [
     { _id: 'cat2', name: 'Salaire', icon: '💼', children: [] }
@@ -36,9 +37,11 @@ vi.mock('../../../hooks/useTags', () => ({
   })
 }));
 
+let mockBudgets = [];
+
 vi.mock('../../../hooks/useBudgets', () => ({
   useBudgets: () => ({
-    budgets: [],
+    budgets: mockBudgets,
     loading: false,
     addBudget: vi.fn(),
     updateBudget: vi.fn(),
@@ -71,6 +74,8 @@ vi.mock('react-hot-toast', () => ({
 describe('TransactionFormSheet Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockBudgets = [];
+    localStorage.clear();
   });
 
   it('renders nothing when closed', () => {
@@ -88,7 +93,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue to Step 2
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     expect(screen.getByLabelText(/Compte/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Catégorie/)).toBeInTheDocument();
@@ -105,7 +110,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue to step 2
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
     
     // Check category list now contains Salaire
     expect(screen.getByText('Salaire')).toBeInTheDocument();
@@ -129,7 +134,7 @@ describe('TransactionFormSheet Component', () => {
     fireEvent.change(amountInput, { target: { value: '45.50' } });
 
     // Continue to step 2
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     // Enter note in step 2
     const noteInput = screen.getByLabelText('Note (optionnel)');
@@ -201,7 +206,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue to step 2
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     // Default should be acc1
     expect(screen.getByLabelText(/Compte/).value).toBe('acc1');
@@ -227,7 +232,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue to step 2
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '99' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     expect(screen.getByLabelText(/Compte/).value).toBe('acc2');
     expect(screen.getByLabelText(/Catégorie/).value).toBe('cat1');
@@ -281,8 +286,8 @@ describe('TransactionFormSheet Component', () => {
 
     expect(screen.getByPlaceholderText('0.00').value).toBe('2.50');
     
-    // Click Continuer to see step 2 note field
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    // Click Saisir les détails → to see step 2 note field
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
     expect(screen.getByLabelText('Note (optionnel)').value).toBe('Café');
   });
 
@@ -309,7 +314,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     // Type "Sta" in note
     const noteInput = screen.getByLabelText('Note (optionnel)');
@@ -324,7 +329,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     const noteInput = screen.getByLabelText('Note (optionnel)');
     fireEvent.change(noteInput, { target: { value: 'Sta' } });
@@ -343,7 +348,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     const noteInput = screen.getByLabelText('Note (optionnel)');
     
@@ -390,7 +395,7 @@ describe('TransactionFormSheet Component', () => {
 
     // Enter amount and continue
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     const noteInput = screen.getByLabelText('Note (optionnel)');
     fireEvent.change(noteInput, { target: { value: 'Sta' } });
@@ -412,9 +417,9 @@ describe('TransactionFormSheet Component', () => {
   it('automatically predicts the category and displays the suggestion badge', async () => {
     render(<TransactionFormSheet isOpen={true} onClose={vi.fn()} />);
 
-    // Go to step 2 by entering an amount and clicking Continuer
+    // Go to step 2 by entering an amount and clicking Saisir les détails →
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '15' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     // Initially, there should not be any "Suggéré" badge
     expect(screen.queryByText('Suggéré')).not.toBeInTheDocument();
@@ -451,9 +456,87 @@ describe('TransactionFormSheet Component', () => {
     );
 
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '15' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
 
     const dateInput = screen.getByLabelText(/Date/);
     expect(dateInput.value).toBe('2026-06-24');
+  });
+
+  it('displays budget indicator correctly when adding a new transaction', async () => {
+    mockBudgets = [{ categoryId: 'cat1', spent: 50, amount: 100 }];
+
+    render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={() => {}} 
+      />
+    );
+
+    // Enter amount and continue to step 2
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Saisir les détails →' }));
+
+    // Select category cat1
+    fireEvent.change(screen.getByLabelText(/Catégorie/), { target: { value: 'cat1' } });
+
+    // Expect the budget indicator to show "70,00 € / 100,00 €" (spent 50 + amount 20 = 70)
+    expect(screen.getByText('70,00 € / 100,00 €')).toBeInTheDocument();
+  });
+
+  it('adjusts budget indicator when editing an existing transaction in the same category', async () => {
+    mockBudgets = [{ categoryId: 'cat1', spent: 50, amount: 100 }];
+    const transactionToEdit = {
+      _id: 'tx123',
+      type: 'expense',
+      amount: 20,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      note: 'Courses',
+      date: '2026-06-01'
+    };
+
+    render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={() => {}} 
+        transactionToEdit={transactionToEdit}
+      />
+    );
+
+    // Expect the budget indicator to show "50,00 € / 100,00 €" (spent 50 - original 20 + new 20 = 50)
+    expect(screen.getByText('50,00 € / 100,00 €')).toBeInTheDocument();
+  });
+
+  it('does not subtract original amount when editing and switching to a different category budget', async () => {
+    mockBudgets = [
+      { categoryId: 'cat1', spent: 50, amount: 100 },
+      { categoryId: 'cat3', spent: 40, amount: 100 }
+    ];
+    const transactionToEdit = {
+      _id: 'tx123',
+      type: 'expense',
+      amount: 20,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      note: 'Courses',
+      date: '2026-06-01'
+    };
+
+    render(
+      <TransactionFormSheet 
+        isOpen={true} 
+        onClose={() => {}} 
+        transactionToEdit={transactionToEdit}
+      />
+    );
+
+    // Initially in cat1, should show 50 / 100
+    expect(screen.getByText('50,00 € / 100,00 €')).toBeInTheDocument();
+
+    // Now change category to cat3
+    fireEvent.change(screen.getByLabelText(/Catégorie/), { target: { value: 'cat3' } });
+
+    // Expect the budget indicator for cat3 to show "60,00 € / 100,00 €" (spent 40 + new 20 = 60, no subtraction)
+    expect(screen.getByText('60,00 € / 100,00 €')).toBeInTheDocument();
   });
 });

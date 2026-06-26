@@ -34,7 +34,7 @@ Ce panneau gère la saisie, la validation et l'ajout/modification d'une transact
 | **Rendu ouvert** | `isOpen={true}` | Rendu des champs et récupération des comptes/catégories mockés | Le titre `"Nouvelle transaction"`, les boutons de type, le champ de montant, les sélections de comptes et de catégories sont affichés. |
 | **Filtre dynamique des catégories** | Clic sur le bouton de type `"Revenu"` | Commutation de la variable d'état `type` et mise à jour de la liste des catégories | L'option de catégorie `"Salaire"` (revenu) est présente, tandis que la catégorie `"Alimentation"` (dépense) a disparu. |
 | **Saisie et validation (Ajout)** | Saisie du montant `"45.50"`, note `"Courses"`, sélection catégorie `"cat1"`, clic sur `"Ajouter"` | Validation de la présence d'un montant, compte, catégorie, puis appel au hook `addTransaction` | La fonction `addTransaction` est appelée avec les paramètres de la transaction. Les callbacks `onSuccess` et `onClose` sont exécutés. |
-| **Peuplement en mode édition** | `transactionToEdit` contenant un objet transaction, `isOpen={true}` | Remplissage des champs du formulaire avec les données existantes dans le cycle de vie `useEffect` | Le titre devient `"Modifier la transaction"`, le montant affiche `"1500"`, la note affiche le texte d'origine, et le bouton d'action devient `"Enregistrer les modifications"`. |
+| **Peuplement en mode édition** | `transactionToEdit` contenant un objet transaction (prop `transactionToEdit`), `isOpen={true}` | Remplissage des champs du formulaire avec les données existantes dans le cycle de vie `useEffect` | Le titre devient `"Modifier la transaction"`, le montant affiche `"1500"`, la note affiche le texte d'origine, et le bouton d'action devient `"Enregistrer les modifications"`. |
 | **Initialisation date locale** | `defaultDate` (objet Date) fourni en paramètre | Remplissage du champ de date sans subir de décalage de fuseau horaire | La valeur du champ de date du formulaire est au format `YYYY-MM-DD` local correspondant exactement à la date sélectionnée. |
 
 ---
@@ -176,6 +176,8 @@ Ce composant affiche les transactions sous forme de liste chronologique groupée
 | **Signe Virement par défaut** | Virement, `currentAccountId` non défini | Traitement par défaut du transfert en tant que sortie de fonds | Le virement s'affiche précédé de `"-"` et coloré en `text-danger` (si au-dessus du seuil). |
 | **Virement sur compte source** | Virement, `currentAccountId` égal à l'émetteur (`acc_checking`) | Identification du compte débité | Le montant s'affiche en négatif (`-`) et rouge `text-danger` (si au-dessus du seuil) ou `text-primary/80` (si en dessous) pour symboliser le débit. |
 | **Virement sur compte destinataire** | Virement, `currentAccountId` égal au récepteur (`acc_credit`) | Identification du compte crédité | Le montant s'affiche en positif (`+`) et vert `text-accent` pour symboliser l'augmentation de solde (ou remboursement de dette). |
+| **Déclenchement du callback `onEdit`** | Prop `onEdit` mockée, clic sur le bouton "Modifier" d'une transaction | Propagation de l'événement `click` vers le handler parent | La fonction `onEdit` est appelée exactement 1 fois avec l'objet de la transaction correspondante en paramètre. |
+| **Déclenchement du callback `onDelete`** | Prop `onDelete` mockée, clic sur le bouton "Supprimer" d'une transaction | Propagation de l'événement `click` vers le handler parent | La fonction `onDelete` est appelée exactement 1 fois avec l'objet de la transaction correspondante en paramètre. |
 
 ---
 
