@@ -14,7 +14,8 @@ import Button from '../components/ui/Button';
 const TransfersPage = () => {
   const { user } = useContext(AuthContext);
   const { isScrolled } = useContext(HeaderPortalContext);
-  const { accounts, loading: accountsLoading, fetchAccounts } = useAccounts();
+  const { accounts: allAccounts, loading: accountsLoading, fetchAccounts } = useAccounts();
+  const accounts = React.useMemo(() => allAccounts.filter(acc => acc.permission !== 'read'), [allAccounts]);
   const { transactions: transfers, loading: transfersLoading, addTransaction, deleteTransaction } = useTransactions({ type: 'transfer' });
 
   const [fromAccountId, setFromAccountId] = useState('');

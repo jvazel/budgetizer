@@ -8,6 +8,7 @@ import { invalidateMonthlyReport } from '../utils/cacheInvalidator.js';
 import { invalidateDashboardCache } from './dashboardController.js';
 import { eventBus } from '../utils/eventBus.js';
 import mongoose from 'mongoose';
+import Share from '../models/Share.js';
 
 // Utility function to update savings goal progress
 const updateSavingsGoalProgress = async (goalId, amount, type, isRevert = false, session = null, transaction = null) => {
@@ -55,14 +56,36 @@ export const getTransactions = async (req, res) => {
   try {
     const { accountId, categoryId, type, startDate, endDate, search, tags, page = 1, limit = 20 } = req.query;
 
-    let query = { userId: req.user.id, isPending: { $ne: true } };
+    // Retrieve all accessible accounts for the user
+    const ownedAccounts = await Account.find({ userId: req.user.id }).select('_id');
+    const shares = await Share.find({ sharedWithId: req.user.id, resourceType: 'account' }).select('resourceId');
+    
+    const accessibleAccountIds = [
+      ...ownedAccounts.map(a => a._id),
+      ...shares.map(s => s.resourceId)
+    ];
+
+    let query = { isPending: { $ne: true } };
 
     if (accountId) {
+      // Check authorization
+      const isAuthorized = accessibleAccountIds.some(id => id.toString() === accountId.toString());
+      if (!isAuthorized) {
+        return res.status(401).json({ message: 'Non autorisé à accéder à ce compte.' });
+      }
       query.$or = [
         { accountId: accountId },
         { toAccountId: accountId }
       ];
+    } else {
+      // Return transactions from any accessible account, or created by the user
+      query.$or = [
+        { userId: req.user.id },
+        { accountId: { $in: accessibleAccountIds } },
+        { toAccountId: { $in: accessibleAccountIds } }
+      ];
     }
+
     if (categoryId) query.categoryId = categoryId;
     if (type) query.type = type;
     if (startDate || endDate) {
@@ -90,7 +113,7 @@ export const getTransactions = async (req, res) => {
 
       // Find matching accounts, categories, and tags to allow searching by their names
       const [matchingAccounts, matchingCategories, matchingTags] = await Promise.all([
-        Account.find({ userId: req.user.id, name: searchRegex }),
+        Account.find({ _id: { $in: accessibleAccountIds }, name: searchRegex }),
         Category.find({ userId: req.user.id, name: searchRegex }),
         Tag.find({ userId: req.user.id, name: searchRegex })
       ]);
@@ -157,6 +180,39 @@ export const createTransaction = async (req, res) => {
 
   try {
     const { accountId, categoryId, type, amount, description, date, note, toAccountId, savingsGoalId, tags } = req.body;
+
+    // Validate write permission on source account
+    const sourceAccount = await Account.findById(accountId);
+    if (!sourceAccount) return res.status(404).json({ message: 'Compte source non trouvé' });
+    if (sourceAccount.userId.toString() !== req.user.id) {
+      const hasWrite = await Share.exists({
+        resourceType: 'account',
+        resourceId: accountId,
+        sharedWithId: req.user.id,
+        permission: 'write'
+      });
+      if (!hasWrite) {
+        return res.status(401).json({ message: 'Non autorisé à écrire sur ce compte' });
+      }
+    }
+
+    // Validate write permission on destination account if transfer
+    if (type === 'transfer') {
+      if (!toAccountId) return res.status(400).json({ message: 'Le compte destinataire est requis pour un virement.' });
+      const destAccount = await Account.findById(toAccountId);
+      if (!destAccount) return res.status(404).json({ message: 'Compte destinataire non trouvé' });
+      if (destAccount.userId.toString() !== req.user.id) {
+        const hasWrite = await Share.exists({
+          resourceType: 'account',
+          resourceId: toAccountId,
+          sharedWithId: req.user.id,
+          permission: 'write'
+        });
+        if (!hasWrite) {
+          return res.status(401).json({ message: 'Non autorisé à écrire sur le compte destinataire' });
+        }
+      }
+    }
 
     const transaction = new Transaction({
       userId: req.user.id,
@@ -227,7 +283,20 @@ export const deleteTransaction = async (req, res) => {
     const transaction = await Transaction.findById(req.params.id);
 
     if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
-    if (transaction.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    
+    const isCreator = transaction.userId.toString() === req.user.id;
+    const account = await Account.findById(transaction.accountId);
+    const isAccountOwner = account && account.userId.toString() === req.user.id;
+    const hasWrite = await Share.exists({
+      resourceType: 'account',
+      resourceId: transaction.accountId,
+      sharedWithId: req.user.id,
+      permission: 'write'
+    });
+
+    if (!isCreator && !isAccountOwner && !hasWrite) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
 
     // Revert balances if the transaction is not pending (meaning it was actually executed and affected balances)
     if (!transaction.isPending) {
@@ -639,7 +708,62 @@ export const updateTransaction = async (req, res) => {
     const transaction = await Transaction.findById(req.params.id).session(session);
 
     if (!transaction) return res.status(404).json({ message: 'Transaction non trouvée' });
-    if (transaction.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Non autorisé' });
+
+    // Validate write permission on old account
+    const oldAccount = await Account.findById(transaction.accountId);
+    const isOldAccountOwner = oldAccount && oldAccount.userId.toString() === req.user.id;
+    const isCreator = transaction.userId.toString() === req.user.id;
+    const hasWriteOld = await Share.exists({
+      resourceType: 'account',
+      resourceId: transaction.accountId,
+      sharedWithId: req.user.id,
+      permission: 'write'
+    });
+
+    if (!isCreator && !isOldAccountOwner && !hasWriteOld) {
+      return res.status(401).json({ message: 'Non autorisé à modifier cette transaction' });
+    }
+
+    // Validate write permission on new account if changing it
+    if (accountId && accountId.toString() !== transaction.accountId.toString()) {
+      const newAccount = await Account.findById(accountId);
+      if (!newAccount) return res.status(404).json({ message: 'Nouveau compte non trouvé' });
+      if (newAccount.userId.toString() !== req.user.id) {
+        const hasWriteNew = await Share.exists({
+          resourceType: 'account',
+          resourceId: accountId,
+          sharedWithId: req.user.id,
+          permission: 'write'
+        });
+        if (!hasWriteNew) {
+          return res.status(401).json({ message: 'Non autorisé à écrire sur le nouveau compte' });
+        }
+      }
+    }
+
+    // Validate destination account if transfer
+    const isTransfer = type === 'transfer' || (transaction.type === 'transfer' && type !== 'expense' && type !== 'income');
+    if (isTransfer) {
+      const targetToAccountId = toAccountId || transaction.toAccountId;
+      if (!targetToAccountId) {
+        return res.status(400).json({ message: 'Le compte destinataire est requis.' });
+      }
+      if (!transaction.toAccountId || targetToAccountId.toString() !== transaction.toAccountId.toString()) {
+        const newDestAccount = await Account.findById(targetToAccountId);
+        if (!newDestAccount) return res.status(404).json({ message: 'Compte destinataire non trouvé' });
+        if (newDestAccount.userId.toString() !== req.user.id) {
+          const hasWriteDest = await Share.exists({
+            resourceType: 'account',
+            resourceId: targetToAccountId,
+            sharedWithId: req.user.id,
+            permission: 'write'
+          });
+          if (!hasWriteDest) {
+            return res.status(401).json({ message: 'Non autorisé à écrire sur le compte destinataire' });
+          }
+        }
+      }
+    }
 
     // Store old transaction state before updates for comparison in alerts
     const oldTransactionCopy = {

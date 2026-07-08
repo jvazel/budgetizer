@@ -13,6 +13,17 @@ const generateToken = (id) => {
   });
 };
 
+const sendTokenCookie = (res, token) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/'
+  };
+  res.cookie('token', token, cookieOptions);
+};
+
 const defaultCategories = [
   { name: 'Alimentation', type: 'expense', icon: '🍔', color: '#f97316' },
   { name: 'Logement', type: 'expense', icon: '🏠', color: '#6366f1' },
@@ -72,13 +83,16 @@ export const registerUser = async (req, res) => {
       
       await Category.insertMany(categoriesToCreate);
 
+      const token = generateToken(user._id);
+      sendTokenCookie(res, token);
+
       res.status(201).json({
         _id: user.id,
         name: user.name,
         email: user.email,
         preferences: user.preferences,
         currency: user.currency,
-        token: generateToken(user._id),
+        token,
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -105,13 +119,16 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      const token = generateToken(user._id);
+      sendTokenCookie(res, token);
+
       res.json({
         _id: user.id,
         name: user.name,
         email: user.email,
         preferences: user.preferences,
         currency: user.currency,
-        token: generateToken(user._id),
+        token,
       });
     } else {
       res.status(401).json({ message: 'Adresse e-mail ou mot de passe incorrect.' });
@@ -237,4 +254,30 @@ export const resetPassword = async (req, res) => {
     console.error(error.message);
     res.status(500).send('Server error');
   }
+};
+
+// @desc    Logout user - clear JWT cookie
+// @route   POST /api/auth/logout
+// @access  Public
+export const logoutUser = async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  });
+  res.json({ message: 'Déconnexion réussie' });
+};
+
+// @desc    Set JWT cookie from a token passed in body
+// @route   POST /api/auth/set-cookie
+// @access  Public
+export const setTokenCookie = async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ message: 'Token requis' });
+  }
+  sendTokenCookie(res, token);
+  res.json({ message: 'Cookie configuré avec succès' });
 };

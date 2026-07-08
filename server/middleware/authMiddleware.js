@@ -31,44 +31,45 @@ export const protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Check cache first
-      const now = Date.now();
-      const cached = userCache.get(decoded.id);
-
-      if (cached && cached.expiresAt > now) {
-        req.user = cached.user;
-      } else {
-        // Get user from the token
-        const user = await User.findById(decoded.id).select('-password');
-
-        if (!user) {
-          return res.status(401).json({ message: 'Not authorized, user not found' });
-        }
-
-        req.user = user;
-        // Save to cache
-        userCache.set(decoded.id, {
-          user,
-          expiresAt: now + CACHE_TTL
-        });
-      }
-
-      return next();
-    } catch (error) {
-      console.error(error);
-      return res.status(401).json({ message: 'Not authorized' });
-    }
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
   }
 
   if (!token) {
     return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check cache first
+    const now = Date.now();
+    const cached = userCache.get(decoded.id);
+
+    if (cached && cached.expiresAt > now) {
+      req.user = cached.user;
+    } else {
+      // Get user from the token
+      const user = await User.findById(decoded.id).select('-password');
+
+      if (!user) {
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+
+      req.user = user;
+      // Save to cache
+      userCache.set(decoded.id, {
+        user,
+        expiresAt: now + CACHE_TTL
+      });
+    }
+
+    return next();
+  } catch (error) {
+    console.error(error);
+    return res.status(401).json({ message: 'Not authorized' });
   }
 };
 

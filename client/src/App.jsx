@@ -32,6 +32,7 @@ const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
 const MonthlyReportPage = React.lazy(() => import('./pages/MonthlyReportPage'));
 const FinancialScoresPage = React.lazy(() => import('./pages/FinancialScoresPage'));
 const LoanSimulatorPage = React.lazy(() => import('./pages/LoanSimulatorPage'));
+const SharingPage = React.lazy(() => import('./pages/SharingPage'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -146,6 +147,7 @@ const AppContent = () => {
             <Route path="/categories" element={<Categories />} />
             <Route path="/tags" element={<Tags />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/sharing" element={<SharingPage />} />
             <Route path="/accounts" element={<AccountsPage />} />
             <Route path="/accounts/:id" element={<AccountDetailPage />} />
             <Route path="/accounts/:id/credit" element={<CreditDetailPage />} />

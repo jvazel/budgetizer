@@ -53,7 +53,8 @@ describe('Auth Controller', () => {
     res = {
       json: vi.fn(),
       status: vi.fn().mockReturnThis(),
-      send: vi.fn()
+      send: vi.fn(),
+      cookie: vi.fn().mockReturnThis()
     };
   });
 

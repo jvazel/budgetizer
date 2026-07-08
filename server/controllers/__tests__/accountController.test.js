@@ -54,6 +54,18 @@ vi.mock('../../models/ScheduledTransaction.js', () => {
   return { default: MockST };
 });
 
+vi.mock('../../models/Share.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      populate: vi.fn().mockResolvedValue([])
+    })),
+    exists: vi.fn().mockResolvedValue(false),
+    findOne: vi.fn().mockImplementation(() => ({
+      populate: vi.fn().mockResolvedValue(null)
+    }))
+  }
+}));
+
 describe('Account Controller', () => {
   let req, res;
 
@@ -87,8 +99,17 @@ describe('Account Controller', () => {
 
       await getAccounts(req, res);
 
-      expect(Account.find).toHaveBeenCalledWith({ userId: 'user_999' });
-      expect(res.json).toHaveBeenCalledWith(mockAccounts);
+      expect(Account.find).toHaveBeenCalledWith(expect.objectContaining({
+        $or: [
+          { userId: 'user_999' },
+          { _id: { $in: [] } }
+        ]
+      }));
+      expect(res.json).toHaveBeenCalledWith(mockAccounts.map(acc => ({
+        ...acc,
+        isShared: false,
+        permission: 'owner'
+      })));
     });
 
     it('should handle errors and return 500 status', async () => {

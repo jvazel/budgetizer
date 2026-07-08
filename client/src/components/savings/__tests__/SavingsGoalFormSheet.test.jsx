@@ -85,7 +85,7 @@ describe('SavingsGoalFormSheet Component', () => {
     });
   });
 
-  it('populates fields when initialData is provided', () => {
+  it('populates fields when initialData is provided', async () => {
     const initialData = {
       _id: 'goal123',
       name: 'Fonds de Secours',
@@ -105,9 +105,11 @@ describe('SavingsGoalFormSheet Component', () => {
       />
     );
 
-    expect(screen.getByText("Modifier l'objectif")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Ex: Fonds de secours, Apport maison...").value).toBe('Fonds de Secours');
-    expect(screen.getByPlaceholderText("Ex: 5000").value).toBe('10000');
-    expect(container.querySelector('select').value).toBe('acc2');
+    await waitFor(() => {
+      expect(screen.getByText("Modifier l'objectif")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Ex: Fonds de secours, Apport maison...").value).toBe('Fonds de Secours');
+      expect(screen.getByPlaceholderText("Ex: 5000").value).toBe('10000');
+      expect(container.querySelector('select').value).toBe('acc2');
+    });
   });
 });

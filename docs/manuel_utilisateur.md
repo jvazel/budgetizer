@@ -39,9 +39,13 @@ Budgetizer est conçu comme une application web progressive, ce qui signifie qu'
 * **Bannière d'installation dynamique** : 
   * *Sur Google Chrome / Microsoft Edge (PC et Android)* : Un bandeau s'affiche automatiquement en bas de l'écran ou dans les paramètres pour installer l'application. Cliquez sur "Installer".
   * *Sur Apple iOS (Safari sur iPhone/iPad)* : En raison des contraintes d'Apple, la bannière d'installation affiche des instructions explicites. Appuyez sur l'icône de partage de Safari (le carré avec une flèche vers le haut), faites défiler vers le bas et sélectionnez **Sur l'écran d'accueil**.
-* **Détection automatique de connexion réseau** :
-  * Si vous perdez votre connexion internet (tunnel, zone blanche), un **Toast rouge** glisse depuis le haut de l'écran : *"Mode hors ligne — Utilisation des données en cache"*. L'application reste pleinement consultable.
-  * Dès que le réseau est de retour, un **Toast vert** apparaît : *"Connexion rétablie — Synchronisation réussie"*. Les données sont instantanément rafraîchies depuis le serveur de manière transparente.
+* **Utilisation et Édition Hors-ligne** :
+  - **Consultation** : Si vous perdez votre connexion internet, toutes vos données (comptes, transactions, budgets, etc.) restent visibles grâce à la mise en cache locale.
+  - **Édition** : Vous pouvez continuer à utiliser l'application normalement : ajouter des transactions, modifier des budgets ou supprimer des éléments. Les changements apparaissent instantanément sur votre écran (mise à jour optimiste).
+  - **Bandeau d'état (Toast dynamique)** : Un bandeau s'affiche en haut de l'écran :
+    - En mode hors ligne, il indique le nombre de modifications en attente : *"Mode hors ligne — X modification(s) en attente de synchronisation."*
+    - Lors du retour de la connexion, il affiche l'état d'envoi : *"Synchronisation en cours — Envoi de X modification(s) en arrière-plan..."*
+    - Une fois la synchronisation terminée, il confirme le succès : *"Connexion rétablie — Synchronisation réussie."* et disparaît automatiquement après 3 secondes. Vous n'avez aucune action manuelle à faire.
 
 ---
 

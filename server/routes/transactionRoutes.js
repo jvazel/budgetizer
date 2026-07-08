@@ -2,6 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import multer from 'multer';
 import { protect } from '../middleware/authMiddleware.js';
+import idempotencyMiddleware from '../middleware/idempotencyMiddleware.js';
 import {
   getTransactions,
   createTransaction,
@@ -16,6 +17,14 @@ const router = express.Router();
 const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
 
 router.use(protect);
+
+// Appliquer l'idempotence sur POST / PUT / DELETE pour éviter les doublons lors du sync hors-ligne
+router.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    return idempotencyMiddleware(req, res, next);
+  }
+  next();
+});
 
 router.route('/calendar')
   .get(getCalendarTransactions);

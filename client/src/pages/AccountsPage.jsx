@@ -4,7 +4,7 @@ import { HeaderTitle, HeaderActions, HeaderBackButton } from '../components/layo
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { useAccounts } from '../hooks/useAccounts';
 import { AuthContext } from '../context/AuthContext';
-import { Plus, Wallet, CreditCard, EyeOff, AlertCircle } from 'lucide-react';
+import { Plus, Wallet, CreditCard, EyeOff, AlertCircle, Users } from 'lucide-react';
 
 const AccountsPage = () => {
   const navigate = useNavigate();
@@ -114,6 +114,14 @@ const AccountsPage = () => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-bold text-primary truncate leading-tight">{acc.name}</p>
+                          {acc.isShared && (
+                            <span 
+                              className="text-[8px] font-extrabold bg-accent/15 text-accent px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
+                              title={`Partagé par ${acc.ownerName}`}
+                            >
+                              <Users size={10} /> {acc.ownerName}
+                            </span>
+                          )}
                           {acc.includeInTotal === false && (
                             <span 
                               className="text-[8px] font-extrabold bg-muted/20 text-muted px-1.5 py-0.5 rounded-md flex items-center gap-0.5"

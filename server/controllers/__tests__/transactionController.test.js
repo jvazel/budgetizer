@@ -164,6 +164,17 @@ vi.mock('../../models/Budget.js', () => ({
   }
 }));
 
+vi.mock('../../models/Share.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      populate: vi.fn().mockResolvedValue([]),
+      select: vi.fn().mockResolvedValue([])
+    })),
+    exists: vi.fn().mockResolvedValue(false),
+    findOne: vi.fn().mockResolvedValue(null)
+  }
+}));
+
 vi.mock('../../utils/pushNotification.js', () => ({
   sendPushNotification: vi.fn().mockResolvedValue(true)
 }));
@@ -205,11 +216,11 @@ describe('Transaction Controller', () => {
       const mockTxs = [{ _id: 'tx1', description: 'Boulangerie', amount: 5 }];
       Transaction.find.mockReturnValue(mockChain(mockTxs));
       Transaction.countDocuments.mockResolvedValue(25);
+      Account.find.mockReturnValue({ select: vi.fn().mockResolvedValue([{ _id: 'acc_1' }]) });
 
       await getTransactions(req, res);
 
       expect(Transaction.find).toHaveBeenCalledWith(expect.objectContaining({
-        userId: 'user_123',
         isPending: { $ne: true },
         $or: [
           { accountId: 'acc_1' },
@@ -236,7 +247,8 @@ describe('Transaction Controller', () => {
         date: '2026-06-01'
       };
 
-      const mockAcc = { _id: 'acc_1', balance: 200, save: vi.fn() };
+      const mockAcc = { _id: 'acc_1', userId: 'user_123', balance: 200, save: vi.fn() };
+      Account.findById.mockResolvedValue(mockAcc);
       Account.findOneAndUpdate.mockImplementation((filter, update) => {
         if (update && update.$inc && update.$inc.balance !== undefined) {
           mockAcc.balance += update.$inc.balance;
@@ -266,9 +278,14 @@ describe('Transaction Controller', () => {
         date: '2026-06-01'
       };
 
-      const mockAccSource = { _id: 'acc_1', balance: 500, save: vi.fn() };
-      const mockAccDest = { _id: 'acc_2', balance: 50, save: vi.fn() };
+      const mockAccSource = { _id: 'acc_1', userId: 'user_123', balance: 500, save: vi.fn() };
+      const mockAccDest = { _id: 'acc_2', userId: 'user_123', balance: 50, save: vi.fn() };
 
+      Account.findById.mockImplementation((id) => {
+        if (id === 'acc_1') return Promise.resolve(mockAccSource);
+        if (id === 'acc_2') return Promise.resolve(mockAccDest);
+        return Promise.resolve(null);
+      });
       Account.findOneAndUpdate.mockImplementation((filter, update) => {
         const id = filter._id;
         const acc = id === 'acc_1' ? mockAccSource : id === 'acc_2' ? mockAccDest : null;
@@ -300,10 +317,15 @@ describe('Transaction Controller', () => {
         savingsGoalId: 'goal_1'
       };
 
-      const mockAccSource = { _id: 'acc_1', balance: 500, save: vi.fn() };
-      const mockAccDest = { _id: 'acc_savings', balance: 1000, save: vi.fn() };
+      const mockAccSource = { _id: 'acc_1', userId: 'user_123', balance: 500, save: vi.fn() };
+      const mockAccDest = { _id: 'acc_savings', userId: 'user_123', balance: 1000, save: vi.fn() };
       const mockGoal = { _id: 'goal_1', accountId: 'acc_savings', currentAmount: 200, save: vi.fn() };
 
+      Account.findById.mockImplementation((id) => {
+        if (id === 'acc_1') return Promise.resolve(mockAccSource);
+        if (id === 'acc_savings') return Promise.resolve(mockAccDest);
+        return Promise.resolve(null);
+      });
       Account.findOneAndUpdate.mockImplementation((filter, update) => {
         const id = filter._id;
         const acc = id === 'acc_1' ? mockAccSource : id === 'acc_savings' ? mockAccDest : null;

@@ -1,16 +1,86 @@
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
+import './../models/JobLock.js';
 import mongoose from 'mongoose';
 import { calculateNextDate } from './dateHelper.js';
+import os from 'os';
 
-export const processScheduledTransactions = async () => {
-  const now = new Date();
-  const session = await mongoose.startSession();
+const LOCK_NAME = 'scheduled_transactions_processor';
+const HOSTNAME = os.hostname();
+
+// Acquire exclusive lock for this processor.
+// Returns true if lock was acquired, false if another instance holds it.
+const acquireLock = async (mongooseConnection) => {
+  const JobLock = mongooseConnection.model('JobLock');
   
   try {
+    const result = await JobLock.findOneAndUpdate(
+      { lockName: LOCK_NAME },
+      {
+        $set: { holderId: HOSTNAME, acquiredAt: new Date() }
+      },
+      { upsert: true, returnDocument: 'before', sort: { createdAt: -1 } }
+    );
+
+    // If result is null, the document was just created by us (upsert) — lock acquired.
+    // If result exists and holderId matches us, we re-acquired a stale lock — OK.
+    // If result exists with a different holder, another instance owns it.
+    if (!result || result.holderId === HOSTNAME) {
+      return true;
+    }
+
+    console.log(`[JobLock] Lock "${LOCK_NAME}" held by "${result.holderId}", skipping.`);
+    return false;
+  } catch (err) {
+    console.error('[JobLock] Error acquiring lock:', err.message);
+    return false;
+  }
+};
+
+// Release the lock so another instance can take over.
+const releaseLock = async (mongooseConnection) => {
+  const JobLock = mongooseConnection.model('JobLock');
+  
+  try {
+    await JobLock.deleteOne({ lockName: LOCK_NAME, holderId: HOSTNAME });
+  } catch (err) {
+    console.error('[JobLock] Error releasing lock:', err.message);
+  }
+};
+
+// Clean up stale locks on startup (locks older than the TTL window).
+const cleanupStaleLocks = async (mongooseConnection) => {
+  const JobLock = mongooseConnection.model('JobLock');
+  
+  try {
+    const result = await JobLock.deleteMany({
+      acquiredAt: { $lt: new Date(Date.now() - 30 * 60 * 1000) } // older than 30 min
+    });
+    
+    if (result.deletedCount > 0) {
+      console.log(`[JobLock] Cleaned up ${result.deletedCount} stale lock(s).`);
+    }
+  } catch (err) {
+    console.error('[JobLock] Error cleaning stale locks:', err.message);
+  }
+};
+
+export const processScheduledTransactions = async () => {
+  // Try to acquire exclusive lock across PM2 instances
+  const locked = await acquireLock(mongoose);
+  if (!locked) {
+    return; // Another instance is processing, skip this run.
+  }
+
+  let session;
+  
+  try {
+    session = await mongoose.startSession();
     session.startTransaction();
     
+    const now = new Date();
+
     // Find all active scheduled transactions whose nextDate has arrived or passed
     const activeSchedules = await ScheduledTransaction.find({
       isActive: true,
@@ -84,15 +154,21 @@ export const processScheduledTransactions = async () => {
     }
 
     await session.commitTransaction();
+    session.endSession();
+    
     if (activeSchedules.length > 0) {
       console.log(`[ScheduledProcessor] Processed ${activeSchedules.length} scheduled transactions successfully.`);
-      // Emit generic global change event so UI refreshes if tab is open
-      // Since this runs in node environment, we don't have window object, which is normal.
     }
   } catch (error) {
-    await session.abortTransaction();
     console.error('[ScheduledProcessor] Error processing scheduled transactions:', error);
+    if (session && session.hasEnded === false) {
+      await session.abortTransaction();
+      session.endSession();
+    }
   } finally {
-    session.endSession();
+    // Always release the lock after processing completes or fails
+    await releaseLock(mongoose);
   }
 };
+
+export { cleanupStaleLocks };

@@ -244,8 +244,8 @@ const Budgets = () => {
                 <BudgetCard 
                   key={budget._id} 
                   budget={budget} 
-                  onEdit={handleOpenEdit}
-                  onDelete={deleteBudget}
+                  onEdit={(!budget.isShared || budget.permission === 'write') ? handleOpenEdit : null}
+                  onDelete={!budget.isShared ? deleteBudget : null}
                   selectedWeekStart={weekStartStr}
                 />
               ))
@@ -273,8 +273,8 @@ const Budgets = () => {
                 <BudgetCard 
                   key={budget._id} 
                   budget={budget} 
-                  onEdit={handleOpenEdit}
-                  onDelete={deleteBudget}
+                  onEdit={(!budget.isShared || budget.permission === 'write') ? handleOpenEdit : null}
+                  onDelete={!budget.isShared ? deleteBudget : null}
                   selectedMonth={monthStr}
                 />
               ))
@@ -302,8 +302,8 @@ const Budgets = () => {
                 <BudgetCard 
                   key={budget._id} 
                   budget={budget} 
-                  onEdit={handleOpenEdit}
-                  onDelete={deleteBudget}
+                  onEdit={(!budget.isShared || budget.permission === 'write') ? handleOpenEdit : null}
+                  onDelete={!budget.isShared ? deleteBudget : null}
                   selectedYear={yearStr}
                 />
               ))

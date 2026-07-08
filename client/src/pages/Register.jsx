@@ -1,42 +1,49 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema } from '../validators/authValidators';
 import { AuthContext } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { register } = useContext(AuthContext);
+  const { register: authRegister } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const passwordValue = watch('password');
   const getPasswordStrength = () => {
-    if (password.length === 0) return 0;
-    if (password.length < 6) return 1;
-    if (password.length < 10) return 2;
+    if (!passwordValue) return 0;
+    if (passwordValue.length < 6) return 1;
+    if (passwordValue.length < 10) return 2;
     return 3;
   };
 
   const strengthColors = ['bg-surface-2', 'bg-danger', 'bg-warning', 'bg-accent'];
   const strength = getPasswordStrength();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      return toast.error('Les mots de passe ne correspondent pas');
-    }
-    if (password.length < 6) {
-      return toast.error('Le mot de passe doit contenir au moins 6 caractères');
-    }
-    
+  const onSubmit = async (data) => {
     try {
       sessionStorage.setItem('just_logged_in', 'true');
-      await register(name, email, password);
+      await authRegister(data.name, data.email, data.password);
       toast.success('Compte créé avec succès !');
       navigate('/');
     } catch (error) {
@@ -66,13 +73,13 @@ const Register = () => {
             <p className="text-xs text-secondary">Prenez le contrôle de vos finances</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
             <Input
               id="name"
               placeholder="Prénom"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register('name')}
               icon={User}
+              error={errors.name?.message}
               required
             />
 
@@ -80,9 +87,9 @@ const Register = () => {
               id="email"
               type="email"
               placeholder="Adresse email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register('email')}
               icon={Mail}
+              error={errors.email?.message}
               required
             />
             
@@ -91,14 +98,14 @@ const Register = () => {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register('password')}
                 icon={Lock}
                 rightIcon={showPassword ? EyeOff : Eye}
                 onRightIconClick={() => setShowPassword(!showPassword)}
+                error={errors.password?.message}
                 required
               />
-              {password.length > 0 && (
+              {passwordValue && passwordValue.length > 0 && (
                 <div className="flex h-1 gap-1 px-1">
                   {[1, 2, 3].map((level) => (
                     <div
@@ -116,15 +123,15 @@ const Register = () => {
               id="confirmPassword"
               type={showPassword ? 'text' : 'password'}
               placeholder="Confirmer le mot de passe"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              {...register('confirmPassword')}
               icon={Lock}
+              error={errors.confirmPassword?.message}
               required
             />
 
             <div className="pt-2">
-              <Button type="submit" fullWidth>
-                Créer mon compte
+              <Button type="submit" fullWidth disabled={isSubmitting}>
+                {isSubmitting ? 'Création...' : 'Créer mon compte'}
               </Button>
             </div>
           </form>

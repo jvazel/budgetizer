@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getMe, forgotPassword, resetPassword } from '../controllers/authController.js';
+import { registerUser, loginUser, logoutUser, setTokenCookie, getMe, forgotPassword, resetPassword } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { body } from 'express-validator';
 
@@ -329,6 +329,9 @@ router.post(
   ],
   resetPassword
 );
+
+router.post('/logout', logoutUser);
+router.post('/set-cookie', setTokenCookie);
 
 export default router;
 

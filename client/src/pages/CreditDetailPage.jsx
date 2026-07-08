@@ -114,7 +114,7 @@ const CreditDetailPage = () => {
     return data;
   };
 
-  const actions = (
+  const actions = summary?.permission === 'owner' ? (
     <div className="flex items-center gap-2">
       <button 
         onClick={() => setIsEditOpen(true)}
@@ -131,7 +131,7 @@ const CreditDetailPage = () => {
         <Trash2 size={16} />
       </button>
     </div>
-  );
+  ) : null;
 
   if (loading) {
     return (

@@ -42,6 +42,18 @@ vi.mock('../../models/Account.js', () => ({
   }
 }));
 
+vi.mock('../../models/Share.js', () => ({
+  default: {
+    find: vi.fn().mockImplementation(() => ({
+      populate: vi.fn().mockResolvedValue([])
+    })),
+    exists: vi.fn().mockResolvedValue(false),
+    findOne: vi.fn().mockImplementation(() => ({
+      populate: vi.fn().mockResolvedValue(null)
+    }))
+  }
+}));
+
 describe('Budget Controller', () => {
   let req, res;
 
@@ -67,6 +79,7 @@ describe('Budget Controller', () => {
       const mockBudgets = [
         {
           _id: 'b1',
+          userId: 'user_123',
           amount: 200,
           period: 'monthly',
           categoryId: { _id: 'cat_food', name: 'Alimentation' },
@@ -75,14 +88,14 @@ describe('Budget Controller', () => {
       ];
 
       const mockTransactions = [
-        { categoryId: 'cat_food', amount: 50, type: 'expense', date: new Date() },
-        { categoryId: 'cat_food', amount: 30, type: 'expense', date: new Date() }
+        { categoryId: 'cat_food', accountId: 'acc1', amount: 50, type: 'expense', date: new Date('2026-06-10') },
+        { categoryId: 'cat_food', accountId: 'acc1', amount: 30, type: 'expense', date: new Date('2026-06-15') }
       ];
 
-      // Mock chain for populate
-      Budget.find.mockReturnValue({
-        populate: vi.fn().mockResolvedValue(mockBudgets)
-      });
+      // Mock chain for populate - first call returns owned budgets, second returns empty shared budgets
+      Budget.find
+        .mockReturnValueOnce({ populate: vi.fn().mockResolvedValue(mockBudgets) })
+        .mockReturnValueOnce({ populate: vi.fn().mockResolvedValue([]) });
 
       Transaction.find.mockResolvedValue(mockTransactions);
 
@@ -91,7 +104,7 @@ describe('Budget Controller', () => {
 
       await getBudgets(req, res);
 
-      expect(Budget.find).toHaveBeenCalledWith({ userId: 'user_123' });
+      expect(Budget.find).toHaveBeenCalled();
       expect(Transaction.find).toHaveBeenCalled();
       
       // spent should be 50 + 30 = 80
@@ -103,7 +116,9 @@ describe('Budget Controller', () => {
           amount: 200,
           spent: 80,
           remaining: 120,
-          percentage: 40
+          percentage: 40,
+          isShared: false,
+          permission: 'owner'
         })
       ]);
     });

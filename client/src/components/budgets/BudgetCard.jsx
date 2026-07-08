@@ -163,7 +163,14 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
           {/* Header Row */}
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
-              <h3 className="text-sm font-bold text-primary truncate leading-tight">{budget.name}</h3>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="text-sm font-bold text-primary truncate leading-tight">{budget.name}</h3>
+                {budget.isShared && (
+                  <span className="text-[8px] font-extrabold bg-accent/15 text-accent px-1.5 py-0.5 rounded-md flex items-center gap-0.5" title={`Partagé par ${budget.ownerName}`}>
+                    👥 {budget.ownerName}
+                  </span>
+                )}
+              </div>
               <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mt-0.5">{budget.categoryId?.name || 'Toutes catégories'}</p>
             </div>
             <span className={`${textColor} text-sm font-premium-numbers font-extrabold tracking-tight shrink-0`}>{percentage}%</span>

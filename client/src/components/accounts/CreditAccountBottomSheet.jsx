@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -8,77 +10,86 @@ import toast from 'react-hot-toast';
 import { X, Landmark } from 'lucide-react';
 import { useAccounts } from '../../hooks/useAccounts';
 import api from '../../services/api';
+import { creditAccountSchema } from '../../validators';
 
 const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeChange, initialData = null }) => {
-  const { accounts } = useAccounts(isOpen); // Fetch accounts when opened to have the latest list
+  const { accounts } = useAccounts(isOpen);
 
-  const [name, setName] = useState('');
-  const [color, setColor] = useState('#f87171');
-  const [initialAmount, setInitialAmount] = useState('');
-  const [interestRate, setInterestRate] = useState('');
-  const [durationMonths, setDurationMonths] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [sourceAccountId, setSourceAccountId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting }, reset, watch: formWatch } = useForm({
+    resolver: zodResolver(creditAccountSchema),
+    defaultValues: {
+      name: '',
+      color: '#f87171',
+      initialAmount: '',
+      interestRate: '',
+      durationMonths: '',
+      startDate: new Date().toISOString().split('T')[0],
+      sourceAccountId: ''
+    }
+  });
+
+  const formValues = formWatch();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        const dateObj = initialData.creditDetails?.startDate
+          ? new Date(initialData.creditDetails.startDate).toISOString().split('T')[0]
+          : '';
+
+        reset({
+          name: initialData.name || '',
+          color: initialData.color || '#f87171',
+          initialAmount: initialData.creditDetails?.initialAmount?.toString() || '',
+          interestRate: initialData.creditDetails?.interestRate?.toString() || '',
+          durationMonths: initialData.creditDetails?.durationMonths?.toString() || '',
+          startDate: dateObj,
+          sourceAccountId: ''
+        });
+
+        if (initialData.creditDetails?.scheduledTransactionId) {
+          api.get('/scheduled')
+            .then(res => {
+              const st = res.data.find(s => s._id === initialData.creditDetails.scheduledTransactionId);
+              if (st) {
+                setValue('sourceAccountId', st.accountId?._id || st.accountId || '');
+              }
+            })
+            .catch(err => console.error('Error fetching source account:', err));
+        }
+      } else {
+        reset({
+          name: '',
+          color: '#f87171',
+          initialAmount: '',
+          interestRate: '',
+          durationMonths: '',
+          startDate: new Date().toISOString().split('T')[0],
+          sourceAccountId: ''
+        });
+      }
+    }
+  }, [initialData, isOpen, reset, setValue]);
 
   const handleDeleteConfirm = async () => {
     try {
-      setIsDeleteConfirmOpen(false);
-      await onDelete(initialData._id);
+      if (onDelete) {
+        await onDelete(initialData._id);
+        toast.success('Crédit supprimé');
+      }
       onClose();
     } catch (e) {
       toast.error('Erreur lors de la suppression');
     }
   };
 
-  // Filter checking & savings accounts to use as source account
   const sourceAccounts = accounts.filter(acc => acc.type === 'checking' || acc.type === 'savings');
 
-  useEffect(() => {
-    if (initialData) {
-      setName(initialData.name || '');
-      setColor(initialData.color || '#f87171');
-      if (initialData.creditDetails) {
-        setInitialAmount(initialData.creditDetails.initialAmount?.toString() || '');
-        setInterestRate(initialData.creditDetails.interestRate?.toString() || '');
-        setDurationMonths(initialData.creditDetails.durationMonths?.toString() || '');
-        
-        if (initialData.creditDetails.startDate) {
-          const dateObj = new Date(initialData.creditDetails.startDate);
-          setStartDate(dateObj.toISOString().split('T')[0]);
-        } else {
-          setStartDate('');
-        }
-
-        // Fetch source account from scheduled transaction
-        if (initialData.creditDetails.scheduledTransactionId) {
-          api.get('/scheduled')
-            .then(res => {
-              const st = res.data.find(s => s._id === initialData.creditDetails.scheduledTransactionId);
-              if (st) {
-                setSourceAccountId(st.accountId?._id || st.accountId || '');
-              }
-            })
-            .catch(err => console.error('Error fetching source account:', err));
-        }
-      }
-    } else {
-      setName('');
-      setColor('#f87171');
-      setInitialAmount('');
-      setInterestRate('');
-      setDurationMonths('');
-      setStartDate(new Date().toISOString().split('T')[0]);
-      setSourceAccountId('');
-    }
-    setSubmitting(false);
-  }, [initialData, isOpen]);
-
-  // Live calculations
-  const C = parseFloat(initialAmount) || 0;
-  const t = parseFloat(interestRate) || 0;
-  const n = parseInt(durationMonths) || 0;
+  // Live calculations from watched form values
+  const C = parseFloat(formValues.initialAmount) || 0;
+  const t = parseFloat(formValues.interestRate) || 0;
+  const n = parseInt(formValues.durationMonths) || 0;
 
   let monthlyPayment = 0;
   let firstMonthInterest = 0;
@@ -98,40 +109,24 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (submitting) return;
-
-    if (!sourceAccountId) {
-      toast.error('Veuillez sélectionner un compte source');
-      return;
-    }
-    if (C <= 0 || n <= 0) {
-      toast.error('Veuillez renseigner un capital et une durée valides');
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
-      setSubmitting(true);
       await onSave({
-        name,
+        name: data.name,
         type: 'credit',
-        color,
+        color: data.color,
         includeInTotal: true,
-        sourceAccountId,
+        sourceAccountId: data.sourceAccountId,
         creditDetails: {
-          initialAmount: C,
-          interestRate: t,
-          durationMonths: n,
-          startDate: new Date(startDate)
+          initialAmount: data.initialAmount,
+          interestRate: data.interestRate,
+          durationMonths: data.durationMonths,
+          startDate: new Date(data.startDate)
         }
       });
       onClose();
     } catch (error) {
       // Error handled by caller
-      setSubmitting(false);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -153,11 +148,11 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1 no-scrollbar pb-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1 no-scrollbar pb-6">
         <Select 
           label="Type de compte"
-          value="credit" 
-          onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
+          value={formValues.type || 'credit'} 
+          onChange={(e) => { setValue('type', e.target.value); onTypeChange && onTypeChange(e.target.value); }}
           disabled={!!initialData}
         >
           <option value="checking">Courant</option>
@@ -170,10 +165,9 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
         <Input
           label="Nom du crédit"
           placeholder="ex: Prêt Immobilier, Crédit Auto"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
+          {...register('name')}
         />
+        {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
 
         <div className="flex flex-col">
           <label className="mb-2 text-sm text-secondary font-medium">Couleur de la carte</label>
@@ -182,8 +176,8 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
               <button
                 key={c}
                 type="button"
-                onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
+                onClick={() => setValue('color', c)}
+                className={`w-8 h-8 rounded-full transition-transform ${formValues.color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
                 style={{ backgroundColor: c }}
               />
             ))}
@@ -205,21 +199,21 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
             type="number"
             step="0.01"
             placeholder="150000"
-            value={initialAmount}
-            onChange={(e) => setInitialAmount(e.target.value)}
+            {...register('initialAmount')}
             required
             className="font-mono [&>label]:min-h-[40px]"
           />
+          {errors.initialAmount && <p className="text-sm text-danger">{errors.initialAmount.message}</p>}
           <Input
             label="Taux d'intérêt annuel (%)"
             type="number"
             step="0.01"
             placeholder="3.50"
-            value={interestRate}
-            onChange={(e) => setInterestRate(e.target.value)}
+            {...register('interestRate')}
             required
             className="font-mono [&>label]:min-h-[40px]"
           />
+          {errors.interestRate && <p className="text-sm text-danger">{errors.interestRate.message}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -227,16 +221,15 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
             label="Durée (mois)"
             type="number"
             placeholder="240"
-            value={durationMonths}
-            onChange={(e) => setDurationMonths(e.target.value)}
+            {...register('durationMonths')}
             required
             className="font-mono [&>label]:min-h-[40px]"
           />
+          {errors.durationMonths && <p className="text-sm text-danger">{errors.durationMonths.message}</p>}
           <Input
             label="Date de 1ère échéance"
             type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            {...register('startDate')}
             onClick={(e) => {
               try {
                 e.target.showPicker();
@@ -245,12 +238,13 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
             required
             className="[&>label]:min-h-[40px]"
           />
+          {errors.startDate && <p className="text-sm text-danger">{errors.startDate.message}</p>}
         </div>
 
         <Select 
           label="Compte source des prélèvements"
-          value={sourceAccountId} 
-          onChange={(e) => setSourceAccountId(e.target.value)}
+          value={formValues.sourceAccountId} 
+          onChange={(e) => setValue('sourceAccountId', e.target.value)}
           required
         >
           <option value="">Sélectionner un compte courant</option>
@@ -260,6 +254,7 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
             </option>
           ))}
         </Select>
+        {errors.sourceAccountId && <p className="text-sm text-danger">{errors.sourceAccountId.message}</p>}
 
         {C > 0 && n > 0 && (
           <div className="bg-surface-2 p-4 rounded-2xl border border-border/40 mt-4">
@@ -279,8 +274,8 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
         )}
 
         <div className="pt-4 space-y-3">
-          <Button type="submit" fullWidth disabled={submitting}>
-            {submitting 
+          <Button type="submit" fullWidth disabled={isSubmitting}>
+            {isSubmitting 
               ? (initialData ? 'Enregistrement...' : 'Création...') 
               : (initialData ? 'Enregistrer les modifications' : 'Créer le crédit')}
           </Button>
@@ -305,7 +300,7 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
               >
                 <div className="text-xs text-secondary leading-relaxed space-y-2">
                   <p>
-                    Êtes-vous sûr de vouloir supprimer le compte crédit <span className="font-bold text-primary">"{name}"</span> ?
+                    Êtes-vous sûr de vouloir supprimer le compte crédit <span className="font-bold text-primary">"{initialData.name}"</span> ?
                   </p>
                   <p className="font-semibold text-danger">
                     ATTENTION : Cela supprimera définitivement le compte, son historique, ainsi que l'échéancier de remboursement planifié associé. Cette action est irréversible.

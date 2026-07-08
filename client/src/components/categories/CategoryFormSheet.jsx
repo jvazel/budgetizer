@@ -1,39 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
+import { categorySchema } from '../../validators';
 
 const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null, initialType = 'expense', initialParentId = null }) => {
-  const [name, setName] = useState('');
-  const [type, setType] = useState('expense');
-  const [icon, setIcon] = useState('📁');
-  const [color, setColor] = useState('#8b5cf6');
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      type: initialType,
+      icon: '📁',
+      color: '#8b5cf6'
+    }
+  });
 
   useEffect(() => {
     if (initialData) {
-      setName(initialData.name);
-      setType(initialData.type);
-      setIcon(initialData.icon);
-      setColor(initialData.color);
+      setValue('name', initialData.name);
+      setValue('type', initialData.type);
+      setValue('icon', initialData.icon);
+      setValue('color', initialData.color);
     } else {
-      setName('');
-      setType(initialType);
-      setIcon('📁');
-      setColor('#8b5cf6');
+      setValue('name', '');
+      setValue('type', initialType);
+      setValue('icon', '📁');
+      setValue('color', '#8b5cf6');
     }
-  }, [initialData, isOpen, initialType]);
+  }, [initialData, isOpen, initialType, setValue]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
       await onSave({
-        name,
-        type,
-        icon,
-        color,
+        name: data.name,
+        type: data.type,
+        icon: data.icon,
+        color: data.color,
         parentId: initialData ? initialData.parentId : initialParentId
       });
       toast.success(initialData ? 'Catégorie modifiée' : 'Catégorie créée');
@@ -67,6 +81,10 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
     '👶', '🍼', '🐱', '🐶', '🐾', '🏫'
   ];
 
+  const currentIcon = watch('icon');
+  const currentColor = watch('color');
+  const currentType = watch('type');
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className="flex justify-between items-center mb-6">
@@ -78,23 +96,23 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         
         <div className="flex gap-4">
           <div className="w-16">
             <label className="mb-2 text-sm text-secondary font-medium block">Icône</label>
             <div className="w-full h-[52px] bg-surface-2 border border-border rounded-2xl flex items-center justify-center text-2xl">
-               {icon}
+               {currentIcon}
             </div>
           </div>
           <div className="flex-1">
              <Input
                 label="Nom de la catégorie"
                 placeholder="Ex: Loisirs"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...register('name')}
                 required
               />
+              {errors.name && <p className="mt-1 text-sm text-danger">{errors.name.message}</p>}
           </div>
         </div>
 
@@ -105,8 +123,8 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
               <button
                 key={ic}
                 type="button"
-                onClick={() => setIcon(ic)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${icon === ic ? 'bg-accent/20' : 'hover:bg-surface'}`}
+                onClick={() => setValue('icon', ic)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${currentIcon === ic ? 'bg-accent/20' : 'hover:bg-surface'}`}
               >
                 {ic}
               </button>
@@ -117,8 +135,8 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
         {!initialParentId && !initialData?.parentId && (
           <Select 
             label="Type"
-            value={type} 
-            onChange={(e) => setType(e.target.value)}
+            value={currentType} 
+            onChange={(e) => setValue('type', e.target.value)}
             disabled={initialData?.isDefault}
           >
             <option value="expense">Dépense</option>
@@ -134,8 +152,8 @@ const CategoryFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = nu
               <button
                 key={c}
                 type="button"
-                onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
+                onClick={() => setValue('color', c)}
+                className={`w-8 h-8 rounded-full transition-transform ${currentColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
                 style={{ backgroundColor: c }}
               />
             ))}

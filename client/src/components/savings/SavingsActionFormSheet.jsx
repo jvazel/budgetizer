@@ -1,96 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import BottomSheet from '../ui/BottomSheet';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useCategories } from '../../hooks/useCategories';
 import { useTransactions } from '../../hooks/useTransactions';
-import api from '../../services/api';
+import { savingsActionSchema } from '../../validators';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 
 const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }) => {
-  const [amount, setAmount] = useState('');
-  const [accountId, setAccountId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [note, setNote] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-
   const { accounts } = useAccounts();
   const { categoriesTree } = useCategories();
   const { addTransaction } = useTransactions();
 
+  const { register, handleSubmit, setValue, reset, watch, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(savingsActionSchema),
+    defaultValues: {
+      amount: '',
+      accountId: '',
+      date: new Date().toISOString().split('T')[0],
+      note: '',
+      categoryId: '',
+    },
+  });
+
   useEffect(() => {
     if (isOpen) {
-      setAmount('');
-      setNote('');
-      setDate(new Date().toISOString().split('T')[0]);
+      const today = new Date().toISOString().split('T')[0];
       
+      let defaultAccountId = '';
       if (accounts.length > 0) {
         const goalAccId = goal?.accountId?._id || goal?.accountId;
-        // Filter out the goal's own account if it's a transfer
         const selectableAccounts = goalAccId 
           ? accounts.filter(a => a._id !== goalAccId)
           : accounts;
-
-        // Try to select the first checking or cash account by default, or just the first selectable account
         const defaultAcc = selectableAccounts.find(a => a.type === 'checking' || a.type === 'cash') || selectableAccounts[0];
-        setAccountId(defaultAcc ? defaultAcc._id : '');
+        defaultAccountId = defaultAcc ? defaultAcc._id : '';
       }
-    }
-  }, [isOpen, accounts, goal]);
 
-  useEffect(() => {
-    if (isOpen && goal && categoriesTree) {
-      // Find a category related to savings
-      const list = actionType === 'deposit' ? categoriesTree.expense : categoriesTree.income;
-      if (list && list.length > 0) {
-        const found = list.find(c => c.name.toLowerCase().includes('épargne') || c.name.toLowerCase().includes('savings'));
-        if (found) {
-          setCategoryId(found._id);
-        } else {
-          setCategoryId('');
+      let defaultCategoryId = '';
+      if (goal && categoriesTree) {
+        const list = actionType === 'deposit' ? categoriesTree.expense : categoriesTree.income;
+        if (list && list.length > 0) {
+          const found = list.find(c => c.name.toLowerCase().includes('épargne') || c.name.toLowerCase().includes('savings'));
+          defaultCategoryId = found?._id || '';
         }
       }
+
+      reset({
+        amount: '',
+        accountId: defaultAccountId,
+        date: today,
+        note: '',
+        categoryId: defaultCategoryId,
+      });
     }
-  }, [isOpen, goal, categoriesTree, actionType]);
+  }, [isOpen, accounts, goal, categoriesTree, actionType, reset]);
 
   if (!goal) return null;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!amount || parseFloat(amount) <= 0) {
-      return toast.error('Veuillez saisir un montant valide');
-    }
-    if (!accountId) {
-      return toast.error('Veuillez sélectionner un compte');
-    }
+  const isDeposit = actionType === 'deposit';
+  const watchAccountId = watch('accountId');
 
+  const onSubmit = async (data) => {
     try {
-      const isDeposit = actionType === 'deposit';
       const goalAccId = goal.accountId?._id || goal.accountId;
 
       let payload;
       if (goalAccId) {
         payload = {
-          accountId: isDeposit ? accountId : goalAccId,
-          toAccountId: isDeposit ? goalAccId : accountId,
+          accountId: isDeposit ? data.accountId : goalAccId,
+          toAccountId: isDeposit ? goalAccId : data.accountId,
           type: 'transfer',
-          amount: parseFloat(amount),
+          amount: data.amount,
           description: isDeposit ? `Épargne : ${goal.name}` : `Retrait épargne : ${goal.name}`,
-          date: new Date(date).toISOString(),
-          note: note.trim(),
+          date: new Date(data.date).toISOString(),
+          note: data.note?.trim() || '',
           savingsGoalId: goal._id
         };
       } else {
         payload = {
-          accountId,
-          categoryId: categoryId || null,
+          accountId: data.accountId,
+          categoryId: data.categoryId || null,
           type: isDeposit ? 'expense' : 'income',
-          amount: parseFloat(amount),
+          amount: data.amount,
           description: isDeposit ? `Épargne : ${goal.name}` : `Retrait épargne : ${goal.name}`,
-          date: new Date(date).toISOString(),
-          note: note.trim(),
+          date: new Date(data.date).toISOString(),
+          note: data.note?.trim() || '',
           savingsGoalId: goal._id
         };
       }
@@ -105,8 +104,6 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
       toast.error(err.response?.data?.message || 'Erreur lors de l\'enregistrement de l\'opération');
     }
   };
-
-  const isDeposit = actionType === 'deposit';
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -125,7 +122,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Amount Input */}
         <div>
           <label className="mb-2 text-sm text-secondary font-medium block">
@@ -134,13 +131,13 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
           <input
             type="number"
             step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary font-mono text-xl focus:outline-none focus:border-accent"
+            {...register('amount')}
+            className={`w-full h-[52px] px-4 bg-surface-2 border rounded-2xl text-primary font-mono text-xl focus:outline-none ${errors.amount ? 'border-danger' : 'border-border focus:border-accent'}`}
             placeholder="0.00"
             required
             autoFocus
           />
+          {errors.amount && <p className="text-[10px] text-danger mt-1 px-1">{errors.amount.message}</p>}
         </div>
 
         {/* Account Selection */}
@@ -154,8 +151,8 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
               isDeposit ? 'Débiter du compte' : 'Créditer sur le compte'
             )
           }
-          value={accountId}
-          onChange={e => setAccountId(e.target.value)}
+          value={watchAccountId}
+          onChange={(e) => setValue('accountId', e.target.value)}
           required
         >
           <option value="">-- Sélectionner un compte --</option>
@@ -167,6 +164,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
               </option>
             ))}
         </Select>
+
         {goal.accountId && (
           <span className="text-[10px] text-muted mt-1 leading-normal block px-1">
             {isDeposit ? (
@@ -181,8 +179,8 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         {!goal.accountId && (
           <Select 
             label="Catégorie (optionnel)"
-            value={categoryId}
-            onChange={e => setCategoryId(e.target.value)}
+            value={watch('categoryId')}
+            onChange={(e) => setValue('categoryId', e.target.value)}
           >
             <option value="">-- Aucune catégorie --</option>
             {(isDeposit ? categoriesTree.expense : categoriesTree.income)?.map(parent => (
@@ -204,14 +202,13 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
             </label>
             <input
               type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              {...register('date')}
               onClick={(e) => {
                 try {
                   e.target.showPicker();
                 } catch (err) {}
               }}
-              className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
+              className={`w-full h-[52px] px-4 bg-surface-2 border rounded-2xl text-primary focus:outline-none ${errors.date ? 'border-danger' : 'border-border focus:border-accent'}`}
               required
             />
           </div>
@@ -219,8 +216,7 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
             <label className="mb-2 text-sm text-secondary font-medium block">Note (optionnel)</label>
             <input
               type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              {...register('note')}
               className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none"
               placeholder="Note..."
             />
@@ -228,8 +224,8 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
         </div>
 
         <div className="pt-4">
-          <Button type="submit" fullWidth variant={isDeposit ? 'accent' : 'info'}>
-            {isDeposit ? 'Confirmer le versement' : 'Confirmer le retrait'}
+          <Button type="submit" fullWidth variant={isDeposit ? 'accent' : 'info'} disabled={isSubmitting}>
+            {isSubmitting ? (isDeposit ? 'Enregistrement...' : 'Enregistrement...') : (isDeposit ? 'Confirmer le versement' : 'Confirmer le retrait')}
           </Button>
         </div>
       </form>

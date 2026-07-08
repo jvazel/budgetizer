@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
+import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/authRoutes.js';
 import accountRoutes from './routes/accountRoutes.js';
@@ -23,8 +24,9 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import monthlyReportRoutes from './routes/monthlyReportRoutes.js';
 import webauthnRoutes from './routes/webauthnRoutes.js';
 import tagRoutes from './routes/tagRoutes.js';
+import shareRoutes from './routes/shareRoutes.js';
 import UserCredential from './models/UserCredential.js';
-import { processScheduledTransactions } from './utils/scheduledProcessor.js';
+import { processScheduledTransactions, cleanupStaleLocks } from './utils/scheduledProcessor.js';
 import { initWebPush } from './utils/pushNotification.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec, { customCss } from './utils/swagger.js';
@@ -63,6 +65,30 @@ const app = express();
 // Trust proxy for rate limiting (behind reverse proxies like Heroku, Nginx, Vercel)
 app.set('trust proxy', 1);
 
+// Dynamic CORS Configuration — doit être avant les autres middlewares pour gérer le preflight OPTIONS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  // CORS headers manuels pour garantir le preflight OPTIONS fonctionne
+  if (origin && (allowedOrigins.includes(origin) || (isDevelopment && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Idempotency-Key');
+    res.header('Access-Control-Max-Age', '86400');
+  }
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 // Workaround for express-mongo-sanitize compatibility with Express 5 (where req.query is read-only)
 app.use((req, res, next) => {
   Object.defineProperty(req, 'query', {
@@ -76,34 +102,21 @@ app.use((req, res, next) => {
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // Security Middleware
-app.use(helmet());
+if (process.env.NODE_ENV === 'production') {
+  app.use(helmet());
+} else {
+  // En développement, on désactive HSTS pour éviter les conflits avec http://localhost
+  app.use(helmet({
+    hsts: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false
+  }));
+}
 app.use(mongoSanitize());
-
-// Dynamic CORS Configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : [];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-    if (
-      allowedOrigins.includes(origin) ||
-      (isDevelopment && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')))
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-};
-app.use(cors(corsOptions));
 
 // Logging Middleware
 if (process.env.NODE_ENV === 'production') {
@@ -112,7 +125,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(morgan('dev'));
 }
 
-// Global Rate Limiter for API routes
+// Global Rate Limiter for API routes — appliqué après CORS pour ne pas bloquer le preflight OPTIONS
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 80,
@@ -122,6 +135,7 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
 });
 app.use('/api', apiLimiter);
 
@@ -148,6 +162,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/monthly-reports', monthlyReportRoutes);
 app.use('/api/webauthn', webauthnRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/shares', shareRoutes);
 
 // Secure scheduled job endpoint for external trigger
 app.post('/api/jobs/process-scheduled', async (req, res) => {
@@ -231,6 +246,9 @@ mongoose.connect(process.env.MONGODB_URI, mongoOptions)
     migrateDoubleEncodedCredentials();
     cleanLegacyCorruptCredentials();
 
+    // Clean up stale job locks from previous crashed instances
+    cleanupStaleLocks(mongoose);
+
     const PORT = process.env.PORT || 5000;
     server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -240,6 +258,8 @@ mongoose.connect(process.env.MONGODB_URI, mongoOptions)
         (process.env.NODE_ENV !== 'production' && process.env.RUN_SCHEDULED_JOBS !== 'false');
 
       if (shouldRunJobs) {
+        // MongoDB document lock ensures exclusive execution across PM2 instances.
+        // The in-memory flag is kept as a secondary safeguard within the same process.
         let isProcessingScheduledJobs = false;
 
         const runScheduledJobsSafe = async () => {

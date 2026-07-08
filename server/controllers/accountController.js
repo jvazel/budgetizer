@@ -3,14 +3,48 @@ import Transaction from '../models/Transaction.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import { validationResult } from 'express-validator';
 import { invalidateDashboardCache } from './dashboardController.js';
+import Share from '../models/Share.js';
 
 // @desc    Get all accounts for a user
 // @route   GET /api/accounts
 // @access  Private
 export const getAccounts = async (req, res) => {
   try {
-    const accounts = await Account.find({ userId: req.user.id }).sort('order createdAt');
-    res.json(accounts);
+    // Fetch shares shared with this user
+    const shares = await Share.find({ sharedWithId: req.user.id, resourceType: 'account' })
+      .populate('ownerId', 'name email');
+      
+    const sharedAccountIds = shares.map(s => s.resourceId);
+    
+    // Fetch both owned and shared accounts in one query
+    const accounts = await Account.find({
+      $or: [
+        { userId: req.user.id },
+        { _id: { $in: sharedAccountIds } }
+      ]
+    }).sort('order createdAt');
+    
+    const mappedAccounts = accounts.map(acc => {
+      const isOwned = acc.userId.toString() === req.user.id;
+      if (isOwned) {
+        return {
+          ...(acc.toObject ? acc.toObject() : acc),
+          isShared: false,
+          permission: 'owner'
+        };
+      } else {
+        const share = shares.find(s => s.resourceId.toString() === acc._id.toString());
+        return {
+          ...(acc.toObject ? acc.toObject() : acc),
+          isShared: true,
+          permission: share ? share.permission : 'read',
+          ownerName: share?.ownerId?.name || 'Inconnu',
+          ownerEmail: share?.ownerId?.email || ''
+        };
+      }
+    });
+    
+    res.json(mappedAccounts);
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -273,7 +307,14 @@ export const getCreditSummary = async (req, res) => {
     const account = await Account.findById(req.params.id);
     if (!account) return res.status(404).json({ message: 'Account not found' });
     if (account.userId.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
+      const isShared = await Share.exists({
+        resourceType: 'account',
+        resourceId: req.params.id,
+        sharedWithId: req.user.id
+      });
+      if (!isShared) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
     }
     if (account.type !== 'credit') {
       return res.status(400).json({ message: 'Account is not a credit account' });
@@ -337,6 +378,17 @@ export const getCreditSummary = async (req, res) => {
     const progressPercentage = initialAmount > 0 ? Number(((capitalPaid / initialAmount) * 100).toFixed(2)) : 0;
     const totalInterestEstimated = Number(((monthlyPayment * durationMonths) - initialAmount).toFixed(2));
  
+    const isOwner = account.userId.toString() === req.user.id;
+    let permission = 'owner';
+    if (!isOwner) {
+      const share = await Share.findOne({
+        resourceType: 'account',
+        resourceId: req.params.id,
+        sharedWithId: req.user.id
+      });
+      permission = share ? share.permission : 'read';
+    }
+
     res.json({
       accountId: account._id,
       accountName: account.name,
@@ -352,7 +404,9 @@ export const getCreditSummary = async (req, res) => {
       monthsRemaining,
       totalInterestPaid: Number(totalInterestPaid.toFixed(2)),
       totalInterestEstimated,
-      paymentsHistory
+      paymentsHistory,
+      isShared: !isOwner,
+      permission
     });
   } catch (error) {
     console.error(error.message);

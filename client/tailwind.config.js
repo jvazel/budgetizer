@@ -21,6 +21,7 @@ export default {
         danger: "var(--danger)",
         "danger-dim": "var(--danger-dim)",
         warning: "var(--warning)",
+        "warning-dim": "var(--warning-dim)",
         info: "var(--info)",
         purple: "var(--purple)",
         copper: "var(--copper)",

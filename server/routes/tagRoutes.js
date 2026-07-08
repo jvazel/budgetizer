@@ -1,6 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { protect } from '../middleware/authMiddleware.js';
+import idempotencyMiddleware from '../middleware/idempotencyMiddleware.js';
 import {
   getTags,
   createTag,
@@ -11,6 +12,14 @@ import {
 const router = express.Router();
 
 router.use(protect);
+
+// Appliquer l'idempotence sur POST / PUT / DELETE pour éviter les doublons lors du sync hors-ligne
+router.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    return idempotencyMiddleware(req, res, next);
+  }
+  next();
+});
 
 router.route('/')
   .get(getTags)

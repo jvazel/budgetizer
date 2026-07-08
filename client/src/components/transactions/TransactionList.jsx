@@ -158,12 +158,12 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
 
                 {/* Front Layer: Draggable Content */}
                 <motion.div
-                  drag="x"
+                  drag={onEdit || onDelete ? "x" : false}
                   dragConstraints={{ left: -160, right: 0 }}
                   dragElastic={{ left: 0.1, right: 0.5 }}
                   dragMomentum={false}
                   onDragStart={() => {
-                    triggerHaptic('light');
+                    if (onEdit || onDelete) triggerHaptic('light');
                   }}
                   className="bg-surface-2 relative z-10 p-3.5 flex items-center gap-3 sm:gap-4 hover:bg-surface/30 transition-colors cursor-pointer select-none border-l-4"
                   style={{

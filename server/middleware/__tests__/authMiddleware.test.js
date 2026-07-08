@@ -24,7 +24,8 @@ describe('Auth Middleware', () => {
     process.env.JWT_SECRET = 'testsecret';
 
     req = {
-      headers: {}
+      headers: {},
+      cookies: {}
     };
 
     res = {
@@ -48,6 +49,24 @@ describe('Auth Middleware', () => {
     await protect(req, res, next);
 
     expect(jwt.verify).toHaveBeenCalledWith('validtoken123', 'testsecret');
+    expect(User.findById).toHaveBeenCalledWith('user_123');
+    expect(req.user).toBe(mockUser);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('should call next() if valid token is provided in cookies and user exists', async () => {
+    req.cookies.token = 'cookietoken123';
+    
+    jwt.verify.mockReturnValue({ id: 'user_123' });
+    
+    const mockUser = { _id: 'user_123', name: 'John Doe' };
+    User.findById.mockReturnValue({
+      select: vi.fn().mockResolvedValue(mockUser)
+    });
+
+    await protect(req, res, next);
+
+    expect(jwt.verify).toHaveBeenCalledWith('cookietoken123', 'testsecret');
     expect(User.findById).toHaveBeenCalledWith('user_123');
     expect(req.user).toBe(mockUser);
     expect(next).toHaveBeenCalled();

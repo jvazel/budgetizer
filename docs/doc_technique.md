@@ -81,6 +81,16 @@ Gère l'arborescence des types de flux financiers.
 - `isDefault` (Boolean, default: false) : Indicateur système (ex: catégories pré-remplies).
 - `order` (Number, default: 0).
 
+### 2.12 Modèle `Share` (Partages de ressources)
+Permet à un utilisateur de partager un compte ou un budget avec un autre utilisateur avec un niveau de permission défini.
+- `resourceType` (String, enum: `['account', 'budget']`, requis) : Type de ressource partagée.
+- `resourceId` (ObjectId, requis) : Identifiant de la ressource. Utilise un `refPath` dynamique pointant vers `Account` ou `Budget` selon `resourceType`.
+- `ownerId` (ObjectId -> User, requis) : Utilisateur propriétaire de la ressource.
+- `sharedWithId` (ObjectId -> User, requis) : Utilisateur destinataire du partage.
+- `permission` (String, enum: `['read', 'write']`, default: 'read') : Niveau d'accès accordé.
+- `createdAt` (Date, default: Date.now).
+- *Index unique* : `{ resourceId, resourceType, sharedWithId }` pour éviter les doublons de partage.
+
 ### 2.4 Modèle `Transaction` (Transactions réelles)
 Enregistre chaque mouvement financier.
 - `userId` (ObjectId -> User, requis).
@@ -91,11 +101,26 @@ Enregistre chaque mouvement financier.
 - `description` (String, default: "").
 - `date` (Date, default: Date.now, requis).
 - `note` (String, default: "").
-- `tags` ([String]).
+- `tags` ([ObjectId -> Tag]).
 - `isScheduled` (Boolean, default: false) : Vrai si généré par le planificateur.
 - `scheduledTransactionId` (ObjectId -> ScheduledTransaction, default: null).
 - `isPending` (Boolean, default: false) : En attente d'approbation si `autoConfirm = false`.
 - `toAccountId` (ObjectId -> Account, default: null) : Compte cible (uniquement si type = `transfer`).
+- `savingsGoalId` (ObjectId -> SavingsGoal, default: null).
+
+**Indexes optimisés :**
+| Index | Usage |
+|---|---|
+| `{ userId: 1, date: -1 }` | Liste chronologique des transactions |
+| `{ userId: 1, accountId: 1 }` | Transactions par compte |
+| `{ userId: 1, toAccountId: 1 }` | Virements entrants |
+| `{ userId: 1, savingsGoalId: 1 }` | Transactions liées à un objectif d'épargne |
+| `{ userId: 1, categoryId: 1, date: -1 }` | Dépenses par catégorie sur une période |
+| `{ userId: 1, date: -1, createdAt: -1 }` | Tri combiné date/insertion |
+| `{ userId: 1, isPending: 1 }` | Transactions en attente de confirmation |
+| `{ userId: 1, type: 1, date: -1 }` | Filtre par type (income/expense/transfer) |
+| `{ userId: 1, type: 1, isPending: 1, date: -1 }` | Dashboard pending transactions par type |
+| `{ userId: 1, isScheduled: 1, isPending: 1, date: -1 }` | Transactions planifiées en attente |
 
 ### 2.5 Modèle `ScheduledTransaction` (Transactions Planifiées / Abonnements)
 Contient le patron de récurrence pour générer automatiquement les transactions.
@@ -124,6 +149,12 @@ Contient le patron de récurrence pour générer automatiquement les transaction
 - `rollover` (Boolean, default: false) : Permet de reporter le reste ou le déficit sur la période suivante.
 - `alertAt` (Number, default: 80) : Pourcentage de dépense déclenchant une alerte.
 - `color` (String, default: '#8b5cf6').
+
+**Indexes optimisés :**
+| Index | Usage |
+|---|---|
+| `{ userId: 1, categoryId: 1 }` | Budgets par catégorie |
+| `{ userId: 1, period: 1, startDate: -1 }` | Filtrage par période + plage de dates (vue budgets mensuels/hebdo/annuels) |
 
 ### 2.7 Modèle `SavingsGoal` (Objectifs d'épargne)
 Représente un projet ou un fonds d'épargne défini par l'utilisateur.
@@ -164,7 +195,13 @@ Défis aléatoires cryptographiques à usage unique munis d'un index TTL d'auto-
 - `userId` (ObjectId -> User, default: null) : Optionnel (rempli uniquement lors de l'enregistrement).
 - `createdAt` (Date, default: Date.now, expires: 300) : Expiration automatique de l'enregistrement en BDD après 5 minutes (300 secondes).
 
-### 2.11 Modèle `Tag` (Étiquettes / Tags)
+### 2.11 Modèle `JobLock` (Verrou Distribué pour Jobs Planifiés)
+Document unique garantissant l'exécution exclusive du processeur de transactions planifiées à travers les multiples instances PM2 en production.
+- `lockName` (String, requis, unique) : Nom du verrou (`scheduled_transactions_processor`).
+- `holderId` (String, requis) : Identifiant de la machine/instance propriétaire (hostname).
+- `acquiredAt` (Date, default: Date.now) : Timestamp d'acquisition. Indexé avec TTL d'expiration automatique à 1 heure pour le nettoyage des verrous orphelins en cas de crash serveur.
+
+### 2.12 Modèle `Tag` (Étiquettes / Tags)
 Représente des étiquettes transversales de suivi budgétaire ou de projets.
 - `userId` (ObjectId -> User, requis) : Propriétaire de l'étiquette.
 - `name` (String, requis) : Nom de l'étiquette (unique par utilisateur).
@@ -263,30 +300,37 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 - `PUT /:id` : Modifie un tag existant (nom, couleur, état d'archivage `isArchived`).
 - `DELETE /:id` : Supprime définitivement un tag. Cette action supprime également la référence du tag sur toutes les transactions associées de l'utilisateur (nettoyage en cascade via `$pull`).
 
+### 3.13 Partage de ressources (`/api/shares`)
+- `GET /` : Liste les partages de la session courante (partagés *par* l'utilisateur et partagés *avec* l'utilisateur). Chaque entrée est enrichie du nom et de l'email du propriétaire (ou du destinataire).
+- `POST /` : Crée un partage. Le corps de la requête contient `recipientEmail` (email du destinataire), `resourceType` (`account` ou `budget`), `resourceId` et `permission` (`read` ou `write`). Validation : le destinataire doit exister ; aucun doublon de partage n'est autorisé.
+- `DELETE /:id` : Révoque un partage. Seul le propriétaire de la ressource partagée peut effectuer cette action.
+
 ---
 
 ## 4. Algorithmes et Processus Clés
 
 ### 4.1 Orchestrateur de planification (`scheduledProcessor.js`)
 Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la boucle d'exécution suivante :
-1. **Déclenchement** : Lancé immédiatement au démarrage du serveur Express, puis exécuté périodiquement toutes les heures via un `setInterval`.
-2. **Recherche des échéances** : Recherche toutes les `ScheduledTransaction` dont `isActive = true` et `nextDate <= Date.now()`.
-3. **Traitement transactionnel (Mongoose Sessions)** :
-   - Pour chaque échéance, une session de transaction MongoDB est démarrée. Cela garantit que la création de la transaction financière et la mise à jour des soldes de compte réussissent ensemble ou échouent sans corrompre les données (atomicité).
-   - **Écriture de l'historique** : Crée un enregistrement `Transaction` avec `isScheduled: true`.
-   - **Mise à jour des soldes** :
-     - Si `autoConfirm = true` : Modifie les soldes des comptes correspondants (`balance -= amount` pour dépense, `+= amount` pour revenu, et les deux pour un transfert).
-     - Si `autoConfirm = false` : La transaction est créée avec `isPending: true`, aucun solde n'est modifié tant que l'utilisateur n'approuve pas via l'API `/confirm`.
-   - **Calcul de la récurrence suivante** :
-     Pour éviter la dérive temporelle liée aux longueurs inégales de mois (28/29/30/31 jours) et aux années bissextiles, la fonction `calculateNextDate` (du fichier helper [dateHelper.js](file:///c:/Projects/budgetizer/server/utils/dateHelper.js)) calcule chaque occurrence suivante de manière absolue et déterministe à partir de la date de début d'origine (`startDate`) et du nombre d'exécutions accumulé (`timesExecuted`) :
-     $$\text{nextDate} = \text{startDate} + (\text{timesExecuted} \times \text{every} \times \text{unit})$$
-     Un ajustement intelligent est appliqué pour plafonner le jour calculé au dernier jour réel du mois cible si le jour de début déborde (ex : une récurrence le 31 janvier donnera le 28 ou 29 février, puis se rétablira automatiquement au 31 mars).
-   - **Vérification des limites** :
-     - Si le compteur `timesExecuted` atteint `numberOfTimes` ou si `nextDate` dépasse `endDate`, la planification est marquée `isActive = false`.
-    - `Validation` : Validation de la session (`commitTransaction()`).
-4. **Multi-processus et PM2 Cluster** :
-   - Pour éviter des exécutions concurrentes en double lors de déploiements multi-instances (PM2 Cluster), le processeur de planification n'est lancé localement via `setInterval` que si la variable d'environnement `RUN_SCHEDULED_JOBS` est positionnée à `"true"`.
-   - **Déclenchement Externe (Cron / Serverless Jobs)** : L'endpoint `/api/jobs/process-scheduled` permet d'exécuter la planification à distance via un planificateur externe (comme Vercel Cron, Google Cloud Scheduler). Cela permet d'exécuter l'application sur des instances d'API sans état en paramétrant `RUN_SCHEDULED_JOBS` à `"false"` et en appelant régulièrement le point d'accès avec l'en-tête `x-job-key` configuré (`SCHEDULED_JOBS_SECRET`).
+1. **Acquisition du Verrou Distribué** : Avant tout traitement, le processeur tente d'acquérir un verrou MongoDB atomique via `JobLock.findOneAndUpdate()` avec upsert (voir modèle [JobLock](#211-modèle-joblock-verrou-distribué-pour-jobs-planifiés)). Si une autre instance PM2 détient déjà le verrou, l'exécution est ignorée silencieusement. Le verrou est toujours libéré dans un bloc `finally` après achèvement (succès ou échec).
+2. **Déclenchement** : Lancé immédiatement au démarrage du serveur Express, puis exécuté périodiquement toutes les heures via un `setInterval`. Au démarrage, un nettoyage des verrous orphelins (> 30 min) est également effectué (`cleanupStaleLocks`).
+3. **Recherche des échéances** : Recherche toutes les `ScheduledTransaction` dont `isActive = true` et `nextDate <= Date.now()`.
+4. **Traitement transactionnel (Mongoose Sessions)** :
+    - Pour chaque échéance, une session de transaction MongoDB est démarrée. Cela garantit que la création de la transaction financière et la mise à jour des soldes de compte réussissent ensemble ou échouent sans corrompre les données (atomicité).
+    - **Écriture de l'historique** : Crée un enregistrement `Transaction` avec `isScheduled: true`.
+    - **Mise à jour des soldes** :
+      - Si `autoConfirm = true` : Modifie les soldes des comptes correspondants (`balance -= amount` pour dépense, `+= amount` pour revenu, et les deux pour un transfert).
+      - Si `autoConfirm = false` : La transaction est créée avec `isPending: true`, aucun solde n'est modifié tant que l'utilisateur n'approuve pas via l'API `/confirm`.
+    - **Calcul de la récurrence suivante** :
+      Pour éviter la dérive temporelle liée aux longueurs inégales de mois (28/29/30/31 jours) et aux années bissextiles, la fonction `calculateNextDate` (du fichier helper [dateHelper.js](file:///c:/Projects/budgetizer/server/utils/dateHelper.js)) calcule chaque occurrence suivante de manière absolue et déterministe à partir de la date de début d'origine (`startDate`) et du nombre d'exécutions accumulé (`timesExecuted`) :
+      $$\text{nextDate} = \text{startDate} + (\text{timesExecuted} \times \text{every} \times \text{unit})$$
+      Un ajustement intelligent est appliqué pour plafonner le jour calculé au dernier jour réel du mois cible si le jour de début déborde (ex : une récurrence le 31 janvier donnera le 28 ou 29 février, puis se rétablira automatiquement au 31 mars).
+    - **Vérification des limites** :
+      - Si le compteur `timesExecuted` atteint `numberOfTimes` ou si `nextDate` dépasse `endDate`, la planification est marquée `isActive = false`.
+     - `Validation` : Validation de la session (`commitTransaction()`).
+5. **Multi-processus et PM2 Cluster** :
+    - Pour éviter des exécutions concurrentes en double lors de déploiements multi-instances (PM2 Cluster), le processeur de planification n'est lancé localement via `setInterval` que si la variable d'environnement `RUN_SCHEDULED_JOBS` est positionnée à `"true"`.
+    - **Déclenchement Externe (Cron / Serverless Jobs)** : L'endpoint `/api/jobs/process-scheduled` permet d'exécuter la planification à distance via un planificateur externe (comme Vercel Cron, Google Cloud Scheduler). Cela permet d'exécuter l'application sur des instances d'API sans état en paramétrant `RUN_SCHEDULED_JOBS` à `"false"` et en appelant régulièrement le point d'accès avec l'en-tête `x-job-key` configuré (`SCHEDULED_JOBS_SECRET`).
+    - **Garantie d'exécution Exclusive** : Même si plusieurs instances PM2 exécutent simultanément le processeur, le verrou MongoDB `JobLock` garantit qu'une seule et unique instance traite les échéances à chaque intervalle. Les autres instances ignorent silencieusement leur tour.
 
 ### 4.2 Détection d'Anomalies et Prévisions d'Insights (`insightController.js`)
 Cet algorithme est invoqué à la demande lors du rendu de la page « Conseils » :
@@ -323,19 +367,39 @@ Le client sépare la logique de gestion d'état et d'appel réseau des composant
 - `useScheduled.js` : Gérant les transactions planifiées.
 - `useDashboard.js` : Agrégation des données de la page d'accueil.
 - `useMonthlySummaries.js` : Historique des soldes par mois passés.
+- `useShares.js` : Gestion des partages de comptes et budgets. Expose `shares` (liste consolidée partagé-par-moi + partagé-avec-moi), `createShare(data)` et `deleteShare(id)`. Les données sont mises en cache sous la clé `['shares']` via React Query.
 
-### 5.3 Intégration PWA & Gestion de l'Installation
-Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `client/vite.config.js` :
-- **Service Worker** : Enregistré automatiquement au point d'entrée (`main.jsx`). Il gère le pré-mise en cache (precaching) des actifs statiques (HTML, JS, CSS, images, icônes) pour un démarrage instantané et un fonctionnement en mode hors connexion partiel.
-- **Cycle de Vie** : Défini en mode `autoUpdate` pour appliquer immédiatement les nouvelles versions de l'application.
-- **PwaContext (`PwaContext.jsx`)** :
-  - Intercepte l'événement `beforeinstallprompt` du navigateur pour stocker l'objet d'installation différé.
-  - Détecte si l'application s'exécute en mode autonome (PWA installée sur l'appareil) ou via un navigateur standard.
-  - Détecte spécifiquement iOS pour fournir des instructions d'installation personnalisées adaptées à Safari.
-  - Expose la méthode `installApp()` qui déclenche l'installation native.
-- **OfflineStatus (`OfflineStatus.jsx`)** :
-  - Surveille les événements de connexion globaux `window.addEventListener('online')` et `window.addEventListener('offline')`.
-  - Affiche un bandeau d'alerte animé avec `framer-motion` indiquant le passage hors ligne ou le rétablissement de la connexion.
+### 5.3 Intégration PWA & Gestion de l'État Hors-ligne (Offline-first)
+Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `client/vite.config.js` et s'appuie sur une architecture offline-first complète et transparente :
+
+1. **Service Worker & Precaching** :
+   - Enregistré automatiquement au point d'entrée (`main.jsx`). Il utilise `workbox-precaching` pour pré-mettre en cache tous les actifs statiques (HTML, JS, CSS, images, icônes) générés lors de la compilation, permettant le chargement instantané de l'application sans réseau.
+   - Cycle de vie configuré en mode `autoUpdate` pour déployer immédiatement les nouvelles versions de l'application dès qu'elles sont détectées.
+
+2. **Persistance du Cache des Requêtes (Lecture hors ligne)** :
+   - Mise en cache persistante automatique avec `@tanstack/react-query-persist-client` et un persister IndexedDB natif personnalisé (`idbHelper.js`).
+   - L'état de toutes les requêtes (Transactions, Comptes, Budgets, Objectifs d'épargne, Catégories, Opérations planifiées) est stocké localement sous la clé `reactQueryCache` dans le store IndexedDB `query-cache`.
+   - La durée de conservation du cache (`gcTime`) est étendue à **7 jours** pour s'assurer que les données restent disponibles localement même lors de sessions hors ligne prolongées.
+
+3. **File d'attente des modifications (Outbox & Écriture hors ligne)** :
+   - **Interception Réseau** : Un intercepteur de requêtes configuré dans `api.js` capture toutes les requêtes d'écriture (POST, PUT, DELETE) lorsque `navigator.onLine` est faux.
+   - **Stockage de File (IndexedDB)** : Ces requêtes d'écriture sont sérialisées chronologiquement dans le store IndexedDB `sync-outbox` avec un ID auto-incrémenté. Pour chaque opération de création (POST), un identifiant temporaire (`temp-...`) est généré.
+   - **Mise à jour Optimiste du Cache** : Le processeur `offlineSync.js` intercepte la modification et l'applique immédiatement et de manière optimiste dans le cache local de React Query (via `setQueriesData`), ce qui met à jour l'interface en temps réel.
+   - **Simulation Réseau** : La requête Axios d'origine est annulée avec une erreur simulée `isOfflineMock`, qui est interceptée par le response interceptor pour être résolue comme un succès HTTP 200 contenant la charge utile (avec l'ID temporaire s'il s'agit d'une création). Les hooks de mutation croient ainsi que l'appel réseau a réussi et exécutent leurs fonctions de succès normalement.
+
+4. **Moteur de Synchronisation en Arrière-plan** :
+   - Le script `offlineSync.js` écoute l'événement `online` du navigateur ou s'exécute au démarrage si le réseau est disponible.
+   - Il dépile séquentiellement l'outbox IndexedDB en exécutant les requêtes réelles auprès de l'API (avec le drapeau `skipOfflineInterceptor: true` pour contourner la capture locale).
+   - **Résolution d'IDs Temporaires** : Si une création réussit sur le serveur, le moteur récupère le véritable ID de la base de données MongoDB et met à jour dynamiquement toutes les requêtes d'édition ou de suppression ultérieures présentes dans la file d'attente qui feraient référence à cet ID temporaire.
+   - Une fois la file vidée, le cache React Query est invalidé pour charger les données consolidées du serveur.
+
+5. **Cycle de Vie UI & Indicateurs (`OfflineStatus.jsx` & `PwaContext.jsx`)** :
+   - **PwaContext** : Gère l'installation différée (`beforeinstallprompt`) et l'interfaçage avec le service worker.
+   - **OfflineStatus** : Écoute les événements système personnalisés (`outbox-updated` et `sync-status-changed`). Il affiche dynamiquement :
+     - Le mode hors ligne standard.
+     - Le nombre d'opérations en attente de synchronisation.
+     - L'avancement de l'envoi en arrière-plan ("Synchronisation en cours...").
+     - Une notification temporaire verte après la réussite de la synchronisation de toutes les données.
 
 ### 5.4 Expérience Utilisateur & Design System Premium
 - **Charte Graphique & Typographie** : Alignement visuel global avec l'esthétique premium de Bankyboard. Intégration de la police **`Manrope`** comme police sans-serif par défaut. Définition de la palette de couleurs **Bleu Encre** (`#030816` pour la base sombre, `#f8fafc` / `#0a1a2f` pour le thème clair) et de la couleur d'accentuation **Cuivre/Ambre** signature (`#d97706`).
@@ -441,6 +505,7 @@ Pour résoudre ce problème, Budgetizer utilise la topologie décrite dans [ecos
 
 - **budgetizer-api** : S'exécute en mode `cluster` sur `max` instances. La variable `RUN_SCHEDULED_JOBS` y est positionnée à `false` ; ces instances répondent aux requêtes HTTP de l'API mais n'exécutent pas de boucle de planification.
 - **budgetizer-worker** : S'exécute en instance unique (`instances: 1`) en mode `fork`. La variable `RUN_SCHEDULED_JOBS` is positionnée à `true` ; cette instance se consacre exclusivement aux calculs planifiés et à la récurrence sans accepter de trafic web public.
+- **Garantie d'Exclusion (JobLock)** : Même si plusieurs worker sont accidentellement démarrés, le verrou MongoDB `JobLock` garantit qu'une seule instance traite les échéances à chaque intervalle. Le modèle `JobLock` utilise un `findOneAndUpdate` atomique avec upsert et un TTL index de 1 heure pour nettoyer automatiquement les verrous orphelins en cas de crash serveur.
 
 ### 6.4 Gestion du Cache en Mémoire & Prévention des Fuites de Mémoire
 Pour accélérer le chargement du tableau de bord sans multiplier les requêtes MongoDB coûteuses, les données agrégées de `getDashboardSummary` sont mises en cache en mémoire.
@@ -458,7 +523,17 @@ Afin de sécuriser le code existant et de prévenir toute régression lors des f
 ### 7.1 Framework de Tests : Vitest
 **Vitest** est utilisé comme exécuteur de tests unique pour le frontend et le backend en raison de sa rapidité, de sa compatibilité native avec les modules ES (ESM) et de son intégration immédiate avec Vite.
 
-### 7.2 Configuration Client (Frontend)
+### 7.2 Couverture des Tests — Récapitulatif
+
+| Environnement | Fichiers de tests | Tests total | Domaines couverts |
+|---|---|---|---|
+| **Backend** | 24 fichiers | ~184 tests | Tous les contrôleurs, middlewares (auth, idempotency), utilitaires (scheduledProcessor, dateHelper, ttlCache, pushNotification, cacheInvalidator), listeners (alertListener), contrat API complet |
+| **Frontend** | 39 fichiers | ~280 tests (+1 skip) | Pages clés (Login, Register, Home, Transactions, Budgets, Charts, Settings, Calendar, MonthlyReport, FinancialScores, Transfers, Reports...), composants UI (BottomSheet, ConfirmModal, Input, AmountSelect, CircularScoreGauge, EmptyState), formulaires métier (TransactionFormSheet, ScheduledFormSheet, SavingsGoalFormSheet), hooks personnalisés (**useAccounts**, **useTransactions**, **useBudgets**, **useDashboard**, **useScheduled**, **useSavingsGoals**), utilitaires purs (floorBalanceHelper, hapticHelper, idbHelper, monteCarloHelper, velocityHelper), validateurs (authValidators, index) |
+
+> [!NOTE]
+> Les hooks client (`useTransactions`, `useBudgets`, `useDashboard`, `useScheduled`, `useSavingsGoals`) sont maintenant couverts par des tests unitaires qui vérifient : le fetch initial, les mutations CRUD, l'invalidation de cache React Query, la gestion d'erreurs et les messages d'erreur localisés.
+
+### 7.3 Configuration Client (Frontend)
 - **Environnement** : `jsdom` (simule un navigateur dans Node.js).
 - **Bibliothèques** : `@testing-library/react` et `@testing-library/jest-dom` pour le rendu des composants React et les assertions DOM.
 - **Fichiers de configuration** :
@@ -466,7 +541,7 @@ Afin de sécuriser le code existant et de prévenir toute régression lors des f
   - [client/vitest.setup.js](file:///c:/Projects/budgetizer/client/vitest.setup.js) : Importe les utilitaires d'assertion `@testing-library/jest-dom`.
 - **Fichiers de tests** : Localisés dans des dossiers `__tests__` à proximité des composants ciblés (ex: [AmountInput.test.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/__tests__/AmountInput.test.jsx)).
 
-### 7.3 Configuration Serveur (Backend)
+### 7.4 Configuration Serveur (Backend)
 - **Environnement** : `node` (exécution standard).
 - **Stratégie de Mocking** : Les tests du serveur s'exécutent de façon isolée sans base de données physique en mockant :
   - Les modèles Mongoose (`Account`, `Transaction`, `ScheduledTransaction`, `User`, `Category`).
@@ -474,7 +549,7 @@ Afin de sécuriser le code existant et de prévenir toute régression lors des f
 - **Fichiers de configuration** :
   - [server/vitest.config.js](file:///c:/Projects/budgetizer/server/vitest.config.js) : Configuration simple pour l'environnement Node.
 
-### 7.4 Commandes d'Exécution
+### 7.5 Commandes d'Exécution
 Les scripts npm sont centralisés pour simplifier le travail des développeurs :
 - **Lancer tous les tests (Frontend et Backend)** depuis la racine :
   ```bash

@@ -1,20 +1,30 @@
-import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { profileSchema } from '../../validators';
 import { User } from 'lucide-react';
-import api from '../../services/api';
 import toast from 'react-hot-toast';
+import api from '../../services/api';
 
 const ProfileForm = ({ user, setUser }) => {
-  const [profileName, setProfileName] = useState(user?.name || '');
-  const [profileEmail, setProfileEmail] = useState(user?.email || '');
-
   const initials = user?.name 
     ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() 
     : 'U';
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+    },
+  });
+
+  const onSubmit = async (data) => {
     try {
-      const res = await api.put('/users/profile', { name: profileName, email: profileEmail });
+      const res = await api.put('/users/profile', data);
       setUser(res.data);
       toast.success('Profil mis à jour avec succès');
     } catch (err) {
@@ -41,34 +51,35 @@ const ProfileForm = ({ user, setUser }) => {
           <User size={14} className="text-accent" /> Mon Profil
         </h3>
         
-        <form onSubmit={handleUpdateProfile} className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-surface-2 p-5 rounded-[28px] border border-border/40 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-secondary">Nom d'affichage <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
             <input 
               type="text"
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
-              className="w-full bg-surface border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
+              {...register('name')}
+              className={`w-full bg-surface border px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none ${errors.name ? 'border-danger' : 'border-border/40 focus:border-accent'}`}
               required
             />
+            {errors.name && <p className="text-[10px] text-danger mt-1 px-1">{errors.name.message}</p>}
           </div>
           
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-secondary">Adresse Email <span className="text-danger ml-1" title="Ce champ est obligatoire">*</span></label>
             <input 
               type="email"
-              value={profileEmail}
-              onChange={(e) => setProfileEmail(e.target.value)}
-              className="w-full bg-surface border border-border/40 px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none focus:border-accent"
+              {...register('email')}
+              className={`w-full bg-surface border px-4 py-3 rounded-2xl text-sm text-primary focus:outline-none ${errors.email ? 'border-danger' : 'border-border/40 focus:border-accent'}`}
               required
             />
+            {errors.email && <p className="text-[10px] text-danger mt-1 px-1">{errors.email.message}</p>}
           </div>
 
           <button 
             type="submit" 
-            className="w-full bg-surface border border-border/40 py-3 rounded-2xl text-xs font-bold text-primary hover:bg-border/20 active:scale-98 transition-all"
+            disabled={isSubmitting}
+            className="w-full bg-surface border border-border/40 py-3 rounded-2xl text-xs font-bold text-primary hover:bg-border/20 active:scale-98 transition-all disabled:opacity-50"
           >
-            Enregistrer le profil
+            {isSubmitting ? 'Enregistrement...' : 'Enregistrer le profil'}
           </button>
         </form>
       </div>

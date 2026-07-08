@@ -239,13 +239,23 @@ export const verifyAuthentication = async (req, res) => {
     await credential.save();
 
     // Respond with user details & JWT token
+    const token = generateToken(user._id);
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/'
+    };
+    res.cookie('token', token, cookieOptions);
+
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       preferences: user.preferences,
       currency: user.currency,
-      token: generateToken(user._id),
+      token,
     });
   } catch (error) {
     console.error('Error verifying authentication:', error);

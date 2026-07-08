@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import { AlertTriangle, FolderTree, Tag, ChevronRight } from 'lucide-react';
+import { AlertTriangle, FolderTree, Tag, ChevronRight, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 
@@ -95,6 +95,22 @@ const SettingsPage = () => {
                 <div>
                   <h4 className="text-xs font-bold text-primary">Étiquettes (Tags)</h4>
                   <p className="text-[10px] text-muted">Personnalise les tags transversaux pour un suivi plus fin.</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted group-hover:text-primary transition-colors" />
+            </button>
+
+            <button 
+              onClick={() => navigate('/settings/sharing')}
+              className="w-full flex items-center justify-between p-4 bg-surface-2 rounded-2xl border border-border/40 hover:bg-border/10 transition-all text-left active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+                  <Users size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-primary">Partage & Collaboration</h4>
+                  <p className="text-[10px] text-muted">Partage tes comptes et budgets avec tes proches.</p>
                 </div>
               </div>
               <ChevronRight size={16} className="text-muted group-hover:text-primary transition-colors" />

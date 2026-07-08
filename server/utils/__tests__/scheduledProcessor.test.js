@@ -1,9 +1,24 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { processScheduledTransactions } from '../scheduledProcessor.js';
 import ScheduledTransaction from '../../models/ScheduledTransaction.js';
 import Transaction from '../../models/Transaction.js';
 import Account from '../../models/Account.js';
 import mongoose from 'mongoose';
+
+// Mock os.hostname() to return a consistent hostname for lock tests
+vi.mock('os', () => ({
+  default: { hostname: vi.fn().mockReturnValue('test-host') }
+}));
+
+// Mock mongoose.model for JobLock — acquireLock calls mongoose.model('JobLock')
+const mockFindOneAndUpdate = vi.fn().mockResolvedValue(null); // null = lock acquired (upsert)
+mongoose.model = vi.fn((name) => {
+  if (name === 'JobLock') {
+    return { findOneAndUpdate: mockFindOneAndUpdate };
+  }
+  // For any other model, use default behavior if needed
+  throw new Error(`Model ${name} not mocked`);
+});
 
 // Mock mongoose startSession
 const mockSession = {
@@ -48,6 +63,13 @@ vi.mock('../../models/Account.js', () => ({
 describe('Scheduled Processor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFindOneAndUpdate.mockResolvedValue(null); // Lock acquired each time
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-05T00:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should process active schedules, create transactions, and update account balances if autoConfirm is true', async () => {

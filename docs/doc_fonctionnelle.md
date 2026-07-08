@@ -562,3 +562,58 @@ Pour offrir une expérience proche de la fintech **Bankyboard**, Budgetizer a fa
 
 
 
+## 20. Partage & Collaboration 👥
+
+Budgetizer permet de partager des comptes et des budgets entre utilisateurs (couple, famille, colocation) avec des niveaux de permission distincts.
+
+### 20.1 Modèle de permissions
+
+Chaque partage associe une ressource (compte ou budget) à un utilisateur destinataire avec l'un des deux rôles suivants :
+
+| Permission | Accès |
+|---|---|
+| **Lecture** (`read`) | Consulter le solde, l'historique des transactions et les indicateurs. Ne peut pas créer, modifier ou supprimer de données. |
+| **Écriture** (`write`) | Tout ce que permet la lecture, **plus** la possibilité de créer et de modifier des transactions sur le compte ou le budget partagé. |
+
+Le propriétaire original est toujours considéré comme `owner` et conserve tous les droits, y compris la suppression de la ressource et la révocation des partages.
+
+### 20.2 Flux de partage
+
+1. **L'initiateur** se rend dans **Paramètres › Partage & Collaboration**.
+2. Il saisit l'**adresse e-mail** du destinataire (le destinataire doit avoir un compte Budgetizer actif).
+3. Il sélectionne le **type de ressource** à partager : un compte ou un budget.
+4. Il choisit la **ressource spécifique** dans sa liste de comptes / budgets.
+5. Il choisit le **niveau de permission** (Lecture ou Écriture).
+6. Le partage est créé et actif immédiatement.
+
+### 20.3 Expérience du destinataire
+
+Une fois le partage actif, le destinataire accède à la ressource partagée dans les sections habituelles de l'application :
+
+- **Comptes** : Les comptes partagés apparaissent dans la liste aux côtés des comptes personnels, identifiés par un badge 👥 indiquant le nom du propriétaire.
+- **Budgets** : Les budgets partagés sont affichés dans la liste avec un badge 👥. Le calcul du « montant dépensé » est effectué sur les comptes du **propriétaire** du budget (pas du destinataire), assurant la cohérence des données.
+- **Transactions** : Les transactions des comptes partagés sont visibles dans l'historique. En permission `write`, le destinataire peut créer de nouvelles transactions sur ces comptes.
+
+### 20.4 Restrictions UI selon la permission
+
+| Élément | Permission `read` | Permission `write` |
+|---|---|---|
+| Consulter le solde et l'historique | ✅ | ✅ |
+| Créer une transaction | ❌ | ✅ |
+| Swipe Modifier / Supprimer (TransactionList) | ❌ désactivé | ✅ |
+| Bouton ⚙️ paramètres du compte | ❌ masqué | ❌ masqué |
+| Modifier / Supprimer un budget partagé | ❌ masqué | ❌ masqué |
+| Sélectionner le compte dans le formulaire de transaction | ❌ filtré | ✅ |
+| Sélectionner le compte dans les virements | ❌ filtré | ✅ |
+
+> [!NOTE]
+> La modification de la configuration d'un compte partagé (nom, couleur, paramètres de crédit) reste réservée au propriétaire, quelle que soit la permission accordée.
+
+### 20.5 Gestion des partages (SharingPage)
+
+La page **Paramètres › Partage & Collaboration** est le tableau de contrôle central du partage. Elle est divisée en trois zones :
+
+1. **Formulaire d'invitation** : Saisie email, choix du type (Compte / Budget), sélection de la ressource, choix de la permission. Un bouton «  Partager » envoie le partage.
+2. **Partagé par moi** : Liste des ressources que l'utilisateur a partagées avec d'autres. Chaque ligne affiche le nom de la ressource, le destinataire et son niveau d'accès. Un bouton « Révoquer » supprime immédiatement le partage.
+3. **Partagé avec moi** : Liste des ressources que d'autres utilisateurs ont partagées avec l'utilisateur courant, avec le nom du propriétaire et le niveau d'accès.
+

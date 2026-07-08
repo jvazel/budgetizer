@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { preferencesSchema, currencyCodeEnum } from '../../validators';
 import { Settings, Bell, Smartphone, CheckCircle, Download } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { usePwa } from '../../context/PwaContext';
 import Select from '../ui/Select';
+
+const currencySymbolMap = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', JPY: '¥' };
 
 const PreferencesForm = ({ user, setUser }) => {
   const { 
@@ -21,42 +26,52 @@ const PreferencesForm = ({ user, setUser }) => {
 
   const [showIOSModal, setShowIOSModal] = useState(false);
 
-  // Preference states
-  const [currencyCode, setCurrencyCode] = useState(user?.currency?.code || 'EUR');
-  const [currencySymbol, setCurrencySymbol] = useState(user?.currency?.symbol || '€');
-  const [theme, setTheme] = useState(user?.preferences?.theme || 'dark');
-  const [dateFormat, setDateFormat] = useState(user?.preferences?.dateFormat || 'DD/MM/YYYY');
-  const [firstDayOfWeek, setFirstDayOfWeek] = useState(user?.preferences?.firstDayOfWeek !== undefined ? user.preferences.firstDayOfWeek : 1);
-  const [anomalyThreshold, setAnomalyThreshold] = useState(user?.preferences?.anomalyThreshold || 30);
-  const [lowBalanceThreshold, setLowBalanceThreshold] = useState(user?.preferences?.lowBalanceThreshold !== undefined ? user.preferences.lowBalanceThreshold : 100);
-  const [enableBudgetAlerts, setEnableBudgetAlerts] = useState(user?.preferences?.enableBudgetAlerts !== undefined ? user.preferences.enableBudgetAlerts : true);
-  const [enableScheduledAlerts, setEnableScheduledAlerts] = useState(user?.preferences?.enableScheduledAlerts !== undefined ? user.preferences.enableScheduledAlerts : true);
-  const [enableSavingsAlerts, setEnableSavingsAlerts] = useState(user?.preferences?.enableSavingsAlerts !== undefined ? user.preferences.enableSavingsAlerts : true);
-  const [enableLowBalanceAlerts, setEnableLowBalanceAlerts] = useState(user?.preferences?.enableLowBalanceAlerts !== undefined ? user.preferences.enableLowBalanceAlerts : true);
-  const [enableAiInsightsAlerts, setEnableAiInsightsAlerts] = useState(user?.preferences?.enableAiInsightsAlerts !== undefined ? user.preferences.enableAiInsightsAlerts : true);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(preferencesSchema),
+    defaultValues: {
+      currencyCode: user?.currency?.code || 'EUR',
+      theme: user?.preferences?.theme || 'dark',
+      dateFormat: user?.preferences?.dateFormat || 'DD/MM/YYYY',
+      firstDayOfWeek: user?.preferences?.firstDayOfWeek !== undefined ? user.preferences.firstDayOfWeek : 1,
+      anomalyThreshold: user?.preferences?.anomalyThreshold || 30,
+      lowBalanceThreshold: user?.preferences?.lowBalanceThreshold !== undefined ? user.preferences.lowBalanceThreshold : 100,
+      enableBudgetAlerts: user?.preferences?.enableBudgetAlerts !== undefined ? user.preferences.enableBudgetAlerts : true,
+      enableScheduledAlerts: user?.preferences?.enableScheduledAlerts !== undefined ? user.preferences.enableScheduledAlerts : true,
+      enableSavingsAlerts: user?.preferences?.enableSavingsAlerts !== undefined ? user.preferences.enableSavingsAlerts : true,
+      enableLowBalanceAlerts: user?.preferences?.enableLowBalanceAlerts !== undefined ? user.preferences.enableLowBalanceAlerts : true,
+      enableAiInsightsAlerts: user?.preferences?.enableAiInsightsAlerts !== undefined ? user.preferences.enableAiInsightsAlerts : true,
+    },
+  });
 
-  const handleSavePreferences = async (prefUpdates = {}) => {
+  const watchAll = watch();
+
+  const handleSavePreferences = async (prefUpdates) => {
     try {
       const payload = {
         currency: {
-          code: prefUpdates.currencyCode || currencyCode,
-          symbol: prefUpdates.currencySymbol || currencySymbol
+          code: prefUpdates.currencyCode || watchAll.currencyCode,
+          symbol: currencySymbolMap[prefUpdates.currencyCode || watchAll.currencyCode] || '€'
         },
-        theme: prefUpdates.theme || theme,
-        dateFormat: prefUpdates.dateFormat || dateFormat,
-        firstDayOfWeek: prefUpdates.firstDayOfWeek !== undefined ? prefUpdates.firstDayOfWeek : firstDayOfWeek,
-        anomalyThreshold: prefUpdates.anomalyThreshold !== undefined ? prefUpdates.anomalyThreshold : anomalyThreshold,
-        lowBalanceThreshold: prefUpdates.lowBalanceThreshold !== undefined ? prefUpdates.lowBalanceThreshold : lowBalanceThreshold,
-        enableBudgetAlerts: prefUpdates.enableBudgetAlerts !== undefined ? prefUpdates.enableBudgetAlerts : enableBudgetAlerts,
-        enableScheduledAlerts: prefUpdates.enableScheduledAlerts !== undefined ? prefUpdates.enableScheduledAlerts : enableScheduledAlerts,
-        enableSavingsAlerts: prefUpdates.enableSavingsAlerts !== undefined ? prefUpdates.enableSavingsAlerts : enableSavingsAlerts,
-        enableLowBalanceAlerts: prefUpdates.enableLowBalanceAlerts !== undefined ? prefUpdates.enableLowBalanceAlerts : enableLowBalanceAlerts,
-        enableAiInsightsAlerts: prefUpdates.enableAiInsightsAlerts !== undefined ? prefUpdates.enableAiInsightsAlerts : enableAiInsightsAlerts
+        theme: prefUpdates.theme !== undefined ? prefUpdates.theme : watchAll.theme,
+        dateFormat: prefUpdates.dateFormat !== undefined ? prefUpdates.dateFormat : watchAll.dateFormat,
+        firstDayOfWeek: prefUpdates.firstDayOfWeek !== undefined ? prefUpdates.firstDayOfWeek : watchAll.firstDayOfWeek,
+        anomalyThreshold: prefUpdates.anomalyThreshold !== undefined ? prefUpdates.anomalyThreshold : watchAll.anomalyThreshold,
+        lowBalanceThreshold: prefUpdates.lowBalanceThreshold !== undefined ? prefUpdates.lowBalanceThreshold : watchAll.lowBalanceThreshold,
+        enableBudgetAlerts: prefUpdates.enableBudgetAlerts !== undefined ? prefUpdates.enableBudgetAlerts : watchAll.enableBudgetAlerts,
+        enableScheduledAlerts: prefUpdates.enableScheduledAlerts !== undefined ? prefUpdates.enableScheduledAlerts : watchAll.enableScheduledAlerts,
+        enableSavingsAlerts: prefUpdates.enableSavingsAlerts !== undefined ? prefUpdates.enableSavingsAlerts : watchAll.enableSavingsAlerts,
+        enableLowBalanceAlerts: prefUpdates.enableLowBalanceAlerts !== undefined ? prefUpdates.enableLowBalanceAlerts : watchAll.enableLowBalanceAlerts,
+        enableAiInsightsAlerts: prefUpdates.enableAiInsightsAlerts !== undefined ? prefUpdates.enableAiInsightsAlerts : watchAll.enableAiInsightsAlerts,
       };
 
       const res = await api.put('/users/preferences', payload);
       setUser(res.data);
-      toast.success('Préférences enregistrées');
     } catch (err) {
       toast.error('Erreur de sauvegarde des préférences');
     }
@@ -64,28 +79,8 @@ const PreferencesForm = ({ user, setUser }) => {
 
   const handleCurrencyChange = (e) => {
     const code = e.target.value;
-    let symbol = '€';
-    if (code === 'USD') symbol = '$';
-    else if (code === 'GBP') symbol = '£';
-    else if (code === 'CHF') symbol = 'CHF';
-    else if (code === 'JPY') symbol = '¥';
-
-    setCurrencyCode(code);
-    setCurrencySymbol(symbol);
-    handleSavePreferences({ currencyCode: code, currencySymbol: symbol });
-  };
-
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-    handleSavePreferences({ theme: newTheme });
-  };
-
-  const handlePwaInstall = () => {
-    if (isIOS) {
-      setShowIOSModal(true);
-    } else {
-      installApp();
-    }
+    setValue('currencyCode', code);
+    handleSavePreferences({ currencyCode: code });
   };
 
   return (
@@ -104,10 +99,10 @@ const PreferencesForm = ({ user, setUser }) => {
               <p className="text-[10px] text-muted">Devise utilisée pour tes budgets et affichages.</p>
             </div>
             <Select
-              value={currencyCode}
+              value={watchAll.currencyCode}
               onChange={handleCurrencyChange}
               align="right"
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              className={`bg-surface border px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none ${errors.currencyCode ? 'border-danger' : 'border-border/40'}`}
             >
               <option value="EUR">Euro (€)</option>
               <option value="USD">Dollar US ($)</option>
@@ -116,6 +111,8 @@ const PreferencesForm = ({ user, setUser }) => {
               <option value="JPY">Yen Japonais (¥)</option>
             </Select>
           </div>
+
+          {errors.currencyCode && <p className="text-[10px] text-danger pl-1">{errors.currencyCode.message}</p>}
 
           <hr className="border-border/30" />
 
@@ -126,20 +123,21 @@ const PreferencesForm = ({ user, setUser }) => {
               <p className="text-[10px] text-muted">Format utilisé pour afficher les dates dans l'app.</p>
             </div>
             <Select
-              value={dateFormat}
+              value={watchAll.dateFormat}
               onChange={(e) => {
-                const val = e.target.value;
-                setDateFormat(val);
-                handleSavePreferences({ dateFormat: val });
+                setValue('dateFormat', e.target.value);
+                handleSavePreferences({ dateFormat: e.target.value });
               }}
               align="right"
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              className={`bg-surface border px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none ${errors.dateFormat ? 'border-danger' : 'border-border/40'}`}
             >
               <option value="DD/MM/YYYY">JJ/MM/AAAA</option>
               <option value="YYYY-MM-DD">AAAA-MM-JJ</option>
               <option value="MM/DD/YYYY">MM/JJ/AAAA</option>
             </Select>
           </div>
+
+          {errors.dateFormat && <p className="text-[10px] text-danger pl-1">{errors.dateFormat.message}</p>}
 
           <hr className="border-border/30" />
 
@@ -150,19 +148,21 @@ const PreferencesForm = ({ user, setUser }) => {
               <p className="text-[10px] text-muted">Jour de démarrage pour les vues calendrier et hebdomadaires.</p>
             </div>
             <Select
-              value={firstDayOfWeek}
+              value={watchAll.firstDayOfWeek}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                setFirstDayOfWeek(val);
+                setValue('firstDayOfWeek', val);
                 handleSavePreferences({ firstDayOfWeek: val });
               }}
               align="right"
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              className={`bg-surface border px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none ${errors.firstDayOfWeek ? 'border-danger' : 'border-border/40'}`}
             >
               <option value={1}>Lundi</option>
               <option value={0}>Dimanche</option>
             </Select>
           </div>
+
+          {errors.firstDayOfWeek && <p className="text-[10px] text-danger pl-1">{errors.firstDayOfWeek.message}</p>}
 
           <hr className="border-border/30" />
 
@@ -173,14 +173,14 @@ const PreferencesForm = ({ user, setUser }) => {
               <p className="text-[10px] text-muted">Seuil de dépassement par défaut pour tes alertes.</p>
             </div>
             <Select
-              value={anomalyThreshold}
+              value={watchAll.anomalyThreshold}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                setAnomalyThreshold(val);
+                setValue('anomalyThreshold', val);
                 handleSavePreferences({ anomalyThreshold: val });
               }}
               align="right"
-              className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
+              className={`bg-surface border px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none ${errors.anomalyThreshold ? 'border-danger' : 'border-border/40'}`}
             >
               <option value={30}>+30% (Sensible)</option>
               <option value={40}>+40%</option>
@@ -188,6 +188,8 @@ const PreferencesForm = ({ user, setUser }) => {
               <option value={60}>+60% (Modéré)</option>
             </Select>
           </div>
+
+          {errors.anomalyThreshold && <p className="text-[10px] text-danger pl-1">{errors.anomalyThreshold.message}</p>}
 
           <hr className="border-border/30" />
 
@@ -207,17 +209,20 @@ const PreferencesForm = ({ user, setUser }) => {
                 <div className="flex items-center gap-1 bg-surface border border-border/40 rounded-xl px-2.5 py-1.5">
                   <input
                     type="number"
-                    value={lowBalanceThreshold}
-                    onChange={(e) => {
+                    min="0"
+                    {...register('lowBalanceThreshold')}
+                    onBlur={(e) => {
                       const val = Math.max(0, Number(e.target.value));
-                      setLowBalanceThreshold(val);
+                      setValue('lowBalanceThreshold', val);
+                      handleSavePreferences({ lowBalanceThreshold: val });
                     }}
-                    onBlur={() => handleSavePreferences({ lowBalanceThreshold })}
-                    className="bg-transparent text-xs font-bold text-primary w-14 text-right focus:outline-none"
+                    className={`bg-transparent text-xs font-bold text-primary w-14 text-right focus:outline-none ${errors.lowBalanceThreshold ? 'text-danger' : ''}`}
                   />
-                  <span className="text-[10px] text-muted font-bold">{currencySymbol}</span>
+                  <span className="text-[10px] text-muted font-bold">{currencySymbolMap[watchAll.currencyCode] || '€'}</span>
                 </div>
               </div>
+
+              {errors.lowBalanceThreshold && <p className="text-[10px] text-danger pl-1">{errors.lowBalanceThreshold.message}</p>}
 
               <hr className="border-border/20" />
 
@@ -230,10 +235,10 @@ const PreferencesForm = ({ user, setUser }) => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
-                    checked={enableBudgetAlerts} 
+                    {...register('enableBudgetAlerts')}
                     onChange={(e) => {
                       const val = e.target.checked;
-                      setEnableBudgetAlerts(val);
+                      setValue('enableBudgetAlerts', val);
                       handleSavePreferences({ enableBudgetAlerts: val });
                     }}
                     className="sr-only peer" 
@@ -253,10 +258,10 @@ const PreferencesForm = ({ user, setUser }) => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
-                    checked={enableScheduledAlerts} 
+                    {...register('enableScheduledAlerts')}
                     onChange={(e) => {
                       const val = e.target.checked;
-                      setEnableScheduledAlerts(val);
+                      setValue('enableScheduledAlerts', val);
                       handleSavePreferences({ enableScheduledAlerts: val });
                     }}
                     className="sr-only peer" 
@@ -276,10 +281,10 @@ const PreferencesForm = ({ user, setUser }) => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
-                    checked={enableSavingsAlerts} 
+                    {...register('enableSavingsAlerts')}
                     onChange={(e) => {
                       const val = e.target.checked;
-                      setEnableSavingsAlerts(val);
+                      setValue('enableSavingsAlerts', val);
                       handleSavePreferences({ enableSavingsAlerts: val });
                     }}
                     className="sr-only peer" 
@@ -299,10 +304,10 @@ const PreferencesForm = ({ user, setUser }) => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
-                    checked={enableLowBalanceAlerts} 
+                    {...register('enableLowBalanceAlerts')}
                     onChange={(e) => {
                       const val = e.target.checked;
-                      setEnableLowBalanceAlerts(val);
+                      setValue('enableLowBalanceAlerts', val);
                       handleSavePreferences({ enableLowBalanceAlerts: val });
                     }}
                     className="sr-only peer" 
@@ -322,10 +327,10 @@ const PreferencesForm = ({ user, setUser }) => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
-                    checked={enableAiInsightsAlerts} 
+                    {...register('enableAiInsightsAlerts')}
                     onChange={(e) => {
                       const val = e.target.checked;
-                      setEnableAiInsightsAlerts(val);
+                      setValue('enableAiInsightsAlerts', val);
                       handleSavePreferences({ enableAiInsightsAlerts: val });
                     }}
                     className="sr-only peer" 
@@ -409,23 +414,29 @@ const PreferencesForm = ({ user, setUser }) => {
             </div>
             <div className="flex bg-surface p-1 rounded-xl border border-border/40">
               <button
-                onClick={() => handleThemeChange('dark')}
+                onClick={() => {
+                  handleSavePreferences({ theme: 'dark' });
+                }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                  theme === 'dark' ? 'bg-surface-2 text-primary shadow-sm' : 'text-muted'
+                  watchAll.theme === 'dark' ? 'bg-surface-2 text-primary shadow-sm' : 'text-muted'
                 }`}
               >
                 Sombre
               </button>
               <button
-                onClick={() => handleThemeChange('light')}
+                onClick={() => {
+                  handleSavePreferences({ theme: 'light' });
+                }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                  theme === 'light' ? 'bg-surface-2 text-primary shadow-sm' : 'text-muted'
+                  watchAll.theme === 'light' ? 'bg-surface-2 text-primary shadow-sm' : 'text-muted'
                 }`}
               >
                 Clair
               </button>
             </div>
           </div>
+
+          {errors.theme && <p className="text-[10px] text-danger pl-1">{errors.theme.message}</p>}
         </div>
       </div>
 
@@ -453,7 +464,7 @@ const PreferencesForm = ({ user, setUser }) => {
               </div>
             ) : (
               <button 
-                onClick={handlePwaInstall}
+                onClick={() => isIOS ? setShowIOSModal(true) : installApp()}
                 className="w-full bg-accent text-white py-3.5 rounded-2xl text-xs font-bold hover:scale-101 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accent/15"
               >
                 <Download size={14} />

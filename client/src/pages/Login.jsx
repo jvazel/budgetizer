@@ -1,6 +1,9 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Mail, Lock, Eye, EyeOff, Fingerprint, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '../validators/authValidators';
 import { AuthContext } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -8,22 +11,15 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(null);
-  const [shouldShake, setShouldShake] = useState(false);
-  const { login, setUser } = useContext(AuthContext);
-  const navigate = useNavigate();
-
   const isWebAuthnSupported = typeof window !== 'undefined' && 
     window.PublicKeyCredential !== undefined && 
     navigator.credentials !== undefined;
 
-  const handleWebAuthnLogin = async () => {
+  const handleWebAuthnLogin = async (emailValue) => {
     try {
       toast.loading("Génération du défi de connexion...");
-      const optionsRes = await api.post('/webauthn/login/options', { email: email || undefined });
+      const optionsRes = await api.post('/webauthn/login/options', { email: emailValue || undefined });
       const options = optionsRes.data;
       toast.dismiss();
 
@@ -93,7 +89,7 @@ const Login = () => {
       toast.dismiss();
 
       const user = verifyRes.data;
-      localStorage.setItem('token', user.token);
+      localStorage.setItem('isLoggedIn', 'true');
       setUser(user);
       toast.success('Connexion biométrique réussie !');
       navigate('/');
@@ -120,31 +116,33 @@ const Login = () => {
     toast.success("Les paramètres biométriques de cet appareil ont été réinitialisés. Connectez-vous avec votre mot de passe pour les réactiver.");
   };
 
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-    if (error) setError(null);
-  };
+  const { login, setUser } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    if (error) setError(null);
-  };
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setShouldShake(false);
+  const emailValue = watch('email');
+
+  const onSubmit = async (data) => {
     try {
       sessionStorage.setItem('just_logged_in', 'true');
-      await login(email, password);
+      await login(data.email, data.password);
       toast.success('Connexion réussie !');
       navigate('/');
     } catch (err) {
       sessionStorage.removeItem('just_logged_in');
       const msg = err.response?.data?.message || 'Adresse e-mail ou mot de passe incorrect.';
-      setError(msg);
-      setShouldShake(true);
-      setTimeout(() => setShouldShake(false), 400);
       toast.error(msg);
     }
   };
@@ -170,13 +168,13 @@ const Login = () => {
             <p className="text-xs text-secondary">Entrez vos identifiants pour continuer</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={`space-y-4 relative z-10 ${shouldShake ? 'animate-shake' : ''}`}>
-            {error && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
+            {errors.email && (
               <div className="bg-danger-dim border border-danger/20 text-danger rounded-xl p-3 text-xs flex items-start gap-2 shadow-[0_0_20px_rgba(244,63,94,0.03)] transition-all">
                 <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-danger" />
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-primary">Échec de la connexion</p>
-                  <p className="text-[10px] text-secondary mt-0.5">{error}</p>
+                  <p className="font-semibold text-primary">Erreur de validation</p>
+                  <p className="text-[10px] text-secondary mt-0.5">{errors.email.message}</p>
                 </div>
               </div>
             )}
@@ -185,10 +183,9 @@ const Login = () => {
               id="email"
               type="email"
               placeholder="Adresse email"
-              value={email}
-              onChange={handleEmailChange}
+              {...register('email')}
               icon={Mail}
-              error={!!error}
+              error={errors.email?.message}
               required
             />
             
@@ -196,12 +193,11 @@ const Login = () => {
               id="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Mot de passe"
-              value={password}
-              onChange={handlePasswordChange}
+              {...register('password')}
               icon={Lock}
               rightIcon={showPassword ? EyeOff : Eye}
               onRightIconClick={() => setShowPassword(!showPassword)}
-              error={!!error}
+              error={errors.password?.message}
               required
             />
 
@@ -215,8 +211,8 @@ const Login = () => {
             </div>
 
             <div className="pt-2">
-              <Button type="submit" variant="copper" fullWidth>
-                Se connecter
+              <Button type="submit" variant="copper" fullWidth disabled={isSubmitting}>
+                {isSubmitting ? 'Connexion...' : 'Se connecter'}
               </Button>
             </div>
           </form>
@@ -233,7 +229,7 @@ const Login = () => {
                 type="button" 
                 variant="secondary" 
                 fullWidth 
-                onClick={handleWebAuthnLogin}
+                onClick={() => handleWebAuthnLogin(emailValue)}
                 className="flex items-center justify-center gap-2"
               >
                 <Fingerprint size={16} className="text-copper" />

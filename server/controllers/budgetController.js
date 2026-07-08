@@ -4,6 +4,7 @@ import Account from '../models/Account.js';
 import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
 import { invalidateDashboardCache } from './dashboardController.js';
+import Share from '../models/Share.js';
 
 // @desc    Get user budgets with calculated spent and remaining
 // @route   GET /api/budgets
@@ -53,17 +54,53 @@ export const getBudgets = async (req, res) => {
       yEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
     }
 
-    const includedAccounts = await Account.find({ userId: req.user.id, includeInTotal: { $ne: false } }).select('_id');
-    const includedAccountIds = includedAccounts.map(acc => acc._id);
-
-    const budgets = await Budget.find({ userId: req.user.id })
+    // Fetch owned budgets
+    const ownedBudgets = await Budget.find({ userId: req.user.id })
       .populate('categoryId', 'name icon type');
 
-    // Fetch expense transactions within any of the three calculated ranges (only for included accounts)
+    // Fetch shared budgets
+    const shares = await Share.find({ sharedWithId: req.user.id, resourceType: 'budget' })
+      .populate('ownerId', 'name email');
+    const sharedBudgetIds = shares.map(s => s.resourceId);
+    const sharedBudgets = await Budget.find({ _id: { $in: sharedBudgetIds } })
+      .populate('categoryId', 'name icon type');
+
+    const mappedOwned = ownedBudgets.map(b => ({
+      ...(b.toObject ? b.toObject() : b),
+      isShared: false,
+      permission: 'owner'
+    }));
+
+    const mappedShared = sharedBudgets.map(b => {
+      const share = shares.find(s => s.resourceId.toString() === b._id.toString());
+      return {
+        ...(b.toObject ? b.toObject() : b),
+        isShared: true,
+        permission: share ? share.permission : 'read',
+        ownerName: share?.ownerId?.name || 'Inconnu',
+        ownerEmail: share?.ownerId?.email || ''
+      };
+    });
+
+    const allBudgets = [...mappedOwned, ...mappedShared];
+
+    // Collect all unique user/owner IDs to find accounts for spent calculations
+    const uniqueOwnerIds = Array.from(new Set(allBudgets.map(b => b.userId.toString())));
+
+    // Map each owner to their included account IDs
+    const ownerAccountsMap = {};
+    for (const ownerId of uniqueOwnerIds) {
+      const includedAccounts = await Account.find({ userId: ownerId, includeInTotal: { $ne: false } }).select('_id');
+      ownerAccountsMap[ownerId] = includedAccounts.map(acc => acc._id.toString());
+    }
+
+    // Collect all included account IDs across all owners
+    const allIncludedAccountIds = Object.values(ownerAccountsMap).flat();
+
+    // Fetch expense transactions within any of the ranges (for all included accounts)
     const transactions = await Transaction.find({
-      userId: req.user.id,
       type: 'expense',
-      accountId: { $in: includedAccountIds },
+      accountId: { $in: allIncludedAccountIds },
       isPending: { $ne: true },
       $or: [
         { date: { $gte: wStart, $lte: wEnd } },
@@ -72,7 +109,7 @@ export const getBudgets = async (req, res) => {
       ]
     });
 
-    const enrichedBudgets = budgets.map(budget => {
+    const enrichedBudgets = allBudgets.map(budget => {
       const period = budget.period || 'monthly';
       let start, end;
       if (period === 'weekly') {
@@ -86,11 +123,15 @@ export const getBudgets = async (req, res) => {
         end = mEnd;
       }
 
+      const budgetOwnerId = budget.userId.toString();
+      const budgetOwnerAccountIds = ownerAccountsMap[budgetOwnerId] || [];
+
       const spent = transactions
         .filter(t => 
           t.categoryId && 
           budget.categoryId &&
           t.categoryId.toString() === budget.categoryId._id.toString() &&
+          budgetOwnerAccountIds.includes(t.accountId.toString()) &&
           t.date >= start &&
           t.date <= end
         )
@@ -100,7 +141,7 @@ export const getBudgets = async (req, res) => {
       const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
       return {
-        ...budget.toObject(),
+        ...budget,
         spent,
         remaining,
         percentage
@@ -109,7 +150,7 @@ export const getBudgets = async (req, res) => {
 
     res.json(enrichedBudgets);
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     res.status(500).send('Server Error');
   }
 };
@@ -155,7 +196,17 @@ export const updateBudget = async (req, res) => {
     let budget = await Budget.findById(req.params.id);
 
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
-    if (budget.userId.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
+    if (budget.userId.toString() !== req.user.id) {
+      const hasWrite = await Share.exists({
+        resourceType: 'budget',
+        resourceId: req.params.id,
+        sharedWithId: req.user.id,
+        permission: 'write'
+      });
+      if (!hasWrite) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+    }
 
     budget = await Budget.findByIdAndUpdate(
       req.params.id,

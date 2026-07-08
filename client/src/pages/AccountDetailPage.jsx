@@ -132,7 +132,10 @@ const AccountDetailPage = () => {
     );
   }
 
-  const actions = (
+  const isOwner = account.permission === 'owner';
+  const canWrite = account.permission === 'owner' || account.permission === 'write';
+
+  const actions = isOwner ? (
     <button 
       onClick={() => setIsEditOpen(true)}
       className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-full text-accent transition-colors"
@@ -140,7 +143,7 @@ const AccountDetailPage = () => {
     >
       <Settings size={16} />
     </button>
-  );
+  ) : null;
 
   const accountTypeLabel = 
     account.type === 'checking' ? 'Courant' :
@@ -293,14 +296,14 @@ const AccountDetailPage = () => {
             <TransactionList 
               transactions={transactions} 
               currentAccountId={id}
-              onDelete={(tx) => {
+              onDelete={canWrite ? (tx) => {
                 setTxToDelete(tx);
                 setConfirmDeleteOpen(true);
-              }}
-              onEdit={(tx) => {
+              } : null}
+              onEdit={canWrite ? (tx) => {
                 setSelectedTransaction(tx);
                 setIsTxEditOpen(true);
-              }}
+              } : null}
             />
           )}
         </div>

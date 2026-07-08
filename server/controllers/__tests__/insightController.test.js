@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { getInsights } from '../insightController.js';
 import Transaction from '../../models/Transaction.js';
 import ScheduledTransaction from '../../models/ScheduledTransaction.js';
@@ -13,7 +13,9 @@ vi.mock('../../models/Transaction.js', () => ({
 
 vi.mock('../../models/ScheduledTransaction.js', () => ({
   default: {
-    find: vi.fn()
+    find: vi.fn().mockImplementation(() => ({
+      lean: vi.fn().mockResolvedValue([])
+    }))
   }
 }));
 
@@ -34,6 +36,8 @@ describe('Insight Controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     findCallCount = 0;
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-05T00:00:00.000Z'));
 
     req = {
       user: {
@@ -51,6 +55,10 @@ describe('Insight Controller', () => {
       status: vi.fn().mockReturnThis(),
       send: vi.fn()
     };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should return empty lists and a message if no transactions are found', async () => {

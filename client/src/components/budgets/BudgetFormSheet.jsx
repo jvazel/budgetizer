@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import BottomSheet from '../ui/BottomSheet';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -6,44 +8,48 @@ import Button from '../ui/Button';
 import { useCategories } from '../../hooks/useCategories';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
+import { budgetSchema } from '../../validators';
 
 const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null }) => {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [color, setColor] = useState('#8b5cf6');
-  const [period, setPeriod] = useState('monthly');
-
   const { categoriesTree } = useCategories();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    resolver: zodResolver(budgetSchema),
+    defaultValues: {
+      name: '',
+      amount: '',
+      categoryId: '',
+      color: '#8b5cf6',
+      period: 'monthly',
+    },
+  });
+
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.name);
-      setAmount(initialData.amount);
-      setCategoryId(initialData.categoryId?._id || initialData.categoryId);
-      setColor(initialData.color);
-      setPeriod(initialData.period);
-    } else {
-      setName('');
-      setAmount('');
-      setCategoryId('');
-      setColor('#8b5cf6');
-      setPeriod('monthly');
+    if (isOpen) {
+      reset({
+        name: initialData?.name || '',
+        amount: initialData?.amount != null ? String(initialData.amount) : '',
+        categoryId: initialData?.categoryId?._id || initialData?.categoryId || '',
+        color: initialData?.color || '#8b5cf6',
+        period: initialData?.period || 'monthly',
+      });
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, reset]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!categoryId) return toast.error('Veuillez sélectionner une catégorie');
-    if (!amount || amount <= 0) return toast.error('Montant invalide');
-
+  const onSubmit = async (data) => {
     try {
       await onSave({
-        name,
-        amount: parseFloat(amount),
-        categoryId,
-        color,
-        period
+        name: data.name,
+        amount: data.amount,
+        categoryId: data.categoryId,
+        color: data.color,
+        period: data.period,
       });
       toast.success(initialData ? 'Budget modifié' : 'Budget créé');
       onClose();
@@ -72,14 +78,13 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
           label="Nom du budget"
           placeholder="Ex: Courses mensuelles"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
+          {...register('name')}
         />
+        {errors.name && <p className="text-danger text-sm">{errors.name.message}</p>}
 
         <div className="flex gap-4">
           <div className="flex-1">
@@ -87,17 +92,15 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
             <input
               type="number"
               step="1"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              {...register('amount')}
               className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary font-mono text-lg focus:outline-none focus:border-accent"
-              required
             />
+            {errors.amount && <p className="text-danger text-sm mt-1">{errors.amount.message}</p>}
           </div>
           <div className="flex-1">
             <Select 
               label="Période"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
+              {...register('period')}
             >
               <option value="weekly">Hebdomadaire</option>
               <option value="monthly">Mensuelle</option>
@@ -108,9 +111,7 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
 
         <Select 
           label="Catégorie associée"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
+          {...register('categoryId')}
         >
           <option value="">-- Choisir une catégorie --</option>
           {expenseCategories.map(parent => (
@@ -122,6 +123,7 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
             </optgroup>
           ))}
         </Select>
+        {errors.categoryId && <p className="text-danger text-sm">{errors.categoryId.message}</p>}
 
         <div className="flex flex-col">
           <label className="mb-2 text-sm text-secondary font-medium">Couleur d'identification</label>
@@ -130,12 +132,13 @@ const BudgetFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData = null
               <button
                 key={c}
                 type="button"
-                onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
+                onClick={() => register('color').onChange({ target: { value: c } })}
+                className={`w-8 h-8 rounded-full transition-transform ${watch('color') === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-surface' : ''}`}
                 style={{ backgroundColor: c }}
               />
             ))}
           </div>
+          {errors.color && <p className="text-danger text-sm mt-1">{errors.color.message}</p>}
         </div>
 
         <div className="pt-4 space-y-3">

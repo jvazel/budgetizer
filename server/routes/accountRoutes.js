@@ -1,6 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { protect } from '../middleware/authMiddleware.js';
+import idempotencyMiddleware from '../middleware/idempotencyMiddleware.js';
 import {
   getAccounts,
   createAccount,
@@ -215,6 +216,14 @@ const router = express.Router();
  */
 
 router.use(protect); // Protège toutes les routes des comptes
+
+// Appliquer l'idempotence sur POST / PUT / DELETE pour éviter les doublons lors du sync hors-ligne
+router.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    return idempotencyMiddleware(req, res, next);
+  }
+  next();
+});
 
 /**
  * @openapi

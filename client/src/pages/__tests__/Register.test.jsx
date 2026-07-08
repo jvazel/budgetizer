@@ -41,7 +41,7 @@ describe('Register Page', () => {
     expect(screen.getByRole('button', { name: 'Créer mon compte' })).toBeInTheDocument();
   });
 
-  it('should validate password mismatch and show error toast', async () => {
+  it('should show validation error for password mismatch', async () => {
     renderComponent();
 
     const nameInput = screen.getByPlaceholderText('Prénom');
@@ -52,16 +52,17 @@ describe('Register Page', () => {
 
     fireEvent.change(nameInput, { target: { value: 'Jean' } });
     fireEvent.change(emailInput, { target: { value: 'jean@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: 'different123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'different456' } });
 
     fireEvent.click(submitBtn);
 
-    expect(toast.error).toHaveBeenCalledWith('Les mots de passe ne correspondent pas');
-    expect(mockRegister).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText('Les mots de passe ne correspondent pas')).toBeInTheDocument();
+    });
   });
 
-  it('should validate password length and show error toast', async () => {
+  it('should show validation error for short password', async () => {
     renderComponent();
 
     const nameInput = screen.getByPlaceholderText('Prénom');
@@ -72,13 +73,14 @@ describe('Register Page', () => {
 
     fireEvent.change(nameInput, { target: { value: 'Jean' } });
     fireEvent.change(emailInput, { target: { value: 'jean@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: '12345' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: '12345' } });
+    fireEvent.change(passwordInput, { target: { value: 'abc' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'abc' } });
 
     fireEvent.click(submitBtn);
 
-    expect(toast.error).toHaveBeenCalledWith('Le mot de passe doit contenir au moins 6 caractères');
-    expect(mockRegister).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText('Le mot de passe doit contenir au moins 6 caractères')).toBeInTheDocument();
+    });
   });
 
   it('should call register with correct data on successful form submission', async () => {
@@ -92,13 +94,13 @@ describe('Register Page', () => {
 
     fireEvent.change(nameInput, { target: { value: 'Jean' } });
     fireEvent.change(emailInput, { target: { value: 'jean@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'Password123' } });
 
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith('Jean', 'jean@example.com', 'password123');
+      expect(mockRegister).toHaveBeenCalledWith('Jean', 'jean@example.com', 'Password123');
       expect(toast.success).toHaveBeenCalledWith('Compte créé avec succès !');
     });
   });

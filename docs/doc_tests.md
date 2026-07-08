@@ -301,7 +301,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
-| **Calcul du budget (getBudgets)** | Query `{ month: '2026-06' }` | Récupération des budgets, des dépenses réelles sur la période, et agrégation par catégorie pour sommer les débits | Réponse JSON renvoyant les budgets enrichis des champs `spent` (cumul réel), `remaining` (solde) et `percentage` (HTTP 200). |
+| **Calcul du budget (getBudgets)** | Query `{ month: '2026-06' }` | Récupération des budgets propres et partagés, des dépenses réelles sur la période (filtrées par les comptes du propriétaire), et agrégation par catégorie | Réponse JSON renvoyant les budgets enrichis des champs `spent`, `remaining`, `percentage`, `isShared` et `permission` (HTTP 200). |
 | **Suppression autorisée** | ID du budget, utilisateur propriétaire | Vérification de l'appartenance du budget | Le budget est supprimé de la base de données (HTTP 200). |
 | **Suppression interdite** | ID du budget, utilisateur non propriétaire | Vérification de l'appartenance | La suppression est rejetée (HTTP 401). |
 
@@ -363,9 +363,9 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
-| **Filtrage et pagination** | Paramètres de query (`accountId` et/ou `search`, `page 2`, `limit 10`) | Construction dynamique de la requête vérifiant `accountId` OU `toAccountId` en cas de filtrage de compte, et combinaison propre avec le filtre textuel en `$and` | La réponse (HTTP 200) renvoie la liste filtrée contenant les transactions directes ainsi que les virements entrants/sortants du compte, avec les métadonnées de pagination. |
-| **Création de transaction** | Corps avec montant de 50 (dépense) et ID compte | Enregistrement de la transaction et mise à jour du solde du compte (débit) | Transaction créée (HTTP 201), solde du compte débité de 50. |
-| **Virement entre comptes** | Source `acc_1`, destination `acc_2`, montant 100 | Enregistrement de la transaction de virement et double mise à jour de solde | Transaction créée (HTTP 201), `acc_1` débité de 100 et `acc_2` crédité de 100. |
+| **Filtrage et pagination** | Paramètres de query (`accountId` et/ou `search`, `page 2`, `limit 10`) | Construction dynamique de la requête vérifiant `accountId` OU `toAccountId` en cas de filtrage de compte, et combinaison propre avec le filtre textuel en `$and`. Inclut les comptes accessibles via partage (`Share`) | La réponse (HTTP 200) renvoie la liste filtrée contenant les transactions directes ainsi que les virements entrants/sortants du compte, avec les métadonnées de pagination. |
+| **Création de transaction** | Corps avec montant de 50 (dépense) et ID compte (propriétaire de l'utilisateur) | Vérification de la propriété ou du droit `write` via `Share.exists()`, enregistrement de la transaction et mise à jour du solde du compte (débit) | Transaction créée (HTTP 201), solde du compte débité de 50. |
+| **Virement entre comptes** | Source `acc_1` (userId = user_123), destination `acc_2` (userId = user_123), montant 100 | Vérification des droits sur les deux comptes, enregistrement du virement et double mise à jour de solde | Transaction créée (HTTP 201), `acc_1` débité de 100 et `acc_2` crédité de 100. |
 | **Virement pour objectif d'épargne** | Source `acc_1`, destination `acc_savings`, montant 150, `savingsGoalId` lié | Enregistrement de la transaction de virement, double mise à jour de solde de compte, et mise à jour de la progression de l'objectif d'épargne | Transaction créée (HTTP 201), `acc_1` débité de 150, `acc_savings` crédité de 150, progression de l'objectif augmentée de 150. |
 | **Suppression propre (Rollback)** | ID de transaction existante (dépense de 25) | Rétablissement des soldes de comptes et suppression physique de la transaction | Transaction supprimée (HTTP 200), solde du compte augmenté de 25. |
 | **Exportation CSV** | Données de transactions existantes | Formatage en chaînes séparées par des virgules et définition des en-têtes de réponse | Fichier CSV renvoyé avec type MIME `text/csv` (HTTP 200). |
@@ -491,6 +491,21 @@ Ces tests valident les fonctions mathématiques de calcul d'échéances pour pr�
 | **Fréquences hebdomadaires** | Date de départ, pas de 2 semaines | Ajout linéaire de semaines | Calcul exact avec franchissement de mois. |
 | **Fins de mois récurrentes (31)** | Date de départ au 31 Janvier, pas de 1 mois | Plafonnement dynamique au dernier jour de Février puis retour au 31 Mars | Le 1er mois renvoie le 28/29 Février. Le 2e mois renvoie le 31 Mars. Le 3e mois renvoie le 30 Avril. |
 | **Bissextiles (29 Février)** | Date de départ le 29 Février 2024, pas de 1 an | Plafonnement en année ordinaire puis retour au 29 Février lors de la prochaine année bissextile | Le 1er an renvoie le 28 Février 2025. Le 4e an renvoie le 29 Février 2028. |
+
+---
+
+### 2.20 Contrôleur des Budgets — Cas de Partage (`budgetController.js`)
+
+Les tests du contrôleur de budgets ont été étendus pour tenir compte de la logique de partage.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Calcul du budget (getBudgets) — budgets propres** | Query `{ month: '2026-06' }`, budgets propres, `Share.find` renvoyant `[]` | Premier appel `Budget.find` → budgets propres. Second appel `Budget.find({ _id: { $in: [] } })` → `[]`. Calcul du `spent` à partir des transactions sur les comptes du propriétaire | Réponse JSON renvoyant les budgets enrichis avec `spent: 80`, `remaining: 120`, `percentage: 40`, `isShared: false`, `permission: 'owner'` (HTTP 200). |
+| **Suppression autorisée** | ID du budget, utilisateur propriétaire | Vérification de l'appartenance du budget via `budget.userId.toString()` | Le budget est supprimé de la base de données (HTTP 200). |
+| **Suppression interdite** | ID du budget, utilisateur non propriétaire | Comparaison de l'identifiant | La suppression est rejetée (HTTP 401). |
+
+> [!NOTE]
+> **Convention de mocking** : Le test `getBudgets` utilise `Budget.find.mockReturnValueOnce()` deux fois en séquence : le premier appel retourne les budgets propres avec populate, le second (pour les budgets partagés) retourne un tableau vide. Le modèle `Share` est mocké pour retourner `[]` (aucun partage actif). Les transactions mock incluent désormais un champ `accountId` pour que le filtre de dépenses par compte propriétaire fonctionne correctement.
 
 ---
 

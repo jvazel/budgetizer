@@ -84,7 +84,8 @@ describe('WebAuthn Controller', () => {
     };
     res = {
       json: vi.fn(),
-      status: vi.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      cookie: vi.fn().mockReturnThis()
     };
   });
 

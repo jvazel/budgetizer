@@ -106,7 +106,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     }
   }, [isOpen]);
   
-  const { accounts } = useAccounts();
+  const { accounts: allAccounts } = useAccounts();
+  const accounts = useMemo(() => allAccounts.filter(acc => acc.permission !== 'read'), [allAccounts]);
   const { categoriesTree } = useCategories();
   const { addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { transactions: recentTransactions } = useTransactions({ limit: 50 });
