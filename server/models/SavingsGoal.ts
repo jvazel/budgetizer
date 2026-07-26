@@ -49,5 +49,7 @@ const savingsGoalSchema = new mongoose.Schema({
 
 // Index for query performance optimization
 savingsGoalSchema.index({ userId: 1 });
+savingsGoalSchema.index({ userId: 1, targetDate: 1 });
+savingsGoalSchema.index({ userId: 1, accountId: 1 });
 
 export default mongoose.model<ISavingsGoalDocument, SavingsGoalModel>('SavingsGoal', savingsGoalSchema);

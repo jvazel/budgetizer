@@ -64,11 +64,11 @@ cd budgetizer
 ```
 
 ### 2. Installation des dépendances
-Vous pouvez installer les dépendances du client et du serveur en une seule commande depuis la racine du projet :
+Vous pouvez installer l'ensemble des dépendances du monorepo (racine, shared, server, client) grâce à **npm Workspaces** natifs :
 ```bash
-npm run install-all
+npm install
 ```
-*(Cette commande lance séquentiellement `npm install` dans les sous-dossiers `server` et `client`)*.
+*(Cette commande installe les dépendances et lie automatiquement le package local `@budgetizer/shared` pour le client et le serveur)*.
 
 ### 3. Configuration de l'environnement (`.env`)
 Créez un fichier `.env` dans le dossier `/server` (il est ignoré par Git) et configurez les variables suivantes. Voici les options disponibles pour le développement et la production :
