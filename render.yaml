@@ -3,5 +3,5 @@ services:
     name: budgetizer-api
     runtime: node
     rootDir: server
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
