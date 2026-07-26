@@ -33,6 +33,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec, { customCss } from './utils/swagger';
 import { AppRequest, AppResponse } from './types';
 import { env } from './utils/env';
+import requestIdMiddleware from './middleware/requestIdMiddleware';
 import './listeners/alertListener';
 
 initWebPush();
@@ -89,6 +90,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+app.use(requestIdMiddleware);
 app.use(express.json());
 app.use(cookieParser());
 

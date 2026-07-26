@@ -1,9 +1,14 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 const isProduction = process.env.NODE_ENV === 'production';
+
+export const requestStore = new AsyncLocalStorage<{ requestId: string }>();
 
 interface LogEntry {
   timestamp: string;
   level: string;
   message: string;
+  requestId?: string;
   context?: Record<string, unknown>;
 }
 
@@ -33,10 +38,14 @@ class StructuredLogger {
 
   private format(level: string, message: string, meta?: Record<string, unknown>): LogEntry {
     const serializedMeta = serializeMeta(meta);
+    const store = requestStore.getStore();
+    const requestId = store?.requestId;
+
     return {
       timestamp: new Date().toISOString(),
       level,
       message,
+      ...(requestId ? { requestId } : {}),
       context: { ...this.context, ...serializedMeta },
     };
   }
