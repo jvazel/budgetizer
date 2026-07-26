@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import WaterfallChart from '../WaterfallChart';
 import api from '../../../services/api';
@@ -110,11 +110,15 @@ describe('WaterfallChart Component', () => {
 
     // Click on previous month button
     const prevBtn = screen.getByTitle('Mois précédent');
-    fireEvent.click(prevBtn);
+    await act(async () => {
+      fireEvent.click(prevBtn);
+    });
 
     // Click on next month button
     const nextBtn = screen.getByTitle('Mois suivant');
-    fireEvent.click(nextBtn);
+    await act(async () => {
+      fireEvent.click(nextBtn);
+    });
 
     expect(api.get).toHaveBeenCalledTimes(3); // Initial fetch + prev month + next month
   });

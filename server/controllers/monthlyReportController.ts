@@ -2,7 +2,6 @@ import Transaction from '../models/Transaction';
 import ScheduledTransaction from '../models/ScheduledTransaction';
 import SavingsGoal from '../models/SavingsGoal';
 import Budget from '../models/Budget';
-import Category from '../models/Category';
 import MonthlyReport from '../models/MonthlyReport';
 import Account from '../models/Account';
 import { AppRequest, AppResponse } from '../types';
@@ -114,14 +113,14 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     });
 
     // Revenus & Dépenses Mois M-1
-    let incomePrev = 0;
+    let _incomePrev = 0;
     let expensesPrev = 0;
     txsPrev.forEach(tx => {
       const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
       const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId!.toString()) : false;
 
       if (tx.type === 'income' && sourceChecking) {
-        incomePrev += tx.amount;
+        _incomePrev += tx.amount;
       } else if (tx.type === 'expense' && sourceChecking) {
         expensesPrev += tx.amount;
       } else if (tx.type === 'transfer') {
@@ -145,16 +144,16 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
       } else if (pct > 0) {
         globalExpenseChangeText = `Tes dépenses ont augmenté de **${pct.toFixed(1)}%** comparé au mois précédent, ce qui réduit ta capacité d'épargne nette.`;
       } else {
-        globalExpenseChangeText = `Tes dépenses globales sont restées parfaitement stables par rapport au mois dernier.`;
+        globalExpenseChangeText = 'Tes dépenses globales sont restées parfaitement stables par rapport au mois dernier.';
       }
     } else {
-      globalExpenseChangeText = `Tes dépenses globales sont stables par rapport au mois dernier.`;
+      globalExpenseChangeText = 'Tes dépenses globales sont stables par rapport au mois dernier.';
     }
 
     // --- ÉTAPE 3 : OBJECTIFS D'ÉPARGNE COMPLÉTÉS ---
     let completedGoalName: string | undefined = undefined;
     const completedGoals = savingsGoals.filter(goal => goal.currentAmount >= goal.targetAmount);
-    let allGoalTransfers: any[] = [];
+    let allGoalTransfers: Record<string, unknown>[] = [];
     
     if (completedGoals.length > 0) {
       allGoalTransfers = await Transaction.find({
@@ -171,13 +170,13 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
       if (goal.currentAmount >= goal.targetAmount) {
         // Filtrer les transferts pour cet objectif
         const goalTransfers = allGoalTransfers.filter(
-          tx => tx.savingsGoalId && tx.savingsGoalId.toString() === goal._id.toString()
+          tx => tx.savingsGoalId && (tx.savingsGoalId as string | object).toString() === goal._id.toString()
         );
 
-        const sumFromM = goalTransfers.reduce((sum, tx) => sum + tx.amount, 0);
+        const sumFromM = goalTransfers.reduce((sum, tx) => sum + (tx.amount as number), 0);
         const sumAfterM = goalTransfers
-          .filter(tx => tx.date > endOfM)
-          .reduce((sum, tx) => sum + tx.amount, 0);
+          .filter(tx => (tx.date as Date) > endOfM)
+          .reduce((sum, tx) => sum + (tx.amount as number), 0);
 
         // Montant à la fin du mois M-1 : Solde actuel - tous les transferts depuis M
         const amountAtEndOfPrev = goal.currentAmount - sumFromM - sumAfterM;
@@ -194,7 +193,7 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     // --- ÉTAPE 4 : VARIATIONS D'ABONNEMENTS --- (subs déjà chargé)
     let subChangeText = '';
 
-    let subTransactions: any[] = [];
+    let subTransactions: Record<string, unknown>[] = [];
     if (subs.length > 0) {
       subTransactions = await Transaction.find({
         userId,
@@ -206,27 +205,27 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
 
     for (const sub of subs) {
       const subTxs = subTransactions.filter(
-        tx => tx.scheduledTransactionId && tx.scheduledTransactionId.toString() === sub._id.toString()
+        tx => tx.scheduledTransactionId && (tx.scheduledTransactionId as string | object).toString() === sub._id.toString()
       );
 
       // Trouver les transactions réelles liées à cet abonnement en M et M-1
-      const txM = subTxs.find(tx => tx.date >= startOfM && tx.date <= endOfM);
-      const txPrev = subTxs.find(tx => tx.date >= startOfPrev && tx.date <= endOfPrev);
+      const txM = subTxs.find(tx => (tx.date as Date) >= startOfM && (tx.date as Date) <= endOfM);
+      const txPrev = subTxs.find(tx => (tx.date as Date) >= startOfPrev && (tx.date as Date) <= endOfPrev);
 
       if (txM && txPrev) {
-        const diff = txM.amount - txPrev.amount;
+        const diff = (txM.amount as number) - (txPrev.amount as number);
         if (diff > 0.05) {
-          subChangeText = `Ton abonnement **${sub.description}** a augmenté de **${diff.toFixed(2)} €** ce mois-ci (passant de ${txPrev.amount.toFixed(2)} € à ${txM.amount.toFixed(2)} €).`;
+          subChangeText = `Ton abonnement **${sub.description}** a augmenté de **${diff.toFixed(2)} €** ce mois-ci (passant de ${(txPrev.amount as number).toFixed(2)} € à ${(txM.amount as number).toFixed(2)} €).`;
           break;
         } else if (diff < -0.05) {
           subChangeText = `Excellente nouvelle ! Ton abonnement **${sub.description}** a diminué de **${Math.abs(diff).toFixed(2)} €** ce mois-ci.`;
           break;
         }
       } else if (txM && !txPrev) {
-        subChangeText = `Tu as souscrit à un nouvel abonnement : **${sub.description}** pour un montant de **${txM.amount.toFixed(2)} €**.`;
+        subChangeText = `Tu as souscrit à un nouvel abonnement : **${sub.description}** pour un montant de **${(txM.amount as number).toFixed(2)} €**.`;
         break;
       } else if (!txM && txPrev && !sub.isActive) {
-        subChangeText = `Tu as résilié avec succès ton abonnement **${sub.description}**, économisant **${txPrev.amount.toFixed(2)} €** ce mois-ci.`;
+        subChangeText = `Tu as résilié avec succès ton abonnement **${sub.description}**, économisant **${(txPrev.amount as number).toFixed(2)} €** ce mois-ci.`;
         break;
       }
     }
@@ -250,8 +249,8 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
       categoryTxAverages[catId] = sum / count;
     });
 
-    const unusualTransactions: any[] = [];
-    let outlierTx: any = null;
+    const unusualTransactions: Record<string, unknown>[] = [];
+    let outlierTx: Record<string, unknown> | null = null;
     let maxOutlierRatio = 0;
 
     for (const tx of txsM) {
@@ -373,7 +372,7 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     if (completedGoalName) {
       p2 += `Félicitations ! Ce mois-ci, tu as complété ton objectif d'épargne **🎯 ${completedGoalName}** en atteignant ta cible. C'est une immense victoire pour ton patrimoine ! `;
     } else {
-      p2 += `Félicitations pour tes efforts de gestion ! `;
+      p2 += 'Félicitations pour tes efforts de gestion ! ';
     }
 
     if (wellManagedBudgetName) {
@@ -381,7 +380,7 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     } else if (decreasedCategoryName) {
       p2 += `Tu as réduit tes dépenses sur la catégorie **${decreasedCategoryName}** de **${Math.abs(decreasedCategoryPct).toFixed(0)}%** par rapport à tes habitudes historiques. `;
     } else {
-      p2 += `Aucun dérapage de dépenses n'est à signaler sur tes postes majeurs, signe d'une belle discipline budgétaire générale. `;
+      p2 += 'Aucun dérapage de dépenses n\'est à signaler sur tes postes majeurs, signe d\'une belle discipline budgétaire générale. ';
     }
 
     if (subChangeText.includes('résilié') || subChangeText.includes('diminué')) {
@@ -401,7 +400,7 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
       const catName = catObj?.name || 'Catégorie inconnue';
       p3 += `Attention toutefois à certains écarts. Une transaction inhabituelle a été détectée : **${outlierTx.amount.toFixed(2)} €** ${txDesc} dans la catégorie **${catName}** (soit **${maxOutlierRatio.toFixed(1)} fois** le montant unitaire habituel). `;
     } else {
-      p3 += `Quelques points nécessitent ta vigilance. `;
+      p3 += 'Quelques points nécessitent ta vigilance. ';
     }
 
     if (exceededBudgetName) {
@@ -413,7 +412,7 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     if (subChangeText.includes('augmenté') || subChangeText.includes('nouvel')) {
       p3 += `Prends également note de ceci : ${subChangeText}`;
     } else if (!outlierTx && !exceededBudgetName && !increasedCategoryName) {
-      p3 = `Excellent travail ! Aucun dépassement de budget ni transaction hors normes n'a été signalé ce mois-ci. Tes finances restent sous contrôle.`;
+      p3 = 'Excellent travail ! Aucun dépassement de budget ni transaction hors normes n\'a été signalé ce mois-ci. Tes finances restent sous contrôle.';
     }
 
     const reportText = `${p1}\n\n${p2}\n\n${p3}`;

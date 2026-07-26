@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getBudgets, createBudget, deleteBudget } from '../budgetController';
+import { getBudgets, deleteBudget } from '../budgetController';
 import Budget from '../../models/Budget';
 import Transaction from '../../models/Transaction';
 

@@ -30,11 +30,11 @@ const savingsGoalSchema = new mongoose.Schema({
   },
   icon: {
     type: String,
-    default: "💰"
+    default: '💰'
   },
   color: {
     type: String,
-    default: "#3b82f6"
+    default: '#3b82f6'
   },
   accountId: {
     type: mongoose.Schema.Types.ObjectId,

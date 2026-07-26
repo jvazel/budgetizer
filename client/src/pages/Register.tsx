@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema } from '../validators/authValidators';
 import { AuthContext } from '../context/AuthContext';
@@ -17,7 +17,7 @@ const Register = () => {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
@@ -29,7 +29,7 @@ const Register = () => {
     },
   });
 
-  const passwordValue = watch('password');
+  const passwordValue = useWatch({ control, name: 'password' });
   const getPasswordStrength = () => {
     if (!passwordValue) return 0;
     if (passwordValue.length < 6) return 1;

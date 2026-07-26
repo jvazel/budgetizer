@@ -9,7 +9,7 @@ const userCache = new Map<string, { user: IUserDocument; expiresAt: number }>();
 const CACHE_TTL = 30 * 1000; // 30 seconds
 
 // Periodic cleanup of expired cache entries to prevent memory leaks
-let cleanupInterval = setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [key, cached] of userCache.entries()) {
     if (cached.expiresAt < now) {

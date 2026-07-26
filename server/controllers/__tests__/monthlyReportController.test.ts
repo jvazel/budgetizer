@@ -68,7 +68,7 @@ const createMockQuery = (data) => {
     sort: vi.fn().mockReturnThis(),
     lean: vi.fn().mockReturnThis(),
     then: (resolve) => resolve(data),
-    catch: (reject) => {}
+    catch: (_reject) => {}
   };
   return query;
 };

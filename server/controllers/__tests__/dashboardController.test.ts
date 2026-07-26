@@ -106,7 +106,7 @@ describe('Dashboard Controller', () => {
       }));
       
       // Setup findOne mock to handle oldestTx date
-      Transaction.findOne.mockImplementation((query) => {
+      Transaction.findOne.mockImplementation((_query) => {
         return mockChain({ date: new Date('2026-01-01') }); // Oldest transaction
       });
 
@@ -393,7 +393,7 @@ describe('Dashboard Controller', () => {
       req.query.year = '2026';
 
       // Oldest and newest tx for availableYears computation
-      Transaction.findOne.mockImplementation((query) => {
+      Transaction.findOne.mockImplementation((_query) => {
         return mockChain({ date: new Date('2025-05-01') });
       });
 
@@ -401,7 +401,7 @@ describe('Dashboard Controller', () => {
         { _id: 'acc1', type: 'checking', includeInTotal: true }
       ]));
 
-      Transaction.aggregate.mockImplementation((pipeline) => {
+      Transaction.aggregate.mockImplementation((_pipeline) => {
         return Promise.resolve([
           { _id: 0, income: 2000, expenses: 500 },
           { _id: 1, income: 0, expenses: 300 }

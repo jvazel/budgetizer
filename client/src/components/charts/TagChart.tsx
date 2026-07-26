@@ -7,6 +7,52 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const CustomTooltip1 = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip text-left">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+        <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+          {formatCurrency(payload[0].value || payload[0].amount)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomTooltip2 = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const formattedDate = new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    return (
+      <div className="custom-chart-tooltip text-left space-y-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Le : {formattedDate}</p>
+        <div className="flex items-center justify-between gap-6 text-[11px] font-medium">
+          <span className="text-secondary">Cumulé :</span>
+          <span className="font-premium-numbers font-bold text-accent">
+            {formatCurrency(payload[0].value)}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomTooltip3 = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip text-left">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+        <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+          {formatCurrency(payload[0].value)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
   const [localPeriod, setLocalPeriod] = useState('month');
   const period = externalPeriod || localPeriod;
@@ -228,52 +274,6 @@ const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
   const selectedTagTotal = data.cumulativeEvolution.length > 0 
     ? data.cumulativeEvolution[data.cumulativeEvolution.length - 1].cumulative 
     : 0;
-
-  const CustomTooltip1 = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-chart-tooltip text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
-          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
-            {formatCurrency(payload[0].value || payload[0].amount)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomTooltip2 = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const formattedDate = new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-      return (
-        <div className="custom-chart-tooltip text-left space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Le : {formattedDate}</p>
-          <div className="flex items-center justify-between gap-6 text-[11px] font-medium">
-            <span className="text-secondary">Cumulé :</span>
-            <span className="font-premium-numbers font-bold text-accent">
-              {formatCurrency(payload[0].value)}
-            </span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomTooltip3 = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-chart-tooltip text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
-          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
-            {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6">

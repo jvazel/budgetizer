@@ -94,7 +94,7 @@ const CreditDetailPage = () => {
     let currentOutstanding = summary.capitalRemaining;
     const rate = summary.interestRate / 100 / 12;
     const monthlyPayment = summary.monthlyPayment;
-    let projectionDate = summary.nextPaymentDate ? new Date(summary.nextPaymentDate) : new Date();
+    const projectionDate = summary.nextPaymentDate ? new Date(summary.nextPaymentDate) : new Date();
 
     for (let i = 0; i < summary.monthsRemaining; i++) {
       const interestPart = rate > 0 ? currentOutstanding * rate : 0;

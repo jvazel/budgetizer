@@ -1,7 +1,6 @@
 import Budget from '../models/Budget';
 import Transaction from '../models/Transaction';
 import Account from '../models/Account';
-import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
 import { AppRequest, AppResponse } from '../types';
 import { invalidateDashboardCache } from './dashboardController';
@@ -109,7 +108,7 @@ export const getBudgets = async (req: AppRequest, res: AppResponse) => {
         { date: { $gte: mStart, $lte: mEnd } },
         { date: { $gte: yStart, $lte: yEnd } }
       ]
-    } as any);
+    });
 
     const enrichedBudgets = allBudgets.map(budget => {
       const period = budget.period || 'monthly';

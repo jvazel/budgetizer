@@ -3,7 +3,6 @@ import { registerUser, loginUser } from '../authController';
 import User from '../../models/User';
 import Category from '../../models/Category';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
 vi.mock('../../models/User.js', () => ({
   default: {

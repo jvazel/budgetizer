@@ -32,7 +32,7 @@ export interface CompletedOperation {
 }
 
 // Silence IndexedDB errors in test environment
-const logError = (...args: any[]) => {
+const logError = (...args: unknown[]) => {
   if (typeof process === 'undefined' || process.env?.NODE_ENV !== 'test') {
     console.error(...args);
   }
@@ -90,7 +90,7 @@ const getDB = (): Promise<IDBDatabase> => {
   });
 };
 
-export const getCacheValue = async <T = any>(key: string): Promise<T | undefined> => {
+export const getCacheValue = async <T = unknown>(key: string): Promise<T | undefined> => {
   try {
     const db = await getDB();
     return new Promise((resolve, reject) => {
@@ -106,7 +106,7 @@ export const getCacheValue = async <T = any>(key: string): Promise<T | undefined
   }
 };
 
-export const setCacheValue = async (key: string, value: any): Promise<void> => {
+export const setCacheValue = async (key: string, value: unknown): Promise<void> => {
   try {
     const db = await getDB();
     return new Promise((resolve, reject) => {
@@ -142,7 +142,7 @@ export const deleteCacheValue = async (key: string): Promise<void> => {
  * Génère une clé d'idempotence à partir de la méthode, l'URL et le payload.
  * Utilise SubtleCrypto (Web Crypto API) pour un hash SHA-256
  */
-export const generateIdempotencyKey = async (method: string, url: string, data?: any): Promise<string> => {
+export const generateIdempotencyKey = async (method: string, url: string, data?: unknown): Promise<string> => {
   const payloadString = data ? JSON.stringify(data) : '';
   const input = `${method}:${url}:${payloadString}`;
   
@@ -281,7 +281,7 @@ export const cleanupCompletedOperations = async (): Promise<number> => {
       const request = store.getAll();
       
       request.onsuccess = () => {
-        const entries = request.result as any[];
+        const entries = request.result as CompletedOperation[];
         const now = Date.now();
         let deletedCount = 0;
         

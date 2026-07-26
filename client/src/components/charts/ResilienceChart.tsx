@@ -8,6 +8,32 @@ const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount);
 };
 
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="custom-chart-tooltip text-left text-[11px] space-y-1.5 min-w-[160px]">
+        <p className="font-extrabold text-secondary tracking-wide border-b border-border/20 pb-1 mb-1">
+          Année {data.year}
+        </p>
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-emerald-400 font-medium">Optimiste (P90) :</span>
+          <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p90)}</span>
+        </div>
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-accent font-medium">Médian (P50) :</span>
+          <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p50)}</span>
+        </div>
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-rose-400 font-medium">Pessimiste (P10) :</span>
+          <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p10)}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const ResilienceChart = () => {
   const { data: dashboardData, loading: dashboardLoading, refreshDashboard } = useDashboard();
 
@@ -113,33 +139,6 @@ const ResilienceChart = () => {
     indexSavings,
     enableShocks
   ]);
-
-  // Custom tooltip styling
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="custom-chart-tooltip text-left text-[11px] space-y-1.5 min-w-[160px]">
-          <p className="font-extrabold text-secondary tracking-wide border-b border-border/20 pb-1 mb-1">
-            Année {data.year}
-          </p>
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-emerald-400 font-medium">Optimiste (P90) :</span>
-            <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p90)}</span>
-          </div>
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-accent font-medium">Médian (P50) :</span>
-            <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p50)}</span>
-          </div>
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-rose-400 font-medium">Pessimiste (P10) :</span>
-            <span className="font-extrabold font-premium-numbers">{formatCurrency(data.p10)}</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const loading = dashboardLoading || initialCapital === undefined || monthlySavings === undefined;
 

@@ -145,7 +145,7 @@ export const processScheduledTransactions = async (): Promise<void> => {
          }
        }
 
-      await (st as any).save({ session });
+      await st.save({ session });
      }
 
     await session.commitTransaction();

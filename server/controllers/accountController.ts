@@ -161,7 +161,7 @@ export const updateAccount = async (req: AppRequest, res: AppResponse) => {
     }
 
     const { type, sourceAccountId, creditDetails } = req.body;
-    let updateFields = { ...req.body };
+    const updateFields = { ...req.body };
 
     if (account.type === 'credit' || type === 'credit') {
       const details = creditDetails || account.creditDetails || {};

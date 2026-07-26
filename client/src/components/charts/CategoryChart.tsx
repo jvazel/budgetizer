@@ -5,6 +5,20 @@ import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Min
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip text-left">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+        <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+          {formatCurrency(payload[0].value)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, isWidget = false, onViewDetail }) => {
   const [localPeriod, setLocalPeriod] = useState('month');
   const period = externalPeriod || localPeriod;
@@ -405,20 +419,6 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
   const visibleLegendItems = isLegendExpanded ? pieData : pieData.slice(0, 4);
   const hasMoreLegendItems = pieData.length > 4;
   const hiddenLegendCount = pieData.length - 4;
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-chart-tooltip text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
-          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
-            {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   if (isWidget) {
     return (

@@ -22,15 +22,15 @@ const accountSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    default: "EUR"
+    default: 'EUR'
   },
   color: {
     type: String,
-    default: "#4ade80"
+    default: '#4ade80'
   },
   icon: {
     type: String,
-    default: "wallet"
+    default: 'wallet'
   },
   includeInTotal: {
     type: Boolean,

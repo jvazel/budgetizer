@@ -49,9 +49,9 @@ describe('sendEmail utility', () => {
     process.env.FROM_EMAIL = 'noreply@budgetizer.app';
 
     const sendMailMock = vi.fn().mockResolvedValue({ messageId: '12345' });
-    (nodemailer.createTransport as any).mockReturnValue({
+    vi.mocked(nodemailer.createTransport).mockReturnValue({
       sendMail: sendMailMock,
-    });
+    } as unknown as ReturnType<typeof nodemailer.createTransport>);
 
     await sendEmail({
       to: 'user@domain.com',

@@ -7,6 +7,33 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const monthLabel = formatMonthLabel(label);
+    return (
+      <div className="custom-chart-tooltip text-left space-y-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
+        {payload.map((item, idx) => {
+          let labelName = item.name;
+          let valColor = item.color;
+          if (item.name === 'income') { labelName = 'Revenus'; valColor = '#10b981'; }
+          else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#f43f5e'; }
+          else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
+          return (
+            <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+              <span className="text-secondary">{labelName} :</span>
+              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                {formatCurrency(item.value)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return null;
+};
+
 const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod, endDate: externalEndDate }) => {
   const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
   const [selectedAccountId, setSelectedAccountId] = useState('');
@@ -120,33 +147,6 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
     } finally {
       setTxLoading(false);
     }
-  };
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const monthLabel = formatMonthLabel(label);
-      return (
-        <div className="custom-chart-tooltip text-left space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
-          {payload.map((item, idx) => {
-            let labelName = item.name;
-            let valColor = item.color;
-            if (item.name === 'income') { labelName = 'Revenus'; valColor = '#10b981'; }
-            else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#f43f5e'; }
-            else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
-            return (
-              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
-                <span className="text-secondary">{labelName} :</span>
-                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                  {formatCurrency(item.value)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    return null;
   };
 
   if (isWidget) {

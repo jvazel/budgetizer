@@ -14,7 +14,7 @@ const mockFindOneAndUpdate = vi.fn().mockResolvedValue(null); // null = lock acq
 
 vi.mock('../../models/JobLock', () => ({
   default: {
-    findOneAndUpdate: (...args: any[]) => mockFindOneAndUpdate(...args),
+    findOneAndUpdate: (...args: unknown[]) => mockFindOneAndUpdate(...args),
     deleteOne: vi.fn().mockResolvedValue({}),
     deleteMany: vi.fn().mockResolvedValue({})
   }
@@ -38,13 +38,13 @@ vi.mock('../../models/ScheduledTransaction', () => ({
 
 vi.mock('../../models/Transaction', () => {
   const mockSave = vi.fn().mockResolvedValue({});
-  const MockTx = vi.fn().mockImplementation(function(data: any) {
+  const MockTx = vi.fn().mockImplementation(function(data: Record<string, unknown>) {
     return {
       ...data,
       save: mockSave
     };
   });
-  (MockTx as any).save = mockSave;
+  (MockTx as unknown as Record<string, unknown>).save = mockSave;
   return { default: MockTx };
 });
 

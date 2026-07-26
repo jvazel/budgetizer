@@ -33,7 +33,7 @@ export const createTag = async (req: AppRequest, res: AppResponse) => {
     // Case-insensitive check for duplicate name for this user
     const existingTag = await Tag.findOne({
       userId: req.user!.id,
-      name: { $regex: new RegExp(`^${cleanName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
+      name: { $regex: new RegExp(`^${cleanName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
     });
 
     if (existingTag) {
@@ -67,7 +67,7 @@ export const updateTag = async (req: AppRequest, res: AppResponse) => {
   const { name, color, isArchived } = req.body;
 
   try {
-    let tag = await Tag.findById(req.params.id);
+    const tag = await Tag.findById(req.params.id);
     if (!tag) {
       return res.status(404).json({ message: 'Tag non trouvé.' });
     }
@@ -82,7 +82,7 @@ export const updateTag = async (req: AppRequest, res: AppResponse) => {
       const duplicateTag = await Tag.findOne({
         userId: req.user!.id,
         _id: { $ne: tag._id },
-        name: { $regex: new RegExp(`^${cleanName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
+        name: { $regex: new RegExp(`^${cleanName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
       });
 
       if (duplicateTag) {

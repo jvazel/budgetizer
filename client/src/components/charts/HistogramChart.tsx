@@ -7,6 +7,45 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const CustomTooltip = ({ active, payload, label, dataHistory = [], groupBy = 'month' }) => {
+  if (active && payload && payload.length) {
+    let formattedLabel = label;
+    if (groupBy === 'month' && label.includes('-')) {
+      const [year, month] = label.split('-');
+      const date = new Date(year, parseInt(month) - 1, 1);
+      formattedLabel = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    } else if (groupBy === 'day' && label.includes('-')) {
+      const date = new Date(label);
+      formattedLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    } else {
+      const item = dataHistory.find(h => h.key === label);
+      if (item) formattedLabel = item.label;
+    }
+
+    return (
+      <div className="custom-chart-tooltip text-left space-y-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{formattedLabel}</p>
+        {payload.map((item, idx) => {
+          let labelName = item.name;
+          let valColor = item.color;
+          if (item.name === 'income') { labelName = 'Recettes'; valColor = '#10b981'; }
+          else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#ef4444'; }
+          else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
+          return (
+            <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+              <span className="text-secondary">{labelName} :</span>
+              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                {formatCurrency(item.value)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return null;
+};
+
 const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate }) => {
   const { accounts } = useAccounts();
 
@@ -118,45 +157,6 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
 
   const { history = [], metrics = {} } = data;
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      let formattedLabel = label;
-      if (data.groupBy === 'month' && label.includes('-')) {
-        const [year, month] = label.split('-');
-        const date = new Date(year, parseInt(month) - 1, 1);
-        formattedLabel = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-      } else if (data.groupBy === 'day' && label.includes('-')) {
-        const date = new Date(label);
-        formattedLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      } else {
-        const item = history.find(h => h.key === label);
-        if (item) formattedLabel = item.label;
-      }
-
-      return (
-        <div className="custom-chart-tooltip text-left space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{formattedLabel}</p>
-          {payload.map((item, idx) => {
-            let labelName = item.name;
-            let valColor = item.color;
-            if (item.name === 'income') { labelName = 'Recettes'; valColor = '#10b981'; }
-            else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#ef4444'; }
-            else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
-            return (
-              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
-                <span className="text-secondary">{labelName} :</span>
-                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                  {formatCurrency(item.value)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="space-y-6">
       {/* 1. Filters Card */}
@@ -208,8 +208,10 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
                 onChange={(e) => setStartDate(e.target.value)}
                 onClick={(e) => {
                   try {
-                    e.target.showPicker();
-                  } catch (err) {}
+                    (e.target as HTMLInputElement).showPicker?.();
+                  } catch {
+                    // Ignore if showPicker is not supported
+                  }
                 }}
                 className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
               />
@@ -222,8 +224,10 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
                 onChange={(e) => setEndDate(e.target.value)}
                 onClick={(e) => {
                   try {
-                    e.target.showPicker();
-                  } catch (err) {}
+                    (e.target as HTMLInputElement).showPicker?.();
+                  } catch {
+                    // Ignore if showPicker is not supported
+                  }
                 }}
                 className="bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none focus:border-accent"
               />
@@ -353,7 +357,7 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
                   tickLine={false}
                 />
                 <Tooltip
-                  content={<CustomTooltip />}
+                  content={<CustomTooltip dataHistory={history} groupBy={data.groupBy} />}
                   wrapperStyle={{ pointerEvents: 'none' }}
                   cursor={{ stroke: 'rgba(255, 255, 255, 0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />

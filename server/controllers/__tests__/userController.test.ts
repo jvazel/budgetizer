@@ -16,7 +16,6 @@ import SavedFilter from '../../models/SavedFilter';
 import MonthlyReport from '../../models/MonthlyReport';
 import UserCredential from '../../models/UserCredential';
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
 
 const mockSession = {
   startTransaction: vi.fn(),

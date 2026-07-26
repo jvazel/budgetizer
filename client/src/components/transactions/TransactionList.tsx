@@ -71,17 +71,13 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
     };
   }, [visibleCount, transactions.length]);
 
-  if (!transactions || transactions.length === 0) {
-    return <div className="text-center text-muted p-8">Aucune transaction trouvée.</div>;
-  }
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   // Only slice and group what is currently visible
   const slicedTransactions = React.useMemo(() => {
-    return transactions.slice(0, visibleCount);
+    return (transactions || []).slice(0, visibleCount);
   }, [transactions, visibleCount]);
 
   const grouped = React.useMemo(() => {
@@ -93,21 +89,33 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
     return slicedTransactions.reduce((acc, curr) => {
       const txDate = new Date(curr.date);
       txDate.setHours(0, 0, 0, 0);
+      let dateKey: string;
 
-      let label;
       if (txDate.getTime() === today.getTime()) {
-        label = "Aujourd'hui";
+        dateKey = "Aujourd'hui";
       } else if (txDate.getTime() === yesterday.getTime()) {
-        label = 'Hier';
+        dateKey = 'Hier';
       } else {
-        label = new Date(curr.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        dateKey = txDate.toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        dateKey = dateKey.charAt(0).toUpperCase() + dateKey.slice(1);
       }
 
-      if (!acc[label]) acc[label] = [];
-      acc[label].push(curr);
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(curr);
       return acc;
     }, {});
   }, [slicedTransactions]);
+
+  if (!transactions || transactions.length === 0) {
+    return <div className="text-center text-muted p-8">Aucune transaction trouvée.</div>;
+  }
 
   return (
     <div>

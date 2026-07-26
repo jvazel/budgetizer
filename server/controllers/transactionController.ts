@@ -14,12 +14,12 @@ import { AppRequest, AppResponse } from '../types';
 
 // Utility function to update savings goal progress
 const updateSavingsGoalProgress = async (
-  goalId: any,
-  amount: any,
-  type: any,
+  goalId: string | mongoose.Types.ObjectId,
+  amount: number,
+  type: string,
   isRevert = false,
-  session: any = null,
-  transaction: any = null
+  session: mongoose.ClientSession | null = null,
+  transaction: unknown = null
 ) => {
   const goal = await SavingsGoal.findById(goalId).session(session);
   if (!goal) return;
@@ -74,7 +74,7 @@ export const getTransactions = async (req: AppRequest, res: AppResponse) => {
       ...shares.map(s => s.resourceId)
     ];
 
-    let query: Record<string, any> = { isPending: { $ne: true } };
+    const query: Record<string, unknown> = { isPending: { $ne: true } };
 
     if (accountId) {
       // Check authorization
@@ -131,7 +131,7 @@ export const getTransactions = async (req: AppRequest, res: AppResponse) => {
       const categoryIds = matchingCategories.map(c => c._id);
       const tagIds = matchingTags.map(t => t._id);
 
-      const searchOr: any[] = [
+      const searchOr: Record<string, unknown>[] = [
         { description: searchRegex },
         { note: searchRegex },
         { accountId: { $in: accountIds } },
@@ -377,10 +377,10 @@ export const getCalendarTransactions = async (req: AppRequest, res: AppResponse)
     ]);
 
     // Calculate occurrences
-    const projectedTransactions: any[] = [];
+    const projectedTransactions: Record<string, unknown>[] = [];
     
     scheduledTxs.forEach(st => {
-      let curr = new Date(st.nextDate);
+      const curr = new Date(st.nextDate);
       let timesLeft = st.numberOfTimes > 0 ? (st.numberOfTimes - st.timesExecuted) : Infinity;
       
       while (curr <= endDate && timesLeft > 0) {
@@ -445,7 +445,7 @@ export const getCalendarTransactions = async (req: AppRequest, res: AppResponse)
 export const exportTransactions = async (req: AppRequest, res: AppResponse) => {
   try {
     const { startDate, endDate, accountId } = req.query as Record<string, string>;
-    let query: Record<string, any> = { userId: req.user!.id, isPending: { $ne: true } };
+    const query: Record<string, unknown> = { userId: req.user!.id, isPending: { $ne: true } };
 
     if (accountId) query.accountId = accountId;
     if (startDate || endDate) {
@@ -541,11 +541,11 @@ export const importTransactions = async (req: AppRequest, res: AppResponse) => {
     const categoriesMap = new Map();
     existingCategories.forEach(cat => categoriesMap.set(`${cat.name.toLowerCase().trim()}_${cat.type}`, cat));
 
-    const transactionsToInsert: any[] = [];
+    const transactionsToInsert: Record<string, unknown>[] = [];
 
     // Cache new accounts and categories to bulk-insert later
-    const newAccountsToInsert: any[] = [];
-    const newCategoriesToInsert: any[] = [];
+    const newAccountsToInsert: Record<string, unknown>[] = [];
+    const newCategoriesToInsert: Record<string, unknown>[] = [];
 
     // Skip headers
     for (let i = 1; i < lines.length; i++) {
@@ -811,7 +811,7 @@ export const updateTransaction = async (req: AppRequest, res: AppResponse) => {
     transaction.date = date || transaction.date;
     transaction.note = note !== undefined ? note : transaction.note;
     transaction.toAccountId = toAccountId !== undefined ? toAccountId : transaction.toAccountId;
-    if (req.body.hasOwnProperty('savingsGoalId')) {
+    if (Object.prototype.hasOwnProperty.call(req.body, 'savingsGoalId')) {
       transaction.savingsGoalId = savingsGoalId;
     }
     if (tags !== undefined) {

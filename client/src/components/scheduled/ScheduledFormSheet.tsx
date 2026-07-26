@@ -142,7 +142,7 @@ const ScheduledFormSheet = ({ isOpen, onClose, onSave, initialData, defaultIsSub
     setAutoConfirm(true);
     
     // Find matching category ID from tree
-    let foundCatId = '';
+    let foundCatId: string;
     const expenseCats = categoriesTree.expense || [];
     
     const findCat = (cats) => {

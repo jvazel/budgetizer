@@ -119,7 +119,7 @@ const VelocityChart = ({ isWidget = false, onViewDetail, period: externalPeriod 
     const daysRemaining = getDaysRemaining(today);
     let totalBudget = 0;
     let totalSpentInMonth = 0;
-    let recentSpent = 0;
+    let recentSpent: number;
 
     if (selectedCategoryId === 'all') {
       totalBudget = monthlyBudgets.reduce((sum, b) => sum + b.amount, 0);
@@ -139,7 +139,7 @@ const VelocityChart = ({ isWidget = false, onViewDetail, period: externalPeriod 
     }
 
     const remainingBudget = totalBudget - totalSpentInMonth;
-    let targetVelocity = 0;
+    let targetVelocity: number;
     if (isCurrentMonthVal) {
       targetVelocity = getTargetVelocity(remainingBudget, daysRemaining);
     } else {

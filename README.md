@@ -30,9 +30,10 @@ L'application est construite sur une architecture découplée de type client-ser
 
 - **Frontend (Client)** :
   - **Framework & Langage** : [React](https://react.dev/) & **TypeScript** (propulsé par [Vite](https://vite.dev/))
-  - **PWA** : Configuration Progressive Web App via `@vite-pwa/plugin` avec Service Worker, gestion du cache et détection du mode hors ligne.
+  - **Architecture Modulaire** : Composants optimisés et découpés (`TransactionHeader`, `TransactionFiltersSheet`, composants de graphiques découplés du rendu).
+  - **PWA & Offline Sync** : Configuration Progressive Web App via `@vite-pwa/plugin` avec Service Worker, file d'attente IndexedDB (`idb`), stratégie de retentative avec *exponential backoff*, résolution de conflits HTTP 409 (server-wins avec notifications toast) et détection automatique de l'état en ligne/hors ligne.
   - **Styles & Animations** : [Tailwind CSS](https://tailwindcss.com/) et [Framer Motion](https://www.framer.com/motion/) pour un design sombre premium "Encre & Cuivre" inspiré de Bankyboard (lueurs orbes translucides en arrière-plan, transitions élastiques tactiles, et support du balayage *swipe-to-dismiss* sur les tiroirs de dialogue).
-  - **Graphiques** : [Recharts](https://recharts.org/) pour les visualisations interactives.
+  - **Graphiques** : [Recharts](https://recharts.org/) pour les visualisations interactives (Tooltips extraits hors du rendu pour la stabilité du state).
   - **Routage** : [React Router DOM v7](https://reactrouter.com/) pour la navigation.
 
 - **Backend (Serveur)** :

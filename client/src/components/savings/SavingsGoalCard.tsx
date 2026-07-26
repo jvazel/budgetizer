@@ -42,8 +42,8 @@ const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
   }
 
   // Color theme
-  let progressColor = 'bg-accent'; // Green / Teal
-  let textColor = 'text-accent';
+  let progressColor: string;
+  let textColor: string;
   
   if (isCompleted) {
     progressColor = 'bg-emerald-400';

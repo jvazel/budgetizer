@@ -89,7 +89,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
 
   const pillarRows = [
     {
-      key: 'savingsRate',
+      id: 'savingsRate',
       label: 'Taux d\'épargne',
       score: pillars.savingsRate.score,
       maxScore: pillars.savingsRate.maxScore,
@@ -97,7 +97,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
       applicable: true,
     },
     {
-      key: 'budgets',
+      id: 'budgets',
       label: 'Respect des budgets',
       score: pillars.budgets.score,
       maxScore: pillars.budgets.maxScore,
@@ -107,7 +107,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
       applicable: pillars.budgets.applicable,
     },
     {
-      key: 'fixedCharges',
+      id: 'fixedCharges',
       label: 'Charges fixes / Revenus',
       score: pillars.fixedCharges.score,
       maxScore: pillars.fixedCharges.maxScore,
@@ -115,7 +115,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
       applicable: true,
     },
     {
-      key: 'patrimony',
+      id: 'patrimony',
       label: 'Évolution du patrimoine',
       score: pillars.patrimony.score,
       maxScore: pillars.patrimony.maxScore,
@@ -125,7 +125,7 @@ const ScoreCard = ({ scoreData, prevScore }) => {
       applicable: true,
     },
     {
-      key: 'cushion',
+      id: 'cushion',
       label: 'Matelas de sécurité',
       score: pillars.cushion.score,
       maxScore: pillars.cushion.maxScore,
@@ -191,8 +191,8 @@ const ScoreCard = ({ scoreData, prevScore }) => {
                 {/* Pillars */}
                 <div className="space-y-3">
                   <p className="text-[10px] font-bold text-muted uppercase tracking-wider font-premium-numbers">Détail des 5 piliers</p>
-                  {pillarRows.map(row => (
-                    <PillarRow key={row.key} {...row} />
+                  {pillarRows.map(({ id, ...rowProps }) => (
+                    <PillarRow key={id} {...rowProps} />
                   ))}
                 </div>
 

@@ -141,7 +141,7 @@ const MonthlyReportPage = () => {
     if (!text || typeof text !== 'string') return null;
     try {
       // Regexp to match currency amounts (ex: "1 250,00 €" or "500 €") or percentages (ex: "23,2%")
-      const numberRegex = /(\d+[\s\d]*[,\.]?\d*\s*€|-?\d+[,\.]?\d*%\s*)/g;
+      const numberRegex = /(\d+[\s\d]*[,.]?\d*\s*€|-?\d+[,.]?\d*%\s*)/g;
       const parts = text.split(numberRegex);
 
       return (

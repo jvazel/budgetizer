@@ -476,7 +476,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     const stored = localStorage.getItem('budgetizer_quick_templates');
     let currentTemplates = DEFAULT_TEMPLATES;
     if (stored) {
-      try { currentTemplates = JSON.parse(stored); } catch (e) {}
+      try { currentTemplates = JSON.parse(stored); } catch { /* ignore parse error */ }
     }
     const updated = [newTemplate, ...currentTemplates].slice(0, 10);
     setTemplates(updated);
@@ -1061,7 +1061,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     value={date}
                     onChange={e => setDate(e.target.value)}
                     onClick={(e) => {
-                      try { e.target.showPicker(); } catch (err) {}
+                      try { (e.target as HTMLInputElement).showPicker?.(); } catch { /* ignore fallback */ }
                     }}
                     className={showDatePicker 
                       ? "mt-2 bg-surface border border-border rounded-xl p-3 text-primary focus:outline-none focus:border-accent w-full text-xs animate-fadeIn"

@@ -29,7 +29,7 @@ const transactionSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    default: ""
+    default: ''
   },
   date: {
     type: Date,
@@ -38,7 +38,7 @@ const transactionSchema = new mongoose.Schema({
   },
   note: {
     type: String,
-    default: ""
+    default: ''
   },
   tags: [{
     type: mongoose.Schema.Types.ObjectId,

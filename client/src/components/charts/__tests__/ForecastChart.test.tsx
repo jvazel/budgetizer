@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ForecastChart from '../ForecastChart';
 import { useAccounts } from '../../../hooks/useAccounts';
@@ -137,7 +137,9 @@ describe('ForecastChart Component', () => {
 
     // Simulate clicking on the chart point
     const chart = screen.getByTestId('recharts-composed-chart');
-    fireEvent.click(chart);
+    await act(async () => {
+      fireEvent.click(chart);
+    });
 
     // Verify drill-down sheet opens with correct data and no TypeError crash occurred
     expect(screen.getByTestId('bottom-sheet')).toBeInTheDocument();

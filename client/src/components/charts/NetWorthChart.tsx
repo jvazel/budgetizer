@@ -4,6 +4,46 @@ import { ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer }
 import { TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    return (
+      <div className="bg-surface/95 backdrop-blur-md p-4 rounded-2xl border border-border/40 shadow-xl space-y-2.5 text-left min-w-[200px]">
+        <p className="text-[9px] font-black uppercase tracking-wider text-muted">Période : {label}</p>
+        
+        <div className="pb-1.5 border-b border-border/20">
+          <p className="text-[9px] font-bold text-secondary uppercase tracking-wider">Richesse Nette</p>
+          <p className="font-premium-numbers text-base font-extrabold text-purple mt-0.5">
+            {formatCurrency(item.netWorth)}
+          </p>
+        </div>
+
+        <div className="space-y-1.5 text-[10px]">
+          <div className="flex justify-between items-center">
+            <span className="text-secondary font-medium">Total Actifs :</span>
+            <span className="font-mono font-bold text-accent">{formatCurrency(item.totalAssets)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-secondary font-medium">Checking :</span>
+            <span className="font-mono font-bold text-primary">{formatCurrency(item.checkingBalance)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-secondary font-medium">Épargne :</span>
+            <span className="font-mono font-bold text-primary">{formatCurrency(item.savingsBalance)}</span>
+          </div>
+          {item.totalDebts > 0 && (
+            <div className="flex justify-between items-center pt-1 border-t border-border/20">
+              <span className="text-secondary font-medium">Passifs / Dettes :</span>
+              <span className="font-mono font-bold text-danger">-{formatCurrency(item.totalDebts)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const NetWorthChart = ({ endDate: externalEndDate }) => {
   const [duration, setDuration] = useState(180); // 30, 90, 180, 365 days
   const [viewMode, setViewMode] = useState('global'); // 'global', 'assets_vs_debts', 'detail'
@@ -77,72 +117,6 @@ const NetWorthChart = ({ endDate: externalEndDate }) => {
 
   const peakNetWorth = history.length > 0 ? Math.max(...history.map(h => h.netWorth)) : 0;
   const lowestNetWorth = history.length > 0 ? Math.min(...history.map(h => h.netWorth)) : 0;
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      return (
-        <div className="bg-surface/95 backdrop-blur-md p-4 rounded-2xl border border-border/40 shadow-xl space-y-2.5 text-left min-w-[200px]">
-          <p className="text-[9px] font-black uppercase tracking-wider text-muted">Période : {label}</p>
-          
-          <div className="pb-1.5 border-b border-border/20">
-            <p className="text-[9px] font-bold text-secondary uppercase tracking-wider">Richesse Nette</p>
-            <p className="font-premium-numbers text-base font-extrabold text-purple mt-0.5">
-              {formatCurrency(item.netWorth)}
-            </p>
-          </div>
-
-          <div className="space-y-1.5 text-[10px]">
-            <div className="flex justify-between items-center">
-              <span className="text-secondary font-medium">Total Actifs :</span>
-              <span className="font-mono font-bold text-accent">{formatCurrency(item.totalAssets)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-secondary font-medium">Total Dettes :</span>
-              <span className="font-mono font-bold text-danger">{formatCurrency(Math.abs(item.credit))}</span>
-            </div>
-          </div>
-
-          {viewMode === 'detail' && (
-            <div className="pt-1.5 border-t border-border/20 space-y-1 text-[9px] font-medium">
-              <p className="text-[8px] text-muted font-bold uppercase tracking-wider mb-1">Détails des comptes</p>
-              {!hiddenKeys.includes('checking') && (
-                <div className="flex justify-between">
-                  <span className="text-muted">Courant :</span>
-                  <span className="font-mono text-primary font-bold">{formatCurrency(item.checking)}</span>
-                </div>
-              )}
-              {!hiddenKeys.includes('savings') && (
-                <div className="flex justify-between">
-                  <span className="text-muted">Épargne :</span>
-                  <span className="font-mono text-primary font-bold">{formatCurrency(item.savings)}</span>
-                </div>
-              )}
-              {!hiddenKeys.includes('cash') && (
-                <div className="flex justify-between">
-                  <span className="text-muted">Espèces :</span>
-                  <span className="font-mono text-primary font-bold">{formatCurrency(item.cash)}</span>
-                </div>
-              )}
-              {!hiddenKeys.includes('investment') && (
-                <div className="flex justify-between">
-                  <span className="text-muted">Investissements :</span>
-                  <span className="font-mono text-primary font-bold">{formatCurrency(item.investment)}</span>
-                </div>
-              )}
-              {!hiddenKeys.includes('credit') && (
-                <div className="flex justify-between">
-                  <span className="text-muted">Dette Crédit :</span>
-                  <span className="font-mono text-danger font-bold">-{formatCurrency(Math.abs(item.credit))}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6">

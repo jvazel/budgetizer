@@ -31,11 +31,9 @@ vi.mock('../../models/Account.js', () => ({
 
 describe('Insight Controller', () => {
   let req, res;
-  let findCallCount = 0;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    findCallCount = 0;
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-05T00:00:00.000Z'));
 
@@ -92,7 +90,7 @@ describe('Insight Controller', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
       anomalies: [],
       suggestions: [],
-      message: expect.stringContaining("Pas assez d'historique")
+      message: expect.stringContaining('Pas assez d\'historique')
     }));
   });
 
@@ -108,7 +106,7 @@ describe('Insight Controller', () => {
     const mockCategoryRent = { _id: 'cat_rent', name: 'Loyer', icon: '🏠', color: 'blue' };
 
     let aggregateCallCount = 0;
-    Transaction.aggregate.mockImplementation((pipeline) => {
+    Transaction.aggregate.mockImplementation((_pipeline) => {
       const isFirst = aggregateCallCount === 0;
       aggregateCallCount++;
       if (isFirst) {
@@ -181,7 +179,7 @@ describe('Insight Controller', () => {
     const mockCategoryFood = { _id: 'cat_food', name: 'Alimentation', icon: '🍔', color: 'orange' };
 
     let aggregateCallCount = 0;
-    Transaction.aggregate.mockImplementation((pipeline) => {
+    Transaction.aggregate.mockImplementation((_pipeline) => {
       const isFirst = aggregateCallCount === 0;
       aggregateCallCount++;
       if (isFirst) {

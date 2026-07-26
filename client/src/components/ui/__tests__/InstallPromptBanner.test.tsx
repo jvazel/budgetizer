@@ -65,7 +65,9 @@ describe('InstallPromptBanner Component', () => {
     expect(screen.getByRole('button', { name: 'Installer maintenant' })).toBeInTheDocument();
 
     const installBtn = screen.getByRole('button', { name: 'Installer maintenant' });
-    fireEvent.click(installBtn);
+    await act(async () => {
+      fireEvent.click(installBtn);
+    });
 
     expect(mockInstallApp).toHaveBeenCalled();
   });

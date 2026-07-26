@@ -1,7 +1,6 @@
 import http from 'http';
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -145,7 +144,7 @@ app.use('/api', apiLimiter);
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss,
-  customSiteTitle: "Budgetizer API Documentation"
+  customSiteTitle: 'Budgetizer API Documentation'
 }));
 
 // Routes
@@ -198,7 +197,7 @@ app.post('/api/jobs/process-scheduled', async (req: AppRequest, res: AppResponse
 });
 
 // Error Handler to log and format error responses
-app.use((err: unknown, req: AppRequest, res: AppResponse, next: (err?: unknown) => void) => {
+app.use((err: unknown, req: AppRequest, res: AppResponse, _next: (err?: unknown) => void) => {
   const status = (err as { status?: number })?.status || 500;
   const message = (err as Error)?.message || 'Internal Server Error';
   const stack = (err as Error)?.stack;
@@ -240,7 +239,7 @@ const migrateDoubleEncodedCredentials = async () => {
           await cred.save();
           fixedCount++;
         }
-      } catch (e) {
+      } catch {
         // Ignore parsing errors or non-double-encoded IDs
       }
     }

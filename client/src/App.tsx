@@ -55,10 +55,9 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
   const ctx = useContext(AuthContext);
-  if (!ctx) return null;
-  const { user, loading } = ctx;
 
   useEffect(() => {
+    const user = ctx?.user;
     if (user && user.preferences && (user.preferences as Record<string, unknown>).theme) {
       const isLight = (user.preferences as Record<string, unknown>).theme === 'light';
       document.documentElement.classList.toggle('light', isLight);
@@ -75,9 +74,12 @@ const AppContent = () => {
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
         meta.setAttribute('content', '#000000');
-        }
       }
-    }, [user]);
+    }
+  }, [ctx?.user]);
+
+  if (!ctx) return null;
+  const { user, loading } = ctx;
 
   if (showSplash) {
     return <Splash onComplete={() => setShowSplash(false)} />;

@@ -48,7 +48,7 @@ const WebAuthnKeys = () => {
       const base64urlToArrayBuffer = (base64url) => {
         try {
           const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
-          const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+          const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
           const rawData = window.atob(base64);
           const outputArray = new Uint8Array(rawData.length);
           for (let i = 0; i < rawData.length; ++i) {

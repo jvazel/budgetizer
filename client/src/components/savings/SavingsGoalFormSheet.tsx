@@ -151,8 +151,10 @@ const SavingsGoalFormSheet = ({ isOpen, onClose, onSave, onDelete, initialData =
               {...register('targetDate')}
               onClick={(e) => {
                 try {
-                  e.target.showPicker();
-                } catch (err) {}
+                  (e.target as HTMLInputElement).showPicker?.();
+                } catch {
+                  // Ignore if showPicker is not supported
+                }
               }}
               className="w-full h-[52px] px-4 bg-surface-2 border border-border rounded-2xl text-primary focus:outline-none focus:border-accent"
               required

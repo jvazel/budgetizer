@@ -53,16 +53,20 @@ const Input = ({
           onClick={(e) => {
             if (type === 'date') {
               try {
-                e.target.showPicker();
-              } catch (err) {}
+                (e.target as HTMLInputElement).showPicker?.();
+              } catch {
+                // Ignore if showPicker is not supported
+              }
             }
             if (props.onClick) props.onClick(e);
           }}
           onFocus={(e) => {
             if (type === 'date') {
               try {
-                e.target.showPicker();
-              } catch (err) {}
+                (e.target as HTMLInputElement).showPicker?.();
+              } catch {
+                // Ignore if showPicker is not supported
+              }
             }
             if (props.onFocus) props.onFocus(e);
           }}

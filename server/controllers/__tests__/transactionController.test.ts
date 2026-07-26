@@ -1,5 +1,4 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import mongoose from 'mongoose';
 import {
   getTransactions,
   createTransaction,

@@ -44,11 +44,11 @@ const aggregatePeriodStats = async (userId, checkingAccountIds, startDate, endDa
         amount: 1,
         accountId: 1,
         toAccountId: 1,
-        isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+        isSourceChecking: { $in: ['$accountId', checkingAccountObjectIds] },
         isDestChecking: {
           $cond: {
-            if: { $ne: ["$toAccountId", null] },
-            then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+            if: { $ne: ['$toAccountId', null] },
+            then: { $in: ['$toAccountId', checkingAccountObjectIds] },
             else: false
           }
         }
@@ -62,11 +62,11 @@ const aggregatePeriodStats = async (userId, checkingAccountIds, startDate, endDa
             $cond: [
               {
                 $or: [
-                  { $and: [{ $eq: ["$type", "income"] }, "$isSourceChecking"] },
-                  { $and: [{ $eq: ["$type", "transfer"] }, { $not: ["$isSourceChecking"] }, "$isDestChecking"] }
+                  { $and: [{ $eq: ['$type', 'income'] }, '$isSourceChecking'] },
+                  { $and: [{ $eq: ['$type', 'transfer'] }, { $not: ['$isSourceChecking'] }, '$isDestChecking'] }
                 ]
               },
-              "$amount",
+              '$amount',
               0
             ]
           }
@@ -76,11 +76,11 @@ const aggregatePeriodStats = async (userId, checkingAccountIds, startDate, endDa
             $cond: [
               {
                 $or: [
-                  { $and: [{ $eq: ["$type", "expense"] }, "$isSourceChecking"] },
-                  { $and: [{ $eq: ["$type", "transfer"] }, "$isSourceChecking", { $not: ["$isDestChecking"] }] }
+                  { $and: [{ $eq: ['$type', 'expense'] }, '$isSourceChecking'] },
+                  { $and: [{ $eq: ['$type', 'transfer'] }, '$isSourceChecking', { $not: ['$isDestChecking'] }] }
                 ]
               },
-              "$amount",
+              '$amount',
               0
             ]
           }
@@ -114,11 +114,11 @@ const getDailyExpensesMap = async (userId, checkingAccountIds, startDate, endDat
         accountId: 1,
         toAccountId: 1,
         date: 1,
-        isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+        isSourceChecking: { $in: ['$accountId', checkingAccountObjectIds] },
         isDestChecking: {
           $cond: {
-            if: { $ne: ["$toAccountId", null] },
-            then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+            if: { $ne: ['$toAccountId', null] },
+            then: { $in: ['$toAccountId', checkingAccountObjectIds] },
             else: false
           }
         }
@@ -127,17 +127,17 @@ const getDailyExpensesMap = async (userId, checkingAccountIds, startDate, endDat
     {
       $match: {
         $or: [
-          { type: "expense", isSourceChecking: true },
-          { type: "transfer", isSourceChecking: true, isDestChecking: false }
+          { type: 'expense', isSourceChecking: true },
+          { type: 'transfer', isSourceChecking: true, isDestChecking: false }
         ]
       }
     },
     {
       $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$date" }
+          $dateToString: { format: '%Y-%m-%d', date: '$date' }
         },
-        amount: { $sum: "$amount" }
+        amount: { $sum: '$amount' }
       }
     }
   ]);
@@ -282,15 +282,15 @@ export const getDashboardSummary = async (req, res) => {
               {
                 $group: {
                   _id: {
-                    date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                    accountId: "$accountId"
+                    date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                    accountId: '$accountId'
                   },
                   delta: {
                     $sum: {
                       $cond: [
-                        { $eq: ["$type", "income"] },
-                        "$amount",
-                        { $multiply: ["$amount", -1] }
+                        { $eq: ['$type', 'income'] },
+                        '$amount',
+                        { $multiply: ['$amount', -1] }
                       ]
                     }
                   }
@@ -300,17 +300,17 @@ export const getDashboardSummary = async (req, res) => {
             destDeltas: [
               {
                 $match: {
-                  type: "transfer",
+                  type: 'transfer',
                   toAccountId: { $in: includedAccountIds.map(toObjectId) }
                 }
               },
               {
                 $group: {
                   _id: {
-                    date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                    accountId: "$toAccountId"
+                    date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                    accountId: '$toAccountId'
                   },
-                  delta: { $sum: "$amount" }
+                  delta: { $sum: '$amount' }
                 }
               }
             ]
@@ -318,17 +318,17 @@ export const getDashboardSummary = async (req, res) => {
         },
         {
           $project: {
-            allDeltas: { $concatArrays: ["$sourceDeltas", "$destDeltas"] }
+            allDeltas: { $concatArrays: ['$sourceDeltas', '$destDeltas'] }
           }
         },
-        { $unwind: "$allDeltas" },
+        { $unwind: '$allDeltas' },
         {
           $group: {
             _id: {
-              date: "$allDeltas._id.date",
-              accountId: "$allDeltas._id.accountId"
+              date: '$allDeltas._id.date',
+              accountId: '$allDeltas._id.accountId'
             },
-            totalDelta: { $sum: "$allDeltas.delta" }
+            totalDelta: { $sum: '$allDeltas.delta' }
           }
         }
       ]),
@@ -441,19 +441,19 @@ export const getDashboardSummary = async (req, res) => {
         $project: {
           accounts: {
             $filter: {
-              input: ["$accountId", "$toAccountId"],
-              as: "acc",
-              cond: { $ne: ["$$acc", null] }
+              input: ['$accountId', '$toAccountId'],
+              as: 'acc',
+              cond: { $ne: ['$$acc', null] }
             }
           },
           date: 1
         }
       },
-      { $unwind: "$accounts" },
+      { $unwind: '$accounts' },
       {
         $group: {
-          _id: "$accounts",
-          lastTransactionDate: { $max: "$date" }
+          _id: '$accounts',
+          lastTransactionDate: { $max: '$date' }
         }
       }
     ]);
@@ -671,7 +671,7 @@ export const getDashboardSummary = async (req, res) => {
                 notifications.push({
                   id: `velocity-${budget._id}`,
                   type: 'budget',
-                  title: `Alerte Vélocité Proactive ⚠️`,
+                  title: 'Alerte Vélocité Proactive ⚠️',
                   message: `Au rythme actuel de dépenses (${actualVelocity.toFixed(2)} €/j au lieu de ${targetVelocity.toFixed(2)} €/j), votre budget "${budget.name}" sera épuisé le ${depletionDate.toLocaleDateString('fr-FR')}, soit avant le 20 du mois.`,
                   icon: 'Flame',
                   color: 'danger',
@@ -909,15 +909,15 @@ const computeMonthScore = async (userId, monthKey) => {
   const savingsIds  = savingsAccounts.map(a => a._id);
   const allIncludedIds = allIncludedAccounts.map(a => a._id);
 
-  const checkingObjectIds     = checkingIds.map(toObjectId);
-  const savingsObjectIds      = savingsIds.map(toObjectId);
+  const _checkingObjectIds     = checkingIds.map(toObjectId);
+  const _savingsObjectIds      = savingsIds.map(toObjectId);
   const allIncludedObjectIds  = allIncludedIds.map(toObjectId);
 
-  const userObjectId = toObjectId(userId);
+  const _userObjectId = toObjectId(userId);
 
   // ── Helper: determine previous month key ────────────────────────────────────
   const prevDate = new Date(Date.UTC(year, month - 1, 1));
-  const prevMonthKey = `${prevDate.getUTCFullYear()}-${String(prevDate.getUTCMonth() + 1).padStart(2, '0')}`;
+  const _prevMonthKey = `${prevDate.getUTCFullYear()}-${String(prevDate.getUTCMonth() + 1).padStart(2, '0')}`;
 
   // ── Fetch all transactions in the month ─────────────────────────────────────
   const monthTransactions = await Transaction.find({
@@ -937,7 +937,7 @@ const computeMonthScore = async (userId, monthKey) => {
   for (const tx of monthTransactions) {
     const srcIsChecking = checkingIds.some(id => id.toString() === tx.accountId?.toString());
     const dstIsSavings  = savingsIds.some(id => id.toString() === tx.toAccountId?.toString());
-    const srcIsSavings  = savingsIds.some(id => id.toString() === tx.accountId?.toString());
+    const _srcIsSavings  = savingsIds.some(id => id.toString() === tx.accountId?.toString());
 
     if (tx.type === 'income' && srcIsChecking) {
       pillar1Income += tx.amount;
@@ -1151,11 +1151,7 @@ const computeMonthScore = async (userId, monthKey) => {
     finalScore = pillar1Score + pillar2Score + pillar3Score + pillar4Score + Math.round(pillar5Score);
   } else {
     // Redistribute 25 pts proportionally among other pillars
-    // Ratios: P1=30, P3=20, P4=15, P5=10 → total 75
-    const baseTotal = 75;
-    const redistribute = 25;
-    const p1Adjusted = pillar1Score + Math.round((30 / baseTotal) * pillar1Score * redistribute / 30);
-    // Simpler: just scale the raw score over 100
+    // Scale the raw score over 100
     const rawScore = pillar1Score + pillar3Score + pillar4Score + Math.round(pillar5Score);
     finalScore = Math.round((rawScore / 75) * 100);
   }
@@ -1164,7 +1160,7 @@ const computeMonthScore = async (userId, monthKey) => {
   // ── Bonus objectifs d'épargne ─────────────────────────────────────────────
   const savingsGoals = await SavingsGoal.find({ userId }).lean();
   let bonusScore = 0;
-  let bonusDetails = [];
+  const bonusDetails = [];
 
   const activeGoals = savingsGoals.filter(g =>
     g.currentAmount < g.targetAmount && g.targetDate && new Date(g.targetDate) > endOfMonth
@@ -1365,16 +1361,16 @@ export const getMonthlySummaries = async (req, res) => {
         },
         {
           $project: {
-            monthIndex: { $subtract: [{ $month: "$date" }, 1] }, // convert 1-12 to 0-11
+            monthIndex: { $subtract: [{ $month: '$date' }, 1] }, // convert 1-12 to 0-11
             type: 1,
             amount: 1,
             accountId: 1,
             toAccountId: 1,
-            isSourceChecking: { $in: ["$accountId", checkingAccountObjectIds] },
+            isSourceChecking: { $in: ['$accountId', checkingAccountObjectIds] },
             isDestChecking: {
               $cond: {
-                if: { $ne: ["$toAccountId", null] },
-                then: { $in: ["$toAccountId", checkingAccountObjectIds] },
+                if: { $ne: ['$toAccountId', null] },
+                then: { $in: ['$toAccountId', checkingAccountObjectIds] },
                 else: false
               }
             }
@@ -1382,17 +1378,17 @@ export const getMonthlySummaries = async (req, res) => {
         },
         {
           $group: {
-            _id: "$monthIndex",
+            _id: '$monthIndex',
             income: {
               $sum: {
                 $cond: [
                   {
                     $or: [
-                      { $and: [{ $eq: ["$type", "income"] }, "$isSourceChecking"] },
-                      { $and: [{ $eq: ["$type", "transfer"] }, { $not: ["$isSourceChecking"] }, "$isDestChecking"] }
+                      { $and: [{ $eq: ['$type', 'income'] }, '$isSourceChecking'] },
+                      { $and: [{ $eq: ['$type', 'transfer'] }, { $not: ['$isSourceChecking'] }, '$isDestChecking'] }
                     ]
                   },
-                  "$amount",
+                  '$amount',
                   0
                 ]
               }
@@ -1402,11 +1398,11 @@ export const getMonthlySummaries = async (req, res) => {
                 $cond: [
                   {
                     $or: [
-                      { $and: [{ $eq: ["$type", "expense"] }, "$isSourceChecking"] },
-                      { $and: [{ $eq: ["$type", "transfer"] }, "$isSourceChecking", { $not: ["$isDestChecking"] }] }
+                      { $and: [{ $eq: ['$type', 'expense'] }, '$isSourceChecking'] },
+                      { $and: [{ $eq: ['$type', 'transfer'] }, '$isSourceChecking', { $not: ['$isDestChecking'] }] }
                     ]
                   },
-                  "$amount",
+                  '$amount',
                   0
                 ]
               }

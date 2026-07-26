@@ -147,6 +147,20 @@ const CategoryList = ({ title, icon: Icon, iconBg, accentColor, categories, empt
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-chart-tooltip text-left">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
+        <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
+          {formatCurrency(payload[0].value)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, isWidget = false, onViewDetail }) => {
   const [localPeriod, setLocalPeriod] = useState(getMonthKey());
   const rawPeriod = externalPeriod || localPeriod;
@@ -202,20 +216,6 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
       groups[year].push({ key, label: capitalized });
     }
     return groups;
-  };
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-chart-tooltip text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
-          <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
-            {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
   };
 
   // Hovered donut segment info

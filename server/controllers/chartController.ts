@@ -3,7 +3,6 @@ import Category from '../models/Category.js';
 import Account from '../models/Account.js';
 import ScheduledTransaction from '../models/ScheduledTransaction.js';
 import Tag from '../models/Tag.js';
-import mongoose from 'mongoose';
 import { logger } from '../utils/logger';
 
 // Helper: Get previous period dates
@@ -353,7 +352,7 @@ export const getFutureCharts = async (req, res) => {
     }
 
     // Query actual transactions (past & up to current time) for comparison/starting solid chart
-    const actualTransactions = await Transaction.find({
+    const _actualTransactions = await Transaction.find({
       userId: req.user.id,
       isPending: { $ne: true },
       date: { $lte: new Date() }
@@ -375,7 +374,7 @@ export const getFutureCharts = async (req, res) => {
     // 1. Project schedule occurrences in range
     const simulatedScheduled = [];
     scheduledSchedules.forEach(st => {
-      let curr = new Date(st.nextDate);
+      const curr = new Date(st.nextDate);
       let timesLeft = st.numberOfTimes > 0 ? (st.numberOfTimes - st.timesExecuted) : Infinity;
 
       while (curr <= end && timesLeft > 0) {
@@ -436,7 +435,7 @@ export const getFutureCharts = async (req, res) => {
 
     // Calculate month-by-month periods
     const periods = {};
-    let temp = new Date(start);
+    const temp = new Date(start);
     while (temp <= end) {
       const label = temp.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       const key = `${temp.getFullYear()}-${String(temp.getMonth() + 1).padStart(2, '0')}`;

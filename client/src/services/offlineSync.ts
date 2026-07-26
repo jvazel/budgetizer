@@ -5,6 +5,37 @@ import type { QueryClient } from '@tanstack/react-query';
 
 let isSyncing = false;
 
+/**
+ * Helper to retry transient network or server (5xx) failures with exponential backoff.
+ */
+const executeWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries = 2,
+  initialDelayMs = 300
+): Promise<T> => {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      attempt++;
+      const status = (err as { status?: number; response?: { status?: number } })?.status ||
+        (err as { response?: { status?: number } })?.response?.status;
+      
+      // Do not retry 4xx client errors (e.g. 400 Bad Request, 404 Not Found, 409 Conflict)
+      if (status && status >= 400 && status < 500) {
+        throw err;
+      }
+      if (attempt > maxRetries) {
+        throw err;
+      }
+      const delay = initialDelayMs * Math.pow(2, attempt - 1);
+      console.warn(`[Offline Sync] Retrying action (attempt ${attempt}/${maxRetries}) after ${delay}ms due to network/server error.`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
 export const updateLocalCacheOffline = (
   queryClient: QueryClient,
   method: string,
@@ -92,7 +123,7 @@ export const updateLocalCacheOffline = (
 };
 
 /**
- * Handles a 409 conflict by applying server-wins strategy.
+ * Handles a 409 conflict by applying server-wins strategy and notifying user.
  */
 const handleConflict = async (
   action: OutboxAction,
@@ -120,7 +151,7 @@ const handleConflict = async (
   if (!queryKeyString) return;
 
   const queryKey = [queryKeyString];
-  if (id) {
+  if (id && serverData) {
     queryClient.setQueriesData({ queryKey }, (old: unknown) => {
       if (!old) return old;
       if (Array.isArray(old)) {
@@ -132,7 +163,7 @@ const handleConflict = async (
       return old;
     });
   }
-  toast('Conflit détecté, la version serveur a été appliquée.', { icon: '⚠️' });
+  toast('Conflit détecté (409) : la version du serveur a été appliquée.', { icon: '⚠️' });
 };
 
 /**
@@ -167,7 +198,8 @@ export const syncOutbox = async (queryClient: QueryClient): Promise<void> => {
 
   try {
     for (const action of outbox) {
-      let { id, method, url, data, tempId, idempotencyKey } = action as OutboxAction;
+      const { id, method, tempId } = action as OutboxAction;
+      let { url, data, idempotencyKey } = action as OutboxAction;
 
       if (idempotencyKey) {
         const { isOperationCompleted } = await import('../utils/idbHelper');
@@ -199,14 +231,16 @@ export const syncOutbox = async (queryClient: QueryClient): Promise<void> => {
       console.log(`[Offline Sync] Executing action: ${method} ${url}`, data);
 
       try {
-        const res = await api.request({
-          method: method as 'post' | 'put' | 'delete',
-          url,
-          data,
-          headers: {
-            'Idempotency-Key': idempotencyKey || '',
-          },
-        } as any);
+        const res = await executeWithBackoff(() =>
+          api.request({
+            method: method as 'post' | 'put' | 'delete',
+            url,
+            data,
+            headers: {
+              'Idempotency-Key': idempotencyKey || '',
+            },
+          })
+        );
 
         if (idempotencyKey && res.status >= 200 && res.status < 300) {
           try {

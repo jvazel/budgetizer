@@ -152,7 +152,7 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
         <Select 
           label="Type de compte"
           value={formValues.type || 'credit'} 
-          onChange={(e) => { setValue('type', e.target.value); onTypeChange && onTypeChange(e.target.value); }}
+          onChange={(e) => { setValue('type', e.target.value); if (onTypeChange) onTypeChange(e.target.value); }}
           disabled={!!initialData}
         >
           <option value="checking">Courant</option>
@@ -232,8 +232,10 @@ const CreditAccountBottomSheet = ({ isOpen, onClose, onSave, onDelete, onTypeCha
             {...register('startDate')}
             onClick={(e) => {
               try {
-                e.target.showPicker();
-              } catch (err) {}
+                (e.target as HTMLInputElement).showPicker?.();
+              } catch {
+                // Ignore if showPicker is not supported
+              }
             }}
             required
             className="[&>label]:min-h-[40px]"

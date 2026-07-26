@@ -205,8 +205,10 @@ const SavingsActionFormSheet = ({ isOpen, onClose, goal, actionType, onSuccess }
               {...register('date')}
               onClick={(e) => {
                 try {
-                  e.target.showPicker();
-                } catch (err) {}
+                  (e.target as HTMLInputElement).showPicker?.();
+                } catch {
+                  // Ignore if showPicker is not supported
+                }
               }}
               className={`w-full h-[52px] px-4 bg-surface-2 border rounded-2xl text-primary focus:outline-none ${errors.date ? 'border-danger' : 'border-border focus:border-accent'}`}
               required

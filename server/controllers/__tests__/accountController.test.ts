@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { getAccounts, createAccount, deleteAccount, updateAccount, getCreditSummary } from '../accountController';
+import { getAccounts, createAccount, deleteAccount, getCreditSummary } from '../accountController';
 import Account from '../../models/Account';
 import Transaction from '../../models/Transaction';
 import ScheduledTransaction from '../../models/ScheduledTransaction';

@@ -387,9 +387,10 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
    - **Mise à jour Optimiste du Cache** : Le processeur `offlineSync.ts` intercepte la modification et l'applique immédiatement et de manière optimiste dans le cache local de React Query (via `setQueriesData`), ce qui met à jour l'interface en temps réel.
    - **Simulation Réseau** : La requête Axios d'origine est annulée avec une erreur simulée `isOfflineMock`, qui est interceptée par le response interceptor pour être résolue comme un succès HTTP 200 contenant la charge utile (avec l'ID temporaire s'il s'agit d'une création). Les hooks de mutation croient ainsi que l'appel réseau a réussi et exécutent leurs fonctions de succès normalement.
 
-4. **Moteur de Synchronisation en Arrière-plan** :
+4. **Moteur de Synchronisation en Arrière-plan & Résilience Réseau** :
    - Le script `offlineSync.ts` écoute l'événement `online` du navigateur ou s'exécute au démarrage si le réseau est disponible.
-   - Il dépile séquentiellement l'outbox IndexedDB en exécutant les requêtes réelles auprès de l'API (avec le drapeau `skipOfflineInterceptor: true` pour contourner la capture locale).
+   - **Retentative avec Exponential Backoff (`executeWithBackoff`)** : Chaque opération de la file est exécutée via une logique de retentative progressive (délai de 300ms, 600ms, etc.) qui capture les pannes réseau transitoires et les erreurs serveur 5xx sans bloquer les erreurs 4xx.
+   - **Résolution des Conflits 409 (`handleConflict`)** : En cas de conflit HTTP 409 (modification concurrente sur le serveur), la version du serveur est appliquée sur le cache React Query (stratégie *server-wins*) et une notification toast explicite signale l'ajustement à l'utilisateur.
    - **Résolution d'IDs Temporaires** : Si une création réussit sur le serveur, le moteur récupère le véritable ID de la base de données MongoDB et met à jour dynamiquement toutes les requêtes d'édition ou de suppression ultérieures présentes dans la file d'attente qui feraient référence à cet ID temporaire.
    - Une fois la file vidée, le cache React Query est invalidé pour charger les données consolidées du serveur.
 
@@ -401,7 +402,11 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
      - L'avancement de l'envoi en arrière-plan ("Synchronisation en cours...").
      - Une notification temporaire verte après la réussite de la synchronisation de toutes les données.
 
-### 5.4 Expérience Utilisateur & Design System Premium
+### 5.4 Architecture des Composants et Expérience Utilisateur
+- **Architecture Modulaire de la Page Transactions (`Transactions.tsx`)** :
+  Le composant page a été refactorisé de 882 lignes monolithiques vers une architecture modulaire et maintenable (~270 lignes) :
+  - **`TransactionHeader.tsx`** : Isole l'en-tête portal `AppShell`, la navigation mensuelle (boutons précédent/suivant et tiroir de sélection de période), la barre de statistiques réactives de la période (revenus, dépenses, net) et la barre de recherche textuelle avec animation d'ouverture.
+  - **`TransactionFiltersSheet.tsx`** : Encapsule le tiroir de filtres avancés (sélection segmentée du type de flux, comptes bancaires, catégories filtrées, pilules tactiles pour la sélection multiple d'étiquettes/tags, et sélecteurs de plage de dates) ainsi que l'ensemble du système de gestion des filtres enregistrés (création, application rapide, mise à jour et suppression avec confirmation).
 - **Charte Graphique & Typographie** : Alignement visuel global avec l'esthétique premium de Bankyboard. Intégration de la police **`Manrope`** comme police sans-serif par défaut. Définition de la palette de couleurs **Bleu Encre** (`#030816` pour la base sombre, `#f8fafc` / `#0a1a2f` pour le thème clair) et de la couleur d'accentuation **Cuivre/Ambre** signature (`#d97706`).
 - **Tiroir de Navigation (`MenuSheet.tsx`)** : Un menu coulissant moderne est déployé de manière fluide grâce à `framer-motion` (physique de ressort). Il dispose de halos de lumière diffuse (`blur-[60px] bg-copper/5` et `bg-purple/5`). Son architecture a été sécurisée avec des z-indexes rigoureux (`z-40` pour le backdrop, `z-50` pour le tiroir) pour éviter que le flou d'arrière-plan ne se superpose au menu.
 - **Liste Optimisée des Transactions (`TransactionList.tsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles et gérer le contexte de filtrage :

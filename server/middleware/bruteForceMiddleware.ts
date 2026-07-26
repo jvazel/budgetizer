@@ -99,7 +99,7 @@ export const recordSuccessfulAttempt = async (req: Request): Promise<void> => {
     const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
 
     await LoginAttemptModel.deleteOne({ identifier, ip });
-  } catch (error) {
+  } catch {
     // Silently ignore
   }
 };

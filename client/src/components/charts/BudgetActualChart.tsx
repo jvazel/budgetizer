@@ -20,8 +20,35 @@ const getMonthLabel = (date) => {
   return label.charAt(0).toUpperCase() + label.slice(1);
 };
 
+const generateRecentMonthsGrouped = () => {
+  const groups = {};
+  const current = new Date();
+  for (let i = 0; i < 18; i++) {
+    const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
+    const year = d.getFullYear().toString();
+    const key = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+    const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+    
+    if (!groups[year]) {
+      groups[year] = [];
+    }
+    groups[year].push({ key, label: capitalizedLabel });
+  }
+  return groups;
+};
+
 const BudgetActualChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
   const [month, setMonth] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [budgets, setBudgets] = useState([]);
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
+
+  // Drill-down states
+  const [selectedBudgetCategory, setSelectedBudgetCategory] = useState(null);
+  const [budgetTransactions, setBudgetTransactions] = useState([]);
+  const [txLoading, setTxLoading] = useState(false);
+  const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
 
   useEffect(() => {
     if (externalPeriod) {
@@ -33,33 +60,6 @@ const BudgetActualChart = ({ period: externalPeriod, setPeriod: externalSetPerio
       }
     }
   }, [externalPeriod]);
-  const [loading, setLoading] = useState(true);
-  const [budgets, setBudgets] = useState([]);
-  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
-
-  // Drill-down states
-  const [selectedBudgetCategory, setSelectedBudgetCategory] = useState(null);
-  const [budgetTransactions, setBudgetTransactions] = useState([]);
-  const [txLoading, setTxLoading] = useState(false);
-  const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
-
-  const generateRecentMonthsGrouped = () => {
-    const groups = {};
-    const current = new Date();
-    for (let i = 0; i < 18; i++) {
-      const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
-      const year = d.getFullYear().toString();
-      const key = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
-      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
-      
-      if (!groups[year]) {
-        groups[year] = [];
-      }
-      groups[year].push({ key, label: capitalizedLabel });
-    }
-    return groups;
-  };
 
   const fetchBudgets = useCallback(async () => {
     try {

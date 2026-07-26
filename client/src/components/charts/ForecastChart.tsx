@@ -7,6 +7,35 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const monthLabel = formatMonthLabel(label);
+    return (
+      <div className="custom-chart-tooltip text-left space-y-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
+        {payload.map((item, idx) => {
+          if (item.name === "confidence" || item.dataKey === "confidence") return null;
+          let labelName = item.name;
+          let valColor = item.color || item.stroke;
+          if (item.name === 'balance') { labelName = 'Solde Réel'; valColor = '#10b981'; }
+          else if (item.name === 'projBalance') { labelName = 'Solde Projeté'; valColor = '#8b5cf6'; }
+          else if (item.name === 'income') { labelName = 'Revenus Réels'; valColor = '#10b981'; }
+          else if (item.name === 'expenses') { labelName = 'Dépenses Réelles'; valColor = '#ef4444'; }
+          return (
+            <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
+              <span className="text-secondary">{labelName} :</span>
+              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
+                {formatCurrency(item.value)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return null;
+};
+
 const ForecastChart = ({ endDate: externalEndDate }) => {
   const [method, setMethod] = useState('regression'); // regression, weighted, mobile, mean
   const [horizon, setHorizon] = useState(6); // 3, 6, 12 months
@@ -160,35 +189,6 @@ const ForecastChart = ({ endDate: externalEndDate }) => {
   // Compute final projected balance for the card
   const finalProjectedBalance = data.forecast.length > 0 ? data.forecast[data.forecast.length - 1].projectedBalance : 0;
   const confidenceMargin = data.forecast.length > 0 ? (data.forecast[data.forecast.length - 1].confidenceInterval.high - finalProjectedBalance) : 0;
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const monthLabel = formatMonthLabel(label);
-      return (
-        <div className="custom-chart-tooltip text-left space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
-          {payload.map((item, idx) => {
-            if (item.name === "confidence" || item.dataKey === "confidence") return null;
-            let labelName = item.name;
-            let valColor = item.color || item.stroke;
-            if (item.name === 'balance') { labelName = 'Solde Réel'; valColor = '#10b981'; }
-            else if (item.name === 'projBalance') { labelName = 'Solde Projeté'; valColor = '#8b5cf6'; }
-            else if (item.name === 'income') { labelName = 'Revenus Réels'; valColor = '#10b981'; }
-            else if (item.name === 'expenses') { labelName = 'Dépenses Réelles'; valColor = '#ef4444'; }
-            return (
-              <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
-                <span className="text-secondary">{labelName} :</span>
-                <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                  {formatCurrency(item.value)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6">

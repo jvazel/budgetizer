@@ -39,7 +39,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
       return res.status(200).json({ 
         anomalies: [], 
         suggestions: [],
-        message: "Aucune donnée de transaction trouvée."
+        message: 'Aucune donnée de transaction trouvée.'
       });
     }
     const oldestDate = new Date(oldestTx.date);
@@ -70,7 +70,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
       return res.status(200).json({
         anomalies: [],
         suggestions: [],
-        message: "Pas assez d'historique (minimum 2 mois complets de données requis)."
+        message: 'Pas assez d\'historique (minimum 2 mois complets de données requis).'
       });
     }
 
@@ -119,7 +119,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
         $addFields: {
           isSub: {
             $cond: [
-              { $eq: [{ $arrayElemAt: ["$schedInfo.isSubscription", 0] }, true] },
+              { $eq: [{ $arrayElemAt: ['$schedInfo.isSubscription', 0] }, true] },
               true,
               false
             ]
@@ -133,26 +133,26 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
           date: 1,
           isSub: 1,
           monthKey: {
-            $dateToString: { format: "%Y-%m", date: "$date" }
+            $dateToString: { format: '%Y-%m', date: '$date' }
           }
         }
       },
       {
         $group: {
           _id: {
-            categoryId: "$categoryId",
-            monthKey: "$monthKey"
+            categoryId: '$categoryId',
+            monthKey: '$monthKey'
           },
-          totalAmount: { $sum: "$amount" },
-          hasSubscription: { $max: "$isSub" }
+          totalAmount: { $sum: '$amount' },
+          hasSubscription: { $max: '$isSub' }
         }
       },
       {
         $group: {
-          _id: "$_id.categoryId",
-          total: { $sum: "$totalAmount" },
-          months: { $addToSet: "$_id.monthKey" },
-          hasSubscription: { $max: "$hasSubscription" }
+          _id: '$_id.categoryId',
+          total: { $sum: '$totalAmount' },
+          months: { $addToSet: '$_id.monthKey' },
+          hasSubscription: { $max: '$hasSubscription' }
         }
       },
       {
@@ -167,7 +167,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
     ]);
 
     // Group history by category
-    const categoryHistory: Record<string, any> = {};
+    const categoryHistory: Record<string, { category: unknown; total: number; months: Set<string>; hasSubscription: boolean }> = {};
     historyAggregated.forEach(item => {
       if (item._id) {
         const catId = item._id.toString();
@@ -207,7 +207,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
         $addFields: {
           isSub: {
             $cond: [
-              { $eq: [{ $arrayElemAt: ["$schedInfo.isSubscription", 0] }, true] },
+              { $eq: [{ $arrayElemAt: ['$schedInfo.isSubscription', 0] }, true] },
               true,
               false
             ]
@@ -216,9 +216,9 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
       },
       {
         $group: {
-          _id: "$categoryId",
-          totalAmount: { $sum: "$amount" },
-          hasSubscription: { $max: "$isSub" }
+          _id: '$categoryId',
+          totalAmount: { $sum: '$amount' },
+          hasSubscription: { $max: '$isSub' }
         }
       }
     ]);
@@ -239,7 +239,7 @@ export const getInsights = async (req: AppRequest, res: AppResponse) => {
 
     // Analyze each category found in the historical data
     for (const [catId, historyData] of Object.entries(categoryHistory)) {
-      const { category, total, months: activeMonths, hasSubscription } = historyData as any;
+      const { category, total, months: activeMonths, hasSubscription } = historyData;
 
       // Constraint: Ignore categories with less than 2 months of history in the 3-month window
       if (activeMonths.size < 2) {

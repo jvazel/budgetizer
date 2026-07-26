@@ -20,11 +20,11 @@ describe('notificationController', () => {
   it('returns 403 Forbidden when sendTestNotification is called in production environment', async () => {
     process.env.NODE_ENV = 'production';
 
-    const req: any = { user: { id: 'user1' } };
-    const res: any = {
+    const req = { user: { id: 'user1' } } as unknown as AppRequest;
+    const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
-    };
+    } as unknown as AppResponse;
 
     await sendTestNotification(req, res);
 
@@ -38,10 +38,10 @@ describe('notificationController', () => {
   it('triggers push notification when sendTestNotification is called in development environment', async () => {
     process.env.NODE_ENV = 'development';
 
-    const req: any = { user: { id: 'user1' } };
-    const res: any = {
+    const req = { user: { id: 'user1' } } as unknown as AppRequest;
+    const res = {
       json: vi.fn(),
-    };
+    } as unknown as AppResponse;
 
     await sendTestNotification(req, res);
 
@@ -54,10 +54,10 @@ describe('notificationController', () => {
   it('returns VAPID public key when configured', async () => {
     process.env.VAPID_PUBLIC_KEY = 'test_vapid_key';
 
-    const req: any = {};
-    const res: any = {
+    const req = {} as AppRequest;
+    const res = {
       json: vi.fn(),
-    };
+    } as unknown as AppResponse;
 
     await getVapidPublicKey(req, res);
 

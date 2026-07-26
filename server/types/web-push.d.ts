@@ -21,5 +21,5 @@ declare module 'web-push' {
       userPublicKey?: string;
       userAuth?: string;
     }
-  ): Promise<any>;
+  ): Promise<unknown>;
 }

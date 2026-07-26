@@ -30,15 +30,12 @@ const TransfersPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastTransferDetails, setLastTransferDetails] = useState(null);
 
-  // Set default accounts when loaded
-  useEffect(() => {
-    if (accounts.length >= 2) {
-      if (!fromAccountId) setFromAccountId(accounts[0]._id);
-      if (!toAccountId) setToAccountId(accounts[1]._id);
-    } else if (accounts.length === 1) {
-      if (!fromAccountId) setFromAccountId(accounts[0]._id);
-    }
-  }, [accounts, fromAccountId, toAccountId]);
+  // Derive default account IDs dynamically during render without useEffect
+  const effectiveFromAccountId = fromAccountId || (accounts.length > 0 ? accounts[0]._id : '');
+  const effectiveToAccountId = toAccountId || (accounts.length >= 2 ? accounts[1]._id : (accounts.length === 1 ? accounts[0]._id : ''));
+
+  const activeFromAccount = accounts.find(acc => acc._id === effectiveFromAccountId);
+  const activeToAccount = accounts.find(acc => acc._id === effectiveToAccountId);
 
   const formatCurrency = (value, currencyCode = 'EUR') => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currencyCode }).format(value);
@@ -50,12 +47,12 @@ const TransfersPage = () => {
   };
 
   const handleTransfer = () => {
-    if (!fromAccountId || !toAccountId) {
+    if (!effectiveFromAccountId || !effectiveToAccountId) {
       toast.error('Veuillez sélectionner les deux comptes.');
       return;
     }
 
-    if (fromAccountId === toAccountId) {
+    if (effectiveFromAccountId === effectiveToAccountId) {
       toast.error('Le compte de départ et de destination doivent être différents.');
       return;
     }
@@ -67,7 +64,7 @@ const TransfersPage = () => {
     }
 
     // Check balance
-    const sourceAccount = accounts.find(acc => acc._id === fromAccountId);
+    const sourceAccount = accounts.find(acc => acc._id === effectiveFromAccountId);
     if (sourceAccount && sourceAccount.balance < numericAmount) {
       toast.error(`Solde insuffisant sur le compte de départ (${formatCurrency(sourceAccount.balance, sourceAccount.currency)}).`);
       return;
@@ -83,8 +80,8 @@ const TransfersPage = () => {
       setIsConfirmModalOpen(false);
       await addTransaction({
         type: 'transfer',
-        accountId: fromAccountId,
-        toAccountId,
+        accountId: effectiveFromAccountId,
+        toAccountId: effectiveToAccountId,
         amount: numericAmount,
         description: description || 'Virement instantané',
         date: new Date(),
@@ -126,16 +123,13 @@ const TransfersPage = () => {
       await deleteTransaction(selectedTransferId);
       toast.success('Virement annulé et soldes restaurés.');
       await fetchAccounts();
-    } catch (err) {
+    } catch (_err) {
       toast.error("Erreur lors de l'annulation du virement.");
     } finally {
       setIsDeleteModalOpen(false);
       setSelectedTransferId(null);
     }
   };
-
-  const activeFromAccount = accounts.find(acc => acc._id === fromAccountId);
-  const activeToAccount = accounts.find(acc => acc._id === toAccountId);
 
   return (
     <>
@@ -177,7 +171,7 @@ const TransfersPage = () => {
                   <Select
                     id="fromAccountId-select"
                     label="Débiter (Source)"
-                    value={fromAccountId}
+                    value={effectiveFromAccountId}
                     onChange={(e) => setFromAccountId(e.target.value)}
                     required
                   >
@@ -211,11 +205,11 @@ const TransfersPage = () => {
                   <Select
                     id="toAccountId-select"
                     label="Créditer (Destination)"
-                    value={toAccountId}
+                    value={effectiveToAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
                     required
                   >
-                    {accounts.filter(acc => acc._id !== fromAccountId).map(acc => (
+                    {accounts.filter(acc => acc._id !== effectiveFromAccountId).map(acc => (
                       <option key={acc._id} value={acc._id}>
                         {acc.name} ({formatCurrency(acc.balance, acc.currency)})
                       </option>

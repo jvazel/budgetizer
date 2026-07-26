@@ -5,9 +5,9 @@ export interface UpcomingTransaction {
   date: string | Date;
   toAccountId?: {
     type?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   } | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

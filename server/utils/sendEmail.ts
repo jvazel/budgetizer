@@ -19,7 +19,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
   if (!hasSmtpConfig) {
      // Mode Fallback (Développement local) : on log dans la console
     logger.info('\n======================================================');
-    logger.info(`[PASSWORD RESET MOCK EMAIL]`);
+    logger.info('[PASSWORD RESET MOCK EMAIL]');
     logger.info(`To: ${options.to}`);
     logger.info(`Subject: ${options.subject}`);
     logger.info(`Body:\n${options.text}`);

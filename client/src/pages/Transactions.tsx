@@ -1,29 +1,27 @@
 import React, { useState, useContext, useMemo } from 'react';
-import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
+import { HeaderPortalContext } from '../components/layout/AppShell';
 import TransactionList from '../components/transactions/TransactionList';
-import { useTransactions } from '../hooks/useTransactions';
+import TransactionHeader from '../components/transactions/TransactionHeader';
+import TransactionFiltersSheet from '../components/transactions/TransactionFiltersSheet';
+import { useTransactions, TransactionItem } from '../hooks/useTransactions';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCategories } from '../hooks/useCategories';
-import { useSavedFilters } from '../hooks/useSavedFilters';
+import { useSavedFilters, SavedFilter } from '../hooks/useSavedFilters';
 import { useTags } from '../hooks/useTags';
-import { getContrastColor } from './Tags';
 import toast from 'react-hot-toast';
-import { Filter, Search, X, RotateCcw, Calendar, Save, Bookmark, Check, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import TransactionFormSheet from '../components/transactions/TransactionFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
-import BottomSheet from '../components/ui/BottomSheet';
-import Select from '../components/ui/Select';
 
-const Transactions = () => {
+const Transactions: React.FC = () => {
   const { isScrolled } = useContext(HeaderPortalContext);
   // Navigation / Visibility states
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionItem | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [txToDelete, setTxToDelete] = useState(null);
-  const [filterToDelete, setFilterToDelete] = useState(null);
+  const [txToDelete, setTxToDelete] = useState<TransactionItem | null>(null);
+  const [filterToDelete, setFilterToDelete] = useState<SavedFilter | null>(null);
   const [confirmDeleteFilterOpen, setConfirmDeleteFilterOpen] = useState(false);
 
   // Filter state values
@@ -33,18 +31,18 @@ const Transactions = () => {
   const [type, setType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [period, setPeriod] = useState('month'); // month, YYYY-MM, or all
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
 
   // Saved Filters states
   const { savedFilters, addSavedFilter, updateSavedFilter, deleteSavedFilter } = useSavedFilters();
-  const [activeSavedFilterId, setActiveSavedFilterId] = useState(null);
+  const [activeSavedFilterId, setActiveSavedFilterId] = useState<string | null>(null);
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
 
   // Build reactive filters object
-  const activeFilters = {};
+  const activeFilters: Record<string, string> = {};
   if (search) activeFilters.search = search;
   if (accountId) activeFilters.accountId = accountId;
   if (categoryId) activeFilters.categoryId = categoryId;
@@ -53,7 +51,7 @@ const Transactions = () => {
 
   // Resolve dates based on selected period
   if (period !== 'all') {
-    let year, month;
+    let year: number, month: number;
     if (period === 'month') {
       const d = new Date();
       year = d.getFullYear();
@@ -65,7 +63,7 @@ const Transactions = () => {
     }
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 0);
-    const formatDate = (d) => {
+    const formatDate = (d: Date) => {
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
@@ -86,7 +84,7 @@ const Transactions = () => {
   };
 
   const handlePrevMonth = () => {
-    let year, month;
+    let year: number, month: number;
     if (period === 'month') {
       const d = new Date();
       year = d.getFullYear();
@@ -109,7 +107,7 @@ const Transactions = () => {
 
   const handleNextMonth = () => {
     if (isCurrentMonth()) return;
-    let year, month;
+    let year: number, month: number;
     if (period === 'month') {
       const d = new Date();
       year = d.getFullYear();
@@ -137,7 +135,7 @@ const Transactions = () => {
     }
   };
 
-  const formatPeriodLabel = (p) => {
+  const formatPeriodLabel = (p: string) => {
     if (p === 'month') return 'Ce mois';
     if (p === 'all') return 'Toutes les dates';
     const [year, month] = p.split('-').map(Number);
@@ -147,7 +145,7 @@ const Transactions = () => {
   };
 
   const generateRecentMonthsGrouped = () => {
-    const groups = {};
+    const groups: Record<string, Array<{ key: string; label: string }>> = {};
     const current = new Date();
     for (let i = 0; i < 18; i++) {
       const d = new Date(current.getFullYear(), current.getMonth() - i, 1);
@@ -171,7 +169,7 @@ const Transactions = () => {
   const { tags } = useTags();
 
   // Load a saved filter
-  const handleLoadFilter = (sf) => {
+  const handleLoadFilter = (sf: SavedFilter) => {
     setActiveSavedFilterId(sf._id);
     setSearch(sf.filters.search || '');
     setAccountId(sf.filters.accountId || '');
@@ -205,7 +203,7 @@ const Transactions = () => {
   };
 
   // Save new filter handler
-  const handleSaveFilterSubmit = async (e) => {
+  const handleSaveFilterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFilterName.trim()) return;
     try {
@@ -214,7 +212,7 @@ const Transactions = () => {
       setIsSavingFilter(false);
       setNewFilterName('');
       toast.success('Filtre enregistré');
-    } catch (err) {
+    } catch (_err) {
       toast.error("Erreur lors de l'enregistrement");
     }
   };
@@ -227,13 +225,13 @@ const Transactions = () => {
     try {
       await updateSavedFilter(activeSavedFilterId, filterToUpdate.name, activeFilters);
       toast.success('Filtre mis à jour');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur lors de la mise à jour');
     }
   };
 
   // Delete saved filter handler
-  const handleDeleteFilter = (sf) => {
+  const handleDeleteFilter = (sf: SavedFilter) => {
     setFilterToDelete(sf);
     setConfirmDeleteFilterOpen(true);
   };
@@ -246,7 +244,7 @@ const Transactions = () => {
         setActiveSavedFilterId(null);
       }
       toast.success('Filtre supprimé');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur lors de la suppression');
     } finally {
       setConfirmDeleteFilterOpen(false);
@@ -257,9 +255,9 @@ const Transactions = () => {
   const stats = useMemo(() => {
     let income = 0;
     let expenses = 0;
-    const count = transactions.length;
+    const count = (transactions || []).length;
 
-    transactions.forEach(tx => {
+    (transactions || []).forEach(tx => {
       const amount = Number(tx.amount || 0);
       if (tx.type === 'income') {
         income += amount;
@@ -276,128 +274,29 @@ const Transactions = () => {
     };
   }, [transactions]);
 
-  const actions = (
-    <>
-      <button 
-        onClick={() => {
-          setShowSearch(!showSearch);
-          if (showFilters) setShowFilters(false);
-        }} 
-        className={`hover:text-primary transition-colors p-1 rounded-lg ${showSearch ? 'text-accent' : ''}`}
-      >
-        <Search size={20} />
-      </button>
-      <button 
-        onClick={() => {
-          setShowFilters(!showFilters);
-          if (showSearch) setShowSearch(false);
-        }} 
-        className={`hover:text-primary transition-colors p-1 rounded-lg ${showFilters ? 'text-accent' : ''}`}
-      >
-        <Filter size={20} />
-      </button>
-    </>
-  );
-
   return (
     <>
-      <HeaderTitle collapsible={true}>Transactions</HeaderTitle>
-      <HeaderActions>{actions}</HeaderActions>
+      <TransactionHeader
+        isScrolled={isScrolled}
+        showSearch={showSearch}
+        setShowSearch={setShowSearch}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        search={search}
+        setSearch={setSearch}
+        period={period}
+        setPeriod={setPeriod}
+        isMonthSheetOpen={isMonthSheetOpen}
+        setIsMonthSheetOpen={setIsMonthSheetOpen}
+        stats={stats}
+        handlePrevMonth={handlePrevMonth}
+        handleNextMonth={handleNextMonth}
+        isCurrentMonth={isCurrentMonth}
+        formatPeriodLabel={formatPeriodLabel}
+        generateRecentMonthsGrouped={generateRecentMonthsGrouped}
+      />
 
-      {/* Large Collapsible Header Title on Page */}
-      <div className={`mb-5 mt-2 px-1 transition-all duration-300 transform origin-left ${
-        isScrolled 
-          ? 'opacity-0 -translate-y-2 pointer-events-none' 
-          : 'opacity-100 translate-y-0'
-      }`}>
-        <h1 className="text-2xl font-extrabold text-primary tracking-tight">Transactions</h1>
-        <p className="text-xs text-secondary mt-0.5 font-medium">Historique détaillé de tes flux et opérations.</p>
-      </div>
-
-      <div className="mt-4 space-y-4">
-        
-        {/* Month Navigation Bar */}
-        <div className="flex items-center justify-between bg-surface bg-surface-2-glass backdrop-blur-md p-1.5 rounded-2xl border border-border/40 shadow-sm select-none" style={{ transform: 'translate3d(0, 0, 0)' }}>
-          <button
-            type="button"
-            onClick={handlePrevMonth}
-            disabled={period === 'all'}
-            className={`p-2 rounded-xl bg-surface hover:bg-border/25 active:scale-95 transition-all text-secondary hover:text-primary ${
-              period === 'all' ? 'opacity-30 cursor-not-allowed' : ''
-            }`}
-            title="Mois précédent"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => setIsMonthSheetOpen(true)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface border border-border/20 text-xs font-extrabold text-primary hover:border-copper/30 hover:bg-border/5 active:scale-98 transition-all"
-          >
-            <Calendar size={14} className="text-copper" />
-            <span>{formatPeriodLabel(period)}</span>
-            <ChevronDown size={12} className="text-secondary shrink-0" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            disabled={period === 'all' || isCurrentMonth()}
-            className={`p-2 rounded-xl bg-surface border border-border/20 text-primary active:scale-95 transition-all ${
-              (period === 'all' || isCurrentMonth()) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-border/20'
-            }`}
-            title="Mois suivant"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-
-        {/* Stats Summary Bar */}
-        <div className="grid grid-cols-3 gap-2 bg-surface-2-glass backdrop-blur-md border border-border/40 rounded-2xl p-3 text-center select-none shadow-sm">
-          <div>
-            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Revenus</span>
-            <span className="text-xs font-extrabold text-accent font-premium-numbers block mt-0.5">
-              +{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.income)}
-            </span>
-          </div>
-          <div>
-            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Dépenses</span>
-            <span className="text-xs font-extrabold text-danger font-premium-numbers block mt-0.5">
-              -{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.expenses)}
-            </span>
-          </div>
-          <div>
-            <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">Net ({stats.count})</span>
-            <span className={`text-xs font-extrabold font-premium-numbers block mt-0.5 ${stats.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-              {stats.net >= 0 ? '+' : ''}{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.net)}
-            </span>
-          </div>
-        </div>
-        
-        {/* Dynamic sliding Search Bar */}
-        {showSearch && (
-          <div className="bg-surface-2 p-4 rounded-2xl border border-border/40 shadow-sm flex items-center gap-3">
-            <Search size={18} className="text-muted flex-shrink-0" />
-            <input 
-              type="text"
-              placeholder="Rechercher (libellé, note, compte, catégorie...)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-primary focus:outline-none placeholder-muted"
-              autoFocus
-            />
-            {search && (
-              <button 
-                onClick={() => setSearch('')}
-                className="p-1 rounded-full hover:bg-border/20 text-muted transition-colors"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        )}
-
+      <div className="mt-4">
         {/* Real-time Loader / Transactions lists output */}
         {loading ? (
           <div className="space-y-4">
@@ -416,315 +315,37 @@ const Transactions = () => {
       </div>
 
       {/* Advanced Filters BottomSheet */}
-      <BottomSheet
+      <TransactionFiltersSheet
         isOpen={showFilters}
         onClose={() => setShowFilters(false)}
-      >
-        <div className="space-y-4 pt-1">
-          {/* Filter title / Reset button */}
-          <div className="flex justify-between items-center pb-2 border-b border-border/20">
-            <h3 className="text-xs font-bold text-primary flex items-center gap-1.5">
-              <Filter size={14} className="text-accent" /> Filtres Avancés
-            </h3>
-            <button 
-              onClick={handleResetFilters}
-              className="text-[10px] font-bold text-muted hover:text-danger flex items-center gap-1 transition-colors"
-            >
-              <RotateCcw size={10} /> Réinitialiser
-            </button>
-          </div>
-
-          {/* Saved Filters Dropdown */}
-          {savedFilters.length > 0 && (
-            <div className="space-y-1 pb-1">
-              <label className="text-[10px] font-bold text-muted uppercase flex items-center gap-1">
-                <Bookmark size={10} className="text-accent" /> Charger un filtre enregistré
-              </label>
-              <div className="flex gap-2">
-                <Select
-                  value={activeSavedFilterId || ''}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    if (id === '') {
-                      handleResetFilters();
-                      setShowFilters(true); // Keep filters open
-                    } else {
-                      const sf = savedFilters.find(f => f._id === id);
-                      if (sf) handleLoadFilter(sf);
-                    }
-                  }}
-                  className="flex-1 bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                >
-                  <option value="">-- Choisir un filtre --</option>
-                  {[...savedFilters]
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map(sf => (
-                      <option key={sf._id} value={sf._id}>
-                        {sf.name}
-                      </option>
-                    ))
-                  }
-                </Select>
-                
-                {activeSavedFilterId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const sf = savedFilters.find(f => f._id === activeSavedFilterId);
-                      if (sf) handleDeleteFilter(sf);
-                    }}
-                    className="px-3 py-2 rounded-xl bg-surface border border-border/40 text-muted hover:text-danger hover:border-danger/35 transition-colors focus:outline-none flex items-center justify-center shadow-sm"
-                    title="Supprimer ce filtre"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Selection Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Filter by Type (Segmented control style Bankyboard) */}
-            <div className="space-y-1.5 col-span-2">
-              <label className="text-[10px] font-bold text-muted uppercase">Type de flux</label>
-              <div className="flex bg-surface p-1 rounded-xl border border-border/40 gap-1 select-none">
-                {[
-                  { key: '', label: 'Tous' },
-                  { key: 'expense', label: 'Dépenses', colorClass: 'bg-danger' },
-                  { key: 'income', label: 'Revenus', colorClass: 'bg-accent' },
-                  { key: 'transfer', label: 'Virements', colorClass: 'bg-info' }
-                ].map((opt) => {
-                  const isSelected = type === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => {
-                        setType(opt.key);
-                        setCategoryId('');
-                      }}
-                      className={`flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
-                        isSelected
-                          ? 'bg-copper text-white shadow-sm font-extrabold'
-                          : 'text-secondary hover:text-primary hover:bg-border/10'
-                      }`}
-                    >
-                      {opt.colorClass && (
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.colorClass}`} />
-                      )}
-                      <span>{opt.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Filter by Account */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted uppercase">Compte bancaire</label>
-              <Select
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                align="right"
-                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-              >
-                <option value="">Tous les comptes</option>
-                {accounts.map(acc => (
-                  <option key={acc._id} value={acc._id}>{acc.name}</option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Filter by Category */}
-            {type !== 'transfer' && (
-              <div className="space-y-1 col-span-2">
-                <label className="text-[10px] font-bold text-muted uppercase">Catégorie</label>
-                <Select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-                >
-                  <option value="">Toutes les catégories</option>
-                  {categories
-                    .filter(cat => !type || cat.type === type)
-                    .map(cat => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.icon} {cat.name}
-                      </option>
-                    ))
-                  }
-                </Select>
-              </div>
-            )}
-
-            {/* Filter by Tag (Tactile selection pills) */}
-            {tags && tags.length > 0 && (
-              <div className="space-y-1.5 col-span-2 pb-1">
-                <label className="text-[10px] font-bold text-muted uppercase">Filtrer par Étiquettes</label>
-                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-0.5">
-                  {tags.map(tag => {
-                    const isSelected = selectedTags.includes(tag._id);
-                    const textColor = isSelected ? getContrastColor(tag.color) : 'var(--color-text-secondary)';
-                    return (
-                      <button
-                        key={tag._id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedTags(selectedTags.filter(id => id !== tag._id));
-                          } else {
-                            setSelectedTags([...selectedTags, tag._id]);
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95 select-none`}
-                        style={{
-                          backgroundColor: isSelected ? tag.color : 'rgba(255, 255, 255, 0.03)',
-                          color: textColor,
-                          borderColor: isSelected ? 'transparent' : 'rgba(255, 255, 255, 0.08)'
-                        }}
-                      >
-                        {tag.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-             {/* Start Date */}
-            <div className="space-y-1">
-              <label 
-                htmlFor="startDateFilter"
-                className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
-              >
-                <Calendar size={10} /> Du
-              </label>
-              <input
-                id="startDateFilter"
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setPeriod('all');
-                }}
-                onClick={(e) => {
-                  try {
-                    e.target.showPicker();
-                  } catch (err) {}
-                }}
-                onFocus={(e) => {
-                  try {
-                    e.target.showPicker();
-                  } catch (err) {}
-                }}
-                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-              />
-            </div>
-
-            {/* End Date */}
-            <div className="space-y-1">
-              <label 
-                htmlFor="endDateFilter"
-                className="text-[10px] font-bold text-muted uppercase flex items-center gap-1 cursor-pointer hover:text-secondary transition-colors"
-              >
-                <Calendar size={10} /> Au
-              </label>
-              <input
-                id="endDateFilter"
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setPeriod('all');
-                }}
-                onClick={(e) => {
-                  try {
-                    e.target.showPicker();
-                  } catch (err) {}
-                }}
-                onFocus={(e) => {
-                  try {
-                    e.target.showPicker();
-                  } catch (err) {}
-                }}
-                className="w-full bg-surface border border-border/40 px-3 py-2 rounded-xl text-xs font-bold text-primary focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Save / Update Filter action */}
-          <div className="pt-2 border-t border-border/20 flex flex-col gap-2">
-            {!isSavingFilter ? (
-              <div className="flex gap-2 justify-end text-xs">
-                {activeSavedFilterId && (
-                  <button
-                    type="button"
-                    onClick={handleUpdateFilter}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-primary transition-colors font-bold"
-                  >
-                    <RotateCcw size={13} className="text-purple" />
-                    Mettre à jour "{savedFilters.find(f => f._id === activeSavedFilterId)?.name}"
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSavingFilter(true);
-                    setNewFilterName(activeSavedFilterId ? `${savedFilters.find(f => f._id === activeSavedFilterId)?.name} (copie)` : '');
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-border/30 border border-border/45 text-accent font-bold transition-colors"
-                >
-                  <Save size={13} />
-                  {activeSavedFilterId ? 'Enregistrer sous...' : 'Enregistrer ce filtre'}
-                </button>
-              </div>
-            ) : (
-              <form 
-                onSubmit={handleSaveFilterSubmit} 
-                className="flex items-center gap-2 bg-surface p-2 rounded-xl border border-border/40 animate-fadeIn"
-              >
-                <input
-                  type="text"
-                  placeholder="Nom du filtre (ex: Courses de Mai)"
-                  value={newFilterName}
-                  onChange={e => setNewFilterName(e.target.value)}
-                  className="flex-1 bg-transparent text-xs text-primary focus:outline-none placeholder-muted px-2 font-semibold"
-                  required
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  className="p-1.5 rounded-lg bg-accent text-white hover:bg-accent-dim transition-colors"
-                  title="Enregistrer"
-                >
-                  <Check size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSavingFilter(false);
-                    setNewFilterName('');
-                  }}
-                  className="p-1.5 rounded-lg bg-surface-2 hover:bg-border/40 text-secondary transition-colors"
-                  title="Annuler"
-                >
-                  <X size={14} />
-                </button>
-              </form>
-            )}
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => setShowFilters(false)}
-              className="w-full py-3.5 bg-copper hover:bg-copper-hover text-white rounded-2xl text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-copper/10 active-spring-sm"
-            >
-              Appliquer les filtres
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
+        type={type}
+        setType={setType}
+        accountId={accountId}
+        setAccountId={setAccountId}
+        categoryId={categoryId}
+        setCategoryId={setCategoryId}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+        setPeriod={setPeriod}
+        handleResetFilters={handleResetFilters}
+        accounts={accounts}
+        categories={categories}
+        tags={tags}
+        savedFilters={savedFilters}
+        activeSavedFilterId={activeSavedFilterId}
+        handleLoadFilter={handleLoadFilter}
+        handleDeleteFilter={handleDeleteFilter}
+        handleUpdateFilter={handleUpdateFilter}
+        isSavingFilter={isSavingFilter}
+        setIsSavingFilter={setIsSavingFilter}
+        newFilterName={newFilterName}
+        setNewFilterName={setNewFilterName}
+        handleSaveFilterSubmit={handleSaveFilterSubmit}
+      />
 
       {/* Global Transaction Edit Form Sheet */}
       <TransactionFormSheet
@@ -742,7 +363,7 @@ const Transactions = () => {
           try {
             await deleteTransaction(txToDelete._id);
             toast.success('Transaction supprimée');
-          } catch (err) {
+          } catch (_err) {
             toast.error('Erreur lors de la suppression');
           } finally {
             setTxToDelete(null);
@@ -783,89 +404,6 @@ const Transactions = () => {
           </p>
         )}
       </ConfirmModal>
-
-      {/* Month Selection Bottom Sheet */}
-      <BottomSheet
-        isOpen={isMonthSheetOpen}
-        onClose={() => setIsMonthSheetOpen(false)}
-      >
-        <div className="space-y-5">
-          <div className="flex justify-between items-center pb-2 border-b border-border/40">
-            <h2 className="text-sm font-bold text-primary">Choisir la période</h2>
-          </div>
-
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar pb-6">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPeriod('month');
-                  setIsMonthSheetOpen(false);
-                }}
-                className={`p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
-                  period === 'month'
-                    ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
-                    : 'bg-surface border-border/40 text-secondary'
-                }`}
-              >
-                Mois en cours (Ce mois)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setPeriod('all');
-                  setIsMonthSheetOpen(false);
-                }}
-                className={`p-3 rounded-2xl border text-center font-bold text-xs active:scale-95 transition-all ${
-                  period === 'all'
-                    ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
-                    : 'bg-surface border-border/40 text-secondary'
-                }`}
-              >
-                Toutes les dates
-              </button>
-            </div>
-
-            {Object.entries(generateRecentMonthsGrouped()).map(([year, months]) => {
-              const currentD = new Date();
-              const currentKey = `${currentD.getFullYear()}-${String(currentD.getMonth() + 1).padStart(2, '0')}`;
-              
-              return (
-                <div key={year} className="space-y-2">
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest block px-1">{year}</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {months.map((m) => {
-                      const isActive = period === m.key || (m.key === currentKey && period === 'month');
-                      return (
-                        <button
-                          key={m.key}
-                          type="button"
-                          onClick={() => {
-                            if (m.key === currentKey) {
-                              setPeriod('month');
-                            } else {
-                              setPeriod(m.key);
-                            }
-                            setIsMonthSheetOpen(false);
-                          }}
-                          className={`p-2.5 rounded-xl border text-center text-xs font-semibold active:scale-95 transition-all ${
-                            isActive
-                              ? 'bg-copper/10 border-copper text-primary font-bold shadow-sm shadow-copper/5'
-                              : 'bg-surface border-border/40 text-secondary'
-                          }`}
-                        >
-                          {m.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </BottomSheet>
     </>
   );
 };
