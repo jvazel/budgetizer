@@ -174,7 +174,7 @@ Accessible via l'option "Transactions" du menu de navigation :
 - **Montants & Typographie** : Alignement en chiffres tabulaires `.font-premium-numbers` en taille `text-sm sm:text-base` et graisse `font-extrabold`. Les revenus s'affichent en vert émeraude et les débits importants (supérieurs au seuil d'alerte) s'affichent en rouge danger, tandis que les dépenses standard s'affichent sobrement en blanc/bleuté.
 - **Filtres et Recherche** : Consultation globale avec possibilité de filtrer par compte, catégorie, plage de dates, étiquettes ou recherche de mots-clés dans la description ou les notes.
 - **Gestion par Swipe** : Sur mobile, le glissement gauche (Swipe Left) révèle désormais **deux boutons** :
-  - ✏️ **Modifier** (fond accent, bleu-violet) : déclenche le callback `onEdit(transaction)` qui ouvre directement le formulaire pré-rempli dans `Transactions.jsx`. La prop s'appelle `onEdit` (et non `onEditClick`).
+  - ✏️ **Modifier** (fond accent, bleu-violet) : déclenche le callback `onEdit(transaction)` qui ouvre directement le formulaire pré-rempli dans `Transactions.tsx`. La prop s'appelle `onEdit` (et non `onEditClick`).
   - 🗑️ **Supprimer** (fond rouge) : déclenche le callback `onDelete(transaction)` qui ouvre la boite de confirmation de suppression. La prop s'appelle `onDelete` (et non `onDeleteClick`). Le `dragConstraints` est passé à `-160px` pour exposer les deux boutons (2 × 80 px).
 - **Chargement Infini** : Un `IntersectionObserver` charge 30 transactions supplémentaires au bas de la liste lors du scroll.
 
@@ -616,4 +616,20 @@ La page **Paramètres › Partage & Collaboration** est le tableau de contrôle 
 1. **Formulaire d'invitation** : Saisie email, choix du type (Compte / Budget), sélection de la ressource, choix de la permission. Un bouton «  Partager » envoie le partage.
 2. **Partagé par moi** : Liste des ressources que l'utilisateur a partagées avec d'autres. Chaque ligne affiche le nom de la ressource, le destinataire et son niveau d'accès. Un bouton « Révoquer » supprime immédiatement le partage.
 3. **Partagé avec moi** : Liste des ressources que d'autres utilisateurs ont partagées avec l'utilisateur courant, avec le nom du propriétaire et le niveau d'accès.
+
+
+## 21. Notifications Push Prédictives & Résilience Système 🔮
+
+Budgetizer propose un moteur d'alerte en temps réel enrichi d'analyses prédictives :
+
+### 21.1 Notifications Push Prédictives
+*   **Calcul de Vélocité et Projection** : Lors de chaque enregistrement ou mise à jour de dépense dans une catégorie budgétisée, l'application analyse le rythme moyen de dépense quotidien $\text{dailyPace} = \frac{\text{dépense}}{\text{jours écolés}}$.
+*   **Projection de Fin de Période** : L'algorithme projette le montant final estimé à la fin de la période ($\text{dailyPace} \times \text{totalJours}$).
+*   **Déclenchement Prédictif** : Si le budget n'est pas encore dépassé aujourd'hui mais que la projection linéaire indique un dépassement estimé d'au moins $5\%$, une notification push dynamique est envoyée avec le pourcentage de dépassement projeté :
+    > *🔮 Alerte Prédictive Budget : À ce rythme (25.00 €/j), vous allez dépasser votre budget "Alimentation" de 15% d'ici la fin du mois (projection : 575.00 € sur 500.00 €).*
+
+### 21.2 Sécurité et Résilience Système
+*   **Sécurisation Production** : Les endpoints de test PWA (`/api/notifications/test`) sont automatiquement désactivés et verrouillés avec un statut `403 Forbidden` lorsque l'application s'exécute en environnement de production.
+*   **Reconnexion MongoDB avec Reprise (Retry)** : La base de données Mongoose gère les coupures réseau accidentelles grâce à une stratégie de tentatives multiples à backoff exponentiel et notifie en temps réel les pertes ou rétablissements de connexion.
+
 

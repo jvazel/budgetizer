@@ -14,9 +14,13 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Transactions Planifiées & Abonnements** : Planification de transactions régulières ou d'abonnements mensuels/annuels, avec option d'auto-confirmation ou d'approbation manuelle.
 - **Partage & Collaboration** : Partage de comptes et de budgets entre utilisateurs (couple, famille) avec permissions `read` (lecture seule) ou `write` (lecture + écriture). Géré depuis **Paramètres › Partage & Collaboration**. L'interface s'adapte automatiquement aux restrictions : masquage des boutons de gestion, désactivation des swipe-actions et filtrage des comptes non-accessibles dans les formulaires.
 - **Visualisations & Graphiques** : Graphiques d'évolution du solde, répartition catégorielle, prévisions intelligentes de solde à 30 jours (via Recharts), **Indicateur de Vélocité de Dépense (Tachymètre)** pour surveiller le rythme de consommation budgétaire en temps réel, et intégration du graphique de tendance en arrière-plan translucide de la **Carte Solde Hero** physique pour un gain de hauteur optimal.
+- **Notifications Push Prédictives** : Réception de notifications push Web en temps réel en cas de baisse de solde, dépassement de budget ou alerte prédictive de dérive basée sur le rythme quotidien des dépenses (run rate).
 - **Conseils & IA (Insights)** : Détection automatique des anomalies de dépenses par catégorie (alertes orange/rouges) comparées à la moyenne des 3 derniers mois avec seuil de sensibilité configurable et persistant. Suggestions de réductions budgétaires interactives et audit d'abonnements.
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
+- **Haute Résilience & Logging Structuré** : Reconnexion automatique à MongoDB avec backoff exponentiel (retry logic), sérialisation propre des stack traces d'erreurs en JSON et sécurisation de l'endpoint de test en production (403 Forbidden).
+- **Suite de Tests Automatisés (478 tests)** : Couverture complète des fonctionnalités client (39 suites / 283 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (27 suites / 195 tests avec Vitest & Supertest).
+
 
 ---
 
@@ -25,15 +29,15 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 L'application est construite sur une architecture découplée de type client-serveur :
 
 - **Frontend (Client)** :
-  - **Framework** : [React](https://react.dev/) (propulsé par [Vite](https://vite.dev/))
+  - **Framework & Langage** : [React](https://react.dev/) & **TypeScript** (propulsé par [Vite](https://vite.dev/))
   - **PWA** : Configuration Progressive Web App via `@vite-pwa/plugin` avec Service Worker, gestion du cache et détection du mode hors ligne.
   - **Styles & Animations** : [Tailwind CSS](https://tailwindcss.com/) et [Framer Motion](https://www.framer.com/motion/) pour un design sombre premium "Encre & Cuivre" inspiré de Bankyboard (lueurs orbes translucides en arrière-plan, transitions élastiques tactiles, et support du balayage *swipe-to-dismiss* sur les tiroirs de dialogue).
   - **Graphiques** : [Recharts](https://recharts.org/) pour les visualisations interactives.
   - **Routage** : [React Router DOM v7](https://reactrouter.com/) pour la navigation.
 
 - **Backend (Serveur)** :
-  - **Runtime & Framework** : [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
-  - **Base de Données** : [MongoDB](https://www.mongodb.com/) via l'ORM [Mongoose](https://mongoosejs.com/) avec gestion de pool de connexions optimisée.
+  - **Runtime & Langage** : [Node.js](https://nodejs.org/), [Express](https://expressjs.com/) & **TypeScript** (`strict: true`, `noImplicitAny: true`)
+  - **Base de Données** : [MongoDB](https://www.mongodb.com/) via l'ORM [Mongoose](https://mongoosejs.com/) avec gestion de pool de connexions optimisée et typage strict.
   - **Sécurité & Protection** : 
     - En-têtes HTTP de sécurité via `helmet`.
     - Protection contre les injections NoSQL avec `express-mongo-sanitize`.
@@ -88,7 +92,7 @@ VITE_API_URL=http://localhost:5000/api
 ```
 
 ### 4. Lancement en mode Développement
-Pour lancer simultanément le serveur de développement Frontend (Vite) et le Backend (Node) avec rechargement automatique :
+Pour lancer simultanément le serveur de développement Frontend (Vite + TS) et le Backend (Node + TS) avec rechargement automatique :
 ```bash
 npm run dev
 ```
@@ -99,7 +103,18 @@ Vous pouvez également démarrer les parties indépendamment :
 - Côté Backend uniquement : `npm run dev:backend`
 - Côté Frontend uniquement : `npm run dev:frontend`
 
-### 5. Lancement en Production avec PM2
+### 5. Vérification du Typage et Tests
+Pour vérifier l'intégrité du code et exécuter les tests unitaires :
+```bash
+# Vérification du typage TypeScript
+cd server && npx tsc --noEmit
+cd client && npx tsc --noEmit
+
+# Exécution des tests unitaires Vitest
+npm test
+```
+
+### 6. Lancement en Production avec PM2
 Pour le déploiement en production, nous utilisons **PM2** pour gérer l'exécution du backend et séparer le trafic de l'API REST de l'exécution des tâches planifiées d'arrière-plan. Cela évite d'exécuter plusieurs planificateurs concurrents lorsque le serveur d'API est mis en cluster.
 
 Le fichier `server/ecosystem.config.json` définit deux applications :
@@ -109,6 +124,7 @@ Le fichier `server/ecosystem.config.json` définit deux applications :
 Pour lancer l'application avec PM2 :
 ```bash
 cd server
+npm run build # Compilation TypeScript
 pm2 start ecosystem.config.json
 ```
 
@@ -124,7 +140,7 @@ Commandes PM2 utiles :
 
 ```text
 budgetizer/
-├── client/                 # Application Frontend React
+├── client/                 # Application Frontend React + TypeScript
 │   ├── public/             # Fichiers statiques et icônes PWA
 │   ├── src/
 │   │   ├── assets/         # Images, logos, ressources statiques
@@ -133,19 +149,21 @@ budgetizer/
 │   │   ├── hooks/          # Hooks personnalisés (useAccounts, useTransactions, etc.)
 │   │   ├── pages/          # Écrans principaux (Home, Budgets, Settings avec bascule PWA, etc.)
 │   │   ├── services/       # Service de communication API (Axios)
-│   │   ├── App.jsx         # Composant racine, routage et toast hors ligne
-│   │   └── main.jsx        # Point d'entrée React et enregistrement PWA
-│   ├── vite.config.js      # Configuration de Vite avec le plugin VitePWA
+│   │   ├── App.tsx         # Composant racine, routage et toast hors ligne
+│   │   └── main.tsx        # Point d'entrée React et enregistrement PWA
+│   ├── vite.config.ts      # Configuration de Vite avec le plugin VitePWA
+│   ├── tsconfig.json       # Configuration TypeScript du Client
 │   └── package.json
 │
-├── server/                 # API REST Backend Express
+├── server/                 # API REST Backend Express + TypeScript
 │   ├── controllers/        # Logique métier et gestionnaires de requêtes
 │   ├── middleware/         # Middlewares (validation, authMiddleware)
-│   ├── models/             # Modèles Mongoose de base de données
+│   ├── models/             # Modèles Mongoose de base de données typés
 │   ├── routes/             # Définition des routes d'API Express
 │   ├── utils/              # Fonctions utilitaires & planificateur automatique
 │   ├── ecosystem.config.json # Configuration PM2 (cluster API + worker unique)
-│   ├── index.js            # Point d'entrée de l'application Express (sécurisé avec Helmet, Rate Limiter)
+│   ├── index.ts            # Point d'entrée de l'application Express (sécurisé avec Helmet, Rate Limiter)
+│   ├── tsconfig.json       # Configuration TypeScript du Serveur
 │   └── package.json
 │
 ├── docs/                   # Documentations détaillées (fonctionnelle & technique)

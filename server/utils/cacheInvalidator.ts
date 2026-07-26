@@ -1,0 +1,20 @@
+import MonthlyReport from '../models/MonthlyReport';
+import { logger } from '../utils/logger';
+
+/**
+ * Invalide le rapport mensuel mis en cache pour un utilisateur et un mois donnés.
+ */
+export const invalidateMonthlyReport = async (userId: string, date: Date | string): Promise<void> => {
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return;
+
+    const monthKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    const result = await MonthlyReport.deleteOne({ userId, monthKey });
+    if (result.deletedCount > 0) {
+      logger.info(`[CacheInvalidator] Invalidation du cache MonthlyReport réussie pour ${monthKey}`);
+     }
+   } catch (error: unknown) {
+    logger.error('[CacheInvalidator] Erreur lors de l\'invalidation du cache MonthlyReport:', { error: (error as Error).message });
+   }
+};

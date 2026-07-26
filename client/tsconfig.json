@@ -1,0 +1,28 @@
+{
+   "compilerOptions": {
+     "target": "ESNext",
+     "useDefineForClassFields": true,
+     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+     "types": ["node", "@testing-library/jest-dom"],
+     "module": "ESNext",
+     "skipLibCheck": true,
+
+     /* Bundler mode */
+     "moduleResolution": "bundler",
+     "jsx": "react-jsx",
+     "allowImportingTsExtensions": true,
+     "resolveJsonModule": true,
+     "isolatedModules": true,
+     "noUnusedLocals": true,
+     "noUnusedParameters": true,
+     "noUncheckedIndexedAccess": true,
+
+     /* Linting */
+     "strict": true,
+     "noImplicitAny": true,
+     "strictNullChecks": true
+   },
+   "include": ["src"],
+   "exclude": ["src/**/__tests__/**"],
+   "references": [{ "path": "./tsconfig.node.json" }]
+}

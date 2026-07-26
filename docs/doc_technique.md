@@ -309,7 +309,7 @@ Toutes les routes d'API (sauf `/api/auth/login` et `/api/auth/register`) nécess
 
 ## 4. Algorithmes et Processus Clés
 
-### 4.1 Orchestrateur de planification (`scheduledProcessor.js`)
+### 4.1 Orchestrateur de planification (`scheduledProcessor.ts`)
 Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la boucle d'exécution suivante :
 1. **Acquisition du Verrou Distribué** : Avant tout traitement, le processeur tente d'acquérir un verrou MongoDB atomique via `JobLock.findOneAndUpdate()` avec upsert (voir modèle [JobLock](#211-modèle-joblock-verrou-distribué-pour-jobs-planifiés)). Si une autre instance PM2 détient déjà le verrou, l'exécution est ignorée silencieusement. Le verrou est toujours libéré dans un bloc `finally` après achèvement (succès ou échec).
 2. **Déclenchement** : Lancé immédiatement au démarrage du serveur Express, puis exécuté périodiquement toutes les heures via un `setInterval`. Au démarrage, un nettoyage des verrous orphelins (> 30 min) est également effectué (`cleanupStaleLocks`).
@@ -321,7 +321,7 @@ Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la b
       - Si `autoConfirm = true` : Modifie les soldes des comptes correspondants (`balance -= amount` pour dépense, `+= amount` pour revenu, et les deux pour un transfert).
       - Si `autoConfirm = false` : La transaction est créée avec `isPending: true`, aucun solde n'est modifié tant que l'utilisateur n'approuve pas via l'API `/confirm`.
     - **Calcul de la récurrence suivante** :
-      Pour éviter la dérive temporelle liée aux longueurs inégales de mois (28/29/30/31 jours) et aux années bissextiles, la fonction `calculateNextDate` (du fichier helper [dateHelper.js](file:///c:/Projects/budgetizer/server/utils/dateHelper.js)) calcule chaque occurrence suivante de manière absolue et déterministe à partir de la date de début d'origine (`startDate`) et du nombre d'exécutions accumulé (`timesExecuted`) :
+      Pour éviter la dérive temporelle liée aux longueurs inégales de mois (28/29/30/31 jours) et aux années bissextiles, la fonction `calculateNextDate` (du fichier helper `dateHelper.ts`) calcule chaque occurrence suivante de manière absolue et déterministe à partir de la date de début d'origine (`startDate`) et du nombre d'exécutions accumulé (`timesExecuted`) :
       $$\text{nextDate} = \text{startDate} + (\text{timesExecuted} \times \text{every} \times \text{unit})$$
       Un ajustement intelligent est appliqué pour plafonner le jour calculé au dernier jour réel du mois cible si le jour de début déborde (ex : une récurrence le 31 janvier donnera le 28 ou 29 février, puis se rétablira automatiquement au 31 mars).
     - **Vérification des limites** :
@@ -332,7 +332,7 @@ Ce module est le moteur d'automatisation de Budgetizer. Il fonctionne selon la b
     - **Déclenchement Externe (Cron / Serverless Jobs)** : L'endpoint `/api/jobs/process-scheduled` permet d'exécuter la planification à distance via un planificateur externe (comme Vercel Cron, Google Cloud Scheduler). Cela permet d'exécuter l'application sur des instances d'API sans état en paramétrant `RUN_SCHEDULED_JOBS` à `"false"` et en appelant régulièrement le point d'accès avec l'en-tête `x-job-key` configuré (`SCHEDULED_JOBS_SECRET`).
     - **Garantie d'exécution Exclusive** : Même si plusieurs instances PM2 exécutent simultanément le processeur, le verrou MongoDB `JobLock` garantit qu'une seule et unique instance traite les échéances à chaque intervalle. Les autres instances ignorent silencieusement leur tour.
 
-### 4.2 Détection d'Anomalies et Prévisions d'Insights (`insightController.js`)
+### 4.2 Détection d'Anomalies et Prévisions d'Insights (`insightController.ts`)
 Cet algorithme est invoqué à la demande lors du rendu de la page « Conseils » :
 1. **Identification des mois complets historiques** : Détermine les 3 derniers mois complets relatifs à la date du jour (ex: si nous sommes en mai, les mois historiques sont février, mars et avril).
 2. **Calcul de l'âge d'activité** : Vérifie l'ancienneté de l'utilisateur par rapport à sa première transaction. Si celle-ci remonte à moins de 2 mois, l'analyse est ignorée (historique insuffisant).
@@ -351,49 +351,49 @@ Cet algorithme est invoqué à la demande lors du rendu de la page « Conseils �
 
 ---
 
-## 5. Architecture du Frontend (Client React)
+## 5. Architecture du Frontend (Client React + TypeScript)
 
 ### 5.1 Sécurité et Session
-L'état d'authentification est globalisé via le composant [AuthContext](file:///c:/Projects/budgetizer/client/src/context/AuthContext.jsx).
+L'état d'authentification est globalisé via le composant `AuthContext.tsx`.
 - Le jeton JWT est enregistré dans le `localStorage` lors de la connexion.
-- Une instance d'Axios personnalisée ([api.js](file:///c:/Projects/budgetizer/client/src/services/api.js)) intercepte chaque requête sortante pour y injecter le header `Authorization: Bearer <token>`.
+- Une instance d'Axios personnalisée (`api.ts`) intercepte chaque requête sortante pour y injecter le header `Authorization: Bearer <token>`.
 - Si le serveur répond avec un code HTTP `401 Unauthorized` (ex: jeton expiré), le réponse-intercepteur vide le stockage local et redirige vers la page `/login`.
 
 ### 5.2 Hooks Personnalisés (Custom Hooks)
-Le client sépare la logique de gestion d'état et d'appel réseau des composants graphiques grâce à des hooks spécifiques localisés dans `client/src/hooks/` :
-- `useAccounts.js` : CRUD sur les comptes.
-- `useTransactions.js` : Recherche, filtres, import/export et ajout de transactions.
-- `useBudgets.js` : Suivi et définition des enveloppes de budget.
-- `useScheduled.js` : Gérant les transactions planifiées.
-- `useDashboard.js` : Agrégation des données de la page d'accueil.
-- `useMonthlySummaries.js` : Historique des soldes par mois passés.
-- `useShares.js` : Gestion des partages de comptes et budgets. Expose `shares` (liste consolidée partagé-par-moi + partagé-avec-moi), `createShare(data)` et `deleteShare(id)`. Les données sont mises en cache sous la clé `['shares']` via React Query.
+Le client sépare la logique de gestion d'état et d'appel réseau des composants graphiques grâce à des hooks spécifiques typés localisés dans `client/src/hooks/` :
+- `useAccounts.ts` : CRUD sur les comptes.
+- `useTransactions.ts` : Recherche, filtres, import/export et ajout de transactions.
+- `useBudgets.ts` : Suivi et définition des enveloppes de budget.
+- `useScheduled.ts` : Gérant les transactions planifiées.
+- `useDashboard.ts` : Agrégation des données de la page d'accueil.
+- `useMonthlySummaries.ts` : Historique des soldes par mois passés.
+- `useShares.ts` : Gestion des partages de comptes et budgets. Expose `shares` (liste consolidée partagé-par-moi + partagé-avec-moi), `createShare(data)` et `deleteShare(id)`. Les données sont mises en cache sous la clé `['shares']` via React Query.
 
 ### 5.3 Intégration PWA & Gestion de l'État Hors-ligne (Offline-first)
-Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `client/vite.config.js` et s'appuie sur une architecture offline-first complète et transparente :
+Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `client/vite.config.ts` et s'appuie sur une architecture offline-first complète et transparente :
 
 1. **Service Worker & Precaching** :
-   - Enregistré automatiquement au point d'entrée (`main.jsx`). Il utilise `workbox-precaching` pour pré-mettre en cache tous les actifs statiques (HTML, JS, CSS, images, icônes) générés lors de la compilation, permettant le chargement instantané de l'application sans réseau.
+   - Enregistré automatiquement au point d'entrée (`main.tsx`). Il utilise `workbox-precaching` pour pré-mettre en cache tous les actifs statiques (HTML, JS, CSS, images, icônes) générés lors de la compilation, permettant le chargement instantané de l'application sans réseau.
    - Cycle de vie configuré en mode `autoUpdate` pour déployer immédiatement les nouvelles versions de l'application dès qu'elles sont détectées.
 
 2. **Persistance du Cache des Requêtes (Lecture hors ligne)** :
-   - Mise en cache persistante automatique avec `@tanstack/react-query-persist-client` et un persister IndexedDB natif personnalisé (`idbHelper.js`).
+   - Mise en cache persistante automatique avec `@tanstack/react-query-persist-client` et un persister IndexedDB natif personnalisé (`idbHelper.ts`).
    - L'état de toutes les requêtes (Transactions, Comptes, Budgets, Objectifs d'épargne, Catégories, Opérations planifiées) est stocké localement sous la clé `reactQueryCache` dans le store IndexedDB `query-cache`.
    - La durée de conservation du cache (`gcTime`) est étendue à **7 jours** pour s'assurer que les données restent disponibles localement même lors de sessions hors ligne prolongées.
 
 3. **File d'attente des modifications (Outbox & Écriture hors ligne)** :
-   - **Interception Réseau** : Un intercepteur de requêtes configuré dans `api.js` capture toutes les requêtes d'écriture (POST, PUT, DELETE) lorsque `navigator.onLine` est faux.
+   - **Interception Réseau** : Un intercepteur de requêtes configuré dans `api.ts` capture toutes les requêtes d'écriture (POST, PUT, DELETE) lorsque `navigator.onLine` est faux.
    - **Stockage de File (IndexedDB)** : Ces requêtes d'écriture sont sérialisées chronologiquement dans le store IndexedDB `sync-outbox` avec un ID auto-incrémenté. Pour chaque opération de création (POST), un identifiant temporaire (`temp-...`) est généré.
-   - **Mise à jour Optimiste du Cache** : Le processeur `offlineSync.js` intercepte la modification et l'applique immédiatement et de manière optimiste dans le cache local de React Query (via `setQueriesData`), ce qui met à jour l'interface en temps réel.
+   - **Mise à jour Optimiste du Cache** : Le processeur `offlineSync.ts` intercepte la modification et l'applique immédiatement et de manière optimiste dans le cache local de React Query (via `setQueriesData`), ce qui met à jour l'interface en temps réel.
    - **Simulation Réseau** : La requête Axios d'origine est annulée avec une erreur simulée `isOfflineMock`, qui est interceptée par le response interceptor pour être résolue comme un succès HTTP 200 contenant la charge utile (avec l'ID temporaire s'il s'agit d'une création). Les hooks de mutation croient ainsi que l'appel réseau a réussi et exécutent leurs fonctions de succès normalement.
 
 4. **Moteur de Synchronisation en Arrière-plan** :
-   - Le script `offlineSync.js` écoute l'événement `online` du navigateur ou s'exécute au démarrage si le réseau est disponible.
+   - Le script `offlineSync.ts` écoute l'événement `online` du navigateur ou s'exécute au démarrage si le réseau est disponible.
    - Il dépile séquentiellement l'outbox IndexedDB en exécutant les requêtes réelles auprès de l'API (avec le drapeau `skipOfflineInterceptor: true` pour contourner la capture locale).
    - **Résolution d'IDs Temporaires** : Si une création réussit sur le serveur, le moteur récupère le véritable ID de la base de données MongoDB et met à jour dynamiquement toutes les requêtes d'édition ou de suppression ultérieures présentes dans la file d'attente qui feraient référence à cet ID temporaire.
    - Une fois la file vidée, le cache React Query est invalidé pour charger les données consolidées du serveur.
 
-5. **Cycle de Vie UI & Indicateurs (`OfflineStatus.jsx` & `PwaContext.jsx`)** :
+5. **Cycle de Vie UI & Indicateurs (`OfflineStatus.tsx` & `PwaContext.tsx`)** :
    - **PwaContext** : Gère l'installation différée (`beforeinstallprompt`) et l'interfaçage avec le service worker.
    - **OfflineStatus** : Écoute les événements système personnalisés (`outbox-updated` et `sync-status-changed`). Il affiche dynamiquement :
      - Le mode hors ligne standard.
@@ -403,8 +403,8 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
 
 ### 5.4 Expérience Utilisateur & Design System Premium
 - **Charte Graphique & Typographie** : Alignement visuel global avec l'esthétique premium de Bankyboard. Intégration de la police **`Manrope`** comme police sans-serif par défaut. Définition de la palette de couleurs **Bleu Encre** (`#030816` pour la base sombre, `#f8fafc` / `#0a1a2f` pour le thème clair) et de la couleur d'accentuation **Cuivre/Ambre** signature (`#d97706`).
-- **Tiroir de Navigation (`MenuSheet.jsx`)** : Un menu coulissant moderne est déployé de manière fluide grâce à `framer-motion` (physique de ressort). Il dispose de halos de lumière diffuse (`blur-[60px] bg-copper/5` et `bg-purple/5`). Son architecture a été sécurisée avec des z-indexes rigoureux (`z-40` pour le backdrop, `z-50` pour le tiroir) pour éviter que le flou d'arrière-plan ne se superpose au menu.
-- **Liste Optimisée des Transactions (`TransactionList.jsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles et gérer le contexte de filtrage :
+- **Tiroir de Navigation (`MenuSheet.tsx`)** : Un menu coulissant moderne est déployé de manière fluide grâce à `framer-motion` (physique de ressort). Il dispose de halos de lumière diffuse (`blur-[60px] bg-copper/5` et `bg-purple/5`). Son architecture a été sécurisée avec des z-indexes rigoureux (`z-40` pour le backdrop, `z-50` pour le tiroir) pour éviter que le flou d'arrière-plan ne se superpose au menu.
+- **Liste Optimisée des Transactions (`TransactionList.tsx`)** : Le composant a été restructuré pour s'adapter dynamiquement aux contraintes mobiles et gérer le contexte de filtrage :
   - **Regroupement par date intelligent** : Les entrées sont groupées par jour avec des headers sticky colorisés — "Aujourd'hui" en `text-accent`, "Hier" en `text-primary`, dates antérieures en `text-secondary`. La logique compare les timestamps via `Date.getTime()` après normalisation à minuit pour éviter les décalages UTC.
   - **Composant `CategoryIcon` Dédié** : Extrait la logique d'icône pour afficher des emojis de catégorie dans des disques circulaires à arrière-plan en dégradé translucide et bordures assorties (via des styles CSS calculés en ligne de type `linear-gradient(135deg, ${catColor}25 0%, ${catColor}08 100%)`). Les virements internes et opérations non classées utilisent respectivement les emojis `🔄` et `❓` sur des variations de bleu et d'ambre.
   - **Bordure Latérale Colorée** : Chaque ligne de transaction bénéficie d'une fine bordure verticale gauche de 4px reprenant le code couleur de sa catégorie (ou du compte pour les virements) pour faciliter le balayage visuel rapide.
@@ -413,12 +413,12 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
   - Sur mobile, le nom du compte bancaire se décale sous le libellé de catégorie (empilement flex-col) afin de libérer la largeur maximale.
   - Les libellés longs sont tronqués proprement (`truncate`) avec affichage d'un attribut de texte au survol (`title`) pour l'accessibilité.
   - **Gestion dynamique des signes pour les virements** : Affiche les transferts en débit négatif (`-` et rouge) par défaut ou lorsqu'on filtre sur le compte courant source, mais les affiche en crédit positif (`+` et vert `text-accent`) lorsqu'on filtre sur le compte destinataire.
-- **Tableau de Bord (`Home.jsx`) — Restructuration Structurelle** :
+- **Tableau de Bord (`Home.tsx`) — Restructuration Structurelle** :
   - **Carte des Statistiques Temporelles (Timeframe Statistics Card)** : Fusion de l'onglet de statistiques mensuelles (Revenus, Dépenses, Solde net) et du mini-graphique (Sparkline de type courbe d'aire Recharts des 7 derniers jours) dans une unique carte à onglets interactifs pour économiser de la hauteur d'écran sur mobile.
   - **Raccourcis Tactiles Compacts (Dashboard Hub)** : Compression de la grille de 8 raccourcis en une seule rangée de 4 raccourcis primaires (Budgets, Épargne, Analyses, Conseils) complétée par un bouton "Plus" (BottomSheet) révélant les 4 raccourcis secondaires (Abonnements, Scores, Échéances, Virements).
   - **Carrousel des Comptes Premium & Date d'Activité** : Les cartes de compte utilisent un **style solide à dégradé métallique premium** (`var(--bg-surface)` vers `var(--bg-surface-2)`) avec une fine bordure colorée assortie au compte, une barre latérale colorée épurée sur le flanc gauche et un halo lumineux de couleur d'accentuation en haut à droite. Elles intègrent dynamiquement **la date de la dernière transaction** enregistrée sous le solde principal ("Dernière op. : DD MMM" ou "Aucune opération" s'il n'y a pas d'activité récente).
   - **Voyant de Synchronisation Live** : Ajout d'une balise verte pulsante (`.animate-pulse-live`) sur l'icône de chaque carte de compte pour confirmer l'état de synchronisation en temps réel avec la base de données.
-- **Formulaire de Saisie Rapide (`TransactionFormSheet.jsx`)** — Améliorations UX Speed :
+- **Formulaire de Saisie Rapide (`TransactionFormSheet.tsx`)** — Améliorations UX Speed :
   - **Chip "Répéter"** : La transaction précédente est sérialisée dans `localStorage` sous la clé `budgetizer_last_transaction` après chaque ajout. Au montage suivant du formulaire, si la clé est présente, le chip est affiché.
   - **Note en premier & Autocomplete repositionné** : Le champ `<input id="note-input">` est monté avant la grille `grid-cols-2` Compte/Catégorie. Les chips de suggestion apparaissent dans la foulée visuelle (-mt-2).
   - **Pré-catégorisation automatique** : Lors de la modification de la note, un algorithme d'historique recherche en temps réel la catégorie passée la plus fréquente. Si elle existe, elle est pré-sélectionnée et le badge `<AiBadge text="Suggéré" />` est rendu. Toute modification manuelle ou sélection de template annule cette pré-sélection et masque le badge.
@@ -429,32 +429,32 @@ Le support Progressive Web App est configuré via `@vite-pwa/plugin` dans `clien
   - **Bouton Valider Sticky** : CSS `sticky bottom-0` sur le conteneur du bouton avec `bg-gradient-to-t` pour masquer le contenu scrollé en dessous.
   - **Toast Enrichi** : `toast.success(<div>...</div>)` avec le montant et le solde calculé côté client sans re-fetch API.
   - **Patterns Haptiques Distincts** : `triggerHaptic('expense')` déclenche `navigator.vibrate(25)`. `triggerHaptic('income')` déclenche `navigator.vibrate([15, 60, 15])`. `triggerHaptic('error')` déclenche `navigator.vibrate([50, 40, 50, 40, 50])`.
-- **Conseils IA & Suggestions (`AiInsights.jsx`)** :
+- **Conseils IA & Suggestions (`AiInsights.tsx`)** :
   - **Fiches d'Action Actionnables** : Les conseils d'insights ont été restructurés sous forme de cartes d'action dotées d'effets de lueur radiale d'accentuation en arrière-plan.
   - **Chips Tactiles Agrandis** : Les sélections de pourcentages (-10%, -20%, -30%) utilisent de grands boutons de puces interactives avec des classes de transition et de retour d'échelle tactile `.active-scale-sm` et un état actif cuivré (`bg-copper`).
   - **Boutons de Redirection Contextuelle (CTA)** : Intégration de boutons d'appel à l'action clairs au bas de chaque fiche (ex: "Gérer mes abonnements" ou "Fixer une limite budget") redirigeant instantanément l'utilisateur vers la page concernée pour implémenter la recommandation.
-- **`hapticHelper.js`** : Ajout des cases `'expense'`, `'income'` au `switch`. La case `'error'` est renforcée à 3 impulsions au lieu de 2.
-- **Formatage et fonctionnalités du Calendrier (`CalendarPage.jsx`, `MiniCalendar.jsx`)** : 
+- **`hapticHelper.ts`** : Ajout des cases `'expense'`, `'income'` au `switch`. La case `'error'` est renforcée à 3 impulsions au lieu de 2.
+- **Formatage et fonctionnalités du Calendrier (`CalendarPage.tsx`, `MiniCalendar.tsx`)** : 
   - *Flux financiers* : Les transferts (incluant les échéances de crédit planifiées ou validées) s'affichent en négatif (`-`) et rouge (`text-primary` pour les réels) pour représenter l'impact de trésorerie sur le compte émetteur. Les indicateurs de jour sous forme de points colorent également ces journées en rouge (`bg-danger`) pour signaler un débit prévu.
   - *Week-ends en rouge* : Identification des samedis et dimanches via `date.getDay() === 0 || date.getDay() === 6`. Les en-têtes de colonne "Sa"/"Di" sont coloriés en `text-danger/80`. Les cellules de date du week-end s'affichent en `text-danger` (jours courants) ou `text-danger/30 opacity-40` (jours hors mois courant), et en déclinaison `bg-danger/[0.03] text-danger border-danger/10` pour les jours futurs sans charge.
   - *Ajout rapide* : Intégration d'un bouton d'action dans le header via `HeaderActions` (portail) et d'un bouton « Ajouter » à côté du titre de la section journalière. L'ancien bouton d'état vide redondant a été remplacé par un conteneur statique.
-  - *Correction Timezone* : Remplacement de l'initialisation `.toISOString().split('T')[0]` (qui décalait la date sélectionnée d'un jour en arrière selon la timezone locale) par les fonctions utilitaires locales `formatDateLocal` et `getFormReadyDate` dans `TransactionFormSheet.jsx`.
-  - *Test unitaire* : Ajout du cas de test `correctly sets date in local timezone when defaultDate is provided` dans `TransactionFormSheet.test.jsx`.
+  - *Correction Timezone* : Remplacement de l'initialisation `.toISOString().split('T')[0]` (qui décalait la date sélectionnée d'un jour en arrière selon la timezone locale) par les fonctions utilitaires locales `formatDateLocal` et `getFormReadyDate` dans `TransactionFormSheet.tsx`.
+  - *Test unitaire* : Ajout du cas de test `correctly sets date in local timezone when defaultDate is provided` dans `TransactionFormSheet.test.tsx`.
 - **Branding Systémique** : Suppression des logos et icônes génériques de portefeuille. Le logo de l'application (`/pwa-192x192.png`) a été standardisé sur les écrans suivants :
-  - `Splash.jsx` (Écran de chargement initial).
-  - Écrans d'authentification (`Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`).
-- **Titres de Page Collapsibles et En-tête Collante (`AppShell.jsx` / `Home.jsx` / `Budgets.jsx` / `ChartsPage.jsx` / `SummaryHistory.jsx`)** : Intégration d'un écouteur de défilement (`window.scrollY`) pour basculer dynamiquement l'opacité et l'affichage des titres de page dans le header collant. Pour maintenir le header collant (`sticky`) lors du défilement sans blocage par l'overflow sur mobile, le conteneur racine d'AppShell utilise la classe CSS `overflow-x-clip` (qui ne définit pas un nouveau conteneur de défilement pour le positionnement collant, contrairement à `overflow-x-hidden`).
-- **Sélecteur d'Analyses et Onglets (`ChartsPage.jsx`)** :
+  - `Splash.tsx` (Écran de chargement initial).
+  - Écrans d'authentification (`Login.tsx`, `Register.tsx`, `ForgotPassword.tsx`, `ResetPassword.tsx`).
+- **Titres de Page Collapsibles et En-tête Collante (`AppShell.tsx` / `Home.tsx` / `Budgets.tsx` / `ChartsPage.tsx` / `SummaryHistory.tsx`)** : Intégration d'un écouteur de défilement (`window.scrollY`) pour basculer dynamiquement l'opacité et l'affichage des titres de page dans le header collant. Pour maintenir le header collant (`sticky`) lors du défilement sans blocage par l'overflow sur mobile, le conteneur racine d'AppShell utilise la classe CSS `overflow-x-clip` (qui ne définit pas un nouveau conteneur de défilement pour le positionnement collant, contrairement à `overflow-x-hidden`).
+- **Sélecteur d'Analyses et Onglets (`ChartsPage.tsx`)** :
   - **Sélecteur de Mois Centralisé et Propagation de Période** : L'état `period` (ainsi que les dates associées `startDate`/`endDate` calculées localement) est géré de façon centralisée au niveau du composant parent. Cet état est transmis sous forme de props (`externalPeriod`, `externalStartDate`, `externalEndDate`) aux sous-composants graphiques actifs (`CategoryChart`, `FixedVarChart`, `WaterfallChart`, `TagChart`, `RankingChart`, `HistogramChart`, `BudgetActualChart`).
   - **Masquage Automatique des Doublons Graphiques** : Chaque sous-composant graphique conditionne le rendu de son propre sélecteur de date local (`{!externalPeriod}` / `{!externalStartDate}`). S'il est intégré dans `ChartsPage` (donc avec props transmises), son propre sélecteur est masqué pour assurer un affichage épuré sans doublon.
   - **Onglets Horizontaux défilants** : Affichage d'une barre de 5 onglets fixes pour un basculement instantané entre les analyses de premier plan (*Catégories*, *Cash Flow*, *Richesse Nette*, *Budget vs Réel*, et *Prévisions*), avec bouton "Autres" d'accès au drawer.
   - **Conseils IA Contextuels** : Repositionnement et liaison réactive du conseil IA, qui s'ajuste dynamiquement selon le type de graphique sélectionné.
-- **Paramètres structurels & Boutons Row-item (`SettingsPage.jsx`)** : Les boutons classiques de catégories et étiquettes ont été réarchitecturés en listes à cartes horizontales premium (icône avec arrière-plan coloré translucide, titre bold, description d'action et chevron de navigation à droite).
-- **Confirmation unifiée et Saisie Tactile (`ConfirmModal.jsx` / `BottomSheet.jsx`)** : Le composant réutilisable de dialogue de confirmation `<ConfirmModal>` gère désormais les avertissements système critiques de suppression (transactions, filtres personnalisés dans Transactions, suppression de comptes dans AccountsPage, abonnements dans SubscriptionsPage, échéances dans ScheduledPage, catégories dans Categories, effacement de données et suppression de compte dans SettingsPage) avec trois configurations thématiques de danger (danger, warning, info) et effets d'entrée élastiques. De plus, la modification rapide de montant d'une échéance dans ScheduledPage utilise un **BottomSheet de saisie numérique customisé** fluide et tactile pour éviter les invites `window.prompt` natives.
-- **Régulation des Enveloppes de Budgets (`Budgets.jsx`)** : Fusion des trois chronologies chronophages verticales antérieures dans un segmented control supérieur (Semaine | Mois | Année) régulé par un unique navigateur de période (← Période →).
-- **Historique Mensuel & MonthGauge (`SummaryHistory.jsx`)** : Agrandissement du diamètre du graphique de beignet `MonthGauge` de 75 px à 90 px avec rayons ajustés à 26/36, et mise à jour du skeleton loader correspondant.
-- **Gestion Robuste du Chargement des Routes & Suspense (`AppShell.jsx` / `main.jsx`)** : Afin d'éviter les gels d'affichage sous React 19 (où un parent `<AnimatePresence mode="wait">` pouvait bloquer le rendu lors de la suspension d'une route lazy-loadée), la transition globale de page a été retirée au profit d'un composant `<Suspense>` direct enveloppant `<Outlet />`. Ce dernier affiche un *shimmer loader* (squelette de chargement) modélisant l'emplacement des futures cartes. De plus, la restauration automatique du défilement du navigateur a été désactivée (`window.history.scrollRestoration = 'manual'` dans [main.jsx](file:///c:/Projects/budgetizer/client/src/main.jsx)) et gérée manuellement lors des transitions de routes dans `AppShell.jsx` pour éviter les sauts brusques d'affichage.
-- **Sélecteur d'Analyses Catégorisé en Grille (`ChartsPage.jsx`)** : Restructuration du tiroir de sélection d'analyses en regroupant les 12 graphiques sous forme de grille compacte sur 2 colonnes avec des icônes de couleur, pour une meilleure ergonomie sur mobile.
+- **Paramètres structurels & Boutons Row-item (`SettingsPage.tsx`)** : Les boutons classiques de catégories et étiquettes ont été réarchitecturés en listes à cartes horizontales premium (icône avec arrière-plan coloré translucide, titre bold, description d'action et chevron de navigation à droite).
+- **Confirmation unifiée et Saisie Tactile (`ConfirmModal.tsx` / `BottomSheet.tsx`)** : Le composant réutilisable de dialogue de confirmation `<ConfirmModal>` gère désormais les avertissements système critiques de suppression (transactions, filtres personnalisés dans Transactions, suppression de comptes dans AccountsPage, abonnements dans SubscriptionsPage, échéances dans ScheduledPage, catégories dans Categories, effacement de données et suppression de compte dans SettingsPage) avec trois configurations thématiques de danger (danger, warning, info) et effets d'entrée élastiques. De plus, la modification rapide de montant d'une échéance dans ScheduledPage utilise un **BottomSheet de saisie numérique customisé** fluide et tactile pour éviter les invites `window.prompt` natives.
+- **Régulation des Enveloppes de Budgets (`Budgets.tsx`)** : Fusion des trois chronologies chronophages verticales antérieures dans un segmented control supérieur (Semaine | Mois | Année) régulé par un unique navigateur de période (← Période →).
+- **Historique Mensuel & MonthGauge (`SummaryHistory.tsx`)** : Agrandissement du diamètre du graphique de beignet `MonthGauge` de 75 px à 90 px avec rayons ajustés à 26/36, et mise à jour du skeleton loader correspondant.
+- **Gestion Robuste du Chargement des Routes & Suspense (`AppShell.tsx` / `main.tsx`)** : Afin d'éviter les gels d'affichage sous React 19 (où un parent `<AnimatePresence mode="wait">` pouvait bloquer le rendu lors de la suspension d'une route lazy-loadée), la transition globale de page a été retirée au profit d'un composant `<Suspense>` direct enveloppant `<Outlet />`. Ce dernier affiche un *shimmer loader* (squelette de chargement) modélisant l'emplacement des futures cartes. De plus, la restauration automatique du défilement du navigateur a été désactivée (`window.history.scrollRestoration = 'manual'` dans `main.tsx`) et gérée manuellement lors des transitions de routes dans `AppShell.tsx` pour éviter les sauts brusques d'affichage.
+- **Sélecteur d'Analyses Catégorisé en Grille (`ChartsPage.tsx`)** : Restructuration du tiroir de sélection d'analyses en regroupant les 12 graphiques sous forme de grille compacte sur 2 colonnes avec des icônes de couleur, pour une meilleure ergonomie sur mobile.
 - **Harmonisation des Bordures et États Vides** : Standardisation du rayon de courbure à `rounded-[16px]` pour les composants internes et squelettes de chargement. Remplacement des bordures tiretées (`border-dashed`) des états vides par des cartes solides structurées intégrant des halos lumineux et des boutons d'actions nets (via le composant réutilisable `<EmptyState>`).
 - **Système d'Interaction Tactile Haptique** : Définition des classes d'utilitaires CSS `.active-scale-sm`, `.active-scale-md`, et `.active-scale-lg` et de l'animation `@keyframes shimmer` pour des retours physiques instantanés de pressions tactiles sur les boutons, cartes et icônes.
 
@@ -509,7 +509,7 @@ Pour résoudre ce problème, Budgetizer utilise la topologie décrite dans [ecos
 
 ### 6.4 Gestion du Cache en Mémoire & Prévention des Fuites de Mémoire
 Pour accélérer le chargement du tableau de bord sans multiplier les requêtes MongoDB coûteuses, les données agrégées de `getDashboardSummary` sont mises en cache en mémoire.
-- **TtlCache (`ttlCache.js`)** : Remplace l'utilisation d'un objet `Map` standard sujet aux fuites de mémoire. Cette classe implémente :
+- **TtlCache (`ttlCache.ts`)** : Remplace l'utilisation d'un objet `Map` standard sujet aux fuites de mémoire. Cette classe implémente :
   - **Expiration Temporelle (TTL)** : Les entrées expirent après une durée configurable (2 minutes par défaut) pour garantir la fraîcheur des données.
   - **Limite de Taille Maximale (FIFO Eviction)** : Une taille maximale est définie (1000 utilisateurs par défaut). Si la limite est atteinte, l'entrée la plus ancienne est automatiquement évincée lors de l'ajout d'une nouvelle clé.
   - **Invalidation Réactive** : Le cache est invalidé instantanément (`dashboardCache.delete(userId)`) à chaque création, modification ou suppression de transaction, virement, ou budget pour maintenir la cohérence des données affichées.
@@ -521,7 +521,7 @@ Pour accélérer le chargement du tableau de bord sans multiplier les requêtes 
 Afin de sécuriser le code existant et de prévenir toute régression lors des futurs développements, Budgetizer intègre une suite de tests automatisés couvrant à la fois le client et le serveur.
 
 ### 7.1 Framework de Tests : Vitest
-**Vitest** est utilisé comme exécuteur de tests unique pour le frontend et le backend en raison de sa rapidité, de sa compatibilité native avec les modules ES (ESM) et de son intégration immédiate avec Vite.
+**Vitest** est utilisé comme exécuteur de tests unique pour le frontend et le backend en raison de sa rapidité, de sa compatibilité native avec les modules ES (ESM) et TypeScript, et de son intégration immédiate avec Vite.
 
 ### 7.2 Couverture des Tests — Récapitulatif
 
@@ -537,9 +537,9 @@ Afin de sécuriser le code existant et de prévenir toute régression lors des f
 - **Environnement** : `jsdom` (simule un navigateur dans Node.js).
 - **Bibliothèques** : `@testing-library/react` et `@testing-library/jest-dom` pour le rendu des composants React et les assertions DOM.
 - **Fichiers de configuration** :
-  - [client/vitest.config.js](file:///c:/Projects/budgetizer/client/vitest.config.js) : Déclare l'environnement `jsdom` et charge le fichier de setup.
-  - [client/vitest.setup.js](file:///c:/Projects/budgetizer/client/vitest.setup.js) : Importe les utilitaires d'assertion `@testing-library/jest-dom`.
-- **Fichiers de tests** : Localisés dans des dossiers `__tests__` à proximité des composants ciblés (ex: [AmountInput.test.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/__tests__/AmountInput.test.jsx)).
+  - `client/vitest.config.ts` : Déclare l'environnement `jsdom` et charge le fichier de setup.
+  - `client/vitest.setup.ts` : Importe les utilitaires d'assertion `@testing-library/jest-dom`.
+- **Fichiers de tests** : Localisés dans des dossiers `__tests__` à proximité des composants ciblés (ex: `AmountInput.test.tsx`).
 
 ### 7.4 Configuration Serveur (Backend)
 - **Environnement** : `node` (exécution standard).
@@ -547,7 +547,7 @@ Afin de sécuriser le code existant et de prévenir toute régression lors des f
   - Les modèles Mongoose (`Account`, `Transaction`, `ScheduledTransaction`, `User`, `Category`).
   - Les utilitaires de chiffrement et de signature (`bcryptjs`, `jsonwebtoken`).
 - **Fichiers de configuration** :
-  - [server/vitest.config.js](file:///c:/Projects/budgetizer/server/vitest.config.js) : Configuration simple pour l'environnement Node.
+  - `server/vitest.config.ts` : Configuration simple pour l'environnement Node.
 
 ### 7.5 Commandes d'Exécution
 Les scripts npm sont centralisés pour simplifier le travail des développeurs :
@@ -574,8 +574,8 @@ Budgetizer intègre le support natif des clés d'accès (Passkeys) via le protoc
 
 ### 8.1 Résolution du Double Encodage (Migration & Fallback)
 Lors du déploiement initial, une double conversion Base64URL causait un désalignement entre les identifiants de clés stockés en base de données et ceux générés par l'appareil utilisateur.
-- **Auto-migration au démarrage** : Le backend exécute un script au démarrage de la base de données (`migrateDoubleEncodedCredentials()` dans [index.js](file:///c:/Projects/budgetizer/server/index.js)) qui identifie les clés doublement encodées, les décode à leur format valide simple, et met à jour la base de données.
-- **Fallback `rawId` à la connexion** : Lors de la phase de validation de connexion dans [webauthnController.js](file:///c:/Projects/budgetizer/server/controllers/webauthnController.js), si le périphérique reste introuvable avec l'identifiant standard `body.id`, le serveur tente une recherche secondaire en utilisant l'identifiant brut `body.rawId` pour assurer une compatibilité totale avec les anciens et nouveaux formats d'encodage.
+- **Auto-migration au démarrage** : Le backend exécute un script au démarrage de la base de données (`migrateDoubleEncodedCredentials()` dans `index.ts`) qui identifie les clés doublement encodées, les décode à leur format valide simple, et met à jour la base de données.
+- **Fallback `rawId` à la connexion** : Lors de la phase de validation de connexion dans `webauthnController.ts`, si le périphérique reste introuvable avec l'identifiant standard `body.id`, le serveur tente une recherche secondaire en utilisant l'identifiant brut `body.rawId` pour assurer une compatibilité totale avec les anciens et nouveaux formats d'encodage.
 
 ### 8.2 Alignement de la Signature SimpleWebAuthn v13
 La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`. 
@@ -586,7 +586,7 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
 ### 8.3 Résolution des Contraintes de PWA Mobile & Android Credential Manager
  Dans un environnement de Progressive Web App (PWA) standalone sur mobile, l'utilisateur n'a pas accès aux outils de développement (DevTools) pour effacer les cookies ou réinitialiser le `localStorage` de l'application, ni à un accès direct aux réglages fins du navigateur pour révoquer ses clés d'accès.
  - **Gestion d'erreur `InvalidStateError` / Credential Manager** : Si l'utilisateur tente de ré-enregistrer un appareil qui détient déjà la clé WebAuthn (par exemple, synchronisée via Google Password Manager ou iCloud Keychain), le navigateur ou le gestionnaire de clés Android peut lever une exception `InvalidStateError` ou une erreur générique `"An error occurred when talking to the credential manager."`. Notre client intercepte de manière robuste ces erreurs et considère l'appareil comme déjà configuré avec succès au lieu de bloquer l'utilisateur.
- - **Bouton d'urgence de réinitialisation locale** : Un lien d'aide *"Problème avec la biométrie ? Réinitialiser l'appareil"* est disponible sur l'écran de connexion dans [Login.jsx](file:///c:/Projects/budgetizer/client/src/pages/Login.jsx). Il permet de purger instantanément les flags `webauthn_registered_on_device` et `webauthn_dismissed_device` du `localStorage` pour forcer une réactivation biométrique propre lors de la prochaine connexion par mot de passe.
+ - **Bouton d'urgence de réinitialisation locale** : Un lien d'aide *"Problème avec la biométrie ? Réinitialiser l'appareil"* est disponible sur l'écran de connexion dans `Login.tsx`. Il permet de purger instantanément les flags `webauthn_registered_on_device` et `webauthn_dismissed_device` du `localStorage` pour forcer une réactivation biométrique propre lors de la prochaine connexion par mot de passe.
  - **Autonettoyage automatique** : En cas d'échec de validation biométrique (ex: périphérique inconnu), le client supprime automatiquement le flag de configuration locale pour inviter à une réinscription.
  - **Sécurisation du support WebAuthn** : La détection de compatibilité biométrique vérifie l'existence de `navigator.credentials` (en plus de `window.PublicKeyCredential`). Cela évite les plantages sur les environnements PWA non sécurisés (comme les accès en HTTP par adresse IP locale) où l'API d'authentification est bloquée par le navigateur.
  
@@ -595,8 +595,8 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
  
  ### 9.1 Organisation des Modules
  La fonctionnalité est découpée en deux modules principaux réutilisables du côté client :
- - **Logique pure (`velocityHelper.js`)** : Regroupe l'ensemble des formules mathématiques de calculs de vélocité, de jours restants et de dates d'épuisement. Ce découpage permet de tester la logique algorithmique unitairement sans dépendances DOM ou React.
- - **Interface Utilisateur (`VelocityChart.jsx`)** : Composant graphique orchestrant le rendu réactif.
+ - **Logique pure (`velocityHelper.ts`)** : Regroupe l'ensemble des formules mathématiques de calculs de vélocité, de jours restants et de dates d'épuisement. Ce découpage permet de tester la logique algorithmique unitairement sans dépendances DOM ou React.
+ - **Interface Utilisateur (`VelocityChart.tsx`)** : Composant graphique orchestrant le rendu réactif.
  
  ### 9.2 Flux de Données et Hooks
  Le composant React utilise deux hooks existants de React Query pour consolider les données en temps réel :
@@ -612,19 +612,19 @@ La suite d'APIs utilise `@simplewebauthn/server` en version `13.x`.
  - **Micro-animation de l'Aiguille (Contournement WebView mobile)** : La rotation de l'aiguille est animée de manière fluide en CSS via une propriété de transition matérielle `transform` combinée à une fonction de transition de type ressort (`cubic-bezier(0.34, 1.56, 0.64, 1)`). Afin de garantir que cette rotation soit fluide sur tous les navigateurs mobiles et WebViews (qui ignorent ou exécutent de manière saccadée les transitions directes sur les éléments SVG `<line>`), la ligne représentant l'aiguille est encapsulée dans un groupe SVG (`<g>`). La transition de rotation et la propriété `transform-origin` (centrée sur le point d'ancrage `120px 110px`) sont appliquées directement sur cette balise de groupe `<g>`.
 
 ### 9.4 Alertes Proactives et Flux Push Backend
-- **Agrégation Optimisée en Parallèle (`getDashboardSummary`)** : Afin de calculer la vélocité sans dégrader les temps de réponse, une agrégation stochastique est ajoutée en parallèle (`Promise.all`) dans `dashboardController.js`. Elle filtre les dépenses réelles sur la période récente (7 jours ou depuis le 1er du mois) par catégorie en s'appuyant sur l'index `{ userId: 1, type: 1, date: -1 }`.
+- **Agrégation Optimisée en Parallèle (`getDashboardSummary`)** : Afin de calculer la vélocité sans dégrader les temps de réponse, une agrégation stochastique est ajoutée en parallèle (`Promise.all`) dans `dashboardController.ts`. Elle filtre les dépenses réelles sur la période récente (7 jours ou depuis le 1er du mois) par catégorie en s'appuyant sur l'index `{ userId: 1, type: 1, date: -1 }`.
 - **Calcul et Projection en Temps Réel** : Le serveur calcule la projection d'épuisement complète du budget mensuel. Si l'utilisateur est en excès de vitesse et que `depletionDate` est estimée avant le 20 du mois en cours, l'alerte est insérée dans la liste des notifications du tableau de bord.
-- **Architecture Événementielle Découplée (EventBus)** : Au lieu d'appeler directement les vérifications d'alertes dans le contrôleur de transactions, l'application utilise un bus d'événements (`eventBus.js`) basé sur `EventEmitter`. Lors de l'ajout ou de la mise à jour d'une transaction, le contrôleur émet un événement (`transaction:created` ou `transaction:updated`). Un écouteur centralisé (`alertListener.js`) intercepte ces événements de manière asynchrone pour exécuter `checkAndTriggerAlerts`, recalculer la vélocité et envoyer les notifications Push PWA via `web-push`, garantissant un code propre, modulaire et hautement découplé.
+- **Architecture Événementielle Découplée (EventBus)** : Au lieu d'appeler directement les vérifications d'alertes dans le contrôleur de transactions, l'application utilise un bus d'événements (`eventBus.ts`) basé sur `EventEmitter`. Lors de l'ajout ou de la mise à jour d'une transaction, le contrôleur émet un événement (`transaction:created` ou `transaction:updated`). Un écouteur centralisé (`alertListener.ts`) intercepte ces événements de manière asynchrone pour exécuter `checkAndTriggerAlerts`, recalculer la vélocité et envoyer les notifications Push PWA via `web-push`, garantissant un code propre, modulaire et hautement découplé.
 
 ## 10. Architecture Technique de la Simulation Monte Carlo & Stress-test ⚙️
 
 ### 10.1 Organisation des Modules
-- **Moteur Mathématique (`monteCarloHelper.js`)** : Regroupe l'implémentation de la transformation de Box-Muller et de la boucle principale de simulation Monte Carlo. Il est exempt de dépendances liées au framework UI pour faciliter les tests unitaires purs.
-- **Interface Utilisateur (`ResilienceChart.jsx`)** : Composant gérant l'état des curseurs (sliders), la liaison aux données d'accueil (`useDashboard`), le déclenchement de la simulation et le rendu graphique.
+- **Moteur Mathématique (`monteCarloHelper.ts`)** : Regroupe l'implémentation de la transformation de Box-Muller et de la boucle principale de simulation Monte Carlo. Il est exempt de dépendances liées au framework UI pour faciliter les tests unitaires purs.
+- **Interface Utilisateur (`ResilienceChart.tsx`)** : Composant gérant l'état des curseurs (sliders), la liaison aux données d'accueil (`useDashboard`), le déclenchement de la simulation et le rendu graphique.
 
 ### 10.2 Algorithme de Simulation et de Stress-testing
 L'algorithme s'exécute localement dans le navigateur sur $N = 1000$ chemins stochastiques indépendants :
-1. **Transformation de Box-Muller** : Génère un nombre aléatoire $Z$ suivant une loi normale standard $\mathcal{N}(0,1)$ :
+1. **Transformation de Box-Muller** : Génère un nombre aléatoire $Z$ suivant une loi normale standard $\mathcal{N}(0,1) :
    $$u_1, u_2 \sim \mathcal{U}(0,1) \implies Z = \sqrt{-2\ln(u_1)}\cos(2\pi u_2)$$
 2. **Évolution mensuelle du Capital ($C_t$)** :
    $$C_t = C_{t-1} \times (1 + r_t) + S_t - \text{Sinistre}_t$$
@@ -650,7 +650,7 @@ Le rendu graphique s'appuie sur le composant `ComposedChart` de Recharts :
 ## 11. Architecture Technique de la Génération de Rapports et Export PDF ⚙️📄
 
 ### 11.1 Organisation des Modules
-Le module est principalement implémenté dans le composant [ReportsPage.jsx](file:///c:/Projects/budgetizer/client/src/pages/ReportsPage.jsx) (route `/reports`), qui prend en charge à la fois l'interface de filtrage, la récupération des données agrégées et la zone de rendu masquée pour l'exportation PDF.
+Le module est principalement implémenté dans le composant `ReportsPage.tsx` (route `/reports`), qui prend en charge à la fois l'interface de filtrage, la récupération des données agrégées et la zone de rendu masquée pour l'exportation PDF.
 
 ### 11.2 Parallélisation de la Récupération des Données
 Lors de la génération du rapport (`handleGenerateReport`), le client interroge les API du serveur de manière concurrente (`Promise.all`) pour minimiser le temps d'attente :
@@ -699,35 +699,35 @@ Pour garantir que l'impression système (`window.print()`) ou la conversion PDF 
 Afin de fournir une expérience utilisateur mobile de qualité premium, l'application intègre des ajustements graphiques profonds inspirés de la fintech **Bankyboard**.
 
 ### 12.1 Thème Visuel et Orbes Ambiants
-*   **Palette de couleurs "Encre & Cuivre"** : Définie dans [index.css](file:///c:/Projects/budgetizer/client/src/index.css) à l'aide de variables HSL. Le fond sombre est fixé sur un noir d'encre marine profond (`#030816`), rehaussé d'ombres subtiles et de reflets chauds de couleur cuivre/ambre (`#d97706`).
-*   **Glow Orbs** : Intégration de trois halos lumineux translucides fixes (`div` dotées de flous CSS `blur-[100px]` et de faibles opacités de 5% à 8%) injectés dans le composant racine [AppShell.jsx](file:///c:/Projects/budgetizer/client/src/components/layout/AppShell.jsx) pour apporter du relief visuel.
+*   **Palette de couleurs "Encre & Cuivre"** : Définie dans `index.css` à l'aide de variables HSL. Le fond sombre est fixé sur un noir d'encre marine profond (`#030816`), rehaussé d'ombres subtiles et de reflets chauds de couleur cuivre/ambre (`#d97706`).
+*   **Glow Orbs** : Intégration de trois halos lumineux translucides fixes (`div` dotées de flous CSS `blur-[100px]` et de faibles opacités de 5% à 8%) injectés dans le composant racine `AppShell.tsx` pour apporter du relief visuel.
 *   **Retours Tactiles** : Ajout de la classe utilitaire `.active-scale` offrant une réduction d'échelle de $2\%$ lors des clics ou appuis tactiles sur les boutons interactifs.
 
 ### 12.2 Tiroirs Gestuels (Swipe-to-Dismiss)
-*   Le composant [BottomSheet.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/BottomSheet.jsx) s'appuie sur `framer-motion` pour intercepter les gestes mobiles.
+*   Le composant `BottomSheet.tsx` s'appuie sur `framer-motion` pour intercepter les gestes mobiles.
 *   Les propriétés de drag vertical (`drag="y"`, `dragConstraints={{ top: 0 }}`, `dragElastic=0.2`) permettent à l'utilisateur de fermer les tiroirs de dialogue par simple glissement vers le bas. Une distance de glissement supérieure à $100\text{px}$ déclenche automatiquement la fermeture (`onClose`).
 
 ### 12.3 Carte Solde Physique et Graphique Intégré
-*   Le composant [FloorBalanceWidget.jsx](file:///c:/Projects/budgetizer/client/src/components/ui/FloorBalanceWidget.jsx) affiche le solde disponible dans un conteneur simulant une carte bancaire physique rigide (bordures cuivrées fines, effet de brillance *glassmorphism*).
+*   Le composant `FloorBalanceWidget.tsx` affiche le solde disponible dans un conteneur simulant une carte bancaire physique rigide (bordures cuivrées fines, effet de brillance *glassmorphism*).
 *   **Indicateur de Santé Lumineux** : La bordure de la carte pulse doucement et change de couleur selon la santé financière globale (vert pour Excellent, orange pour Warn, rouge pour Danger).
 *   **Graphique en Arrière-plan** : Le graphique de tendance à 30 jours (`AreaChart` de Recharts) est superposé en arrière-plan translucide absolu sous les étiquettes de solde. Cela permet d'économiser plus de $100\text{px}$ de hauteur d'écran sur mobile tout en préservant le contexte analytique.
 
 ### 12.4 Formulaire Progressif de Transaction
-*   **Saisie en Deux Étapes** : Afin de libérer de l'espace écran et de ne pas encombrer le clavier virtuel mobile, [TransactionFormSheet.jsx](file:///c:/Projects/budgetizer/client/src/components/transactions/TransactionFormSheet.jsx) sépare le flux :
+*   **Saisie en Deux Étapes** : Afin de libérer de l'espace écran et de ne pas encombrer le clavier virtuel mobile, `TransactionFormSheet.tsx` sépare le flux :
     *   **Étape 1** : Saisie ciblée du montant via le clavier virtuel, gestion du type (revenu/dépense) et accès rapide aux favoris tactiles et au bouton "Répéter la dernière transaction" (sauvegardée dans le `localStorage`).
     *   **Étape 2** : Complétion des détails (note prédictive intelligente s'appuyant sur l'historique récent, tags, date en accordéon et sélection de comptes/catégories).
-*   **Prop `transactionToEdit`** : Le formulaire accepte la prop `transactionToEdit` (objet transaction complet) pour pré-remplir les champs en mode édition. Cette prop remplace l'ancienne prop `initialData` (qui n'était pas reconnue). Les pages consommatrices (`Transactions.jsx`, `CalendarPage.jsx`) doivent passer `transactionToEdit={selectedTransaction}` et non `initialData={selectedTransaction}`.
+*   **Prop `transactionToEdit`** : Le formulaire accepte la prop `transactionToEdit` (objet transaction complet) pour pré-remplir les champs en mode édition. Cette prop remplace l'ancienne prop `initialData` (qui n'était pas reconnue). Les pages consommatrices (`Transactions.tsx`, `CalendarPage.tsx`) doivent passer `transactionToEdit={selectedTransaction}` et non `initialData={selectedTransaction}`.
 *   **Correction de la Jauge de Budget en Mode Édition** : Lorsque l'utilisateur modifie une transaction dans une catégorie possédant un budget actif, l'indicateur inline soustrait le montant de la transaction d'origine du total déjà consommé avant de projeter le nouveau montant. Cela évite le double-comptage (`adjustedSpent = isSameCategory ? Math.max(0, spent - transactionToEdit.amount) : spent`).
 *   **Style Premium des Boutons d'Action ("Encre & Cuivre")** : Tous les boutons CTA du formulaire ("Saisir les détails", "Ajouter la transaction", "Enregistrer", "Supprimer") utilisent les classes Tailwind `bg-copper hover:bg-copper-hover text-white font-bold rounded-2xl shadow-md shadow-copper/20` avec `hover:scale-[1.01] active:scale-95` pour un retour tactile prémium cohérent avec le thème global. Le bouton "Supprimer" conserve `bg-danger` pour marquer son caractère destructif.
 *   **Optimisation Accessibilité (A11y) & Tests** : Pour conserver la compatibilité avec les outils d'audit d'accessibilité et les tests unitaires automatisés (qui interrogent le DOM avec `getByLabelText`), des éléments `<select>` natifs et inputs de date invisibles (`sr-only`) restent présents dans le DOM en arrière-plan, synchronisant en temps réel leurs valeurs avec les choix effectués dans l'interface tactile customisée.
 
 ### 12.5 Harmonisation des Graphiques de l'Onglet Analyses
-*   **Infobulles Unifiées & Responsives (`CustomTooltip`)** : Toutes les infobulles Recharts ont été standardisées avec un composant React customisé. Les styles CSS en ligne par défaut (`contentStyle` de Recharts) qui forçaient un fond sombre incohérent ont été supprimés. Les infobulles héritent de la classe `.custom-chart-tooltip` définie dans [index.css](file:///c:/Projects/budgetizer/client/src/index.css), assurant une harmonie parfaite avec le thème actif (mode clair ou sombre, avec bordure translucide et fond flouté en glassmorphism).
-*   **Contrôle des Décalages de Disposition (Layout Shifts)** : Pour éviter les sauts brutaux d'affichage sur les écrans mobiles lors du chargement ou de la commutation des filtres de graphiques, les panneaux de sélecteurs (comme les contrôles du graphique catégoriel dans [CategoryChart.jsx](file:///c:/Projects/budgetizer/client/src/components/charts/CategoryChart.jsx)) sont intégrés dans des conteneurs avec une hauteur minimale fixe (ex: `min-h-[48px] flex flex-col justify-center`).
+*   **Infobulles Unifiées & Responsives (`CustomTooltip`)** : Toutes les infobulles Recharts ont été standardisées avec un composant React customisé. Les styles CSS en ligne par défaut (`contentStyle` de Recharts) qui forçaient un fond sombre incohérent ont été supprimés. Les infobulles héritent de la classe `.custom-chart-tooltip` définie dans `index.css`, assurant une harmonie parfaite avec le thème actif (mode clair ou sombre, avec bordure translucide et fond flouté en glassmorphism).
+*   **Contrôle des Décalages de Disposition (Layout Shifts)** : Pour éviter les sauts brutaux d'affichage sur les écrans mobiles lors du chargement ou de la commutation des filtres de graphiques, les panneaux de sélecteurs (comme les contrôles du graphique catégoriel dans `CategoryChart.tsx`) sont intégrés dans des conteneurs avec une hauteur minimale fixe (ex: `min-h-[48px] flex flex-col justify-center`).
 
 ### 12.6 Contrat de Props du Composant `TransactionList`
 
-Le composant [TransactionList.jsx](file:///c:/Projects/budgetizer/client/src/components/transactions/TransactionList.jsx) expose les props suivantes pour les actions utilisateur :
+Le composant `TransactionList.tsx` expose les props suivantes pour les actions utilisateur :
 
 | Prop | Type | Description |
 | :--- | :--- | :--- |
@@ -736,6 +736,32 @@ Le composant [TransactionList.jsx](file:///c:/Projects/budgetizer/client/src/com
 | `onEdit` | `Function(transaction)` | Callback déclenché au clic sur "Modifier". Reçoit l'objet transaction complet. |
 | `onDelete` | `Function(transaction)` | Callback déclenché au clic sur "Supprimer". Reçoit l'objet transaction complet. |
 
-> **Important** : Les anciens noms `onEditClick` et `onDeleteClick` n'étaient pas reconnus par le composant et empêchaient les boutons de swipe de fonctionner. Les pages consommatrices (`Transactions.jsx`) utilisent désormais correctement `onEdit` et `onDelete`.
+> **Important** : Les anciens noms `onEditClick` et `onDeleteClick` n'étaient pas reconnus par le composant et empêchaient les boutons de swipe de fonctionner. Les pages consommatrices (`Transactions.tsx`) utilisent désormais correctement `onEdit` et `onDelete`.
+
+---
+
+## 13. Infrastructure, Résilience & Notifications Intelligentes
+
+### 13.1 Logging Structuré et Sérialisation (`logger.ts`)
+*   **Module `StructuredLogger`** : Produit des logs au format JSON structuré avec horodatage ISO, niveau de sévérité (`INFO`, `WARN`, `ERROR`, `DEBUG`) et métadonnées de contexte.
+*   **Sérialisation d'erreurs** : La méthode `serializeMeta` extrait automatiquement les propriétés `name`, `message` et `stack` des instances `Error` JavaScript, évitant la sérialisation en objet JSON vide `{}`.
+*   **Contexte Express** : Le middleware d'erreur global intercepte les requêtes en échec et journalise la méthode HTTP, le chemin `path` et l'adresse IP cliente.
+
+### 13.2 Résilience et Reconnexion MongoDB (`index.ts`)
+*   **Retry Logic (`connectDBWithRetry`)** : Tente jusqu'à 5 connexions successives à MongoDB avec un délai à backoff exponentiel ($2\text{s}, 4\text{s}, 8\text{s}, 16\text{s}, 32\text{s}$) avant d'échouer.
+*   **Écouteurs d'évènements Mongoose** :
+    *   `disconnected` : Journalise l'avertissement de perte de connexion et déclenche la tentative de ré-établissement automatique.
+    *   `reconnected` : Notifie le rétablissement de la liaison de base de données.
+    *   `error` : Capture les erreurs d'exécution Mongoose à chaud.
+*   **Protection Hors-ligne** : Le middleware `bruteForceMiddleware.ts` et les processeurs d'arrière-plan vérifient `mongoose.connection.readyState === 1` avant d'exécuter des requêtes pour empêcher le blocage des requêtes HTTP sur le buffering Mongoose hors-connexion.
+
+### 13.3 Notifications Push Prédictives & Sécurisation (`alertListener.ts` & `notificationController.ts`)
+*   **Notifications Prédictives (Run Rate Projection)** :
+    *   Pour tout budget actif, le système calcule le rythme quotidien moyen de dépense $\text{dailyPace} = \frac{\text{spent}}{\text{daysElapsed}}$.
+    *   Il projette les dépenses totales à la fin de la période : $\text{projectedTotal} = \text{dailyPace} \times \text{totalDaysInPeriod}$.
+    *   Si le solde du budget n'est pas encore dépassé aujourd'hui mais que la projection dépasse l'allocation initiale d'au moins $5\%$, une notification push `Alerte Prédictive Budget 🔮` est transmise avec le pourcentage de dépassement estimé.
+*   **Sécurisation Production de `/api/notifications/test`** :
+    *   L'endpoint `POST /api/notifications/test` renvoie un statut `403 Forbidden` lorsque `process.env.NODE_ENV === 'production'`. Il reste accessible uniquement dans les environnements de développement et de tests.
+
 
 

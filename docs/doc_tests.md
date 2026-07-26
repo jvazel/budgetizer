@@ -8,7 +8,7 @@ Ce document détaille les tests automatisés mis en place sur l'application Budg
 
 Les tests de l'interface utilisateur s'exécutent avec **Vitest** dans un environnement `jsdom` (DOM virtuel) en utilisant **React Testing Library**.
 
-### 1.1 Composant `AmountInput.jsx`
+### 1.1 Composant `AmountInput.tsx`
 Ce composant gère la saisie de montants, le formatage en temps réel et l'affichage des claviers numériques mobiles décimaux.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -25,7 +25,7 @@ Ce composant gère la saisie de montants, le formatage en temps réel et l'affic
 
 ---
 
-### 1.2 Formulaire de Transaction (`TransactionFormSheet.jsx`)
+### 1.2 Formulaire de Transaction (`TransactionFormSheet.tsx`)
 Ce panneau gère la saisie, la validation et l'ajout/modification d'une transaction financière.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -39,7 +39,7 @@ Ce panneau gère la saisie, la validation et l'ajout/modification d'une transact
 
 ---
 
-### 1.3 Formulaire des Transactions Planifiées (`ScheduledFormSheet.jsx`)
+### 1.3 Formulaire des Transactions Planifiées (`ScheduledFormSheet.tsx`)
 Ce panneau gère la planification récurrente de transactions ou d'abonnements, ainsi que la gestion des modèles d'abonnements rapides personnalisés (sauvegardés en `localStorage`).
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -54,7 +54,7 @@ Ce panneau gère la planification récurrente de transactions ou d'abonnements, 
 
 ---
 
-### 1.4 Page des Virements Instantanés (`TransfersPage.jsx`)
+### 1.4 Page des Virements Instantanés (`TransfersPage.tsx`)
 Cette page gère l'exécution immédiate d'un transfert de fonds entre deux comptes de l'utilisateur.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -65,7 +65,7 @@ Cette page gère l'exécution immédiate d'un transfert de fonds entre deux comp
 
 ---
 
-### 1.5 Bandeau d'installation PWA (`InstallPromptBanner.jsx`)
+### 1.5 Bandeau d'installation PWA (`InstallPromptBanner.tsx`)
 Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) sur mobile et ordinateur.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -77,7 +77,7 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 
 ---
 
-### 1.6 Page de Connexion (`Login.jsx`)
+### 1.6 Page de Connexion (`Login.tsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -93,7 +93,7 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 
 ---
 
-### 1.7 Page d'Inscription (`Register.jsx`)
+### 1.7 Page d'Inscription (`Register.tsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -103,7 +103,7 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 
 ---
 
-### 1.8 Page des Paramètres (`SettingsPage.jsx`)
+### 1.8 Page des Paramètres (`SettingsPage.tsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -119,7 +119,7 @@ Ce bandeau gère l'incitation à l'installation de la Progressive Web App (PWA) 
 
 ---
 
-### 1.9 Graphique de Prévisions (`ForecastChart.jsx`)
+### 1.9 Graphique de Prévisions (`ForecastChart.tsx`)
 Ce composant affiche le graphique prévisionnel du solde de trésorerie avec des calculs statistiques.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -130,7 +130,7 @@ Ce composant affiche le graphique prévisionnel du solde de trésorerie avec des
 
 ---
 
-### 1.10 Graphique Comparatif de Budget (`BudgetActualChart.jsx`)
+### 1.10 Graphique Comparatif de Budget (`BudgetActualChart.tsx`)
 Ce graphique compare les enveloppes budgétaires définies avec le réel dépensé du mois.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -141,7 +141,7 @@ Ce graphique compare les enveloppes budgétaires définies avec le réel dépens
 
 ---
 
-### 1.11 Page du Rapport Mensuel (`MonthlyReportPage.jsx`)
+### 1.11 Page du Rapport Mensuel (`MonthlyReportPage.tsx`)
 Cette page affiche le diagnostic financier automatique généré par l'algorithme proactif mensuel.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -155,7 +155,7 @@ Cette page affiche le diagnostic financier automatique généré par l'algorithm
 
 ---
 
-### 1.12 Invite Biométrique (`Login.jsx`)
+### 1.12 Invite Biométrique (`Login.tsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -166,7 +166,7 @@ Cette page affiche le diagnostic financier automatique généré par l'algorithm
 
 ---
 
-### 1.13 Liste des Transactions (`TransactionList.jsx`)
+### 1.13 Liste des Transactions (`TransactionList.tsx`)
 Ce composant affiche les transactions sous forme de liste chronologique groupée par date, et calcule dynamiquement les signes et couleurs des montants.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -181,7 +181,7 @@ Ce composant affiche les transactions sous forme de liste chronologique groupée
 
 ---
 
-### 1.14 Fonctions d'aide à la vélocité (`velocityHelper.js`)
+### 1.14 Fonctions d'aide à la vélocité (`velocityHelper.ts`)
 Ces fonctions pures calculent les variables mathématiques de vitesse de dépenses.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -202,7 +202,7 @@ Ces fonctions pures calculent les variables mathématiques de vitesse de dépens
 
 ---
 
-### 1.15 Indicateur de Vélocité de Dépense (`VelocityChart.jsx`)
+### 1.15 Indicateur de Vélocité de Dépense (`VelocityChart.tsx`)
 Ce composant affiche le tachymètre et les insights sous forme visuelle réactive.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -215,7 +215,7 @@ Ce composant affiche le tachymètre et les insights sous forme visuelle réactiv
 
 ---
 
-### 1.16 Composant de Saisie Générique (`Input.jsx`)
+### 1.16 Composant de Saisie Générique (`Input.tsx`)
 Ce composant UI générique gère les champs de saisie standard (texte, date, curseur range) utilisés dans les formulaires de l'application.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -230,7 +230,7 @@ Ce composant UI générique gère les champs de saisie standard (texte, date, cu
 
 ---
 
-### 1.17 Page de Rapports d'Activité (`ReportsPage.jsx`)
+### 1.17 Page de Rapports d'Activité (`ReportsPage.tsx`)
 Cette page permet de configurer des filtres, de générer et d'afficher un rapport financier interactif à l'écran ou de l'exporter en PDF.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -243,7 +243,7 @@ Cette page permet de configurer des filtres, de générer et d'afficher un rappo
 
 ---
 
-### 1.18 Page de Réinitialisation de Mot de Passe (`ResetPassword.jsx`)
+### 1.18 Page de Réinitialisation de Mot de Passe (`ResetPassword.tsx`)
 Cette page permet à l'utilisateur de définir un nouveau mot de passe via un lien de réinitialisation sécurisé (token dans l'URL).
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -259,9 +259,9 @@ Cette page permet à l'utilisateur de définir un nouveau mot de passe via un li
 
 ## 2. Tests Backend (Serveur)
 
-Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose.
+Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement `node` en simulant (mockant) l'API de Mongoose et les modules typés TypeScript.
 
-### 2.1 Contrôleur des Comptes (`accountController.js`)
+### 2.1 Contrôleur des Comptes (`accountController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -273,7 +273,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.2 Contrôleur d'Authentification (`authController.js`)
+### 2.2 Contrôleur d'Authentification (`authController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -285,7 +285,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.3 Contrôleur des Catégories (`categoryController.js`)
+### 2.3 Contrôleur des Catégories (`categoryController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -297,7 +297,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.4 Contrôleur des Budgets (`budgetController.js`)
+### 2.4 Contrôleur des Budgets (`budgetController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -307,7 +307,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.5 Contrôleur des Graphiques et Prévisions (`chartController.js`)
+### 2.5 Contrôleur des Graphiques et Prévisions (`chartController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -316,7 +316,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.6 Middleware de Sécurité (`authMiddleware.js`)
+### 2.6 Middleware de Sécurité (`authMiddleware.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -327,7 +327,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.7 Moteur de traitement récurrent (`scheduledProcessor.js`)
+### 2.7 Moteur de traitement récurrent (`scheduledProcessor.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -336,7 +336,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.8 Contrôleur des Insights (`insightController.js`)
+### 2.8 Contrôleur des Insights (`insightController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -347,7 +347,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.9 Contrôleur des Objectifs d'épargne (`savingsGoalController.js`)
+### 2.9 Contrôleur des Objectifs d'épargne (`savingsGoalController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -359,7 +359,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.10 Contrôleur des Transactions (`transactionController.js`)
+### 2.10 Contrôleur des Transactions (`transactionController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -373,7 +373,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.11 Contrôleur des Utilisateurs (`userController.js`)
+### 2.11 Contrôleur des Utilisateurs (`userController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -385,7 +385,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.12 Contrôleur des Planifications (`scheduledController.js`)
+### 2.12 Contrôleur des Planifications (`scheduledController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -397,7 +397,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.13 Contrôleur du Tableau de Bord (`dashboardController.js`)
+### 2.13 Contrôleur du Tableau de Bord (`dashboardController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -407,7 +407,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.14 Contrôleur des Filtres Enregistrés (`savedFilterController.js`)
+### 2.14 Contrôleur des Filtres Enregistrés (`savedFilterController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -415,7 +415,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.15 Contrôleur du Rapport Mensuel (`monthlyReportController.js`)
+### 2.15 Contrôleur du Rapport Mensuel (`monthlyReportController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -428,7 +428,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.16 Contrôleur WebAuthn (`webauthnController.js`)
+### 2.16 Contrôleur WebAuthn (`webauthnController.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -443,7 +443,7 @@ Les tests unitaires du serveur s'exécutent avec **Vitest** sous l'environnement
 
 ---
 
-### 2.17 Contrôleur des Étiquettes (`tagController.js`)
+### 2.17 Contrôleur des Étiquettes (`tagController.ts`)
 Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archivage) et la suppression en cascade des étiquettes (tags) de l'utilisateur.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -459,9 +459,9 @@ Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archi
 
 ---
 
-### 2.18 Tests de la Simulation de Monte Carlo & Stress-test (`monteCarloHelper.js` & `ResilienceChart.jsx`)
+### 2.18 Tests de la Simulation de Monte Carlo & Stress-test (`monteCarloHelper.ts` & `ResilienceChart.tsx`)
 
-#### 2.18.1 Tests unitaires mathématiques (`monteCarloHelper.test.js`)
+#### 2.18.1 Tests unitaires mathématiques (`monteCarloHelper.test.ts`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -471,7 +471,7 @@ Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archi
 | **Évaluation de résilience** | Scénarios sécurisé vs à haut risque | Calcul du taux de réussite sur l'horizon | Le scénario sécurisé affiche $100\%$ de résilience. Le scénario risqué (sinistres fréquents et capitaux minimes) affiche un taux $<100\%$ et retourne une valeur d'année moyenne de rupture cohérente. |
 | **Indexation de l'épargne** | Épargne avec vs sans indexation sur l'inflation | Calcul des soldes réels finaux sur 10 ans | Le P50 final avec indexation est strictement supérieur au P50 final sans indexation (perte de pouvoir d'achat). |
 
-#### 2.18.2 Tests de composants UI (`ResilienceChart.test.jsx`)
+#### 2.18.2 Tests de composants UI (`ResilienceChart.test.tsx`)
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
 | :--- | :--- | :--- | :--- |
@@ -482,7 +482,7 @@ Ce contrôleur gère la création, la lecture, la mise à jour (incluant l'archi
 
 ---
 
-### 2.19 Tests des Utilitaires Calendaires (`dateHelper.js`)
+### 2.19 Tests des Utilitaires Calendaires (`dateHelper.ts`)
 Ces tests valident les fonctions mathématiques de calcul d'échéances pour prévenir les dérives de dates.
 
 | Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
@@ -494,7 +494,7 @@ Ces tests valident les fonctions mathématiques de calcul d'échéances pour pr�
 
 ---
 
-### 2.20 Contrôleur des Budgets — Cas de Partage (`budgetController.js`)
+### 2.20 Contrôleur des Budgets — Cas de Partage (`budgetController.ts`)
 
 Les tests du contrôleur de budgets ont été étendus pour tenir compte de la logique de partage.
 
@@ -509,13 +509,50 @@ Les tests du contrôleur de budgets ont été étendus pour tenir compte de la l
 
 ---
 
+### 2.21 Utilitaires d'Envoi d'Email (`sendEmail.ts`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Mode Fallback (Dev local)** | Options d'email (destinataire, sujet, texte), variables SMTP absentes | Vérification de `hasSmtpConfig` | Les détails du mail sont journalisés dans la console via `logger.info`. Aucun appel Nodemailer n'est effectué. |
+| **Mode Production (SMTP)** | Options d'email, variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` présentes | Instanciation de `nodemailer.createTransport` et appel à `sendMail` | Le mail est transmis via le transporteur SMTP configuré (HTTP 200). |
+
+---
+
+### 2.22 Logger Structuré (`logger.ts`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Sérialisation d'objets Error** | Log `logger.error("An error occurred", { error: new Error("DB error") })` | Extraction automatique via `serializeMeta` des champs `name`, `message` et `stack` | L'entrée JSON générée contient un sous-objet `context.error` valide avec `name: "Error"`, `message: "DB error"` et la `stack` complète. |
+
+---
+
+### 2.23 Contrôleur des Notifications Push (`notificationController.ts`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Test en environnement de production** | `process.env.NODE_ENV = 'production'`, requête sur `POST /api/notifications/test` | Vérification de l'environnement | L'accès est rejeté avec un code HTTP 403 Forbidden. |
+| **Test en environnement de développement** | `process.env.NODE_ENV = 'development'`, requête sur `POST /api/notifications/test` | Envoi d'une notification Web Push de test via `sendPushNotification` | La notification est transmise et la réponse HTTP 200 confirme le déclenchement. |
+| **Récupération de la clé VAPID publique** | Variable `VAPID_PUBLIC_KEY` configurée | Lecture de la clé en environnement | Réponse HTTP 200 contenant `{ publicKey }`. |
+
+---
+
+### 2.24 Tests des Contrats d'API (`apiContract.test.ts`)
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Enregistrement de push notification invalide** | `POST /api/notifications/subscribe` avec payload incomplet | Validation par le schéma Zod `subscribePushSchema` | Réponse HTTP 400 avec tableau `errors` contenant les clés `field` et `message`. |
+| **Enregistrement de push notification valide** | `POST /api/notifications/subscribe` avec endpoint et clés VAPID valides | Validation Zod et traitement | Réponse HTTP 201 `{ message: 'Subscribed' }`. |
+| **Désinscription de push notification invalide** | `POST /api/notifications/unsubscribe` avec endpoint vide | Validation par le schéma Zod `unsubscribePushSchema` | Réponse HTTP 400 indiquant l'erreur sur le champ `endpoint`. |
+
+---
+
 ## 3. Exécution des Tests
 
 ### Lancer tous les tests (Racine)
 ```bash
 npm run test
 ```
-Cette commande exécute séquentiellement les tests unitaires du serveur puis les tests unitaires/composants du client.
+Cette commande exécute séquentiellement les tests unitaires du serveur (27 suites / 195 tests) puis les tests unitaires/composants du client (39 suites / 283 tests). Total : **478 tests automatisés**.
 
 ### Lancer les tests en mode interactif (Watch)
 - **Serveur uniquement** :
@@ -526,3 +563,5 @@ Cette commande exécute séquentiellement les tests unitaires du serveur puis le
   ```bash
   npm run test:watch --prefix client
   ```
+
+
