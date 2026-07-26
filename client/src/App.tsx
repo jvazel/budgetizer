@@ -6,6 +6,7 @@ import WebAuthnPromptModal from './components/ui/WebAuthnPromptModal';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { PwaProvider } from './context/PwaContext';
 import AppShell from './components/layout/AppShell';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -171,14 +172,16 @@ const AppContent = () => {
 
 const App = () => {
   return (
-     <BrowserRouter>
-       <AuthProvider>
-         <PwaProvider>
-           <AppContent />
-         </PwaProvider>
-       </AuthProvider>
-     </BrowserRouter>
-    );
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <PwaProvider>
+            <AppContent />
+          </PwaProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
 };
 
 export default App;

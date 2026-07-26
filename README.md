@@ -18,8 +18,9 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Conseils & IA (Insights)** : Détection automatique des anomalies de dépenses par catégorie (alertes orange/rouges) comparées à la moyenne des 3 derniers mois avec seuil de sensibilité configurable et persistant. Suggestions de réductions budgétaires interactives et audit d'abonnements.
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
-- **Haute Résilience & Logging Structuré** : Reconnexion automatique à MongoDB avec backoff exponentiel (retry logic), sérialisation propre des stack traces d'erreurs en JSON et sécurisation de l'endpoint de test en production (403 Forbidden).
-- **Suite de Tests Automatisés (478 tests)** : Couverture complète des fonctionnalités client (39 suites / 283 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (27 suites / 195 tests avec Vitest & Supertest).
+- **Haute Résilience & Validation Strict** : Validation des variables d'environnement au démarrage via Zod (`env.ts`), Reconnexion automatique à MongoDB avec backoff exponentiel (retry logic), composant React `ErrorBoundary` pour la gestion des plantages d'affichage et sérialisation propre des stack traces en JSON.
+- **Contrat de Données Unifié** : Mutualisation des types et interfaces métiers partagées (`/shared/types/index.ts`) entre le backend et le frontend pour éliminer la duplication et prévenir le décalage d'API.
+- **Suite de Tests Automatisés (485 tests)** : Couverture complète des fonctionnalités client (39 suites / 283 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (29 suites / 202 tests avec Vitest & Supertest).
 
 
 ---

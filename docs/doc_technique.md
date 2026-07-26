@@ -18,10 +18,15 @@ graph TD
     
     subgraph Serveur [Backend Node/Express]
         D -->|HTTP REST Requests + JWT| E[Express App]
-        E --> F[Auth Middleware & Validators]
+        E --> F[Zod Env Validator & Auth Middleware]
         F --> G[Controllers: logic]
         G --> H[Mongoose Models]
         I[Scheduled Processor / Interval] -.->|Atomic DB updates| H
+    end
+    
+    subgraph Partagé [Layer Shared]
+        K[Shared Types / Contract: /shared/types] .-> C
+        K .-> G
     end
     
     subgraph Stockage [Base de Données]

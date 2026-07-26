@@ -32,9 +32,9 @@ import { initWebPush } from './utils/pushNotification';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec, { customCss } from './utils/swagger';
 import { AppRequest, AppResponse } from './types';
+import { env } from './utils/env';
 import './listeners/alertListener';
 
-dotenv.config({ override: true });
 initWebPush();
 
 // Global Error Handlers (Uncaught Exceptions & Unhandled Rejections)
@@ -47,20 +47,6 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error('CRITICAL: Unhandled Rejection', { promise, reason });
   process.exit(1);
 });
-
-// Validate critical environment variables
-const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-if (missingEnvVars.length > 0) {
-  logger.error(`FATAL: Missing critical environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
-}
-
-if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === 'your_super_secret_key_here') {
-  logger.error('FATAL: JWT_SECRET cannot be left as the default development value in production');
-  process.exit(1);
-}
 
 const app = express();
 
@@ -130,7 +116,7 @@ if (process.env.NODE_ENV === 'production') {
 // Global Rate Limiter for API routes — appliqué après CORS pour ne pas bloquer le preflight OPTIONS
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '80', 10),
+  max: env.RATE_LIMIT_MAX_REQUESTS,
   message: {
     status: 'fail',
     message: 'Too many requests from this IP, please try again after 1 minute'

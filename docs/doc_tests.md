@@ -544,6 +544,14 @@ Les tests du contrôleur de budgets ont été étendus pour tenir compte de la l
 | **Enregistrement de push notification valide** | `POST /api/notifications/subscribe` avec endpoint et clés VAPID valides | Validation Zod et traitement | Réponse HTTP 201 `{ message: 'Subscribed' }`. |
 | **Désinscription de push notification invalide** | `POST /api/notifications/unsubscribe` avec endpoint vide | Validation par le schéma Zod `unsubscribePushSchema` | Réponse HTTP 400 indiquant l'erreur sur le champ `endpoint`. |
 
+### 2.29 Tests des Routes d'Authentification et Utilitaires (`authRoutes.test.ts`, `dateHelper.test.ts`)
+Vérification de la robustesse de la validation des données d'authentification (`/register`, `/login`, `/forgot-password`) et des algorithmes déterministes de calcul d'échéances.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Validation Inscription** | `POST /api/auth/register` avec email invalide | Validation Express Validator / Zod | Réponse HTTP 400 avec tableau `errors`. |
+| **Calcul Date Mois Récurrent** | Date d'origine 31/01, incrément +1 mois | Fonction `calculateNextDate` | Résultat plafonné au 28/02 (ou 29/02 en année bissextile). |
+
 ---
 
 ## 3. Exécution des Tests
@@ -552,7 +560,7 @@ Les tests du contrôleur de budgets ont été étendus pour tenir compte de la l
 ```bash
 npm run test
 ```
-Cette commande exécute séquentiellement les tests unitaires du serveur (27 suites / 195 tests) puis les tests unitaires/composants du client (39 suites / 283 tests). Total : **478 tests automatisés**.
+Cette commande exécute séquentiellement les tests unitaires du serveur (29 suites / 202 tests) puis les tests unitaires/composants du client (39 suites / 283 tests). Total : **485 tests automatisés**.
 
 ### Lancer les tests en mode interactif (Watch)
 - **Serveur uniquement** :
