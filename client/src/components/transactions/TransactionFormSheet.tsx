@@ -228,6 +228,50 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
     }
   }, [suggestions, transactionToEdit, type, isCategoryPredicted, categoryId]);
 
+  // Physical keyboard support for desktop while native mobile soft keyboard is disabled
+  useEffect(() => {
+    if (!isOpen || formStep !== 1 || activePanel !== 'form') return;
+
+    const handlePhysicalKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) {
+        return;
+      }
+
+      if ((e.key >= '0' && e.key <= '9') || e.key === '.' || e.key === ',') {
+        e.preventDefault();
+        triggerHaptic('light');
+        const key = e.key === '.' ? ',' : e.key;
+
+        setAmount((prev) => {
+          if (key === ',') {
+            if (!prev) return '0.';
+            if (prev.includes('.') || prev.includes(',')) return prev;
+            return prev + '.';
+          }
+          const decIndex = prev.indexOf('.');
+          if (decIndex !== -1 && prev.length - decIndex > 2) return prev;
+          if (prev === '0') return key;
+          if (prev.length >= 10) return prev;
+          return prev + key;
+        });
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        triggerHaptic('light');
+        setAmount((prev) => (prev.length <= 1 ? '' : prev.slice(0, -1)));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (amount && parseFloat(amount) > 0) {
+          triggerHaptic('light');
+          setFormStep(2);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handlePhysicalKeyDown);
+    return () => window.removeEventListener('keydown', handlePhysicalKeyDown);
+  }, [isOpen, formStep, activePanel, amount]);
+
   useEffect(() => {
     if (isOpen) {
       setActivePanel('form');
@@ -790,7 +834,8 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   value={amount}
                   onChange={setAmount}
                   type={type}
-                  autoFocus={isOpen && formStep === 1}
+                  readOnly={true}
+                  autoFocus={false}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();

@@ -8,20 +8,21 @@ const AmountInput = ({
   currencySymbol = '€',
   placeholder = '0.00',
   autoFocus = false,
+  readOnly = false,
   className = '',
   onKeyDown
 }) => {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
+    if (autoFocus && !readOnly && inputRef.current) {
       // Small timeout to ensure sheet transitions or modal opening are complete
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [autoFocus]);
+  }, [autoFocus, readOnly]);
 
   const handleTextChange = (e) => {
     triggerHaptic('light');
@@ -32,13 +33,11 @@ const AmountInput = ({
     
     // Allow digits, up to one dot, and up to 2 decimal places
     if (val === '' || /^\d*\.?\d{0,2}$/.test(val)) {
-      // Prevent multiple leading zeros (e.g., "05" -> "5", but allow "0." and "0")
       if (val.length > 1 && val.startsWith('0') && val[1] !== '.') {
         val = val.replace(/^0+/, '');
         if (val === '') val = '0';
       }
       
-      // Auto-prefix single dot with 0
       if (val === '.') {
         val = '0.';
       }
@@ -50,13 +49,13 @@ const AmountInput = ({
   const getSign = () => {
     if (type === 'expense') return '-';
     if (type === 'income') return '+';
-    return ''; // No sign for transfers
+    return '';
   };
 
   const getColorClass = () => {
     if (type === 'expense') return 'text-danger focus:border-danger';
     if (type === 'income') return 'text-accent focus:border-accent';
-    return 'text-accent focus:border-accent'; // Transfers are accent-colored
+    return 'text-accent focus:border-accent';
   };
 
   return (
@@ -75,7 +74,8 @@ const AmountInput = ({
         <input
           ref={inputRef}
           type="text"
-          inputMode="decimal"
+          inputMode={readOnly ? 'none' : 'decimal'}
+          readOnly={readOnly}
           pattern="[0-9]*"
           value={value}
           onChange={handleTextChange}
@@ -87,6 +87,7 @@ const AmountInput = ({
             transition-colors duration-200 py-1
             placeholder:text-muted/40
             ${getColorClass()}
+            ${readOnly ? 'cursor-default select-none' : ''}
           `}
         />
         
