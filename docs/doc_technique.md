@@ -722,14 +722,22 @@ Afin de fournir une expérience utilisateur mobile de qualité premium, l'applic
 *   **Indicateur de Santé Lumineux** : La bordure de la carte pulse doucement et change de couleur selon la santé financière globale (vert pour Excellent, orange pour Warn, rouge pour Danger).
 *   **Graphique en Arrière-plan** : Le graphique de tendance à 30 jours (`AreaChart` de Recharts) est superposé en arrière-plan translucide absolu sous les étiquettes de solde. Cela permet d'économiser plus de $100\text{px}$ de hauteur d'écran sur mobile tout en préservant le contexte analytique.
 
-### 12.4 Formulaire Progressif de Transaction
-*   **Saisie en Deux Étapes** : Afin de libérer de l'espace écran et de ne pas encombrer le clavier virtuel mobile, `TransactionFormSheet.tsx` sépare le flux :
-    *   **Étape 1** : Saisie ciblée du montant via le clavier virtuel, gestion du type (revenu/dépense) et accès rapide aux favoris tactiles et au bouton "Répéter la dernière transaction" (sauvegardée dans le `localStorage`).
-    *   **Étape 2** : Complétion des détails (note prédictive intelligente s'appuyant sur l'historique récent, tags, date en accordéon et sélection de comptes/catégories).
-*   **Prop `transactionToEdit`** : Le formulaire accepte la prop `transactionToEdit` (objet transaction complet) pour pré-remplir les champs en mode édition. Cette prop remplace l'ancienne prop `initialData` (qui n'était pas reconnue). Les pages consommatrices (`Transactions.tsx`, `CalendarPage.tsx`) doivent passer `transactionToEdit={selectedTransaction}` et non `initialData={selectedTransaction}`.
-*   **Correction de la Jauge de Budget en Mode Édition** : Lorsque l'utilisateur modifie une transaction dans une catégorie possédant un budget actif, l'indicateur inline soustrait le montant de la transaction d'origine du total déjà consommé avant de projeter le nouveau montant. Cela évite le double-comptage (`adjustedSpent = isSameCategory ? Math.max(0, spent - transactionToEdit.amount) : spent`).
-*   **Style Premium des Boutons d'Action ("Encre & Cuivre")** : Tous les boutons CTA du formulaire ("Saisir les détails", "Ajouter la transaction", "Enregistrer", "Supprimer") utilisent les classes Tailwind `bg-copper hover:bg-copper-hover text-white font-bold rounded-2xl shadow-md shadow-copper/20` avec `hover:scale-[1.01] active:scale-95` pour un retour tactile prémium cohérent avec le thème global. Le bouton "Supprimer" conserve `bg-danger` pour marquer son caractère destructif.
-*   **Optimisation Accessibilité (A11y) & Tests** : Pour conserver la compatibilité avec les outils d'audit d'accessibilité et les tests unitaires automatisés (qui interrogent le DOM avec `getByLabelText`), des éléments `<select>` natifs et inputs de date invisibles (`sr-only`) restent présents dans le DOM en arrière-plan, synchronisant en temps réel leurs valeurs avec les choix effectués dans l'interface tactile customisée.
+### 12.4 Saisie Ultra-Rapide (Pavé Numérique `CustomNumpad` & `QuickChips`)
+* **Pavé Numérique Tactile Universel (`CustomNumpad.tsx`)** :
+  - Composant de clavier virtuel 3x4 (touches `0-9`, `,` et `⌫`) supprimant totalement le focus et l'ouverture du clavier système iOS/Android.
+  - Annulation du délai de tap mobile (300ms) via `touch-action: manipulation` et `user-select: none`.
+  - Intégration du retour haptique `triggerHaptic('light')` lors des pressions tactiles.
+  - Contrôle strict des décimales (max 2 chiffres après la virgule) et formatage fluide des montants.
+* **Puces d'Ajustement Rapide (`QuickChips.tsx`)** :
+  - Bandeau défilant proposant des puces d'incrémentation directe (`+5€`, `+10€`, `+20€`, `+50€`) et la sélection 1-tap de modèles de dépenses récurrentes (templates).
+
+### 12.5 Dashboard Personnalisable & Modulaire (`DashboardCustomizerSheet.tsx`)
+* **Réorganisation dynamique & Masquage** : Le composant `DashboardCustomizerSheet.tsx` permet à l'utilisateur de réordonner les 8 widgets du Dashboard (Solde Plancher, Restant à Dépenser, Statistiques, Raccourcis, Comptes, Assistant IA, Allocation Patrimoine) et de les masquer/afficher à la volée.
+* **Rendu conditionnel & Persistance** : La configuration est sauvegardée dans la clé `localStorage` `'budgetizer_widget_configs'`. `Home.tsx` trie et mappe dynamiquement l'ensemble des 8 widgets via la méthode `renderWidget(id)`.
+
+### 12.6 Raccourcis Adaptatifs (`ShortcutsWidget.tsx`) & États Vides (`EmptyState.tsx`)
+* **ShortcutsWidget** : Widget d'accès directs vers 8 modules clés avec adaptation automatique de contraste Mode Clair & Mode Sombre.
+* **EmptyState** : Composant d'états vides universel avec auras lumineuses translucides (émeraude, corail, cyan, indigo, ambre) et double CTA d'action.
 
 ### 12.5 Harmonisation des Graphiques de l'Onglet Analyses
 *   **Infobulles Unifiées & Responsives (`CustomTooltip`)** : Toutes les infobulles Recharts ont été standardisées avec un composant React customisé. Les styles CSS en ligne par défaut (`contentStyle` de Recharts) qui forçaient un fond sombre incohérent ont été supprimés. Les infobulles héritent de la classe `.custom-chart-tooltip` définie dans `index.css`, assurant une harmonie parfaite avec le thème actif (mode clair ou sombre, avec bordure translucide et fond flouté en glassmorphism).
