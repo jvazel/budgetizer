@@ -28,6 +28,20 @@ const config: Config = {
         copper: 'var(--copper)',
         'copper-hover': 'var(--copper-hover)',
         'copper-dim': 'var(--copper-dim)',
+        // Bankyboard Neobank Theme Extensions
+        obsidian: '#0B0F19',
+        'midnight-slate': '#131B2E',
+        'emerald-glow': '#10B981',
+        'rose-neon': '#F43F5E',
+        'violet-neon': '#8B5CF6',
+        'indigo-neon': '#6366F1',
+      },
+      boxShadow: {
+        neobank: '0 10px 30px -5px rgba(0, 0, 0, 0.3)',
+        'neobank-light': '0 10px 30px -5px rgba(15, 23, 42, 0.05)',
+        'glow-emerald': '0 0 15px rgba(16, 185, 129, 0.3)',
+        'glow-rose': '0 0 15px rgba(244, 63, 94, 0.3)',
+        'glow-indigo': '0 0 20px rgba(99, 102, 241, 0.35)',
       },
       fontFamily: {
         sans: ['"Manrope"', 'sans-serif'],

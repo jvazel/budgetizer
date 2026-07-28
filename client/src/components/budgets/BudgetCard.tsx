@@ -4,18 +4,18 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
   const percentage = Math.round(budget.percentage);
   const cappedPercentage = Math.min(percentage, 100);
 
-  // 1. Color System based on progress
-  let barColor = 'bg-accent'; // Vert
-  let textColor = 'text-accent';
-  let borderLeftClass = 'border-l-accent-4px';
+  // 1. Color System based on progress with Neobank Liquid Glows
+  let barGradient = 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-glow-emerald'; // Vert Émeraude / Cyan
+  let textColor = 'text-emerald-400';
+  let borderLeftClass = 'border-l-4 border-l-emerald-500';
   if (budget.percentage >= 70 && budget.percentage < 90) {
-    barColor = 'bg-warning'; // Orange
-    textColor = 'text-warning';
-    borderLeftClass = 'border-l-warning-4px';
+    barGradient = 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_12px_rgba(245,158,11,0.4)]'; // Orange
+    textColor = 'text-amber-400';
+    borderLeftClass = 'border-l-4 border-l-amber-500';
   } else if (budget.percentage >= 90) {
-    barColor = 'bg-danger'; // Rouge
-    textColor = 'text-danger';
-    borderLeftClass = 'border-l-danger-4px';
+    barGradient = 'bg-gradient-to-r from-rose-500 to-red-600 shadow-glow-rose'; // Rouge Néon
+    textColor = 'text-rose-400';
+    borderLeftClass = 'border-l-4 border-l-rose-500';
   }
 
   const isOverBudget = budget.percentage >= 100;
@@ -179,18 +179,18 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
           {/* Progress Bar Container */}
           <div className="relative">
 
-            {/* Progress Bar */}
-            <div className="h-2 w-full bg-surface border border-border/20 rounded-full overflow-hidden relative">
-              {/* Spent fill */}
+            {/* Progress Bar (Neobank Glow Bar) */}
+            <div className="h-3 w-full bg-black/30 border border-white/10 rounded-full overflow-hidden relative backdrop-blur-md">
+              {/* Spent fill with Liquid Glow */}
               <div
-                className={`h-full ${barColor} ${isOverBudget ? 'animate-pulse' : ''} rounded-full transition-all duration-700 ease-out`}
+                className={`h-full ${barGradient} ${isOverBudget ? 'animate-pulse' : ''} rounded-full transition-all duration-700 ease-out`}
                 style={{ width: `${cappedPercentage}%` }}
               />
 
               {/* Today vertical line inside bar */}
               {temporalProgress > 1 && temporalProgress < 99 && (
                 <div
-                  className="absolute top-0 bottom-0 w-[1.5px] bg-white/70 shadow-sm z-10"
+                  className="absolute top-0 bottom-0 w-[2px] bg-white shadow-[0_0_6px_rgba(255,255,255,0.9)] z-10"
                   style={{ left: `${temporalProgress}%` }}
                   title="Aujourd'hui"
                 />

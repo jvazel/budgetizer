@@ -56,21 +56,21 @@ const BottomTabBar = ({ onPlusClick }) => {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 h-[calc(72px+env(safe-area-inset-bottom,0px))] bg-surface-glass backdrop-blur-lg border-t border-border/40 z-40 pb-[env(safe-area-inset-bottom,0px)] will-change-transform"
+      className="fixed bottom-3 left-3 right-3 h-[68px] glass-sheet rounded-3xl z-40 pb-[env(safe-area-inset-bottom,0px)] shadow-neobank border border-white/10 will-change-transform max-w-md mx-auto"
       style={{ transform: 'translate3d(0, 0, 0)' }}
     >
-      <div className="flex justify-between items-center h-full px-6 max-w-md mx-auto relative">
+      <div className="flex justify-between items-center h-full px-5 relative">
 
         {renderTab(tabs[0])}
         {renderTab(tabs[1])}
 
-        {/* Center Plus Button with refined copper style and subtle glow */}
-        <div className="relative flex justify-center w-16">
+        {/* Center Plus Button with glowing copper style */}
+        <div className="relative flex justify-center w-14">
           <button
             onClick={handlePlusClick}
-            className="absolute -top-7 w-[52px] h-[52px] bg-copper border border-white/10 rounded-full flex items-center justify-center text-white shadow-[0_6px_20px_rgba(217,119,6,0.25)] transition-all duration-300 hover:scale-105 active:scale-90"
+            className="absolute -top-6 w-[54px] h-[54px] bg-gradient-to-tr from-amber-600 via-copper to-amber-500 border border-white/20 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(217,119,6,0.45)] transition-all duration-300 hover:scale-105 active:scale-90"
           >
-            <Plus size={24} />
+            <Plus size={26} className="drop-shadow-md" />
           </button>
         </div>
 
