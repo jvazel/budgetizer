@@ -8,6 +8,8 @@ import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import FloorBalanceWidget from '../components/ui/FloorBalanceWidget';
 import { KpiHeaderGrid } from '../components/dashboard/KpiHeaderGrid';
 import { SafeToSpendCard } from '../components/dashboard/SafeToSpendCard';
+import { ShortcutsWidget } from '../components/dashboard/ShortcutsWidget';
+import { DashboardCustomizerSheet, DEFAULT_WIDGET_CONFIGS, WidgetConfig } from '../components/dashboard/DashboardCustomizerSheet';
 import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
 
 
@@ -21,7 +23,7 @@ import {
   Bell, AlertTriangle, TrendingUp, TrendingDown, Wallet,
   CreditCard, Target, AlertCircle, CheckCircle2,
   BarChart2, Award, Minus, ArrowLeftRight, Clock, Sparkles, Calendar,
-  PiggyBank, Coins, Flame, MoreHorizontal
+  PiggyBank, Coins, Flame, MoreHorizontal, SlidersHorizontal
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from 'recharts';
@@ -106,18 +108,6 @@ const getAccountTrend = (acc) => {
   };
 };
 
-// ─── Quick shortcuts ──────────────────────────────────────────────────────────
-const SHORTCUTS = [
-  { label: 'Budgets',      icon: CreditCard,    path: '/budgets',          color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Épargne',      icon: Target,        path: '/savings',          color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Analyses',     icon: BarChart2,      path: '/charts',           color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Abonnements',  icon: Wallet,         path: '/subscriptions',    color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Scores',       icon: Award,          path: '/financial-scores', color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Conseils',     icon: Sparkles,       path: '/ai-insights',      color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Échéances',    icon: Clock,          path: '/scheduled',        color: 'text-copper bg-copper-dim border-copper/20' },
-  { label: 'Virements',    icon: ArrowLeftRight, path: '/transfers',        color: 'text-copper bg-copper-dim border-copper/20' },
-];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 const Home = () => {
   const navigate = useNavigate();
@@ -139,12 +129,44 @@ const Home = () => {
   const { score: currentScore, loading: currentScoreLoading } = useFinancialScore(currentMonthStr);
   const { score: prevScore, loading: prevScoreLoading } = useFinancialScore(prevMonthStr);
 
-  // Only the two states we actually need
+  // Form & UI states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [timeTab, setTimeTab] = useState('month');
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Widget customizer & layout state
+  const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
+  const [widgetConfigs, setWidgetConfigs] = useState<WidgetConfig[]>(() => {
+    try {
+      const saved = localStorage.getItem('budgetizer_widget_configs');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Failed to parse saved widget configs:', e);
+    }
+    return DEFAULT_WIDGET_CONFIGS;
+  });
+
+  const handleUpdateWidgetConfigs = (newConfigs: WidgetConfig[]) => {
+    setWidgetConfigs(newConfigs);
+    try {
+      localStorage.setItem('budgetizer_widget_configs', JSON.stringify(newConfigs));
+    } catch (e) {
+      console.warn('Failed to save widget configs:', e);
+    }
+  };
+
+  const handleResetWidgetConfigs = () => {
+    setWidgetConfigs(DEFAULT_WIDGET_CONFIGS);
+    try {
+      localStorage.removeItem('budgetizer_widget_configs');
+    } catch (e) {
+      console.warn('Failed to reset widget configs:', e);
+    }
+  };
 
   const {
     totalAvailable = 0,
@@ -223,18 +245,27 @@ const Home = () => {
   // ─── Header ─────────────────────────────────────────────────────────────────
   const title = `Bonjour, ${user?.name ? user.name.split(' ')[0] : ''} 👋`;
   const actions = (
-    <button
-      onClick={() => setIsNotificationsOpen(true)}
-      className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/[0.06] active-spring-sm text-secondary hover:text-primary transition-all p-0 relative -mr-3"
-      id="notification-bell-btn"
-    >
-      <Bell size={22} />
-      {notifications.length > 0 && (
-        <span className="absolute top-2 right-2 px-1 min-w-[16px] h-4 text-[9px] flex items-center justify-center font-extrabold text-white bg-danger rounded-full ring-2 ring-base">
-          {notifications.length}
-        </span>
-      )}
-    </button>
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => setIsCustomizerOpen(true)}
+        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/[0.06] active-spring-sm text-secondary hover:text-primary transition-all p-0"
+        title="Organiser le Dashboard"
+      >
+        <SlidersHorizontal size={18} />
+      </button>
+      <button
+        onClick={() => setIsNotificationsOpen(true)}
+        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/[0.06] active-spring-sm text-secondary hover:text-primary transition-all p-0 relative"
+        id="notification-bell-btn"
+      >
+        <Bell size={20} />
+        {notifications.length > 0 && (
+          <span className="absolute top-1.5 right-1.5 px-1 min-w-[15px] h-3.5 text-[8.5px] flex items-center justify-center font-extrabold text-white bg-danger rounded-full ring-2 ring-base">
+            {notifications.length}
+          </span>
+        )}
+      </button>
+    </div>
   );
 
   const handleOpenAdd = () => { setEditingAccount(null); setIsFormOpen(true); };
@@ -275,6 +306,379 @@ const Home = () => {
     ? Math.round(((month.net - lastMonth.net) / Math.abs(lastMonth.net)) * 100)
     : null;
 
+  // ─── Render Widgets Dynamic Handler ──────────────────────────────────────────
+  const renderWidget = (id: string) => {
+    switch (id) {
+      case 'floor-balance':
+        return (
+          <FloorBalanceWidget
+            key="floor-balance"
+            accounts={accounts}
+            upcoming={upcoming}
+            loading={scheduledLoading || loading}
+          />
+        );
+      case 'shortcuts':
+        return <ShortcutsWidget key="shortcuts" className="mb-6" />;
+      case 'kpi-header':
+        return <KpiHeaderGrid key="kpi-header" />;
+      case 'safe-to-spend':
+        return <SafeToSpendCard key="safe-to-spend" />;
+      case 'statistics':
+        return (
+          <div key="statistics" className="banky-card mb-6 overflow-hidden select-none">
+            <div className="flex bg-surface-2 p-1 rounded-t-[24px] border-b border-border/20 gap-1 relative">
+              <button
+                type="button"
+                onClick={() => setTimeTab('month')}
+                className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm relative ${
+                  timeTab === 'month'
+                    ? 'bg-amber-600 text-white font-extrabold shadow-sm'
+                    : 'text-secondary hover:text-primary hover:bg-border/10'
+                }`}
+              >
+                {timeTab === 'month' && (
+                  <motion.div
+                    layoutId="timeframeActiveTab"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 bg-amber-600 rounded-xl shadow-sm"
+                    style={{ backgroundColor: '#d97706' }}
+                  />
+                )}
+                <span className="relative z-10">Ce mois ({currentMonthLabel})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimeTab('week')}
+                className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all active-spring-sm relative ${
+                  timeTab === 'week'
+                    ? 'bg-amber-600 text-white font-extrabold shadow-sm'
+                    : 'text-secondary hover:text-primary hover:bg-border/10'
+                }`}
+              >
+                {timeTab === 'week' && (
+                  <motion.div
+                    layoutId="timeframeActiveTab"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 bg-amber-600 rounded-xl shadow-sm"
+                    style={{ backgroundColor: '#d97706' }}
+                  />
+                )}
+                <span className="relative z-10">Cette semaine</span>
+              </button>
+            </div>
+
+            {timeTab === 'month' ? (
+              <div className="p-5">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.12em]">Ce mois</span>
+                  <button
+                    onClick={() => navigate('/summary-history')}
+                    className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
+                  >
+                    Historique complet
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Revenus</p>
+                    <p className="font-bold text-accent text-sm font-premium-numbers leading-tight">
+                      {formatCurrency(month.income, user?.currency?.code)}
+                    </p>
+                    {incomeGrowth !== null && (
+                      <div className="mt-1">
+                        <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
+                          incomeGrowth >= 0 ? 'text-accent/80' : incomeGrowth >= -10 ? 'text-warning/80' : 'text-danger/80'
+                        }`}>
+                          {incomeGrowth >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                          <span>{Math.abs(incomeGrowth)}%</span>
+                        </span>
+                        <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Dépenses</p>
+                    <p className="font-bold text-danger text-sm font-premium-numbers leading-tight">
+                      {formatCurrency(month.expenses, user?.currency?.code)}
+                    </p>
+                    {expenseGrowth !== null && (
+                      <div className="mt-1">
+                        <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
+                          expenseGrowth <= 0 ? 'text-accent/80' : expenseGrowth <= 10 ? 'text-warning/80' : 'text-danger/80'
+                        }`}>
+                          {expenseGrowth <= 0 ? <TrendingDown size={11} /> : <TrendingUp size={11} />}
+                          <span>{Math.abs(expenseGrowth)}%</span>
+                        </span>
+                        <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Net</p>
+                    <p className={`font-bold text-sm font-premium-numbers leading-tight ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
+                      {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
+                    </p>
+                    {netGrowth !== null && (
+                      <div className="mt-1">
+                        <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
+                          netGrowth >= 0 ? 'text-accent/80' : netGrowth >= -15 ? 'text-warning/80' : 'text-danger/80'
+                        }`}>
+                          {netGrowth >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                          <span>{Math.abs(netGrowth)}%</span>
+                        </span>
+                        <span className="text-[9px] text-muted block mt-0.5 font-normal leading-none">vs mois dernier</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div onClick={() => navigate('/charts')} className="p-5 cursor-pointer active:bg-white/[0.02] transition-all">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-2xl font-extrabold font-premium-numbers text-danger mt-0.5 leading-none">
+                      {formatCurrency(total7Days, user?.currency?.code)}
+                    </p>
+                    <p className="text-[10px] text-muted mt-1">dépensés sur les 7 derniers jours</p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate('/charts'); }}
+                    className="px-2.5 py-1 text-[9px] font-extrabold bg-accent/10 border border-accent/20 text-accent rounded-full hover:bg-accent/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200 shrink-0 mt-0.5"
+                  >
+                    Analyses
+                  </button>
+                </div>
+
+                {last7DaysExpenses.length > 0 && (
+                  <div className="h-[64px] w-full mt-3" onClick={(e) => e.stopPropagation()}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={last7DaysExpenses} margin={{ top: 4, right: 2, left: 2, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="sparkWeek" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--danger)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="var(--danger)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="amount" stroke="var(--danger)" strokeWidth={2} fill="url(#sparkWeek)" dot={false} />
+                        <Tooltip
+                          wrapperStyle={{ pointerEvents: 'none' }}
+                          contentStyle={{
+                            backgroundColor: 'var(--bg-surface)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            padding: '6px 10px',
+                          }}
+                          itemStyle={{ color: 'var(--danger)' }}
+                          formatter={(value) => [`${value.toFixed(2)} €`, 'Dépenses']}
+                          labelFormatter={(label) => label}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      case 'accounts':
+        return (
+          <div key="accounts" className="mb-6">
+            <div className="flex justify-between items-center mb-4 px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
+                  <Wallet size={13} />
+                </div>
+                <h3 className="premium-label">Comptes</h3>
+              </div>
+              <button
+                onClick={() => navigate('/accounts')}
+                className="px-2.5 py-1 text-[9px] font-extrabold bg-copper-dim border border-copper/20 text-copper rounded-full hover:bg-copper/20 active-spring-sm select-none uppercase tracking-wider transition-all duration-200"
+              >
+                Gérer
+              </button>
+            </div>
+
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4 pt-1 px-1">
+              {accounts.map((acc) => {
+                const isNegative = acc.balance < 0;
+                const trend = getAccountTrend(acc);
+
+                return (
+                  <div
+                    key={acc._id}
+                    onClick={() => navigate(`/accounts/${acc._id}`)}
+                    className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border border-border/40 p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-1 shadow-sm hover:border-border/80 transition-all duration-200"
+                  >
+                    <div className="flex justify-between items-start gap-2 relative z-10">
+                      <div className="min-w-0 pl-1">
+                        <p className="text-xs font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
+                        <span className="inline-block text-[8px] font-black text-secondary bg-surface-2 border border-border/40 px-1.5 py-0.5 rounded-[6px] uppercase tracking-wider mt-1.5">
+                          {acc.type === 'checking' ? 'Courant' :
+                           acc.type === 'savings' ? 'Épargne' :
+                           acc.type === 'credit' ? 'Crédit' :
+                           acc.type === 'cash' ? 'Espèces' :
+                           acc.type === 'investment' ? 'Bourse' : acc.type}
+                        </span>
+                      </div>
+                      
+                      <div className="relative shrink-0 z-10">
+                        <div 
+                          className="w-7 h-7 rounded-full flex items-center justify-center border backdrop-blur-md relative shrink-0"
+                          style={{
+                            backgroundColor: `${acc.color || '#10b981'}15`,
+                            borderColor: `${acc.color || '#10b981'}25`
+                          }}
+                        >
+                          {getAccountIcon(acc.type, 13)}
+                        </div>
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent border border-white/20 animate-pulse-live" />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end items-center relative z-10 mt-1 pr-1">
+                      <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
+                        trend.isPositive ? 'bg-accent/10 border border-accent/20 text-accent' : 'bg-danger/10 border border-danger/20 text-danger'
+                      }`}>
+                        {trend.label}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-end relative z-10 mt-auto pt-2 pl-1">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className={`font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
+                          {formatCurrency(acc.balance, acc.currency)}
+                        </span>
+                        {acc.lastTransactionDate ? (
+                          <span className="text-[9px] text-secondary opacity-60 font-semibold tracking-wide uppercase mt-1 block">
+                            Dernière op. : {new Date(acc.lastTransactionDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-secondary opacity-30 font-semibold tracking-wide uppercase mt-1 block">
+                            Aucune opération
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 opacity-20 shrink-0 pb-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div
+                onClick={handleOpenAdd}
+                className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/60 bg-surface-2/20 hover:border-copper/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2.5 select-none"
+              >
+                <div className="w-9 h-9 rounded-full bg-surface-2 border border-border/40 flex items-center justify-center text-secondary hover:text-copper hover:border-copper/30 transition-all shadow-sm">
+                  <span className="text-sm font-bold text-secondary">+</span>
+                </div>
+                <span className="text-xs font-bold text-secondary">Ajouter un compte</span>
+              </div>
+            </div>
+          </div>
+        );
+      case 'ai-assistant':
+        return (
+          <section key="ai-assistant" className="mb-6">
+            <div className="banky-card p-5 space-y-4 select-none">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
+                    <Sparkles size={13} className="animate-pulse" />
+                  </div>
+                  <h3 className="premium-label text-primary">Assistant IA</h3>
+                </div>
+                <span className="text-[10px] font-extrabold text-copper bg-copper-dim border border-copper/15 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                  Actif
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-secondary">Transactions classées</span>
+                  <span className="text-primary font-premium-numbers">{categorizationRate}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-surface-2 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-copper to-copper-hover rounded-full transition-all duration-500" style={{ width: `${categorizationRate}%` }} />
+                </div>
+                <p className="text-[10px] text-muted">
+                  {categorizationRate < 100 ? "Aidez l'IA à catégoriser les transactions restantes pour affiner vos budgets." : "Toutes vos transactions sont bien catégorisées. Excellent travail !"}
+                </p>
+              </div>
+
+              {realAnomaly ? (
+                <div className="bg-danger/10 border border-danger/15 rounded-2xl p-3 flex items-start gap-3">
+                  <AlertTriangle className="text-danger shrink-0 mt-0.5" size={16} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-primary">{realAnomaly.title}</p>
+                    <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">{realAnomaly.message}</p>
+                  </div>
+                  {realAnomaly.action && (
+                    <button onClick={() => navigate(realAnomaly.action.path)} className="text-[10px] font-bold text-danger hover:underline shrink-0 mt-0.5">
+                      {realAnomaly.action.label || 'Vérifier'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-accent/10 border border-accent/15 rounded-2xl p-3 flex items-start gap-3">
+                  <CheckCircle2 className="text-accent shrink-0 mt-0.5" size={16} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-primary">Budget sous contrôle</p>
+                    <p className="text-[10px] text-secondary mt-0.5 leading-relaxed">
+                      Aucune hausse suspecte ni anomalie n'a été détectée par notre IA ce mois-ci. ✓
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      case 'net-worth':
+        return (
+          <div key="net-worth" className="banky-card p-5 mb-6 select-none">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
+                  <TrendingUp size={13} />
+                </div>
+                <h3 className="premium-label">Allocation Patrimoine</h3>
+              </div>
+            </div>
+
+            {allocationData.length === 0 ? (
+              <p className="text-xs text-muted text-center py-6">Ajoutez des comptes pour voir votre répartition.</p>
+            ) : (
+              <div className="flex items-center gap-6">
+                <div className="w-28 h-28 rounded-full relative flex-shrink-0 shadow-inner" style={donutBackgroundStyle}>
+                  <div className="absolute inset-[22px] rounded-full bg-surface shadow-sm" />
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
+                  {allocationData.map(item => (
+                    <div key={item.label} className="flex flex-col">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-secondary">
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      <span className="text-xs font-extrabold text-primary mt-0.5 ml-3 font-premium-numbers">
+                        {formatCurrency(item.amount, user?.currency?.code)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
@@ -294,18 +698,11 @@ const Home = () => {
         <p className="text-xs text-secondary mt-0.5 font-medium">Voici un aperçu de vos finances ce mois-ci.</p>
       </div>
 
-      {/* ── Hero — Vrai Disponible (FloorBalanceWidget est maintenant le hero) ── */}
-      <FloorBalanceWidget
-        accounts={accounts}
-        upcoming={upcoming}
-        loading={scheduledLoading || loading}
-      />
-
-      {/* ── NOUVELLE SECTION : Cartes KPI XXL & Sparklines 6 mois (Module 6) ── */}
-      <KpiHeaderGrid />
-
-      {/* ── NOUVELLE SECTION : Restant à Dépenser / Safe-To-Spend Widget (Module 1) ── */}
-      <SafeToSpendCard />
+      {/* ── Dynamic Layout Widgets ── */}
+      {[...widgetConfigs]
+        .filter(w => w.enabled)
+        .sort((a, b) => a.order - b.order)
+        .map(widget => renderWidget(widget.id))}
 
       {/* ── KPIs & Sparkline fusionnés (Timeframe Statistics Card) ──────────── */}
 
@@ -693,29 +1090,6 @@ const Home = () => {
               </div>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* ── Raccourcis de Navigation Rapide (Carrousel horizontal) ─────────── */}
-      <section className="mb-6">
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 -mx-4 px-5">
-          {SHORTCUTS.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={idx}
-                onClick={() => navigate(item.path)}
-                className="snap-start shrink-0 w-[84px] flex flex-col items-center justify-center py-3 px-2 premium-card active-spring-sm active:bg-white/[0.02] transition-all text-center gap-2 select-none shadow-sm"
-              >
-                <div className={`w-11 h-11 premium-card-inner flex items-center justify-center border ${item.color} shrink-0 transition-transform duration-200`}>
-                  <Icon size={18} />
-                </div>
-                <span className="text-[10px] font-bold text-secondary tracking-tight w-full px-1 leading-tight line-clamp-2 break-words">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
         </div>
       </section>
 
@@ -1133,6 +1507,15 @@ const Home = () => {
           </div>
         </div>
       </BottomSheet>
+
+      {/* ── Modal / Sheet de Personnalisation du Dashboard ───────────────── */}
+      <DashboardCustomizerSheet
+        isOpen={isCustomizerOpen}
+        onClose={() => setIsCustomizerOpen(false)}
+        configs={widgetConfigs}
+        onChange={handleUpdateWidgetConfigs}
+        onReset={handleResetWidgetConfigs}
+      />
     </>
   );
 };

@@ -11,6 +11,8 @@ import TagSelector from './TagSelector';
 import { triggerHaptic } from '../../utils/hapticHelper';
 import ConfirmModal from '../ui/ConfirmModal';
 import AiBadge from '../ui/AiBadge';
+import CustomNumpad from '../ui/CustomNumpad';
+import QuickChips from '../ui/QuickChips';
 
 const formatCurrencyShort = (amount) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -800,6 +802,22 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                   }}
                 />
 
+                {/* Quick Chips (+5€, +10€, +20€, +50€) */}
+                <QuickChips
+                  templates={[]}
+                  onSelectTemplate={() => {}}
+                  onAddAmount={(delta) => {
+                    const current = parseFloat(amount) || 0;
+                    setAmount((current + delta).toFixed(2).replace(/\.00$/, ''));
+                  }}
+                />
+
+                {/* Custom Numpad for universal touch keyboard-less input */}
+                <CustomNumpad
+                  value={amount}
+                  onChange={setAmount}
+                />
+
                 {/* Continue Button */}
                 <button
                   type="button"
@@ -812,7 +830,7 @@ const TransactionFormSheet = ({ isOpen, onClose, onSuccess, defaultDate, transac
                     triggerHaptic('light');
                     setFormStep(2);
                   }}
-                  className="w-full py-3.5 rounded-2xl bg-copper hover:bg-copper-hover text-white font-bold transition-all duration-300 hover:scale-[1.01] active:scale-95 shadow-md shadow-copper/20 flex items-center justify-center gap-2 text-xs mt-4"
+                  className="w-full py-3.5 rounded-2xl bg-copper hover:bg-copper-hover text-white font-bold transition-all duration-300 hover:scale-[1.01] active:scale-95 shadow-md shadow-copper/20 flex items-center justify-center gap-2 text-xs mt-2"
                 >
                   Saisir les détails →
                 </button>

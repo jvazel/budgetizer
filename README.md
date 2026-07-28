@@ -6,11 +6,14 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 
 ## 🚀 Fonctionnalités Clés
 
-- **Tableau de Bord & Cartes KPI XXL** : Restructuration synthétique avec 4 cartes grand format exposant les métriques clés (Revenus, Dépenses, Solde Net et Taux d'Épargne %) accompagnées de mini-graphiques Sparklines vectoriels retraçant la tendance sur 6 mois ($M-5$ à $M$).
+- **Tableau de Bord Personnalisable & Modulaire** : Réorganisation libre de la disposition des 8 widgets clés sur mobile et desktop via le tiroir tactile `DashboardCustomizerSheet` (boutons de déplacement haut/bas, masquage/affichage et sauvegarde dans les préférences locales).
+- **Cartes KPI XXL & Gradient Area Charts** : Restructuration synthétique avec 4 cartes grand format exposant les métriques clés (Revenus, Dépenses, Solde Net et Taux d'Épargne %) accompagnées de mini-graphiques Sparklines & dégradés SVG translucides.
+- **Accès Rapides Adaptatifs (ShortcutsWidget)** : Grille dynamique d'accès en 1 clic vers les 8 modules essentiels (Budgets, Épargne, Analyses, Abonnements, Scores, IA, Échéances, Virements), parfaitement optimisée pour le Mode Clair et le Mode Sombre.
+- **États Vides Contextuels (EmptyState Glassmorphic)** : Guides visuels enrichis d'auras lumineuses colorées (`emerald`, `rose`, `cyan`, `purple`, `amber`) avec double bouton d'action pour accompagner l'utilisateur sur les écrans sans données.
 - **Widget "Restant à Dépenser" (Safe-to-Spend)** : Calcul et affichage en temps réel du budget disponible sans risque pour le reste du mois, déduction faite des charges récurrentes échelonnées et des cotisations d'épargne planifiées.
 - **Visualisations Complexes & Diagramme de Sankey** : Modélisation vectorielle interactive sous forme de flux Sankey (parcours de l'argent depuis les sources d'entrées, en passant par le nœud central de trésorerie, jusqu'aux catégories de dépenses et à l'épargne résiduelle) disponible dans la section dédiée aux Analyses.
 - **Gestion Multi-comptes** : Prise en charge de divers types de comptes (courant, épargne, espèces, investissements) avec personnalisation esthétique (icônes, couleurs).
-- **Saisie Progressive en Deux Étapes** : Formulaire de transaction mobile fluide structuré en deux étapes (Étape 1 : montant focalisé, puces de favoris éditables et raccourci "répéter" en 1 clic ; Étape 2 : note prédictive, compte/catégorie sous forme de panneaux glissants tactiles, et tags). Prévient la surcharge ergonomique liée à l'affichage du clavier système.
+- **Saisie Ultra-Rapide (Pavé Tactile Universel CustomNumpad)** : Formulaire de transaction mobile fluide structuré en deux étapes avec un Pavé Numérique virtuel universel (`CustomNumpad`), éliminant l'ouverture intempestive du clavier système sur iOS/Android, et proposant des puces d'ajustement immédiat (`QuickChips` +5€, +10€, +20€, +50€) pour saisir une opération en moins de 2 secondes.
 - **Gestion des Catégories** : Catégorisation personnalisable des revenus et dépenses.
 - **Enveloppes Budgétaires** : Définition de budgets par catégorie avec alertes de dépassement (seuil par défaut à 80%) et option de report de solde d'un mois sur l'autre (rollover).
 - **Transactions Planifiées & Abonnements** : Planification de transactions régulières ou d'abonnements mensuels/annuels, avec option d'auto-confirmation ou d'approbation manuelle.
@@ -23,7 +26,7 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
 - **Haute Résilience & Observabilité** : Tracing de requêtes via Correlation ID (`X-Request-ID` & AsyncLocalStorage), logs JSON structurés en production (`logger.ts`), validation d'environnement Zod (`env.ts`), composant React `ErrorBoundary` pour la gestion des plantages d'affichage et sérialisation propre des stack traces.
 - **Contrat de Données Unifié & Swagger API** : Mutualisation des types et interfaces métiers partagées (`/shared/types/index.ts`) entre backend et frontend, et documentation Swagger/OpenAPI interactive (`/api-docs`).
-- **Suite de Tests Automatisés (487 tests)** : Couverture complète des fonctionnalités client (39 suites / 283 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (30 suites / 204 tests avec Vitest & Supertest).
+- **Suite de Tests Automatisés (494 tests)** : Couverture complète des fonctionnalités client (40 suites / 290 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (30 suites / 204 tests avec Vitest & Supertest).
 
 
 
