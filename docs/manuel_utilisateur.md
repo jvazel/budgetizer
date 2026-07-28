@@ -96,14 +96,27 @@ Situé juste sous le solde global de votre compte courant principal, cet indicat
 * **Configuration (icône d'engrenage)** : Cliquez dessus pour définir manuellement le jour de versement récurrent de votre salaire mensuel (ou laissez le système le détecter automatiquement depuis votre échéancier).
 * **Accordéon pliable des charges** : Dépliez la liste au bas de la carte pour voir le détail des factures attendues. **Cochez ou décochez une charge** : si vous l'avez payée en avance ou par un autre moyen, son exclusion réajuste instantanément et dynamiquement le montant de votre Vrai Disponible.
 
-### 2.5 Raccourcis tactiles (Dashboard Hub)
-Située au cœur du tableau de bord, cette barre de raccourcis sur une seule ligne vous offre un accès direct aux 4 services primaires de l'application : Budgets, Épargne, Analyses, Conseils.
-Un 5ème bouton **Plus** (trois points) permet d'ouvrir un tiroir coulissant (BottomSheet) contenant les raccourcis secondaires : Abonnements, Scores, Échéances, Virements. Ce format compact allège considérablement l'affichage sur mobile.
+### 2.5 Personnalisation & Réorganisation des Widgets du Dashboard 🎛️
+Vous avez le contrôle total sur l'affichage et l'ordre de votre Tableau de Bord sur mobile et desktop :
+* **Bouton de Personnalisation** : Dans l'en-tête du Dashboard, cliquez sur l'icône de curseurs de réglages (`SlidersHorizontal`).
+* **Tiroir Tactile de Réorganisation (`DashboardCustomizerSheet`)** :
+  - **Réordonner les widgets** : Utilisez les boutons **[Monter ⬆️]** et **[Descendre ⬇️]** sur chaque widget pour changer son emplacement dans le Dashboard (Solde Plancher, Restant à Dépenser, Statistiques, Raccourcis, Comptes, Assistant IA, Allocation Patrimoine, etc.).
+  - **Masquer ou Afficher un widget** : Cliquez sur le bouton d'œil **[Masquer 👁️]** pour retirer un bloc dont vous n'avez pas l'utilité, ou **[Afficher]** pour le réintégrer.
+  - **Sauvegarde automatique** : Cliquez sur *"Enregistrer les modifications"*. Vos préférences sont immédiatement conservées localement dans votre navigateur (`localStorage`).
 
-### 2.6 La Carte des Statistiques Temporelles (Ce mois / Cette semaine) 📊
+### 2.6 Raccourcis tactiles adaptatifs (ShortcutsWidget) 🚀
+Placé au cœur de votre Dashboard sous forme de widget déplaçable, ce composant propose un accès instantané en 1 tap aux 8 modules essentiels de l'application (Budgets, Épargne, Analyses, Abonnements, Scores, Assistant IA, Échéances, Virements).
+* **Adaptation Mode Clair / Sombre** : Les icônes colorées et fonds translucides s'adaptent automatiquement avec un contraste élevé garantissant une parfaite lisibilité aussi bien le jour que la nuit.
+* **Micro-animations** : Chaque bouton de raccourci intègre un retour élastique tactile (`active-spring-sm`) lors du toucher.
+
+### 2.7 La Carte des Statistiques Temporelles (Ce mois / Cette semaine) 📊
 Ce composant réunit vos indicateurs de suivi du temps dans une unique carte dotée d'un sélecteur d'onglets pour économiser de la hauteur d'écran :
 * **Onglet "Ce mois"** : Affiche vos Revenus, vos Dépenses et votre Solde Net mensuel avec le pourcentage d'évolution (hausse ou baisse) par rapport au mois précédent.
 * **Onglet "Cette semaine"** : Affiche le montant cumulé de vos dépenses sur les 7 derniers jours glissants et un mini-graphique (Sparkline de type courbe d'aire) reflétant leur évolution au fil des jours.
+* **Visibilité Améliorée de l'Onglet Actif** : L'onglet sélectionné est mis en valeur par une pilule dynamique orange vif (`bg-amber-600` / `#d97706`) qui glisse d'un onglet à l'autre avec une transition fluide.
+
+### 2.8 États Vides Contextuels & Design Glassmorphic (EmptyState) ✨
+Lorsque vous accédez à un écran sans données (ex. : aucun budget configuré, aucune transaction récente), Budgetizer affiche désormais une carte d'accueil guidée en verre dépoli (`backdrop-blur-md`) sublimée par une aura lumineuse colorée arrière (émeraude, corail, cyan, indigo ou ambre) avec deux boutons d'action rapide pour vous accompagner pas à pas.
 
 ### 2.7 Atmosphère Lumineuse (Ambient Glow Orbs)
 * **Halos lumineux arrières** : Afin de donner du relief visuel à l'application mobile en mode sombre, trois halos de lumière colorés diffus (`bg-glow-orb`) sont disposés à des coordonnées fixes de fond d'écran. Ces orbes de lueur (indigo en haut à gauche, ambre au centre droit, émeraude en bas à gauche) émettent une lumière tamisée à très faible intensité en arrière-plan.
@@ -183,22 +196,20 @@ Pour les projets transversaux (ex. : `#vacances 2026`, `#travaux`), créez des t
 
 ## 4. Saisie et suivi des mouvements au quotidien
 
-### 4.1 La Saisie Rapide et Progressive (Bottom Sheet)
+### 4.1 La Saisie Ultra-Rapide & Progressive (Bottom Sheet) ⚡
 * **Ouverture** : Cliquez sur le bouton flottant d'action central `+` au bas de l'écran. Un tiroir interactif (Bottom Sheet) se déploie depuis le bas.
-* **Balayage tactile (Swipe-to-Dismiss)** : Sur mobile, vous pouvez fermer ce tiroir à tout moment d'un simple mouvement du doigt en le faisant glisser vers le bas de plus de 100 px.
-* **Fonctionnement progressif en Deux Étapes** : Le formulaire est structuré en deux étapes pour optimiser l'espace écran et réduire la gêne occasionnée par l'ouverture du clavier mobile :
-  * **Étape 1 (Saisie du Montant)** : 
-    * Saisissez la somme à enregistrer. Sur mobile, le pavé numérique décimal s'affiche automatiquement.
-    * Un indicateur de solde résultant s'affiche en temps réel sous le montant (vert s'il est créditeur, rouge s'il risque de vous faire passer en découvert).
-    * **Chip "🔁 Répéter la dernière transaction"** : Permet de cloner et de pré-remplir l'intégralité du dernier enregistrement en un seul tap.
-    * **Favoris rapides (templates)** : Accédez à vos puces de favoris configurées (boutons de taille confortable de plus de 44 px) pour saisir vos dépenses quotidiennes instantanément. Vous pouvez supprimer un favori en restant appuyé longuement dessus (appui tactile prolongé).
-    * Sélectionnez le type (Revenu ou Dépense) puis appuyez sur **Continuer** pour passer à l'étape suivante.
-  * **Étape 2 (Détails de la Transaction)** :
-    * **Suggestions et Pré-catégorisation intelligente (IA)** : Saisissez la note (description/nom du marchand). Dès 2 caractères saisis, l'application propose des complétions basées sur votre historique récent. De plus, Budgetizer analyse automatiquement votre saisie de note pour identifier la catégorie passée la plus probable et la pré-sélectionne à la volée. Un badge d'IA avec l'étiquette `Suggéré` apparaît alors juste au-dessus du sélecteur de catégorie. Si vous décidez de changer manuellement de catégorie ou d'utiliser un favori, l'auto-suggestion se désactive et le badge disparaît.
-    * **Sélecteurs tactiles Compte et Catégorie** : Cliquer sur l'un d'eux ouvre un panneau coulissant complet. Une barre d'onglets `[Compte] [Catégorie]` en haut vous permet de passer directement de l'un à l'autre sans faire de détours par le formulaire principal.
-    * **Indicateur de budget en ligne** : Si la catégorie choisie dispose d'une enveloppe de budget configurée, une barre de progression s'affiche pour vous indiquer le niveau de consommation actuel et l'impact du montant que vous êtes en train de saisir, avec une alerte visuelle en cas de dépassement.
-    * **Date en accordéon** : Cachée par défaut sous le bouton *"📅 Aujourd'hui"*, déroulez l'accordéon uniquement si vous souhaitez modifier la date de l'opération.
-    * Ajoutez des tags et validez à l'aide du bouton sticky resté visible en bas du formulaire.
+* **Balayage tactile (Swipe-to-Dismiss)** : Sur mobile, vous pouvez fermer ce tiroir à tout moment d'un simple mouvement du doigt en le faisant glisser vers le bas.
+* **Saisie Ultra-Rapide en Moins de 2 Secondes** : Le formulaire est optimisé pour enregistrer vos opérations quotidiennes sans surcharge cognitive :
+  * **Pavé Numérique Tactile Universel (`CustomNumpad`)** : 
+    - Saisissez votre montant sur le clavier virtuel 3x4 directement intégré dans le tiroir.
+    - **Aucun déclenchement du clavier système (iOS / Android)** : L'écran reste totalement dégagé et stable. La frappe tactile est instantanée grâce à l'élimination du délai de tap de 300ms (`touch-action: manipulation`).
+    - Chaque frappe déclenche une vibration haptique douce (`triggerHaptic('light')`).
+  * **Puces d'Ajustement Rapide (`QuickChips`)** : 
+    - En-dessous de l'affichage du montant, profitez de puces d'incrémentation directe (`+5 €`, `+10 €`, `+20 €`, `+50 €`) pour ajuster la somme en 1 tap.
+  * **Modèles Favoris 1-Tap (`templates`)** : 
+    - Sélectionnez une puce favori pré-enregistrée (ex: `☕ Café 2,50€`, `🍔 Déjeuner 15€`, `⛽ Plein 60€`). Un simple tap remplit automatiquement le montant, la catégorie et la note associée et vous redirige immédiatement vers la confirmation.
+  * **Chip "🔁 Répéter la dernière transaction"** : Permet de cloner et de pré-remplir l'intégralité du dernier enregistrement en un seul tap.
+  * **Passez aux détails (Étape 2)** : Appuyez sur *"Saisir les détails →"* pour pré-catégoriser intelligemment (IA) ou ajouter des tags et une note.
 * **Confirmation et retours haptiques** : 
   * Un toast de succès vert apparaît en haut de l'écran pendant 3 secondes pour récapituler le montant enregistré et afficher le nouveau solde du compte.
   * Votre appareil mobile émet des vibrations caractéristiques (1 vibration brève pour une dépense, 2 vibrations légères rythmées pour un revenu, et 3 secousses marquées en cas d'erreur de saisie).
