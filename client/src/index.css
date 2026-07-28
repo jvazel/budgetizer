@@ -14,14 +14,14 @@
   --text-primary: #f8fafc;     /* Blanc bleuté */
   --text-secondary: #94a3b8;   /* Slate-400 */
   --text-muted: #64748b;       /* Slate-500 pour une meilleure lisibilité */
-  --accent: #0fa573;           /* Vert émeraude raffiné et moins saturé */
-  --accent-dim: rgba(15, 165, 115, 0.08);
-  --danger: #e24a64;           /* Rose-rouge élégant, plus sophistiqué */
-  --danger-dim: rgba(226, 74, 100, 0.08);
+  --accent: #10B981;           /* Vert Émeraude Normalisé - Flux entrants & Plus-values */
+  --accent-dim: rgba(16, 185, 129, 0.08);
+  --danger: #EF4444;           /* Corail / Rouge Normalisé - Flux sortants & Dépenses */
+  --danger-dim: rgba(239, 68, 68, 0.08);
   --warning: #f59e0b;          /* Ambre */
   --warning-dim: rgba(245, 158, 11, 0.08);
   --info: #3b82f6;             /* Bleu info */
-  --purple: #8b5cf6;           /* Violet */
+  --purple: #6366F1;           /* Indigo / Violet Normalisé - Analyses IA & KPIs */
   --bg-budget-guide: #1b1206;
 
   /* Couleurs de marque Bankyboard (Cuivre/Ambre) */
@@ -29,6 +29,7 @@
   --copper-hover: #b45309;
   --copper-dim: rgba(217, 119, 6, 0.08);
 }
+
 
 
 [data-theme="light"], .light {
@@ -109,8 +110,10 @@ body {
   --color-accent-rgb: 16, 185, 129;
   --color-info-rgb: 59, 130, 246;
   --color-warning-rgb: 245, 158, 11;
-  --color-danger-rgb: 244, 63, 94;
+  --color-danger-rgb: 239, 68, 68;
+  --color-purple-rgb: 99, 102, 241;
 }
+
 
 [data-theme="light"], .light {
   --color-accent-rgb: 5, 150, 105;

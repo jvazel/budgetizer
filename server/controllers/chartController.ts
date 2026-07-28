@@ -775,6 +775,7 @@ export const getCashFlowHistory = async (req, res) => {
     const { months = 12, accountId, endDate: queryEndDate } = req.query;
     const monthsCount = parseInt(months) || 12;
     const now = queryEndDate ? new Date(queryEndDate) : new Date();
+
     
     // Start of the first month in the range
     const startDate = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
@@ -1624,6 +1625,84 @@ export const getWaterfallData = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+// 12. Get Sankey Flow Data
+export const getSankeyFlowData = async (req: any, res: any) => {
+  try {
+    const userId = req.user.id;
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const end = endDate ? new Date(endDate) : new Date();
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const categories = await Category.find({ userId }).lean();
+    const catMap = new Map();
+    categories.forEach(c => catMap.set(c._id.toString(), c.name));
+
+    const transactions = await Transaction.find({
+      userId,
+      isPending: { $ne: true },
+      date: { $gte: start, $lte: end }
+    }).lean();
+
+    const nodesMap = new Map<string, { id: string; name: string; category: 'income' | 'account' | 'expense' | 'savings' }>();
+    const linksMap = new Map<string, number>();
+
+    const mainAccountId = 'node-hub';
+    nodesMap.set(mainAccountId, { id: mainAccountId, name: 'Trésorerie Centrale', category: 'account' });
+
+    let totalIncome = 0;
+    let totalExpenses = 0;
+
+    transactions.forEach(t => {
+      if (t.type === 'income') {
+        totalIncome += t.amount;
+        const catName = t.categoryId ? (catMap.get(t.categoryId.toString()) || 'Revenus Divers') : 'Revenus';
+        const sourceId = `income-${catName}`;
+
+        if (!nodesMap.has(sourceId)) {
+          nodesMap.set(sourceId, { id: sourceId, name: catName, category: 'income' });
+        }
+
+        const linkKey = `${sourceId}->${mainAccountId}`;
+        linksMap.set(linkKey, (linksMap.get(linkKey) || 0) + t.amount);
+
+      } else if (t.type === 'expense') {
+        totalExpenses += t.amount;
+        const catName = t.categoryId ? (catMap.get(t.categoryId.toString()) || 'Dépenses Diverses') : 'Autre Dépense';
+        const targetId = `expense-${catName}`;
+
+        if (!nodesMap.has(targetId)) {
+          nodesMap.set(targetId, { id: targetId, name: catName, category: 'expense' });
+        }
+
+        const linkKey = `${mainAccountId}->${targetId}`;
+        linksMap.set(linkKey, (linksMap.get(linkKey) || 0) + t.amount);
+      }
+    });
+
+    const netSavings = totalIncome - totalExpenses;
+    if (netSavings > 0) {
+      const savingsId = 'savings-residual';
+      nodesMap.set(savingsId, { id: savingsId, name: 'Épargne Résiduelle', category: 'savings' });
+      linksMap.set(`${mainAccountId}->${savingsId}`, netSavings);
+    }
+
+    const nodes = Array.from(nodesMap.values());
+    const links = Array.from(linksMap.entries()).map(([key, value]) => {
+      const [source, target] = key.split('->');
+      return { source, target, value: parseFloat(value.toFixed(2)) };
+    });
+
+    res.json({ nodes, links });
+  } catch (error) {
+    logger.error('Error fetching Sankey flow data:', { error: (error as Error).message });
+    res.status(500).json({ message: 'Server Error during Sankey flow fetch' });
+  }
+};
+
 
 
 

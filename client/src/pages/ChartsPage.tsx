@@ -14,8 +14,10 @@ import VelocityChart from '../components/charts/VelocityChart';
 import ResilienceChart from '../components/charts/ResilienceChart';
 import FixedVarChart from '../components/charts/FixedVarChart';
 import WaterfallChart from '../components/charts/WaterfallChart';
+import { SankeyFlowChart } from '../components/charts/SankeyFlowChart';
 import BottomSheet from '../components/ui/BottomSheet';
-import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge, ShieldCheck, Lock, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { PieChart, Clock, TrendingUp, LineChart, Sliders, ChevronDown, ArrowUpDown, Award, BarChart2, Tag, Gauge, ShieldCheck, Lock, ChevronLeft, ChevronRight, Calendar, GitCommit } from 'lucide-react';
+
 import AiBadge from '../components/ui/AiBadge';
 
 const ChartsPage = () => {
@@ -101,8 +103,10 @@ const ChartsPage = () => {
     forecast: 'Prévisions',
     histogram: 'Histogramme personnalisé',
     fixedvar: 'Fixes vs Variables',
-    waterfall: 'Analyse mensuelle'
+    waterfall: 'Analyse mensuelle',
+    sankey: 'Diagramme de Flux (Sankey)'
   };
+
 
   const titleElement = (
     <div 
@@ -377,7 +381,14 @@ const ChartsPage = () => {
                 }} 
               />
 
-              {/* Widget 2: Fixes vs Variables */}
+              {/* Widget 2: Diagramme de Flux Sankey */}
+              <SankeyFlowChart 
+                period={period} 
+                startDate={startDate}
+                endDate={endDate}
+              />
+
+              {/* Widget 3: Fixes vs Variables */}
               <FixedVarChart 
                 period={period} 
                 isWidget={true} 
@@ -387,7 +398,7 @@ const ChartsPage = () => {
                 }} 
               />
 
-              {/* Widget 3: Cash Flow */}
+              {/* Widget 4: Cash Flow */}
               <CashFlowChart 
                 period={period}
                 endDate={endDate}
@@ -398,7 +409,7 @@ const ChartsPage = () => {
                 }} 
               />
 
-              {/* Widget 4: Rythme des dépenses */}
+              {/* Widget 5: Rythme des dépenses */}
               <VelocityChart 
                 period={period}
                 isWidget={true} 
@@ -425,6 +436,7 @@ const ChartsPage = () => {
 
             <div>
               {activeDetailView === 'category' && <CategoryChart period={period} setPeriod={setPeriod} />}
+              {activeDetailView === 'sankey' && <SankeyFlowChart period={period} startDate={startDate} endDate={endDate} />}
               {activeDetailView === 'velocity' && <VelocityChart period={period} />}
               {activeDetailView === 'tags' && <TagChart period={period} setPeriod={setPeriod} />}
               {activeDetailView === 'cashflow' && <CashFlowChart period={period} endDate={endDate} />}
@@ -440,6 +452,7 @@ const ChartsPage = () => {
             </div>
           </div>
         )}
+
       </div>
 
       {/* Select Category Drawer */}
@@ -458,11 +471,13 @@ const ChartsPage = () => {
                 title: 'Activité Mensuelle',
                 items: [
                   { key: 'category', label: 'Catégories', icon: PieChart, color: 'text-purple-400 bg-purple-500/10', badge: 'Populaire' },
+                  { key: 'sankey', label: 'Diagramme de Flux (Sankey)', icon: GitCommit, color: 'text-purple-400 bg-purple-500/10', badge: 'Nouveau' },
                   { key: 'waterfall', label: 'Analyse mensuelle', icon: TrendingUp, color: 'text-emerald-400 bg-emerald-500/10' },
                   { key: 'velocity', label: 'Rythme Dépenses', icon: Gauge, color: 'text-rose-400 bg-rose-500/10', badge: 'Recommandé' },
                   { key: 'fixedvar', label: 'Fixes vs Var.', icon: Lock, color: 'text-indigo-400 bg-indigo-500/10' },
                   { key: 'tags', label: 'Tags & Projets', icon: Tag, color: 'text-amber-400 bg-amber-500/10' }
                 ]
+
               },
               {
                 title: 'Évolution & Bilan',

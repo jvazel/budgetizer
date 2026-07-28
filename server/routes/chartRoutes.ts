@@ -11,7 +11,8 @@ import {
   getBalanceHistory,
   getTagChartsData,
   getFixedVsVariableData,
-  getWaterfallData
+  getWaterfallData,
+  getSankeyFlowData
 } from '../controllers/chartController';
 
 const router = express.Router();
@@ -29,6 +30,7 @@ router.get('/histogram', getHistogramData);
 router.get('/balance-history', getBalanceHistory);
 router.get('/fixed-vs-variable', getFixedVsVariableData);
 router.get('/waterfall', getWaterfallData);
-
+router.get('/sankey', getSankeyFlowData);
 
 export default router;
+

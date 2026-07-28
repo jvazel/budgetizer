@@ -6,7 +6,13 @@ import { useFinancialScore } from '../hooks/useFinancialScore';
 import { useScheduled } from '../hooks/useScheduled';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import FloorBalanceWidget from '../components/ui/FloorBalanceWidget';
+import { KpiHeaderGrid } from '../components/dashboard/KpiHeaderGrid';
+import { SafeToSpendCard } from '../components/dashboard/SafeToSpendCard';
 import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
+
+
+
+
 import BudgetCard from '../components/budgets/BudgetCard';
 import BottomSheet from '../components/ui/BottomSheet';
 import InstallPromptBanner from '../components/ui/InstallPromptBanner';
@@ -295,7 +301,17 @@ const Home = () => {
         loading={scheduledLoading || loading}
       />
 
+      {/* ── NOUVELLE SECTION : Cartes KPI XXL & Sparklines 6 mois (Module 6) ── */}
+      <KpiHeaderGrid />
+
+      {/* ── NOUVELLE SECTION : Restant à Dépenser / Safe-To-Spend Widget (Module 1) ── */}
+      <SafeToSpendCard />
+
       {/* ── KPIs & Sparkline fusionnés (Timeframe Statistics Card) ──────────── */}
+
+
+
+
       <div className="banky-card mb-6 overflow-hidden select-none">
         {/* Tab switcher segmented control */}
         <div className="flex bg-surface-2 p-1 rounded-t-[24px] border-b border-border/20 gap-1 relative">

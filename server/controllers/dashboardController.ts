@@ -1461,3 +1461,278 @@ export const getMonthlySummaries = async (req, res) => {
     res.status(500).json({ message: 'Server Error during monthly summaries fetch' });
   }
 };
+
+export const getKpiSummary = async (req: any, res: any) => {
+  try {
+    const userId = req.user.id;
+    const userObjectId = toObjectId(userId);
+
+    const checkingAccounts = await Account.find({
+      userId,
+      type: 'checking',
+      includeInTotal: { $ne: false }
+    }).select('_id').lean();
+
+    const checkingAccountIds = checkingAccounts.map(a => a._id);
+    if (checkingAccountIds.length === 0) {
+      const emptySparkline = Array.from({ length: 6 }).map((_, i) => {
+        const d = new Date();
+        d.setUTCMonth(d.getUTCMonth() - (5 - i));
+        return {
+          monthKey: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`,
+          label: d.toLocaleDateString('fr-FR', { month: 'short' }),
+          value: 0
+        };
+      });
+
+      const emptyMetric = { currentValue: 0, previousValue: 0, changePercentage: 0, sparkline: emptySparkline };
+      return res.json({
+        income: emptyMetric,
+        expenses: emptyMetric,
+        net: emptyMetric,
+        savingsRate: emptyMetric
+      });
+    }
+
+    const checkingAccountObjectIds = checkingAccountIds.map(toObjectId);
+
+    // Calcul des 6 derniers mois (du mois M-5 au mois courant M)
+    const now = new Date();
+    const sixMonthsAgoStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1, 0, 0, 0));
+    const currentMonthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+
+    const aggregates = await Transaction.aggregate([
+      {
+        $match: {
+          userId: userObjectId,
+          isPending: { $ne: true },
+          date: { $gte: sixMonthsAgoStart, $lte: currentMonthEnd },
+          $or: [
+            { accountId: { $in: checkingAccountObjectIds } },
+            { toAccountId: { $in: checkingAccountObjectIds } }
+          ]
+        }
+      },
+      {
+        $project: {
+          year: { $year: '$date' },
+          month: { $month: '$date' },
+          type: 1,
+          amount: 1,
+          accountId: 1,
+          toAccountId: 1,
+          isSourceChecking: { $in: ['$accountId', checkingAccountObjectIds] },
+          isDestChecking: {
+            $cond: {
+              if: { $ne: ['$toAccountId', null] },
+              then: { $in: ['$toAccountId', checkingAccountObjectIds] },
+              else: false
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: '$year',
+            month: '$month'
+          },
+          income: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $and: [{ $eq: ['$type', 'income'] }, '$isSourceChecking'] },
+                    { $and: [{ $eq: ['$type', 'transfer'] }, { $not: ['$isSourceChecking'] }, '$isDestChecking'] }
+                  ]
+                },
+                '$amount',
+                0
+              ]
+            }
+          },
+          expenses: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $and: [{ $eq: ['$type', 'expense'] }, '$isSourceChecking'] },
+                    { $and: [{ $eq: ['$type', 'transfer'] }, '$isSourceChecking', { $not: ['$isDestChecking'] }] }
+                  ]
+                },
+                '$amount',
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    const monthsMap = new Map<string, { income: number; expenses: number }>();
+    aggregates.forEach(item => {
+      const key = `${item._id.year}-${String(item._id.month).padStart(2, '0')}`;
+      monthsMap.set(key, {
+        income: parseFloat(item.income.toFixed(2)),
+        expenses: parseFloat(item.expenses.toFixed(2))
+      });
+    });
+
+    const monthsList: { monthKey: string; label: string; income: number; expenses: number; net: number; savingsRate: number }[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+      const data = monthsMap.get(key) || { income: 0, expenses: 0 };
+      const net = parseFloat((data.income - data.expenses).toFixed(2));
+      const savingsRate = data.income > 0 ? parseFloat(((net / data.income) * 100).toFixed(1)) : 0;
+
+      monthsList.push({
+        monthKey: key,
+        label,
+        income: data.income,
+        expenses: data.expenses,
+        net,
+        savingsRate
+      });
+    }
+
+    const currentMonth = monthsList[monthsList.length - 1];
+    const previousMonth = monthsList[monthsList.length - 2];
+
+    const calcChange = (curr: number, prev: number): number | null => {
+      if (prev === 0) return curr === 0 ? 0 : 100;
+      return parseFloat((((curr - prev) / Math.abs(prev)) * 100).toFixed(1));
+    };
+
+    const response = {
+      income: {
+        currentValue: currentMonth.income,
+        previousValue: previousMonth.income,
+        changePercentage: calcChange(currentMonth.income, previousMonth.income),
+        sparkline: monthsList.map(m => ({ monthKey: m.monthKey, label: m.label, value: m.income }))
+      },
+      expenses: {
+        currentValue: currentMonth.expenses,
+        previousValue: previousMonth.expenses,
+        changePercentage: calcChange(currentMonth.expenses, previousMonth.expenses),
+        sparkline: monthsList.map(m => ({ monthKey: m.monthKey, label: m.label, value: m.expenses }))
+      },
+      net: {
+        currentValue: currentMonth.net,
+        previousValue: previousMonth.net,
+        changePercentage: calcChange(currentMonth.net, previousMonth.net),
+        sparkline: monthsList.map(m => ({ monthKey: m.monthKey, label: m.label, value: m.net }))
+      },
+      savingsRate: {
+        currentValue: currentMonth.savingsRate,
+        previousValue: previousMonth.savingsRate,
+        changePercentage: parseFloat((currentMonth.savingsRate - previousMonth.savingsRate).toFixed(1)),
+        sparkline: monthsList.map(m => ({ monthKey: m.monthKey, label: m.label, value: m.savingsRate }))
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    logger.error('Error fetching KPI summary:', { error: (error as Error).message });
+    res.status(500).json({ message: 'Server Error during KPI summary fetch' });
+  }
+};
+
+export const getSafeToSpend = async (req: any, res: any) => {
+  try {
+    const userId = req.user.id;
+    const userObjectId = toObjectId(userId);
+
+    const checkingAccounts = await Account.find({
+      userId,
+      type: 'checking',
+      includeInTotal: { $ne: false }
+    }).select('_id balance').lean();
+
+    const checkingAccountIds = checkingAccounts.map(a => a._id);
+    const totalCheckingBalance = checkingAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+
+    if (checkingAccountIds.length === 0) {
+      return res.json({
+        totalSafeToSpend: 0,
+        dailyBudgetRemaining: 0,
+        daysLeftInMonth: 1,
+        upcomingExpenses: 0,
+        upcomingIncome: 0,
+        allocatedToSavings: 0,
+        spentThisMonth: 0,
+        status: 'healthy'
+      });
+    }
+
+    const now = new Date();
+    const currentYear = now.getUTCFullYear();
+    const currentMonth = now.getUTCMonth();
+
+    const startOfMonth = new Date(Date.UTC(currentYear, currentMonth, 1, 0, 0, 0));
+    const endOfMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59, 999));
+    const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const currentDay = now.getUTCDate();
+    const daysLeftInMonth = Math.max(1, totalDaysInMonth - currentDay + 1);
+
+    // 1. Transactions récurrentes à venir d'ici la fin du mois
+    const scheduled = await ScheduledTransaction.find({
+      userId,
+      isActive: true,
+      nextDate: { $gte: now, $lte: endOfMonth }
+    }).lean();
+
+    let upcomingExpenses = 0;
+    let upcomingIncome = 0;
+
+    scheduled.forEach(s => {
+      if (s.type === 'expense') {
+        upcomingExpenses += s.amount || 0;
+      } else if (s.type === 'income') {
+        upcomingIncome += s.amount || 0;
+      }
+    });
+
+    // 2. Montants alloués aux objectifs d'épargne (Savings Goals)
+    const savingsGoals = await SavingsGoal.find({ userId }).lean();
+    let allocatedToSavings = 0;
+    savingsGoals.forEach(g => {
+      if (g.targetAmount && g.targetDate) {
+        const target = new Date(g.targetDate);
+        const monthsLeft = Math.max(1, (target.getFullYear() - currentYear) * 12 + (target.getMonth() - currentMonth));
+        const remainingToGoal = Math.max(0, g.targetAmount - (g.currentAmount || 0));
+        allocatedToSavings += remainingToGoal / monthsLeft;
+      }
+    });
+    allocatedToSavings = parseFloat(allocatedToSavings.toFixed(2));
+
+    // 3. Calcul du Restant à Dépenser (Safe to Spend)
+    const totalSafeToSpend = parseFloat(Math.max(0, totalCheckingBalance + upcomingIncome - upcomingExpenses - allocatedToSavings).toFixed(2));
+    const dailyBudgetRemaining = parseFloat((totalSafeToSpend / daysLeftInMonth).toFixed(2));
+
+    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
+    if (dailyBudgetRemaining < 10) {
+      status = 'critical';
+    } else if (dailyBudgetRemaining < 25) {
+      status = 'warning';
+    }
+
+    res.json({
+      totalSafeToSpend,
+      dailyBudgetRemaining,
+      daysLeftInMonth,
+      upcomingExpenses: parseFloat(upcomingExpenses.toFixed(2)),
+      upcomingIncome: parseFloat(upcomingIncome.toFixed(2)),
+      allocatedToSavings,
+      spentThisMonth: 0,
+      status
+    });
+  } catch (error) {
+    logger.error('Error fetching Safe-to-Spend:', { error: (error as Error).message });
+    res.status(500).json({ message: 'Server Error during Safe-to-Spend fetch' });
+  }
+};
+
+

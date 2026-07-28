@@ -119,3 +119,54 @@ export interface UserProfile {
   currency: { code: string; symbol: string };
   preferences: UserPreferences;
 }
+
+export interface KpiSparklinePoint {
+  monthKey: string;
+  label: string;
+  value: number;
+}
+
+export interface KpiMetricItem {
+  currentValue: number;
+  previousValue: number;
+  changePercentage: number | null;
+  sparkline: KpiSparklinePoint[];
+}
+
+export interface KpiSummaryResponse {
+  income: KpiMetricItem;
+  expenses: KpiMetricItem;
+  net: KpiMetricItem;
+  savingsRate: KpiMetricItem;
+}
+
+export interface SafeToSpendSummary {
+  totalSafeToSpend: number;
+  dailyBudgetRemaining: number;
+  daysLeftInMonth: number;
+  upcomingExpenses: number;
+  upcomingIncome: number;
+  allocatedToSavings: number;
+  spentThisMonth: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
+
+export interface SankeyNode {
+  id: string;
+  name: string;
+  category: 'income' | 'account' | 'expense' | 'savings';
+}
+
+export interface SankeyLink {
+  source: string;
+  target: string;
+  value: number;
+}
+
+export interface SankeyFlowResponse {
+  nodes: SankeyNode[];
+  links: SankeyLink[];
+}
+
+
+
