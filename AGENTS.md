@@ -8,6 +8,9 @@ Ce document est conçu pour servir de récapitulatif complet et de contexte de r
 
 **Budgetizer** est une application web full-stack de gestion financière personnelle et de suivi budgétaire. Elle permet aux utilisateurs de :
 - Suivre plusieurs comptes bancaires (courants, épargne, crédits, investissements).
+- Consulter un Dashboard restructuré avec 4 **Cartes KPI XXL** (Revenus, Dépenses, Solde Net, Taux d'épargne %) et leurs Sparklines vectoriels sur 6 mois.
+- Suivre en temps réel leur **Restant à Dépenser (Safe-to-Spend)** déduisant les charges fixes et cotisations d'épargne récurrentes.
+- Visualiser le parcours complet de leur argent via un **Diagramme de Flux Sankey Vectoriel** filtrable par mois dans le module d'Analyses.
 - Gérer leurs transactions (dépenses, revenus, virements internes).
 - Planifier des transactions récurrentes et gérer des abonnements.
 - Définir des budgets par catégorie avec suivi en temps réel et alertes.
@@ -16,6 +19,7 @@ Ce document est conçu pour servir de récapitulatif complet et de contexte de r
 - Partager des comptes ou budgets avec d'autres utilisateurs.
 - Se connecter via authentification classique (JWT) ou WebAuthn / Passkeys.
 - Recevoir des notifications push PWA (Service Worker) et fonctionner en mode hors-ligne partiellement.
+
 
 ---
 

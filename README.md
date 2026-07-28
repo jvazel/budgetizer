@@ -6,7 +6,9 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 
 ## 🚀 Fonctionnalités Clés
 
-- **Tableau de Bord Dynamique** : Vue globale sur le solde total net, répartition visuelle par compte et accès rapide à la saisie de transactions.
+- **Tableau de Bord & Cartes KPI XXL** : Restructuration synthétique avec 4 cartes grand format exposant les métriques clés (Revenus, Dépenses, Solde Net et Taux d'Épargne %) accompagnées de mini-graphiques Sparklines vectoriels retraçant la tendance sur 6 mois ($M-5$ à $M$).
+- **Widget "Restant à Dépenser" (Safe-to-Spend)** : Calcul et affichage en temps réel du budget disponible sans risque pour le reste du mois, déduction faite des charges récurrentes échelonnées et des cotisations d'épargne planifiées.
+- **Visualisations Complexes & Diagramme de Sankey** : Modélisation vectorielle interactive sous forme de flux Sankey (parcours de l'argent depuis les sources d'entrées, en passant par le nœud central de trésorerie, jusqu'aux catégories de dépenses et à l'épargne résiduelle) disponible dans la section dédiée aux Analyses.
 - **Gestion Multi-comptes** : Prise en charge de divers types de comptes (courant, épargne, espèces, investissements) avec personnalisation esthétique (icônes, couleurs).
 - **Saisie Progressive en Deux Étapes** : Formulaire de transaction mobile fluide structuré en deux étapes (Étape 1 : montant focalisé, puces de favoris éditables et raccourci "répéter" en 1 clic ; Étape 2 : note prédictive, compte/catégorie sous forme de panneaux glissants tactiles, et tags). Prévient la surcharge ergonomique liée à l'affichage du clavier système.
 - **Gestion des Catégories** : Catégorisation personnalisable des revenus et dépenses.
@@ -17,10 +19,12 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Notifications Push Prédictives** : Réception de notifications push Web en temps réel en cas de baisse de solde, dépassement de budget ou alerte prédictive de dérive basée sur le rythme quotidien des dépenses (run rate).
 - **Conseils & IA (Insights)** : Détection automatique des anomalies de dépenses par catégorie (alertes orange/rouges) comparées à la moyenne des 3 derniers mois avec seuil de sensibilité configurable et persistant. Suggestions de réductions budgétaires interactives et audit d'abonnements.
 - **Import / Export de Données** : Exportation complète des transactions au format CSV et importation.
+- **Design System Harmonisé & Mode Sombre Premium** : Direction artistique moderne inspirée de Bankyboard (bleu encre profond, typographies Manrope/DM Mono, effet translucide *glass-card*) couplée à un code couleur sémantique strict (🟢 `#10B981` pour les entrées, 🔴 `#EF4444` pour les sorties, 🟣 `#6366F1` pour les analyses & KPIs).
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
 - **Haute Résilience & Observabilité** : Tracing de requêtes via Correlation ID (`X-Request-ID` & AsyncLocalStorage), logs JSON structurés en production (`logger.ts`), validation d'environnement Zod (`env.ts`), composant React `ErrorBoundary` pour la gestion des plantages d'affichage et sérialisation propre des stack traces.
 - **Contrat de Données Unifié & Swagger API** : Mutualisation des types et interfaces métiers partagées (`/shared/types/index.ts`) entre backend et frontend, et documentation Swagger/OpenAPI interactive (`/api-docs`).
 - **Suite de Tests Automatisés (487 tests)** : Couverture complète des fonctionnalités client (39 suites / 283 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (30 suites / 204 tests avec Vitest & Supertest).
+
 
 
 ---
