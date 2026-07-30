@@ -6,6 +6,10 @@ import { HelpCircle, Calendar, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from '../ui/Select';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
 const CustomTooltip1 = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const formattedDate = new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -77,10 +81,6 @@ const FutureChart = () => {
   useEffect(() => {
     fetchFutureData();
   }, [horizon, selectedAccountId]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });

@@ -7,6 +7,10 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
 const CustomTooltip1 = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
@@ -259,10 +263,6 @@ const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
     } else {
       setBudgetTarget(null);
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   const formatDateLabel = (dateStr) => {

@@ -5,6 +5,10 @@ import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Min
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
@@ -343,10 +347,6 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
     } catch (error) {
       toast.error('Impossible de charger les transactions');
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   // Aggregate small categories (< 5%) under "Autres" to keep charts clean and readable

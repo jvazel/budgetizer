@@ -7,6 +7,10 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
 const CustomTooltip = ({ active, payload, label, dataHistory = [], groupBy = 'month' }) => {
   if (active && payload && payload.length) {
     let formattedLabel = label;
@@ -132,10 +136,6 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
     } finally {
       setTxLoading(false);
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   const formatTickLabel = (tickValue) => {

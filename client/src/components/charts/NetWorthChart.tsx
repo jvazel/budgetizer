@@ -4,6 +4,10 @@ import { ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer }
 import { TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const item = payload[0].payload;
@@ -67,10 +71,6 @@ const NetWorthChart = ({ endDate: externalEndDate }) => {
   useEffect(() => {
     fetchNetWorthData();
   }, [duration, externalEndDate]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
 
   const formatDate = (dateStr) => {
     const parts = dateStr.split('/');

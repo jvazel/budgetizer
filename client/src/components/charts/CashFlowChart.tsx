@@ -7,6 +7,26 @@ import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
+
+const formatMonthLabel = (monthStr) => {
+  if (!monthStr) return '';
+  const [year, month] = monthStr.split('-');
+  const date = new Date(year, parseInt(month) - 1, 1);
+  const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+const formatMonthShortLabel = (monthStr) => {
+  if (!monthStr) return '';
+  const [year, month] = monthStr.split('-');
+  const date = new Date(year, parseInt(month) - 1, 1);
+  const label = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const monthLabel = formatMonthLabel(label);
@@ -65,26 +85,6 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
   useEffect(() => {
     fetchCashFlowData();
   }, [horizon, selectedAccountId, externalEndDate]);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  const formatMonthLabel = (monthStr) => {
-    if (!monthStr) return '';
-    const [year, month] = monthStr.split('-');
-    const date = new Date(year, parseInt(month) - 1, 1);
-    const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  };
-
-  const formatMonthShortLabel = (monthStr) => {
-    if (!monthStr) return '';
-    const [year, month] = monthStr.split('-');
-    const date = new Date(year, parseInt(month) - 1, 1);
-    const label = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  };
 
   const { history = [], metrics = {} } = data;
 
