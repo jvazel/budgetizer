@@ -58,6 +58,34 @@ Le tableau de bord est la page d'accueil principale après connexion. Il regroup
 - **Formulaire de Saisie Ultra-Rapide (Action Sheet & `CustomNumpad`)** : Un bouton d'action flottant central ouvre instantanément un panneau de saisie ultra-rapide (Bottom Sheet) muni d'un pavé numérique tactile universel (`CustomNumpad`) et de puces d'ajustement immédiat (`QuickChips` +5€, +10€, +20€, +50€) pour enregistrer une transaction en moins de 2 secondes sans afficher le clavier système iOS/Android.
 - **Menu de Navigation Latéral (Tiroir Burger)** : Un menu coulissant moderne et sans bordure (borderless) est accessible depuis le bouton en haut à gauche. Il centralise les raccourcis vers tous les modules, réorganisés de manière ergonomique par fréquence d'usage :
   1. **Mon Quotidien** (Haute fréquence) : Tableau de bord, Comptes, Transactions, Virements instantanés.
+  2. **Mon Budget & Projets** : Gérer les budgets, Objectifs d'épargne, Planifications & Abonnements, **Règles & Automatisation**.
+  3. **Analyses & IA** : Analyses & Graphiques, Rapport Mensuel, Conseils IA, Scores financiers.
+  4. **Outils & Options** : Simulateur de prêt, Exporter un rapport, Mon Profil & Paramètres.
+
+---
+
+## 4. Transactions, Pointage & Moteur de Règles Intelligentes (Smart Rules)
+
+### 4.1 Saisie & Pointage des Transactions
+- **Saisie Ultra-Rapide (`CustomNumpad`)** : Saisie d'opérations en moins de 2 secondes avec un pavé numérique tactile universel qui bloque l'apparition du clavier virtuel système et propose des puces d'ajustement dynamique.
+- **Pointage & Réconciliation en un clic (`isReviewed`)** : Chaque ligne de transaction dans la liste dispose à l'extrême gauche d'un bouton de validation rapide (icône coche). Un simple clic bascule l'état de la transaction en "pointée / vérifiée", déclenchant une mise à jour réactive sans rechargement grâce à l'invalidation React Query.
+
+### 4.2 Moteur de Règles Intelligentes (Smart Rules)
+Pour éliminer les tâches répétitives sans imposer l'utilisation d'une API d'IA externe payante, Budgetizer intègre un **Moteur de Règles Intelligentes 100% déterministe** :
+- **Critères & Conditions Multiples** : Création de règles d'auto-catégorisation avec évaluation dynamique (`AND` / `OR`) combinant :
+  - Le **Libellé** (contient, égal à, commence par, regex).
+  - Le **Montant** (supérieur à, inférieur à, égal).
+  - Le **Type** (Dépense, Revenu, Virement).
+- **Actions Automatiques** :
+  - Attribution automatique d'une catégorie spécifique.
+  - Renommage ou nettoyage du libellé (ex: transformer `"CARREFOUR CITY 75011 CHARRONNE"` en `"Carrefour"`).
+  - Pointage automatique de la transaction (`autoReview`).
+- **Priorités & Exécution Rétroactive** :
+  - **Ordre des priorités** : Les règles sont évaluées séquentiellement selon leur niveau de priorité (`#1`, `#2`, etc.), modifiable par simples flèches haut/bas.
+  - **Machine à remonter le temps (Effet Rétroactif)** : Lors de la création ou de la mise à jour d'une règle, l'utilisateur peut choisir de l'appliquer immédiatement sur l'intégralité de son historique de transactions passées.
+- **Suggestions & Filtrage** :
+  - **Suggestions basées sur l'historique** : Analyse automatique des motifs récurrents dans les transactions non-catégorisées pour proposer la création de règles en 1 clic.
+  - **Barre de filtres complète** : Recherche textuelle instantanée, filtres par statut (Toutes, Actives, Auto-pointées, Inactives) et sélection par catégorie d'action.
   2. **Mon Budget & Projets** (Moyenne fréquence) : Budgets, Objectifs d'épargne, Planifications.
   3. **Analyses & IA** (Analyses & conseils) : Graphiques, Rapport Mensuel, Conseils IA, Scores financiers.
   4. **Outils & Options** (Occasionnel) : Simulateur de prêt, Exporter un rapport, Mon Profil & Paramètres.

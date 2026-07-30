@@ -108,7 +108,37 @@ export interface ITransactionDocument extends Document {
   isPending: boolean;
   toAccountId: Types.ObjectId | null;
   savingsGoalId: Types.ObjectId | null;
+  isReviewed: boolean;
+  categorizationSource: 'manual' | 'rule' | 'default';
   createdAt: Date;
+}
+
+export interface IRuleConditionSubdocument {
+  field: 'description' | 'amount' | 'accountId' | 'type';
+  operator: 'contains' | 'equals' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than' | 'regex';
+  value: string | number;
+}
+
+export interface IRuleActionSubdocument {
+  categoryId?: Types.ObjectId | null;
+  tagsToAdd?: Types.ObjectId[];
+  autoReview?: boolean;
+  renameDescription?: string | null;
+}
+
+export interface ICategorizationRuleDocument extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  name: string;
+  priority: number;
+  isActive: boolean;
+  matchLogic: 'AND' | 'OR';
+  conditions: IRuleConditionSubdocument[];
+  actions: IRuleActionSubdocument;
+  matchCount: number;
+  lastMatchedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IScheduledTransactionDocument extends Document {
@@ -255,6 +285,7 @@ export type AccountModel = mongoose.Model<IAccountDocument> & {
 export type BudgetModel = mongoose.Model<IBudgetDocument>;
 export type CategoryModel = mongoose.Model<ICategoryDocument>;
 export type TransactionModel = mongoose.Model<ITransactionDocument>;
+export type CategorizationRuleModel = mongoose.Model<ICategorizationRuleDocument>;
 export type ScheduledTransactionModel = mongoose.Model<IScheduledTransactionDocument>;
 export type SavingsGoalModel = mongoose.Model<ISavingsGoalDocument>;
 export type TagModel = mongoose.Model<ITagDocument>;

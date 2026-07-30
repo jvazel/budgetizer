@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import { AlertTriangle, FolderTree, Tag, ChevronRight, Users } from 'lucide-react';
+import { AlertTriangle, FolderTree, Tag, ChevronRight, Users, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 
@@ -68,6 +68,22 @@ const SettingsPage = () => {
             Structure & Catégorisation
           </h3>
           <div className="space-y-2.5">
+            <button 
+              onClick={() => navigate('/settings/rules')}
+              className="w-full flex items-center justify-between p-4 bg-surface-2 rounded-2xl border border-border/40 hover:bg-border/10 transition-all text-left active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                  <Zap size={16} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-primary">Smart Rules & Catégorisation</h4>
+                  <p className="text-[10px] text-muted">Automatisations de catégories et de pointage par règles.</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted group-hover:text-primary transition-colors" />
+            </button>
+
             <button 
               onClick={() => navigate('/categories')}
               className="w-full flex items-center justify-between p-4 bg-surface-2 rounded-2xl border border-border/40 hover:bg-border/10 transition-all text-left active:scale-[0.99] group"

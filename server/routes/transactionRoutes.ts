@@ -14,7 +14,8 @@ import {
   getCalendarTransactions,
   exportTransactions,
   importTransactions,
-  updateTransaction
+  updateTransaction,
+  reviewTransaction
 } from '../controllers/transactionController';
 
 const router = express.Router();
@@ -34,6 +35,8 @@ router.route('/calendar')
 
 router.get('/export', exportTransactions);
 router.post('/import', upload.single('file'), importTransactions);
+
+router.patch('/:id/review', reviewTransaction);
 
 router.route('/')
   .get(getTransactions)

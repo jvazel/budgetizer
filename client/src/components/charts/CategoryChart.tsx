@@ -164,6 +164,7 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
     const start = new Date();
     if (p === 'month') {
       start.setDate(1);
+      end.setMonth(end.getMonth() + 1, 0); // Dernier jour du mois en cours
     } else if (p === '3months') {
       start.setMonth(start.getMonth() - 3);
     } else if (p === '6months') {
@@ -172,9 +173,15 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
       start.setMonth(0);
       start.setDate(1);
     }
+    const formatLocal = (d) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
     return {
-      startDate: start.toISOString().split('T')[0],
-      endDate: end.toISOString().split('T')[0]
+      startDate: formatLocal(start),
+      endDate: formatLocal(end)
     };
   };
 

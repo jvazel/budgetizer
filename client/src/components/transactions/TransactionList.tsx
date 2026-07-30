@@ -35,7 +35,7 @@ const CategoryIcon = ({ tx }) => {
   );
 };
 
-const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) => {
+const TransactionList = ({ transactions, onDelete, onEdit, onToggleReview, currentAccountId }) => {
   const [visibleCount, setVisibleCount] = React.useState(30);
   const observerTarget = React.useRef(null);
 
@@ -184,6 +184,31 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   }}
                   onClick={onEdit ? () => onEdit(tx) : undefined}
                 >
+                  {/* Badge de Pointage / Action de review rapide (aligné à gauche) */}
+                  <button
+                    type="button"
+                    title={tx.isReviewed ? "Transaction pointée / vérifiée" : "Cliquer pour pointer la transaction"}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      triggerHaptic('light');
+                      try {
+                        if (onToggleReview) {
+                          await onToggleReview(tx._id, !tx.isReviewed);
+                        } else {
+                          const { reviewTransaction } = await import('../../services/ruleService');
+                          await reviewTransaction(tx._id, !tx.isReviewed);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className={`p-1.5 rounded-xl transition-all active:scale-90 shrink-0 ${
+                      tx.isReviewed ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-600 hover:text-slate-400 bg-slate-800/40 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <CheckCircle2 size={18} />
+                  </button>
+
                   <CategoryIcon tx={tx} />
                   
                   <div className="flex-1 min-w-0">

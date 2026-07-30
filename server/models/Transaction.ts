@@ -69,6 +69,15 @@ const transactionSchema = new mongoose.Schema({
     ref: 'SavingsGoal',
     default: null
   },
+  isReviewed: {
+    type: Boolean,
+    default: true
+  },
+  categorizationSource: {
+    type: String,
+    enum: ['manual', 'rule', 'default'],
+    default: 'manual'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -83,6 +92,7 @@ transactionSchema.index({ userId: 1, savingsGoalId: 1 });
 transactionSchema.index({ userId: 1, categoryId: 1, date: -1 });
 transactionSchema.index({ userId: 1, date: -1, createdAt: -1 });
 transactionSchema.index({ userId: 1, isPending: 1 });
+transactionSchema.index({ userId: 1, isReviewed: 1, date: -1 });
 transactionSchema.index({ userId: 1, type: 1, date: -1 });
 transactionSchema.index({ userId: 1, type: 1, isPending: 1, date: -1 });
 transactionSchema.index({ userId: 1, isScheduled: 1, isPending: 1, date: -1 });

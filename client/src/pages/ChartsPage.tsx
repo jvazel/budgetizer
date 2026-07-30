@@ -55,6 +55,7 @@ const ChartsPage = () => {
     const start = new Date();
     if (p === 'month') {
       start.setDate(1);
+      end.setMonth(end.getMonth() + 1, 0); // Dernier jour du mois en cours
     } else if (p === '3months') {
       start.setMonth(start.getMonth() - 3);
     } else if (p === '6months') {

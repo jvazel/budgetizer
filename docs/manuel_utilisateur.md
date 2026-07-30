@@ -221,6 +221,7 @@ Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.
   * **"Hier"** → en couleur primaire.
   * Jours antérieurs → en couleur secondaire discrète.
 * **Indicateur de Catégorie & Bordure Colorée (Left-Border)** : Pour faciliter le scan visuel rapide, chaque ligne de transaction dispose d'une fine bordure verticale gauche de 4px reprenant le code couleur de son compte ou de sa catégorie. De plus, l'icône de sa catégorie (ex : 🍔, 🏠, 🛒) ou de son type (ex : 🔄 pour les virements, ❓ pour les éléments non classés) s'affiche sur un arrière-plan en dégradé de couleur translucide et une bordure assortie.
+* **Bouton de Pointage & Réconciliation Rapide (`isReviewed`)** : À l'extrême gauche de chaque ligne de transaction, une icône de coche permet de pointer l'opération financière en 1 tap (passant en émeraude lumineuse). Un second tap retire le pointage.
 * **Typographie Premium & Contraste des Montants** : Les montants sont formatés avec la police `.font-premium-numbers` en taille `text-sm sm:text-base` et en graisse `font-extrabold`. Les revenus s'affichent en vert émeraude et les débits importants de dépassement de seuil s'affichent en rouge vif, tandis que les dépenses régulières s'affichent de façon plus sobre en blanc/bleuté pour ne pas surcharger l'écran.
 * **Gestes de modification et de suppression** :
   * *Sur ordinateur (PC/Mac)* : Cliquez sur la ligne de la transaction pour ouvrir le formulaire d'édition.
@@ -228,6 +229,18 @@ Dans le menu **Transactions**, suivez l'ensemble de vos écritures passées.
     * ✏️ **Modifier** (bleu accent) — ouvre directement le formulaire pré-rempli de la transaction.
     * 🗑️ **Supprimer** (rouge) — supprime immédiatement la transaction.
 * **Filtres** : Filtrez par période, catégorie, tag ou compte bancaire.
+
+### 4.3 Moteur de Règles Intelligentes (Smart Rules) ⚙️
+Accessible depuis le menu burger ou les paramètres (rubrique **Règles & Automatisation**), ce module vous permet de créer des règles automatiques 100% déterministes :
+1. **Création guidée** : Cliquez sur le bouton *"Nouvelle règle"* ou choisissez une suggestion issue de l'analyse de votre historique.
+2. **Conditions d'exécution** : Combinez des critères sur le *Libellé*, le *Montant* ou le *Type* de transaction (operateurs `contient`, `égal`, `commence par`, `supérieur à`, `inférieur à`).
+3. **Actions d'automatisation** :
+   - Attribuer automatiquement la catégorie ciblée.
+   - Activer le **Pointage automatique** (`autoReview`).
+   - Renommer le libellé pour le nettoyer (ex: transformer `"CARREFOUR CITY 75011 CHARRONNE"` en `"Carrefour"`).
+4. **Ordre de priorité et Filtres** :
+   - Ajustez la priorité d'exécution séquentielle via les flèches haut/bas (`#1`, `#2`...).
+   - Filtrez instantanément vos règles grâce à la **barre de recherche textuelle**, aux pilules de statut (*Actives*, *Auto-pointées*, *Inactives*) et au menu déroulant par catégorie.
 
 ### 4.3 Virements Instantanés Internes (Transfers)
 Pour déplacer de l'argent entre vos propres comptes physiques (ex. : alimenter votre Livret d'épargne depuis votre Compte Courant) :

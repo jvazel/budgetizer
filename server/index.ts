@@ -26,6 +26,7 @@ import monthlyReportRoutes from './routes/monthlyReportRoutes';
 import webauthnRoutes from './routes/webauthnRoutes';
 import tagRoutes from './routes/tagRoutes';
 import shareRoutes from './routes/shareRoutes';
+import ruleRoutes from './routes/rules';
 import UserCredential from './models/UserCredential';
 import { processScheduledTransactions, cleanupStaleLocks } from './utils/scheduledProcessor';
 import { initWebPush } from './utils/pushNotification';
@@ -153,6 +154,7 @@ app.use('/api/monthly-reports', monthlyReportRoutes);
 app.use('/api/webauthn', webauthnRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/shares', shareRoutes);
+app.use('/api/rules', ruleRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

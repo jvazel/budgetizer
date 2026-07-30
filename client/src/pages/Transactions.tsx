@@ -62,7 +62,7 @@ const Transactions: React.FC = () => {
       month = m;
     }
     const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0);
+    const end = new Date(year, month, 0); // Dernier jour du mois (ex: pour Juillet (m=7), new Date(2026, 7, 0) = 31 Juillet)
     const formatDate = (d: Date) => {
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -163,7 +163,7 @@ const Transactions: React.FC = () => {
   };
 
   // Retrieve data using hooks
-  const { transactions, loading, deleteTransaction } = useTransactions(activeFilters);
+  const { transactions, loading, deleteTransaction, reviewTransaction } = useTransactions(activeFilters);
   const { accounts } = useAccounts();
   const { categories } = useCategories();
   const { tags } = useTags();
@@ -309,6 +309,7 @@ const Transactions: React.FC = () => {
             transactions={transactions} 
             onEdit={(tx) => { setSelectedTransaction(tx); setIsEditOpen(true); }}
             onDelete={(tx) => { setTxToDelete(tx); setConfirmDeleteOpen(true); }}
+            onToggleReview={reviewTransaction}
             showFiltersActive={Object.keys(activeFilters).length > (period !== 'all' ? 2 : 0)}
           />
         )}

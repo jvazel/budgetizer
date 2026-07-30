@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FolderTree, Tag, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target, Wallet, ArrowLeftRight, FileText, TrendingUp, Building2 } from 'lucide-react';
+import { X, FolderTree, Tag, Repeat, CreditCard, LogOut, Settings, BarChart2, CalendarDays, Sparkles, Banknote, Target, Wallet, ArrowLeftRight, FileText, TrendingUp, Building2, Sliders } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +23,7 @@ const MenuSheet = ({ isOpen, onClose, onLogout }) => {
         { label: 'Gérer les budgets', icon: CreditCard, path: '/budgets' },
         { label: 'Objectifs d\'épargne', icon: Target, path: '/savings' },
         { label: 'Planifications & Abonnements', icon: Repeat, path: '/scheduled' },
+        { label: 'Règles & Automatisation', icon: Sliders, path: '/settings/rules' },
       ]
     },
     {

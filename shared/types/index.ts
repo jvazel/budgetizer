@@ -47,7 +47,11 @@ export interface Transaction {
   isPending?: boolean;
   status?: 'pending' | 'completed';
   savingsGoalId?: string | null;
+  isReviewed?: boolean;
+  categorizationSource?: 'manual' | 'rule' | 'default';
 }
+
+export * from './rule';
 
 export interface Budget {
   _id: string;

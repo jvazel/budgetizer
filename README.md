@@ -6,6 +6,8 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 
 ## 🚀 Fonctionnalités Clés
 
+- **Moteur de Règles Intelligentes (Smart Rules)** : Automatisation déterministe (sans API IA) de la catégorisation et du pointage des transactions récurrentes. Gestion des priorités, évaluation dynamique multi-conditions (`description`, `amount`, `type`), moteur d'exécution rétroactive sur l'historique et recherche/filtrage multi-critères.
+- **Pointage Rapide de Transactions (Reconciliation / Review)** : Action directe via icône coche (`isReviewed`) sur la liste des transactions avec invalidation réactive React Query pour pointer ses opérations financières en un clin d'œil.
 - **Tableau de Bord Personnalisable & Modulaire** : Réorganisation libre de la disposition des 8 widgets clés sur mobile et desktop via le tiroir tactile `DashboardCustomizerSheet` (boutons de déplacement haut/bas, masquage/affichage et sauvegarde dans les préférences locales).
 - **Cartes KPI XXL & Gradient Area Charts** : Restructuration synthétique avec 4 cartes grand format exposant les métriques clés (Revenus, Dépenses, Solde Net et Taux d'Épargne %) accompagnées de mini-graphiques Sparklines & dégradés SVG translucides.
 - **Accès Rapides Adaptatifs (ShortcutsWidget)** : Grille dynamique d'accès en 1 clic vers les 8 modules essentiels (Budgets, Épargne, Analyses, Abonnements, Scores, IA, Échéances, Virements), parfaitement optimisée pour le Mode Clair et le Mode Sombre.
@@ -26,7 +28,7 @@ Budgetizer est une application web moderne et intuitive de gestion de budget per
 - **Support PWA (Progressive Web App)** : Installable sur mobile (iOS & Android) et desktop. Inclut une bannière d'installation personnalisée, la détection automatique du statut en ligne/hors ligne avec notification visuelle, et une mise à jour automatique en arrière-plan.
 - **Haute Résilience & Observabilité** : Tracing de requêtes via Correlation ID (`X-Request-ID` & AsyncLocalStorage), logs JSON structurés en production (`logger.ts`), validation d'environnement Zod (`env.ts`), composant React `ErrorBoundary` pour la gestion des plantages d'affichage et sérialisation propre des stack traces.
 - **Contrat de Données Unifié & Swagger API** : Mutualisation des types et interfaces métiers partagées (`/shared/types/index.ts`) entre backend et frontend, et documentation Swagger/OpenAPI interactive (`/api-docs`).
-- **Suite de Tests Automatisés (494 tests)** : Couverture complète des fonctionnalités client (40 suites / 290 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (30 suites / 204 tests avec Vitest & Supertest).
+- **Suite de Tests Automatisés (494 tests)** : Couverture complète des fonctionnalités client (43 suites / 297 tests avec Vitest & React Testing Library) et des contrôleurs/contrats d'API serveur (30 suites / 204 tests avec Vitest & Supertest).
 
 
 

@@ -62,6 +62,16 @@ export const useTransactions = (filters: TransactionFilters = {}) => {
     },
   });
 
+  const reviewMutation = useMutation({
+    mutationFn: async ({ id, isReviewed }: { id: string; isReviewed?: boolean }) => {
+      const res = await api.patch<{ message: string; isReviewed: boolean }>(`/transactions/${id}/review`, { isReviewed });
+      return res.data;
+    },
+    onSuccess: () => {
+      invalidateRelatedQueries();
+    },
+  });
+
   return {
     transactions,
     loading: isLoading,
@@ -69,6 +79,7 @@ export const useTransactions = (filters: TransactionFilters = {}) => {
     fetchTransactions: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
     addTransaction: addMutation.mutateAsync,
     updateTransaction: (id: string, data: Partial<Transaction>) => updateMutation.mutateAsync({ id, data }),
-    deleteTransaction: deleteMutation.mutateAsync
+    deleteTransaction: deleteMutation.mutateAsync,
+    reviewTransaction: (id: string, isReviewed?: boolean) => reviewMutation.mutateAsync({ id, isReviewed })
   };
 };

@@ -96,13 +96,15 @@ Permet à un utilisateur de partager un compte ou un budget avec un autre utilis
 - `createdAt` (Date, default: Date.now).
 - *Index unique* : `{ resourceId, resourceType, sharedWithId }` pour éviter les doublons de partage.
 
-### 2.4 Modèle `Transaction` (Transactions réelles)
+### 2.4 Modèle `Transaction` (Transactions)
 Enregistre chaque mouvement financier.
-- `userId` (ObjectId -> User, requis).
-- `accountId` (ObjectId -> Account, requis) : Compte affecté.
-- `categoryId` (ObjectId -> Category, requis sauf virement).
+- `userId` (ObjectId -> User, requis) : Propriétaire de la transaction.
+- `accountId` (ObjectId -> Account, requis) : Compte émetteur/source.
+- `toAccountId` (ObjectId -> Account, default: null) : Compte destinataire (uniquement si type = `transfer`).
+- `categoryId` (ObjectId -> Category, optionnel sauf virement).
+- `savingsGoalId` (ObjectId -> SavingsGoal, default: null).
+- `amount` (Number, requis, min: 0.01) : Montant de l'opération.
 - `type` (String, enum: `['expense', 'income', 'transfer']`, requis).
-- `amount` (Number, requis, min: 0.01).
 - `description` (String, default: "").
 - `date` (Date, default: Date.now, requis).
 - `note` (String, default: "").
@@ -110,8 +112,25 @@ Enregistre chaque mouvement financier.
 - `isScheduled` (Boolean, default: false) : Vrai si généré par le planificateur.
 - `scheduledTransactionId` (ObjectId -> ScheduledTransaction, default: null).
 - `isPending` (Boolean, default: false) : En attente d'approbation si `autoConfirm = false`.
-- `toAccountId` (ObjectId -> Account, default: null) : Compte cible (uniquement si type = `transfer`).
-- `savingsGoalId` (ObjectId -> SavingsGoal, default: null).
+- `isReviewed` (Boolean, default: false) : Indique si la transaction a été pointée / vérifiée.
+- `categorizationSource` (String, enum: `['manual', 'rule', 'import']`, default: 'manual').
+
+### 2.5 Modèle `CategorizationRule` (Règles Intelligentes)
+Définition des règles d'automatisation de la catégorisation et du pointage.
+- `userId` (ObjectId -> User, requis) : Propriétaire de la règle.
+- `name` (String, requis) : Nom de la règle.
+- `priority` (Number, default: 0) : Priorité d'exécution.
+- `isActive` (Boolean, default: true).
+- `matchLogic` (String, enum: `['AND', 'OR']`, default: 'AND').
+- `conditions` (Array) :
+  - `field` (String, enum: `['description', 'amount', 'type']`).
+  - `operator` (String, enum: `['contains', 'equals', 'starts_with', 'ends_with', 'greater_than', 'less_than', 'regex']`).
+  - `value` (String/Number).
+- `actions` (Object) :
+  - `categoryId` (ObjectId -> Category, optionnel).
+  - `autoReview` (Boolean, default: false).
+  - `renameDescription` (String, optionnel).
+- `matchCount` (Number, default: 0).
 
 **Indexes optimisés :**
 | Index | Usage |
@@ -119,7 +138,7 @@ Enregistre chaque mouvement financier.
 | `{ userId: 1, date: -1 }` | Liste chronologique des transactions |
 | `{ userId: 1, accountId: 1 }` | Transactions par compte |
 | `{ userId: 1, toAccountId: 1 }` | Virements entrants |
-| `{ userId: 1, savingsGoalId: 1 }` | Transactions liées à un objectif d'épargne |
+| `{ userId: 1, isReviewed: 1 }` | Filtrage des transactions pointées |
 | `{ userId: 1, categoryId: 1, date: -1 }` | Dépenses par catégorie sur une période |
 | `{ userId: 1, date: -1, createdAt: -1 }` | Tri combiné date/insertion |
 | `{ userId: 1, isPending: 1 }` | Transactions en attente de confirmation |
@@ -367,7 +386,8 @@ L'état d'authentification est globalisé via le composant `AuthContext.tsx`.
 ### 5.2 Hooks Personnalisés (Custom Hooks)
 Le client sépare la logique de gestion d'état et d'appel réseau des composants graphiques grâce à des hooks spécifiques typés localisés dans `client/src/hooks/` :
 - `useAccounts.ts` : CRUD sur les comptes.
-- `useTransactions.ts` : Recherche, filtres, import/export et ajout de transactions.
+- `useTransactions.ts` : Recherche, filtres, import/export, pointage rapide et ajout de transactions.
+- `useRules.ts` : Chargement, création, modification, suppression, réordonnancement par priorité et filtrage des règles d'automatisation.
 - `useBudgets.ts` : Suivi et définition des enveloppes de budget.
 - `useScheduled.ts` : Gérant les transactions planifiées.
 - `useDashboard.ts` : Agrégation des données de la page d'accueil.

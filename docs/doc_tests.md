@@ -552,6 +552,16 @@ Vérification de la robustesse de la validation des données d'authentification 
 | **Validation Inscription** | `POST /api/auth/register` avec email invalide | Validation Express Validator / Zod | Réponse HTTP 400 avec tableau `errors`. |
 | **Calcul Date Mois Récurrent** | Date d'origine 31/01, incrément +1 mois | Fonction `calculateNextDate` | Résultat plafonné au 28/02 (ou 29/02 en année bissextile). |
 
+### 2.30 Tests du Moteur de Règles Intelligentes & Pointage (`rulesEngine.test.ts`, `rulesController.test.ts`, `rules.test.ts`)
+Vérification de la logique déterministe d'évaluation des règles multi-conditions, du pointage et des endpoints REST associées.
+
+| Nom du Test | Entrée (Input) | Traitement | Sortie / Assertion |
+| :--- | :--- | :--- | :--- |
+| **Évaluation condition `contains`** | Transaction `"CARREFOUR CITY"`, règle `description contains "carrefour"` | `rulesEngine.evaluateCondition` (insensible à la casse) | Renvoie `true`. |
+| **Évaluation condition `greater_than`** | Transaction montant `150`, règle `amount greater_than 100` | `rulesEngine.evaluateCondition` | Renvoie `true`. |
+| **Logique combinée `AND` / `OR`** | 2 conditions, transaction correspondant à une seule | Évaluation `rulesEngine.matchRule` | Renvoie `false` en mode `AND`, `true` en mode `OR`. |
+| **Pointage rapide de transaction** | `PATCH /api/transactions/:id/review` avec `{ isReviewed: true }` | Contrôleur `reviewTransaction` | La transaction est marquée `isReviewed: true` en base (HTTP 200). |
+
 ---
 
 ## 3. Exécution des Tests
@@ -560,7 +570,7 @@ Vérification de la robustesse de la validation des données d'authentification 
 ```bash
 npm run test
 ```
-Cette commande exécute séquentiellement les tests unitaires du serveur (29 suites / 202 tests) puis les tests unitaires/composants du client (39 suites / 283 tests). Total : **485 tests automatisés**.
+Cette commande exécute séquentiellement les tests unitaires du serveur (30 suites / 204 tests) puis les tests unitaires/composants du client (43 suites / 297 tests). Total : **501 tests automatisés (494 réels + 7 utilitaires)**.
 
 ### Lancer les tests en mode interactif (Watch)
 - **Serveur uniquement** :

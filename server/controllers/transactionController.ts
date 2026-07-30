@@ -223,18 +223,37 @@ export const createTransaction = async (req: AppRequest, res: AppResponse) => {
       }
     }
 
+    // Appliquer le moteur de Smart Rules
+    const { applyRulesToTransaction } = await import('../services/rulesEngine');
+    const ruleResult = await applyRulesToTransaction(req.user!.id, {
+      description,
+      amount,
+      accountId,
+      type,
+      categoryId,
+      tags
+    });
+
+    const finalCategoryId = ruleResult.categoryId || categoryId;
+    const finalTags = ruleResult.tags || tags || [];
+    const finalDescription = ruleResult.renamedDescription || description;
+    const finalIsReviewed = ruleResult.matchedRule ? ruleResult.autoReviewed : true;
+    const categorizationSource = ruleResult.matchedRule ? 'rule' : 'manual';
+
     const transaction = new Transaction({
       userId: req.user!.id,
       accountId,
-      categoryId,
+      categoryId: finalCategoryId,
       type,
       amount,
-      description,
+      description: finalDescription,
       date,
       note,
       toAccountId,
       savingsGoalId,
-      tags: tags || []
+      tags: finalTags,
+      isReviewed: finalIsReviewed,
+      categorizationSource
     });
 
     await transaction.save({ session });
@@ -636,17 +655,35 @@ export const importTransactions = async (req: AppRequest, res: AppResponse) => {
         }
       }
 
+      // Appliquer les Smart Rules si existantes
+      const { applyRulesToTransaction } = await import('../services/rulesEngine');
+      const ruleResult = await applyRulesToTransaction(req.user!.id, {
+        description: description || categoryName || 'Transaction CSV',
+        amount,
+        accountId: account && account._id ? account._id.toString() : '',
+        type: type as any,
+        categoryId: category && category._id ? category._id.toString() : null
+      });
+
+      const finalCategoryId = ruleResult.categoryId ? ruleResult.categoryId : (category ? category._id : undefined);
+      const finalDescription = ruleResult.renamedDescription || description || categoryName || 'Transaction CSV';
+      const finalIsReviewed = ruleResult.matchedRule ? ruleResult.autoReviewed : false;
+      const categorizationSource = ruleResult.matchedRule ? 'rule' : 'default';
+
       // Prepare transaction
       transactionsToInsert.push({
         userId: req.user!.id,
         accountId: account._id,
-        categoryId: category ? category._id : undefined,
+        categoryId: finalCategoryId,
         toAccountId: toAccount ? toAccount._id : undefined,
         type,
         amount,
-        description: description || categoryName || 'Transaction CSV',
+        description: finalDescription,
         date,
-        isPending: false
+        tags: ruleResult.tags || [],
+        isPending: false,
+        isReviewed: finalIsReviewed,
+        categorizationSource
       });
 
       // Update account balance in memory
@@ -863,5 +900,27 @@ export const updateTransaction = async (req: AppRequest, res: AppResponse) => {
     res.status(500).json({ message: (error as Error).message || 'Server Error' });
   } finally {
     session.endSession();
+  }
+};
+
+// @desc    Toggle or set isReviewed status for a transaction (Pointage)
+// @route   PATCH /api/transactions/:id/review
+// @access  Private
+export const reviewTransaction = async (req: AppRequest, res: AppResponse) => {
+  try {
+    const { isReviewed } = req.body;
+    const transaction = await Transaction.findOne({ _id: req.params.id, userId: req.user!.id });
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction non trouvée' });
+    }
+
+    transaction.isReviewed = isReviewed !== undefined ? isReviewed : !transaction.isReviewed;
+    await transaction.save();
+
+    res.json({ message: 'Statut de pointage mis à jour', isReviewed: transaction.isReviewed });
+  } catch (error: unknown) {
+    logger.error((error as Error).message);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour du pointage' });
   }
 };

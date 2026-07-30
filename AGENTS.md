@@ -8,8 +8,11 @@ Ce document est conçu pour servir de récapitulatif complet et de contexte de r
 
 **Budgetizer** est une application web full-stack de gestion financière personnelle et de suivi budgétaire. Elle permet aux utilisateurs de :
 - Suivre plusieurs comptes bancaires (courants, épargne, crédits, investissements).
+- Automatiser la catégorisation et le pointage grâce au **Moteur de Règles Intelligentes (Smart Rules)** 100% déterministe (sans dépendance IA), filtrable, priorisable et avec suggestions basées sur l'historique de la base.
+- Valider et pointer en un clic les transactions réelles via l'action de pointage rapide (`isReviewed`) intégrée à la liste des transactions.
 - Consulter un Dashboard restructuré et entièrement personnalisable (réorganisation des widgets sur mobile & desktop via `DashboardCustomizerSheet`, masquage/affichage et sauvegarde des préférences).
-- Accéder directement aux 8 modules clés via le **ShortcutsWidget** adaptatif (mode clair & sombre).
+- Naviguer facilement via le **Menu Burger Latéral** (`MenuSheet`) incluant un accès direct à l'ensemble des modules (Comptes, Transactions, Budgets, Épargne, Abonnements, Règles, Analyses, Profil).
+- Accéder directement aux modules clés via le **ShortcutsWidget** adaptatif (mode clair & sombre).
 - Profiter d'**États Vides Contextuels (EmptyState)** avec auras lumineuses glassmorphic et actions guidées.
 - Consulter 4 **Cartes KPI XXL** (Revenus, Dépenses, Solde Net, Taux d'épargne %) et leurs Sparklines/Gradient Area Charts vectoriels.
 - Suivre en temps réel leur **Restant à Dépenser (Safe-to-Spend)** déduisant les charges fixes et cotisations d'épargne récurrentes.
@@ -238,9 +241,19 @@ Rapports financiers mensuels générés.
 - `monthKey`: String (ex: "2026-07")
 - `reportText`: String
 - `financialStats`: `{ income: Number, expenses: Number, net: Number, savingsRate: Number }`
-- `unusualTransactions`: Array de `{ transactionId, description, amount, date, categoryName, ratio }`
+### 11. `categorizationrules` (`CategorizationRule.ts`)
+Moteur de règles intelligentes pour la catégorisation et le pointage automatique.
+- `_id`: ObjectId (PK)
+- `userId`: ObjectId (Ref `User`, requis)
+- `name`: String
+- `priority`: Number (Ordre de priorité d'exécution)
+- `isActive`: Boolean
+- `matchLogic`: 'AND' | 'OR'
+- `conditions`: Array de `{ field: 'description' | 'amount' | 'type', operator: 'contains' | 'equals' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than' | 'regex', value: String }`
+- `actions`: `{ categoryId: ObjectId (Ref Category), autoReview: Boolean, renameDescription: String }`
+- `matchCount`: Number
 
-### 11. Support / Métadonnées Systèmes
+### 12. Support / Métadonnées Systèmes
 - **`usercredentials`** & **`webauthnchallenges`**: Gestion de l'authentification FIDO2/Passkey.
 - **`idempotentrequests`**: Prévention des re-soumissions accidentelles de requêtes HTTP mutatives.
 - **`joblocks`**: Verrous distribués pour les cron jobs en environnement multi-instances.
