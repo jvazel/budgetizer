@@ -383,9 +383,7 @@ const Home = () => {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Revenus</p>
-                    <p className="font-bold text-accent text-sm font-premium-numbers leading-tight">
-                      {formatCurrency(month.income, user?.currency?.code)}
-                    </p>
+                    <AmountDisplay amount={month.income} size="sm" type="income" showSign />
                     {incomeGrowth !== null && (
                       <div className="mt-1">
                         <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
@@ -400,9 +398,7 @@ const Home = () => {
                   </div>
                   <div>
                     <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Dépenses</p>
-                    <p className="font-bold text-danger text-sm font-premium-numbers leading-tight">
-                      {formatCurrency(month.expenses, user?.currency?.code)}
-                    </p>
+                    <AmountDisplay amount={month.expenses} size="sm" type="expense" showSign />
                     {expenseGrowth !== null && (
                       <div className="mt-1">
                         <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
@@ -417,9 +413,7 @@ const Home = () => {
                   </div>
                   <div>
                     <p className="text-[11px] text-secondary/80 uppercase tracking-wider font-semibold mb-1">Net</p>
-                    <p className={`font-bold text-sm font-premium-numbers leading-tight ${month.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                      {month.net >= 0 ? '+' : ''}{formatCurrency(month.net, user?.currency?.code)}
-                    </p>
+                    <AmountDisplay amount={month.net} size="sm" type={month.net >= 0 ? 'income' : 'expense'} showSign />
                     {netGrowth !== null && (
                       <div className="mt-1">
                         <span className={`text-[11px] font-bold flex items-center gap-0.5 ${
@@ -438,9 +432,7 @@ const Home = () => {
               <div onClick={() => navigate('/charts')} className="p-5 cursor-pointer active:bg-white/[0.02] transition-all">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-2xl font-extrabold font-premium-numbers text-danger mt-0.5 leading-none">
-                      {formatCurrency(total7Days, user?.currency?.code)}
-                    </p>
+                    <AmountDisplay amount={total7Days} size="2xl" type="expense" />
                     <p className="text-[10px] text-muted mt-1">dépensés sur les 7 derniers jours</p>
                   </div>
                   <button
@@ -667,9 +659,9 @@ const Home = () => {
                         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                         <span className="truncate">{item.label}</span>
                       </div>
-                      <span className="text-xs font-extrabold text-primary mt-0.5 ml-3 font-premium-numbers">
-                        {formatCurrency(item.amount, user?.currency?.code)}
-                      </span>
+                      <div className="mt-0.5 ml-3">
+                        <AmountDisplay amount={item.amount} size="xs" type="expense" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -738,7 +730,7 @@ const Home = () => {
                     <span>{cat.icon}</span>
                     <span className="font-medium text-primary">{cat.name}</span>
                   </div>
-                  <span className="font-bold text-primary">{formatCurrency(cat.amount, user?.currency?.code)}</span>
+                  <AmountDisplay amount={cat.amount} size="xs" type="expense" />
                 </div>
                 <div className="h-2 w-full bg-surface-2 rounded-full overflow-hidden">
                   <div
@@ -862,8 +854,11 @@ const Home = () => {
                     />
                   </div>
                   <div className="flex justify-between items-center text-[10px] text-secondary font-bold">
-                    <span>{formatCurrency(goal.currentAmount, user?.currency?.code)}</span>
-                    <span className="text-muted">cible : {formatCurrency(goal.targetAmount, user?.currency?.code)}</span>
+                    <AmountDisplay amount={goal.currentAmount} size="xs" type="income" />
+                    <div className="flex items-center gap-1 text-muted">
+                      <span>cible :</span>
+                      <AmountDisplay amount={goal.targetAmount} size="xs" type="neutral" />
+                    </div>
                   </div>
                 </div>
               );

@@ -4,6 +4,7 @@ import { useScheduled } from '../hooks/useScheduled';
 import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { Plus, CreditCard, Edit, Trash2 } from 'lucide-react';
+import AmountDisplay from '../components/ui/AmountDisplay';
 
 const SubscriptionsPage = () => {
   const { isScrolled } = useContext(HeaderPortalContext);
@@ -115,12 +116,15 @@ const SubscriptionsPage = () => {
             </span>
           </div>
 
-          <h2 className="font-mono text-3xl font-black text-primary mb-1 font-premium-numbers">
-            {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-secondary">/ mois</span>
-          </h2>
-          <p className="text-xs text-muted font-medium">
-            Soit {formatCurrency(totalAnnualCost)} par an
-          </p>
+          <div className="flex items-baseline gap-1.5 mb-1">
+            <AmountDisplay amount={totalMonthlyCost} size="3xl" type="expense" />
+            <span className="text-sm font-medium text-secondary">/ mois</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-muted font-medium">
+            <span>Soit</span>
+            <AmountDisplay amount={totalAnnualCost} size="xs" type="neutral" />
+            <span>par an</span>
+          </div>
         </div>
       </section>
 
@@ -172,9 +176,7 @@ const SubscriptionsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-3 text-right">
-                  <span className="font-mono font-bold text-primary">
-                    -{formatCurrency(sub.amount)}
-                  </span>
+                  <AmountDisplay amount={sub.amount} size="sm" type="expense" showSign />
                   <div className="flex gap-1.5 shrink-0">
                     <button 
                       onClick={() => handleOpenEdit(sub)}

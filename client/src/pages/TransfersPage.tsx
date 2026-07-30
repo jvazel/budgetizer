@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { ArrowLeftRight, ArrowRight, AlertCircle, Calendar, Trash2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import AmountDisplay from '../components/ui/AmountDisplay';
 import Select from '../components/ui/Select';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -182,8 +183,9 @@ const TransfersPage = () => {
                     ))}
                   </Select>
                   {activeFromAccount && (
-                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
-                      Disponible : <span className="font-premium-numbers text-accent">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
+                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider flex items-center gap-1">
+                      <span>Disponible :</span>
+                      <AmountDisplay amount={activeFromAccount.balance} size="xs" type="income" />
                     </div>
                   )}
                 </div>
@@ -216,8 +218,9 @@ const TransfersPage = () => {
                     ))}
                   </Select>
                   {activeToAccount && (
-                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider">
-                      Disponible : <span className="font-premium-numbers text-accent">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
+                    <div className="text-[10px] text-muted font-bold mt-1.5 pl-1.5 uppercase tracking-wider flex items-center gap-1">
+                      <span>Disponible :</span>
+                      <AmountDisplay amount={activeToAccount.balance} size="xs" type="income" />
                     </div>
                   )}
                 </div>
@@ -328,9 +331,7 @@ const TransfersPage = () => {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0 ml-3">
-                    <span className="font-premium-numbers font-bold text-sm text-primary">
-                      {formatCurrency(tx.amount, tx.accountId?.currency)}
-                    </span>
+                    <AmountDisplay amount={tx.amount} size="sm" type="transfer" />
                     <button
                       onClick={() => handleDeleteTransfer(tx._id)}
                       className="p-2 hover:bg-danger/10 text-muted hover:text-danger rounded-xl transition-colors"
@@ -376,9 +377,11 @@ const TransfersPage = () => {
           type="info"
         >
           <div className="space-y-4">
-            <p className="text-xs text-secondary leading-relaxed">
-              Vous êtes sur le point de transférer <span className="font-premium-numbers font-bold text-accent">{formatCurrency(parseFloat(amount || '0'), activeFromAccount.currency)}</span> de <strong>{activeFromAccount.name}</strong> vers <strong>{activeToAccount.name}</strong>.
-            </p>
+            <div className="text-xs text-secondary leading-relaxed flex items-center flex-wrap gap-1">
+              <span>Vous êtes sur le point de transférer</span>
+              <AmountDisplay amount={parseFloat(amount || '0')} size="xs" type="transfer" />
+              <span>de <strong>{activeFromAccount.name}</strong> vers <strong>{activeToAccount.name}</strong>.</span>
+            </div>
             
             <div className="space-y-2.5 bg-surface p-4 rounded-2xl border border-border/30">
               <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
@@ -389,11 +392,9 @@ const TransfersPage = () => {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-secondary font-semibold truncate max-w-[120px]">{activeFromAccount.name}</span>
                 <div className="flex items-center gap-1.5 font-premium-numbers">
-                  <span className="text-secondary">{formatCurrency(activeFromAccount.balance, activeFromAccount.currency)}</span>
+                  <AmountDisplay amount={activeFromAccount.balance} size="xs" type="neutral" />
                   <ArrowRight size={10} className="text-muted" />
-                  <span className="text-danger font-bold">
-                    {formatCurrency(activeFromAccount.balance - parseFloat(amount || '0'), activeFromAccount.currency)}
-                  </span>
+                  <AmountDisplay amount={activeFromAccount.balance - parseFloat(amount || '0')} size="xs" type="expense" />
                 </div>
               </div>
               
@@ -401,11 +402,9 @@ const TransfersPage = () => {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-secondary font-semibold truncate max-w-[120px]">{activeToAccount.name}</span>
                 <div className="flex items-center gap-1.5 font-premium-numbers">
-                  <span className="text-secondary">{formatCurrency(activeToAccount.balance, activeToAccount.currency)}</span>
+                  <AmountDisplay amount={activeToAccount.balance} size="xs" type="neutral" />
                   <ArrowRight size={10} className="text-muted" />
-                  <span className="text-accent font-bold">
-                    {formatCurrency(activeToAccount.balance + parseFloat(amount || '0'), activeToAccount.currency)}
-                  </span>
+                  <AmountDisplay amount={activeToAccount.balance + parseFloat(amount || '0')} size="xs" type="income" />
                 </div>
               </div>
             </div>

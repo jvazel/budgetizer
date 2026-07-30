@@ -5,6 +5,7 @@ import AccountFormSheet from '../components/accounts/AccountFormSheet';
 import { useAccounts } from '../hooks/useAccounts';
 import { AuthContext } from '../context/AuthContext';
 import { Plus, Wallet, CreditCard, EyeOff, AlertCircle, Users } from 'lucide-react';
+import AmountDisplay from '../components/ui/AmountDisplay';
 
 const AccountsPage = () => {
   const navigate = useNavigate();
@@ -48,9 +49,9 @@ const AccountsPage = () => {
         <div className="banky-card p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
           <div className="absolute -top-12 -left-12 w-32 h-32 bg-copper-dim rounded-full blur-3xl pointer-events-none" />
           <p className="premium-label">Solde Total Disponible</p>
-          <h2 className="text-3xl font-extrabold text-copper mt-2 tracking-tight font-premium-numbers">
-            {formatCurrency(totalBalance, user?.currency?.code)}
-          </h2>
+          <div className="mt-2">
+            <AmountDisplay amount={totalBalance} size="3xl" type={totalBalance >= 0 ? 'income' : 'expense'} />
+          </div>
           <p className="text-[10px] text-muted mt-1 leading-normal">
             Exclut les comptes de type carte de crédit et investissements du solde global.
           </p>
@@ -144,13 +145,12 @@ const AccountsPage = () => {
                     </div>
                     
                     <div className="text-right shrink-0">
-                      <span className={`font-premium-numbers font-bold text-sm ${acc.balance >= 0 ? 'text-accent' : 'text-danger'}`}>
-                        {formatCurrency(acc.balance, acc.currency)}
-                      </span>
+                      <AmountDisplay amount={acc.balance} size="sm" type={acc.balance >= 0 ? 'income' : 'expense'} />
                       {acc.type === 'credit' && acc.creditLimit && (
-                        <p className="text-[9px] text-muted mt-0.5 font-medium">
-                          Limite : {formatCurrency(acc.creditLimit, acc.currency)}
-                        </p>
+                        <div className="flex items-center justify-end gap-1 text-[9px] text-muted mt-0.5 font-medium">
+                          <span>Limite :</span>
+                          <AmountDisplay amount={acc.creditLimit} size="xs" type="neutral" />
+                        </div>
                       )}
                     </div>
                   </div>

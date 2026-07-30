@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit2, Trash2, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
   const percentage = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
@@ -97,9 +98,9 @@ const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
 
           {/* Progress Percent row */}
           <div className="flex justify-between items-center text-[10px] font-bold">
-            <span className="text-muted">{formatCurrency(goal.currentAmount)}</span>
+            <AmountDisplay amount={goal.currentAmount} size="xs" type="income" />
             <span className={`${textColor} text-sm font-premium-numbers font-extrabold tracking-tight`}>{roundedPct}%</span>
-            <span className="text-muted">{formatCurrency(goal.targetAmount)}</span>
+            <AmountDisplay amount={goal.targetAmount} size="xs" type="neutral" />
           </div>
 
           {/* Progress Bar */}
@@ -113,21 +114,24 @@ const SavingsGoalCard = ({ goal, onEdit, onDelete, onDeposit, onWithdraw }) => {
           {/* Detailed metrics & Monthly suggestion */}
           <div className="pt-2 border-t border-border/20 flex flex-col gap-1 text-[10px] font-bold text-secondary">
             {!isCompleted ? (
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span>Reste à économiser :</span>
-                <span className="text-primary font-premium-numbers">{formatCurrency(remainingAmount)}</span>
+                <AmountDisplay amount={remainingAmount} size="xs" type="neutral" />
               </div>
             ) : (
-              <div className="text-emerald-400 font-extrabold flex justify-between">
+              <div className="text-emerald-400 font-extrabold flex justify-between items-center">
                 <span>Félicitations ! Objectif atteint.</span>
-                <span className="font-premium-numbers">{formatCurrency(goal.currentAmount)}</span>
+                <AmountDisplay amount={goal.currentAmount} size="xs" type="income" />
               </div>
             )}
 
             {monthlySuggestion !== null && (
               <div className="flex justify-between items-center bg-surface-3/50 px-2 py-1 rounded-lg mt-1 text-[9px]">
                 <span className="text-muted uppercase tracking-wider">Versement mensuel suggéré :</span>
-                <span className="text-accent font-extrabold font-premium-numbers">{formatCurrency(monthlySuggestion)} / mois</span>
+                <div className="flex items-center gap-1 font-extrabold">
+                  <AmountDisplay amount={monthlySuggestion} size="xs" type="income" />
+                  <span className="text-muted">/ mois</span>
+                </div>
               </div>
             )}
           </div>

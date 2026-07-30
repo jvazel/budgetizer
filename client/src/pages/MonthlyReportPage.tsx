@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Calendar
 } from 'lucide-react';
+import AmountDisplay from '../components/ui/AmountDisplay';
 import BottomSheet from '../components/ui/BottomSheet';
 
 const monthLabels = [
@@ -287,28 +288,30 @@ const MonthlyReportPage = () => {
               {/* Income card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Revenus</span>
-                <span className="text-lg font-extrabold text-accent font-premium-numbers block mt-1">
-                  {formatCurrency(report.financialStats?.income || 0)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={report.financialStats?.income || 0} size="md" type="income" showSign />
+                </div>
               </div>
 
               {/* Expenses card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Dépenses</span>
-                <span className="text-lg font-extrabold text-danger font-premium-numbers block mt-1">
-                  -{formatCurrency(report.financialStats?.expenses || 0)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={report.financialStats?.expenses || 0} size="md" type="expense" showSign />
+                </div>
               </div>
 
               {/* Net Savings card */}
               <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm relative overflow-hidden">
                 <span className="text-[9px] text-muted font-extrabold uppercase tracking-wider block">Épargne Nette</span>
-                <span className={`text-lg font-extrabold font-premium-numbers block mt-1 ${
-                  (report.financialStats?.net || 0) >= 0 ? 'text-accent' : 'text-danger'
-                }`}>
-                  {(report.financialStats?.net || 0) >= 0 ? '+' : ''}
-                  {formatCurrency(report.financialStats?.net || 0)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay
+                    amount={report.financialStats?.net || 0}
+                    size="md"
+                    type={(report.financialStats?.net || 0) >= 0 ? 'income' : 'expense'}
+                    showSign
+                  />
+                </div>
               </div>
 
               {/* Savings Rate card */}
@@ -395,9 +398,7 @@ const MonthlyReportPage = () => {
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <span className="text-xs font-extrabold text-danger font-premium-numbers block">
-                          -{formatCurrency(tx.amount)}
-                        </span>
+                        <AmountDisplay amount={tx.amount} size="xs" type="expense" showSign />
                         <span className="text-[9px] font-extrabold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20 inline-block">
                           {tx.ratio}x la moyenne
                         </span>

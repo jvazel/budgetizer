@@ -1,5 +1,6 @@
 import React from 'react';
 import { Landmark, CreditCard } from 'lucide-react';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const CreditAccountCard = ({ account, onClick }) => {
   const details = account.creditDetails || {};
@@ -44,9 +45,9 @@ const CreditAccountCard = ({ account, onClick }) => {
       {/* Balance row */}
       <div className="my-2 relative z-10">
         <p className="text-white/60 text-[9px] font-medium uppercase tracking-wider">Capital restant dû</p>
-        <h2 className="text-red-400 font-mono text-2xl font-bold tracking-tight leading-tight mt-0.5" style={{ color: 'var(--danger)' }}>
-          {formatCurrency(currentBalance, account.currency)}
-        </h2>
+        <div className="mt-0.5">
+          <AmountDisplay amount={currentBalance} size="xl" type="expense" />
+        </div>
       </div>
 
       {/* Progress row */}
@@ -59,13 +60,16 @@ const CreditAccountCard = ({ account, onClick }) => {
         </div>
         <div className="flex justify-between items-center text-[10px] text-white/70 font-semibold">
           <span>{progressPercentage}% remboursé</span>
-          <span className="font-mono text-white/50">{formatCurrency(capitalPaid, account.currency)}</span>
+          <AmountDisplay amount={capitalPaid} size="xs" type="neutral" />
         </div>
       </div>
 
       {/* Bottom row */}
       <div className="text-[10px] text-white/80 font-medium flex justify-between items-center border-t border-white/5 pt-2 relative z-10">
-        <span>{formatCurrency(details.monthlyPayment || 0, account.currency)}/mois</span>
+        <div className="flex items-center gap-1">
+          <AmountDisplay amount={details.monthlyPayment || 0} size="xs" type="neutral" />
+          <span>/mois</span>
+        </div>
         <span>·</span>
         <span>{monthsRemaining} mois restants</span>
       </div>

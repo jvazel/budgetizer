@@ -2,6 +2,7 @@ import React from 'react';
 import { Wallet, CreditCard, Landmark, Coins, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CreditAccountCard from './CreditAccountCard';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const AccountCarousel = ({ accounts, onAddClick, onEditClick }) => {
   const navigate = useNavigate();
@@ -49,9 +50,9 @@ const AccountCarousel = ({ accounts, onAddClick, onEditClick }) => {
               
               <div>
                 <p className="text-white/70 text-sm mb-1">Solde actuel</p>
-                <h2 className="text-white font-mono text-3xl font-medium tracking-tight">
-                  {formatCurrency(account.balance, account.currency)}
-                </h2>
+                <div className="text-white">
+                  <AmountDisplay amount={account.balance} size="2xl" type="neutral" />
+                </div>
               </div>
             </div>
           );

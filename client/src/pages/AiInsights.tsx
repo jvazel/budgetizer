@@ -3,14 +3,19 @@ import { HeaderTitle, HeaderBackButton } from '../components/layout/AppShell';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import { 
-  Sparkles, 
   AlertTriangle, 
-  CheckCircle, 
+  Sparkles, 
   TrendingDown, 
+  RefreshCw, 
+  Layers, 
+  CheckCircle2, 
+  ChevronRight,
+  CheckCircle, 
   Info,
   ArrowRight,
   TrendingUp
 } from 'lucide-react';
+import AmountDisplay from '../components/ui/AmountDisplay';
 import { motion } from 'framer-motion';
 
 const AiInsights = () => {
@@ -230,11 +235,11 @@ const AiInsights = () => {
                         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/10">
                           <div>
                             <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Ce mois-ci</p>
-                            <p className="text-xs font-extrabold text-primary font-premium-numbers">{formatCurrency(anomaly.currentAmount)}</p>
+                            <AmountDisplay amount={anomaly.currentAmount} size="xs" type="expense" />
                           </div>
                           <div>
                             <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Moyenne (3 mois)</p>
-                            <p className="text-xs font-bold text-secondary font-premium-numbers">{formatCurrency(anomaly.averageAmount)}</p>
+                            <AmountDisplay amount={anomaly.averageAmount} size="xs" type="neutral" />
                           </div>
                         </div>
                       </div>
@@ -282,9 +287,10 @@ const AiInsights = () => {
                           </div>
                           <div className="min-w-0">
                             <h4 className="text-xs font-extrabold text-primary truncate uppercase tracking-wider">{suggestion.name}</h4>
-                            <p className="text-[10px] text-muted leading-tight mt-0.5">
-                              Moyenne mensuelle habituelle : <span className="font-bold text-secondary font-premium-numbers">{formatCurrency(suggestion.averageMonthlyAmount)}</span>
-                            </p>
+                            <div className="flex items-center gap-1 text-[10px] text-muted leading-tight mt-0.5 font-medium">
+                              <span>Moyenne mensuelle habituelle :</span>
+                              <AmountDisplay amount={suggestion.averageMonthlyAmount} size="xs" type="neutral" />
+                            </div>
                           </div>
                         </div>
 
@@ -323,9 +329,10 @@ const AiInsights = () => {
                             </div>
                             <span className="text-[10px] text-secondary font-bold">Économie annuelle</span>
                           </div>
-                          <span className="text-sm font-extrabold text-accent font-premium-numbers">
-                            {formatCurrency(savings)} / an
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <AmountDisplay amount={savings} size="sm" type="income" showSign />
+                            <span className="text-xs text-muted font-bold">/ an</span>
+                          </div>
                         </div>
 
                         {/* Subscription Warning Alert Banner */}
