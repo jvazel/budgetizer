@@ -1,72 +1,34 @@
 import React from 'react';
-import { Wallet, CreditCard, Landmark, Coins, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import CreditAccountCard from './CreditAccountCard';
-import AmountDisplay from '../ui/AmountDisplay';
+import { Plus } from 'lucide-react';
+import AccountCard from './AccountCard';
 
-const AccountCarousel = ({ accounts, onAddClick, onEditClick }) => {
-  const navigate = useNavigate();
+interface AccountCarouselProps {
+  accounts: any[];
+  onAddClick?: () => void;
+  onEditClick?: (account: any) => void;
+}
 
-  const getIcon = (iconName) => {
-    switch (iconName) {
-      case 'credit-card': return <CreditCard size={24} className="text-white opacity-80" />;
-      case 'landmark': return <Landmark size={24} className="text-white opacity-80" />;
-      case 'coins': return <Coins size={24} className="text-white opacity-80" />;
-      default: return <Wallet size={24} className="text-white opacity-80" />;
-    }
-  };
-
-  const formatCurrency = (amount, currencyCode = 'EUR') => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currencyCode }).format(amount);
-  };
-
+const AccountCarousel: React.FC<AccountCarouselProps> = ({ accounts, onAddClick, onEditClick }) => {
   return (
     <div className="w-full relative">
       <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-4 no-scrollbar">
-        {accounts.map((account) => {
-          if (account.type === 'credit') {
-            return (
-              <CreditAccountCard 
-                key={account._id}
-                account={account}
-                onClick={() => navigate(`/accounts/${account._id}/credit`)}
-              />
-            );
-          }
-
-          return (
-            <div 
-              key={account._id}
-              onClick={() => onEditClick && onEditClick(account)}
-              className="snap-center shrink-0 w-[300px] h-[180px] rounded-[24px] p-6 flex flex-col justify-between shadow-lg cursor-pointer transition-transform active:scale-95"
-              style={{ 
-                background: `linear-gradient(135deg, ${account.color} 0%, ${account.color}dd 100%)`,
-              }}
-            >
-              <div className="flex justify-between items-start">
-                <span className="text-white/90 font-medium">{account.name}</span>
-                {getIcon(account.icon)}
-              </div>
-              
-              <div>
-                <p className="text-white/70 text-sm mb-1">Solde actuel</p>
-                <div className="text-white">
-                  <AmountDisplay amount={account.balance} size="2xl" type="neutral" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {accounts.map((account) => (
+          <AccountCard
+            key={account._id}
+            account={account}
+            onClick={() => onEditClick && onEditClick(account)}
+          />
+        ))}
 
         {/* Add new account card */}
         <div 
           onClick={onAddClick}
-          className="snap-center shrink-0 w-[300px] h-[180px] rounded-[24px] border-2 border-dashed border-border flex flex-col items-center justify-center text-muted hover:text-primary hover:border-muted transition-colors cursor-pointer"
+          className="snap-start shrink-0 w-[272px] sm:w-[290px] aspect-[1.586/1] rounded-[24px] border-2 border-dashed border-copper/30 bg-surface-2/10 hover:bg-copper-dim/20 hover:border-copper/60 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2.5 select-none transition-all duration-200 group"
         >
-          <div className="w-12 h-12 rounded-full bg-surface-2 flex items-center justify-center mb-3">
-            <Plus size={24} />
+          <div className="w-10 h-10 rounded-full bg-copper-dim/40 border border-copper/30 flex items-center justify-center text-copper group-hover:scale-110 transition-transform shadow-sm">
+            <Plus size={20} />
           </div>
-          <span className="font-medium">Ajouter un compte</span>
+          <span className="text-xs font-bold text-primary group-hover:text-copper transition-colors">Ajouter un compte</span>
         </div>
       </div>
     </div>

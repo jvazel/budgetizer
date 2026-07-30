@@ -5,6 +5,8 @@ import { useDashboard } from '../hooks/useDashboard';
 import { useFinancialScore } from '../hooks/useFinancialScore';
 import { useScheduled } from '../hooks/useScheduled';
 import AccountFormSheet from '../components/accounts/AccountFormSheet';
+import AccountCard from '../components/accounts/AccountCard';
+import HeroPatrimoineCard from '../components/accounts/HeroPatrimoineCard';
 import FloorBalanceWidget from '../components/ui/FloorBalanceWidget';
 import { KpiHeaderGrid } from '../components/dashboard/KpiHeaderGrid';
 import { SafeToSpendCard } from '../components/dashboard/SafeToSpendCard';
@@ -483,7 +485,7 @@ const Home = () => {
                 <div className="w-6 h-6 rounded-lg bg-copper-dim border border-copper/20 flex items-center justify-center text-copper">
                   <Wallet size={13} />
                 </div>
-                <h3 className="premium-label">Comptes</h3>
+                <h3 className="premium-label">Comptes & Patrimoine</h3>
               </div>
               <button
                 onClick={() => navigate('/accounts')}
@@ -494,85 +496,31 @@ const Home = () => {
             </div>
 
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4 pt-1 px-1">
-              {accounts.map((acc) => {
-                const isNegative = acc.balance < 0;
-                const trend = getAccountTrend(acc);
+              {/* Hero Card Total Patrimoine */}
+              <HeroPatrimoineCard
+                totalBalance={totalAvailable}
+                accountsCount={accounts.length}
+                onClick={() => navigate('/accounts')}
+              />
 
-                return (
-                  <div
-                    key={acc._id}
-                    onClick={() => navigate(`/accounts/${acc._id}`)}
-                    className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border border-border/40 p-5 flex flex-col justify-between relative overflow-hidden active-spring-sm active-card-feedback cursor-pointer select-none bg-surface-1 shadow-sm hover:border-border/80 transition-all duration-200"
-                  >
-                    <div className="flex justify-between items-start gap-2 relative z-10">
-                      <div className="min-w-0 pl-1">
-                        <p className="text-xs font-bold text-primary truncate leading-tight uppercase tracking-wider">{acc.name}</p>
-                        <span className="inline-block text-[8px] font-black text-secondary bg-surface-2 border border-border/40 px-1.5 py-0.5 rounded-[6px] uppercase tracking-wider mt-1.5">
-                          {acc.type === 'checking' ? 'Courant' :
-                           acc.type === 'savings' ? 'Épargne' :
-                           acc.type === 'credit' ? 'Crédit' :
-                           acc.type === 'cash' ? 'Espèces' :
-                           acc.type === 'investment' ? 'Bourse' : acc.type}
-                        </span>
-                      </div>
-                      
-                      <div className="relative shrink-0 z-10">
-                        <div 
-                          className="w-7 h-7 rounded-full flex items-center justify-center border backdrop-blur-md relative shrink-0"
-                          style={{
-                            backgroundColor: `${acc.color || '#10b981'}15`,
-                            borderColor: `${acc.color || '#10b981'}25`
-                          }}
-                        >
-                          {getAccountIcon(acc.type, 13)}
-                        </div>
-                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent border border-white/20 animate-pulse-live" />
-                      </div>
-                    </div>
+              {/* Accounts Cards List */}
+              {accounts.map((acc) => (
+                <AccountCard
+                  key={acc._id}
+                  account={acc}
+                  onClick={() => navigate(`/accounts/${acc._id}`)}
+                />
+              ))}
 
-                    <div className="flex justify-end items-center relative z-10 mt-1 pr-1">
-                      <span className={`inline-flex items-center text-[8.5px] font-extrabold font-mono px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider ${
-                        trend.isPositive ? 'bg-accent/10 border border-accent/20 text-accent' : 'bg-danger/10 border border-danger/20 text-danger'
-                      }`}>
-                        {trend.label}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-end relative z-10 mt-auto pt-2 pl-1">
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <AmountDisplay
-                          amount={acc.balance}
-                          size="2xl"
-                          type={isNegative ? 'expense' : 'neutral'}
-                        />
-                        {acc.lastTransactionDate ? (
-                          <span className="text-[9px] text-secondary opacity-60 font-semibold tracking-wide uppercase mt-1 block">
-                            Dernière op. : {new Date(acc.lastTransactionDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                          </span>
-                        ) : (
-                          <span className="text-[9px] text-secondary opacity-30 font-semibold tracking-wide uppercase mt-1 block">
-                            Aucune opération
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 opacity-20 shrink-0 pb-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
+              {/* Add New Account Card */}
               <div
                 onClick={handleOpenAdd}
-                className="snap-start shrink-0 w-[272px] aspect-[1.586/1] rounded-[24px] border border-dashed border-border/60 bg-surface-2/20 hover:border-copper/40 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2.5 select-none"
+                className="snap-start shrink-0 w-[272px] sm:w-[290px] aspect-[1.586/1] rounded-[24px] border-2 border-dashed border-copper/30 bg-surface-2/10 hover:bg-copper-dim/20 hover:border-copper/60 active-spring-sm active-card-feedback cursor-pointer flex flex-col items-center justify-center gap-2.5 select-none transition-all duration-200 group"
               >
-                <div className="w-9 h-9 rounded-full bg-surface-2 border border-border/40 flex items-center justify-center text-secondary hover:text-copper hover:border-copper/30 transition-all shadow-sm">
-                  <span className="text-sm font-bold text-secondary">+</span>
+                <div className="w-10 h-10 rounded-full bg-copper-dim/40 border border-copper/30 flex items-center justify-center text-copper group-hover:scale-110 transition-transform shadow-sm">
+                  <span className="text-lg font-black text-copper">+</span>
                 </div>
-                <span className="text-xs font-bold text-secondary">Ajouter un compte</span>
+                <span className="text-xs font-bold text-primary group-hover:text-copper transition-colors">Ajouter un compte</span>
               </div>
             </div>
           </div>
