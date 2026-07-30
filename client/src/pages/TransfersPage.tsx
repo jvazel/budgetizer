@@ -12,6 +12,14 @@ import Select from '../components/ui/Select';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 
+const getTodayDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const TransfersPage = () => {
   const { user } = useContext(AuthContext);
   const { isScrolled } = useContext(HeaderPortalContext);
@@ -22,6 +30,7 @@ const TransfersPage = () => {
   const [fromAccountId, setFromAccountId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
   const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(getTodayDateString());
   const [description, setDescription] = useState('Virement instantané');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +94,7 @@ const TransfersPage = () => {
         toAccountId: effectiveToAccountId,
         amount: numericAmount,
         description: description || 'Virement instantané',
-        date: new Date(),
+        date: date ? new Date(date) : new Date(),
         note: note
       });
 
@@ -103,6 +112,7 @@ const TransfersPage = () => {
       setAmount('');
       setNote('');
       setDescription('Virement instantané');
+      setDate(getTodayDateString());
       
       // Update account balances immediately
       await fetchAccounts();
@@ -238,8 +248,17 @@ const TransfersPage = () => {
                 />
               </div>
 
-              {/* Description and Note standard inputs */}
-              <div className="grid grid-cols-1 gap-4">
+              {/* Date, Description and Note standard inputs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Date du virement"
+                  id="date-input"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                  uppercaseLabel={true}
+                />
                 <Input
                   label="Description"
                   id="description-input"
@@ -249,15 +268,15 @@ const TransfersPage = () => {
                   required
                   uppercaseLabel={true}
                 />
-                <Input
-                  label="Note (optionnel)"
-                  id="note-input"
-                  placeholder="Notes supplémentaires..."
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  uppercaseLabel={true}
-                />
               </div>
+              <Input
+                label="Note (optionnel)"
+                id="note-input"
+                placeholder="Notes supplémentaires..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                uppercaseLabel={true}
+              />
 
               {/* Confirm CTA */}
               <Button

@@ -108,4 +108,32 @@ describe('TransfersPage Component', () => {
       expect(mockFetchAccounts).toHaveBeenCalled();
     });
   });
+
+  it('allows selecting a custom date for the transfer', async () => {
+    renderComponent();
+
+    const amountInput = screen.getByPlaceholderText('0.00');
+    fireEvent.change(amountInput, { target: { value: '200' } });
+
+    const dateInput = screen.getByLabelText(/Date du virement/);
+    fireEvent.change(dateInput, { target: { value: '2026-08-15' } });
+
+    const submitBtn = screen.getByRole('button', { name: 'Confirmer le virement' });
+    fireEvent.click(submitBtn);
+
+    const confirmBtn = screen.getByRole('button', { name: 'Valider le virement' });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(mockAddTransaction).toHaveBeenCalledWith({
+        type: 'transfer',
+        accountId: 'acc1',
+        toAccountId: 'acc2',
+        amount: 200,
+        description: 'Virement instantané',
+        date: new Date('2026-08-15'),
+        note: ''
+      });
+    });
+  });
 });
