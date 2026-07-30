@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recha
 import { ChevronRight, ChevronLeft, ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, HelpCircle, Calendar, X, TrendingUp, PieChart as LucidePieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -477,7 +478,7 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                       <span>{cat.icon || '📁'}</span>
                       <span className="truncate text-[8px]">{cat.name}</span>
                     </span>
-                    <span className="font-premium-numbers text-primary">{formatCurrency(cat.amount)}</span>
+                    <AmountDisplay amount={cat.amount} size="xs" type={type === 'income' ? 'income' : 'expense'} />
                   </div>
                   <div className="h-1 w-full bg-surface rounded-full overflow-hidden">
                     <div 
@@ -634,13 +635,17 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                     ? pieData[activeIndex].name
                     : (selectedCategory ? selectedCategory.name : 'Total')}
                 </span>
-                <p className="font-premium-numbers text-lg font-black text-primary truncate max-w-full leading-none mt-0.5">
-                  {formatCurrency(
-                    activeIndex !== null && pieData[activeIndex]
-                      ? pieData[activeIndex].value
-                      : (selectedCategory ? selectedCategory.amount : data.total)
-                  )}
-                </p>
+                <div className="mt-0.5">
+                  <AmountDisplay
+                    amount={
+                      activeIndex !== null && pieData[activeIndex]
+                        ? pieData[activeIndex].value
+                        : (selectedCategory ? selectedCategory.amount : data.total)
+                    }
+                    size="xl"
+                    type={type === 'income' ? 'income' : 'expense'}
+                  />
+                </div>
                 {activeIndex !== null && pieData[activeIndex] && (
                   <span className="text-[9px] text-accent font-bold block mt-0.5">
                     {`${((pieData[activeIndex].value / (selectedCategory ? selectedCategory.amount : data.total || 1)) * 100).toFixed(1)}%`}
@@ -751,7 +756,7 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-premium-numbers text-xs sm:text-sm font-bold text-primary">{formatCurrency(sub.amount)}</span>
+                  <AmountDisplay amount={sub.amount} size="sm" type={type === 'income' ? 'income' : 'expense'} />
                   <ChevronRight size={16} className="text-muted shrink-0" />
                 </div>
               </button>
@@ -784,7 +789,7 @@ const CategoryChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
 
                 <div className="text-right flex items-center gap-3">
                   <div className="flex flex-col items-end">
-                    <span className="font-premium-numbers text-xs sm:text-sm font-bold text-primary block">{formatCurrency(cat.amount)}</span>
+                    <AmountDisplay amount={cat.amount} size="sm" type={type === 'income' ? 'income' : 'expense'} />
                     
                     {compareMode !== 'none' && (
                       <span className={`text-[9px] font-bold flex items-center justify-end gap-0.5 ${getCompareColorClass(cat)}`}>

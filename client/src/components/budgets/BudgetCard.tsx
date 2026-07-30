@@ -1,4 +1,6 @@
+import React from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth, selectedYear }) => {
   const percentage = Math.round(budget.percentage);
@@ -199,17 +201,13 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
 
             {/* Amounts row aligned under the bar */}
             <div className="flex justify-between items-center mt-2 text-[10px] font-medium text-secondary">
-              <div>
-                <span>Dépensé : </span>
-                <span className={`font-premium-numbers font-bold ${textColor}`}>
-                  {formatCurrency(budget.spent)}
-                </span>
+              <div className="flex items-center gap-1">
+                <span>Dépensé :</span>
+                <AmountDisplay amount={budget.spent} size="xs" type={budget.percentage >= 90 ? 'expense' : 'neutral'} />
               </div>
-              <div>
-                <span className="text-muted">Limite : </span>
-                <span className="font-premium-numbers font-bold text-primary">
-                  {formatCurrency(budget.amount)}
-                </span>
+              <div className="flex items-center gap-1">
+                <span className="text-muted">Limite :</span>
+                <AmountDisplay amount={budget.amount} size="xs" type="neutral" />
               </div>
             </div>
           </div>
@@ -218,11 +216,11 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
           <div className="pt-2 border-t border-border/20 flex flex-wrap items-center justify-between gap-1">
             {isOverBudget ? (
               <span className="text-[10px] font-bold text-danger flex items-center gap-1 font-premium-numbers">
-                ⚠️ Dépassement : {formatCurrency(budget.spent - budget.amount)}
+                ⚠️ Dépassement : <AmountDisplay amount={budget.spent - budget.amount} size="xs" type="expense" />
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-secondary font-premium-numbers">
-                Reste : {formatCurrency(budget.remaining)}
+              <span className="text-[10px] font-bold text-secondary font-premium-numbers flex items-center gap-1">
+                Reste : <AmountDisplay amount={budget.remaining} size="xs" type="income" />
               </span>
             )}
             <span className="text-[9px] font-medium text-muted">

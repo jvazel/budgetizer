@@ -6,6 +6,7 @@ import { AlertCircle, AlertTriangle, CheckCircle2, Wallet, Scale, Activity, X, C
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -39,6 +40,9 @@ const CustomTooltip = ({ active, payload, label }) => {
           if (item.name === 'income') { labelName = 'Revenus'; valColor = '#10b981'; }
           else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#f43f5e'; }
           else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
+          else if (item.name === 'prevExpenses') { labelName = 'Dépenses (M-1)'; valColor = 'rgba(244, 63, 94, 0.7)'; }
+          else if (item.name === 'prevIncome') { labelName = 'Revenus (M-1)'; valColor = 'rgba(16, 185, 129, 0.7)'; }
+          if (item.value === null || item.value === undefined) return null;
           return (
             <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
               <span className="text-secondary">{labelName} :</span>
@@ -57,6 +61,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod, endDate: externalEndDate }) => {
   const [horizon, setHorizon] = useState(12); // 6, 12, 24 months
   const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [showOverlayP1, setShowOverlayP1] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ history: [], metrics: {} });
 
@@ -149,6 +154,12 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
     }
   };
 
+  const chartDataWithP1 = history.map((item, idx) => ({
+    ...item,
+    prevIncome: history[idx - 1] ? history[idx - 1].income : null,
+    prevExpenses: history[idx - 1] ? history[idx - 1].expenses : null,
+  }));
+
   if (isWidget) {
     return (
       <div 
@@ -192,21 +203,37 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
 
   return (
     <div className="space-y-6">
-      {/* 1. Filters (Horizon + Account Selector) */}
-      <div className="flex gap-4 items-center justify-between">
-        {/* Horizon selector */}
-        <div className="flex gap-1 bg-surface-2-glass backdrop-blur-md p-1 rounded-xl border border-border/40">
-          {[6, 12, 24].map(m => (
-            <button
-              key={m}
-              onClick={() => setHorizon(m)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                horizon === m ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
-              }`}
-            >
-              {m} mois
-            </button>
-          ))}
+      {/* 1. Filters (Horizon + Account Selector + P-1 Overlay Toggle) */}
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Horizon selector */}
+          <div className="flex gap-1 bg-surface-2-glass backdrop-blur-md p-1 rounded-xl border border-border/40">
+            {[6, 12, 24].map(m => (
+              <button
+                key={m}
+                onClick={() => setHorizon(m)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  horizon === m ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'
+                }`}
+              >
+                {m} mois
+              </button>
+            ))}
+          </div>
+
+          {/* Toggle P-1 Overlay */}
+          <button
+            type="button"
+            onClick={() => setShowOverlayP1(!showOverlayP1)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all active:scale-95 flex items-center gap-1.5 ${
+              showOverlayP1
+                ? 'bg-copper/15 border-copper text-copper shadow-sm shadow-copper/10'
+                : 'bg-surface-2-glass border-border/40 text-secondary hover:text-primary'
+            }`}
+          >
+            <span>vs P-1</span>
+            {showOverlayP1 && <span className="w-1.5 h-1.5 rounded-full bg-copper animate-ping" />}
+          </button>
         </div>
 
         {/* Account selector */}
@@ -248,9 +275,11 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
               <Wallet size={14} />
             </div>
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Épargne Nette</p>
-            <h4 className={`font-premium-numbers text-xs sm:text-sm font-extrabold mt-0.5 leading-tight ${metrics.netSavings >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {loading ? '...' : formatCurrency(metrics.netSavings)}
-            </h4>
+            <div className="mt-0.5">
+              {loading ? '...' : (
+                <AmountDisplay amount={metrics.netSavings} type={metrics.netSavings >= 0 ? 'income' : 'expense'} size="sm" showSign />
+              )}
+            </div>
           </div>
           <p className="text-[9px] text-muted font-bold mt-2">
             {!loading && (metrics.savingsRate >= 0 ? `+${metrics.savingsRate}% des revenus` : `${metrics.savingsRate}% des revenus`)}
@@ -264,13 +293,13 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
               <Scale size={14} />
             </div>
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider mt-2.5">Moyenne / Mois</p>
-            <h4 className="font-premium-numbers text-xs sm:text-sm font-extrabold mt-0.5 leading-tight text-primary">
-              {loading ? '...' : formatCurrency(metrics.avgNet)}
-            </h4>
+            <div className="mt-0.5">
+              {loading ? '...' : <AmountDisplay amount={metrics.avgNet} size="sm" />}
+            </div>
           </div>
           <div className="font-premium-numbers text-[8px] text-muted font-bold mt-2 space-y-0.5">
-            <div>Rev: {loading ? '...' : formatCurrency(metrics.avgIncome)}</div>
-            <div>Dép: {loading ? '...' : formatCurrency(metrics.avgExpenses)}</div>
+            <div className="flex items-center gap-1"><span>Rev:</span>{loading ? '...' : <AmountDisplay amount={metrics.avgIncome} size="xs" type="income" />}</div>
+            <div className="flex items-center gap-1"><span>Dép:</span>{loading ? '...' : <AmountDisplay amount={metrics.avgExpenses} size="xs" type="expense" />}</div>
           </div>
         </div>
 
@@ -309,7 +338,7 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={history}
+                data={chartDataWithP1}
                 margin={{ top: 10, right: 5, left: -15, bottom: 5 }}
                 onClick={handleBarClick}
               >
@@ -352,6 +381,8 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
                     if (value === 'income') return 'Revenus';
                     if (value === 'expenses') return 'Dépenses';
                     if (value === 'net') return 'Épargne Nette (Cash Flow)';
+                    if (value === 'prevExpenses') return 'Dépenses (M-1)';
+                    if (value === 'prevIncome') return 'Revenus (M-1)';
                     return value;
                   }}
                 />
@@ -385,6 +416,28 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
                   activeDot={{ r: 5 }}
                   className="cursor-pointer"
                 />
+
+                {/* Overlay Lines for P-1 comparison */}
+                {showOverlayP1 && (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="prevExpenses"
+                      stroke="#f43f5e"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="prevIncome"
+                      stroke="#10b981"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                  </>
+                )}
               </ComposedChart>
             </ResponsiveContainer>
           )}
@@ -435,21 +488,21 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
             <div className="grid grid-cols-3 gap-2.5">
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Gains</span>
-                <span className="font-mono text-xs font-bold text-emerald-400 block mt-1">
-                  {formatCurrency(selectedMonthFlow.income)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedMonthFlow.income} type="income" size="xs" showSign />
+                </div>
               </div>
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Dépenses</span>
-                <span className="font-mono text-xs font-bold text-red-400 block mt-1">
-                  {formatCurrency(selectedMonthFlow.expenses)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedMonthFlow.expenses} type="expense" size="xs" showSign />
+                </div>
               </div>
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Épargne</span>
-                <span className={`font-mono text-xs font-bold block mt-1 ${selectedMonthFlow.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                  {formatCurrency(selectedMonthFlow.net)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedMonthFlow.net} type={selectedMonthFlow.net >= 0 ? 'income' : 'expense'} size="xs" showSign />
+                </div>
               </div>
             </div>
           )}
@@ -491,12 +544,12 @@ const CashFlowChart = ({ isWidget = false, onViewDetail, period: externalPeriod,
                         )}
                       </p>
                     </div>
-                    <span className={`font-premium-numbers text-xs font-black shrink-0 ${
-                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
-                    }`}>
-                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                      {formatCurrency(tx.amount)}
-                    </span>
+                    <AmountDisplay
+                      amount={tx.amount}
+                      type={tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : 'transfer'}
+                      size="xs"
+                      showSign
+                    />
                   </div>
                 ))
               )}

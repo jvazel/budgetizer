@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { KpiMetricItem } from '@shared/types';
+import AmountDisplay from '../ui/AmountDisplay';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 interface KpiCardXXLProps {
   title: string;
@@ -21,6 +23,8 @@ export const KpiCardXXL: React.FC<KpiCardXXLProps> = ({
   icon,
 }) => {
   const { currentValue, changePercentage, sparkline } = metric;
+  const isPositiveChange = changePercentage !== null && changePercentage > 0;
+  const isNegativeChange = changePercentage !== null && changePercentage < 0;
 
   // Calcul du min / max pour le traçage du sparkline SVG
   const values = sparkline.map(s => s.value);
@@ -74,10 +78,28 @@ export const KpiCardXXL: React.FC<KpiCardXXLProps> = ({
     },
   }[colorScheme];
 
-  const formattedValue = isPercentage ? `${currentValue >= 0 ? '+' : ''}${currentValue.toFixed(1)} %` : formatter(currentValue);
+  const [scrubIndex, setScrubIndex] = React.useState<number | null>(null);
 
-  const isPositiveChange = changePercentage !== null && changePercentage > 0;
-  const isNegativeChange = changePercentage !== null && changePercentage < 0;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!sparkline || sparkline.length < 2) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / rect.width));
+    const index = Math.round(ratio * (sparkline.length - 1));
+    if (index !== scrubIndex) {
+      setScrubIndex(index);
+      triggerHaptic('light');
+    }
+  };
+
+  const handlePointerLeave = () => {
+    setScrubIndex(null);
+  };
+
+  const activeValue = scrubIndex !== null ? sparkline[scrubIndex]?.value : currentValue;
+  const activeLabel = scrubIndex !== null ? (sparkline[scrubIndex]?.date || sparkline[scrubIndex]?.label || `Mois ${scrubIndex + 1}`) : 'vs mois précédent';
+
+  const formattedScrubValue = isPercentage ? `${activeValue >= 0 ? '+' : ''}${activeValue.toFixed(1)} %` : formatter(activeValue);
 
   return (
     <motion.div
@@ -107,14 +129,32 @@ export const KpiCardXXL: React.FC<KpiCardXXLProps> = ({
 
       <div className="flex items-end justify-between mt-3">
         <div>
-          <div className="text-2xl lg:text-3xl font-condensed-tight font-extrabold text-primary tracking-tight group-hover:scale-[1.01] transition-transform">
-            {formattedValue}
+          <div className="text-2xl lg:text-3xl font-condensed-tight font-extrabold tracking-tight group-hover:scale-[1.01] transition-transform">
+            {isPercentage ? (
+              <span className="text-primary">{formattedScrubValue}</span>
+            ) : (
+              <AmountDisplay
+                amount={activeValue}
+                type={colorScheme === 'income' ? 'income' : colorScheme === 'expense' ? 'expense' : 'neutral'}
+                size="2xl"
+              />
+            )}
           </div>
-          <p className="text-[11px] text-muted font-medium mt-1">vs mois précédent</p>
+          <p className="text-[11px] text-muted font-medium mt-1 transition-colors">
+            {scrubIndex !== null ? (
+              <span className="text-copper font-bold uppercase tracking-wider">{activeLabel}</span>
+            ) : (
+              <span>vs mois précédent</span>
+            )}
+          </p>
         </div>
 
-        {/* Sparkline Vectoriel 6 mois en parfait accord avec le thème */}
-        <div className="w-[110px] h-[38px] relative">
+        {/* Sparkline Vectoriel avec Scrubbing Tactile */}
+        <div
+          className="w-[110px] h-[38px] relative cursor-crosshair touch-none select-none"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+        >
           <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
             <defs>
               <linearGradient id={themeStyles.gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -139,15 +179,38 @@ export const KpiCardXXL: React.FC<KpiCardXXLProps> = ({
               points={pointsString}
             />
 
-            {/* Point de fin avec effet de halo */}
-            {sparkline.length > 0 && (
-              <circle
-                cx={width}
-                cy={height - ((values[values.length - 1] - minVal) / range) * (height - 8) - 4}
-                r="3.5"
-                fill={themeStyles.stroke}
-                className="animate-pulse"
-              />
+            {/* Scrubbing indicator cursor */}
+            {scrubIndex !== null ? (
+              <g>
+                <line
+                  x1={(scrubIndex / (sparkline.length - 1)) * width}
+                  y1={0}
+                  x2={(scrubIndex / (sparkline.length - 1)) * width}
+                  y2={height}
+                  stroke={themeStyles.stroke}
+                  strokeWidth="1.5"
+                  strokeDasharray="2 2"
+                  opacity="0.8"
+                />
+                <circle
+                  cx={(scrubIndex / (sparkline.length - 1)) * width}
+                  cy={height - ((values[scrubIndex] - minVal) / range) * (height - 8) - 4}
+                  r="4"
+                  fill="#ffffff"
+                  stroke={themeStyles.stroke}
+                  strokeWidth="2.5"
+                />
+              </g>
+            ) : (
+              sparkline.length > 0 && (
+                <circle
+                  cx={width}
+                  cy={height - ((values[values.length - 1] - minVal) / range) * (height - 8) - 4}
+                  r="3.5"
+                  fill={themeStyles.stroke}
+                  className="animate-pulse"
+                />
+              )
             )}
           </svg>
         </div>

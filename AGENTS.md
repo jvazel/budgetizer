@@ -13,7 +13,7 @@ Ce document est conçu pour servir de récapitulatif complet et de contexte de r
 - Profiter d'**États Vides Contextuels (EmptyState)** avec auras lumineuses glassmorphic et actions guidées.
 - Consulter 4 **Cartes KPI XXL** (Revenus, Dépenses, Solde Net, Taux d'épargne %) et leurs Sparklines/Gradient Area Charts vectoriels.
 - Suivre en temps réel leur **Restant à Dépenser (Safe-to-Spend)** déduisant les charges fixes et cotisations d'épargne récurrentes.
-- Visualiser le parcours complet de leur argent via un **Diagramme de Flux Sankey Vectoriel** filtrable par mois dans le module d'Analyses.
+- Visualiser le parcours complet de leur argent via un **Diagramme de Flux Sankey Vectoriel** filtrable par mois dans le module d'Analyses (avec Drill-Down interactif et intégration universelle du composant `<AmountDisplay />` sur l'intégralité des 11 graphiques d'analyse).
 - Saisir des transactions en moins de 2 secondes grâce à la **Saisie Ultra-Rapide** (pavé numérique tactile universel `CustomNumpad` sans clavier système et puces d'ajustement/favoris `QuickChips`).
 - Gérer leurs transactions (dépenses, revenus, virements internes).
 - Planifier des transactions récurrentes et gérer des abonnements.

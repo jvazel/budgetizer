@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, R
 import { AlertCircle, AlertTriangle, Wallet, Scale, Calendar, Sliders, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 import Select from '../ui/Select';
 
 const formatCurrency = (amount) => {
@@ -272,9 +273,9 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
         <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="space-y-1">
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider">Total Recettes</p>
-            <h4 className="text-lg font-extrabold text-emerald-400 leading-tight">
-              {loading ? '...' : formatCurrency(metrics.totalIncome || 0)}
-            </h4>
+            <div className="mt-1">
+              {loading ? '...' : <AmountDisplay amount={metrics.totalIncome || 0} type="income" size="lg" showSign />}
+            </div>
           </div>
         </div>
 
@@ -282,9 +283,9 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
         <div className="bg-surface-2 p-4 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="space-y-1">
             <p className="text-[9px] text-secondary font-bold uppercase tracking-wider">Total Dépenses</p>
-            <h4 className="text-lg font-extrabold text-red-400 leading-tight">
-              {loading ? '...' : formatCurrency(metrics.totalExpenses || 0)}
-            </h4>
+            <div className="mt-1">
+              {loading ? '...' : <AmountDisplay amount={metrics.totalExpenses || 0} type="expense" size="lg" showSign />}
+            </div>
           </div>
         </div>
 
@@ -293,9 +294,16 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
           <div className="flex justify-between items-center">
             <div>
               <p className="text-[9px] text-secondary font-bold uppercase tracking-wider">Épargne nette (Solde)</p>
-              <h4 className={`text-xl font-extrabold leading-tight mt-0.5 ${(metrics.netSavings || 0) >= 0 ? 'text-accent' : 'text-danger'}`}>
-                {loading ? '...' : formatCurrency(metrics.netSavings || 0)}
-              </h4>
+              <div className="mt-1">
+                {loading ? '...' : (
+                  <AmountDisplay
+                    amount={metrics.netSavings || 0}
+                    type={(metrics.netSavings || 0) >= 0 ? 'income' : 'expense'}
+                    size="xl"
+                    showSign
+                  />
+                )}
+              </div>
             </div>
             <div className="text-right">
               <p className="text-[9px] text-secondary font-bold uppercase tracking-wider">Taux d'Épargne</p>
@@ -430,21 +438,21 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
             <div className="grid grid-cols-3 gap-2.5">
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Recettes</span>
-                <span className="font-mono text-xs font-bold text-emerald-400 block mt-1">
-                  {formatCurrency(selectedPeriod.income)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedPeriod.income} type="income" size="xs" showSign />
+                </div>
               </div>
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Dépenses</span>
-                <span className="font-mono text-xs font-bold text-red-400 block mt-1">
-                  {formatCurrency(selectedPeriod.expenses)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedPeriod.expenses} type="expense" size="xs" showSign />
+                </div>
               </div>
               <div className="bg-surface-2 p-3 rounded-2xl border border-border/30 text-center">
                 <span className="text-[8px] text-muted font-bold uppercase tracking-wider block">Net</span>
-                <span className={`font-mono text-xs font-bold block mt-1 ${selectedPeriod.net >= 0 ? 'text-accent' : 'text-danger'}`}>
-                  {formatCurrency(selectedPeriod.net)}
-                </span>
+                <div className="mt-1">
+                  <AmountDisplay amount={selectedPeriod.net} type={selectedPeriod.net >= 0 ? 'income' : 'expense'} size="xs" showSign />
+                </div>
               </div>
             </div>
           )}
@@ -459,36 +467,39 @@ const HistogramChart = ({ startDate: externalStartDate, endDate: externalEndDate
                   <div className="w-8 h-8 border-4 border-accent/15 border-t-accent rounded-full animate-spin" />
                 </div>
               ) : periodTransactions.length === 0 ? (
-                <p className="text-center text-xs text-muted py-8">Aucune transaction enregistrée.</p>
+                <p className="text-center text-xs text-muted py-8">Aucune transaction pour ce groupe.</p>
               ) : (
                 periodTransactions.map(tx => (
-                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-xl border border-border/30 flex items-center justify-between shadow-sm">
+                  <div key={tx._id} className="bg-surface-2 p-3.5 rounded-[24px] border border-border/30 flex items-center justify-between hover:bg-surface/30 transition-all cursor-pointer">
                     <div className="min-w-0 pr-2">
-                      <p className="text-xs font-bold text-primary truncate">
+                      <p className="text-xs font-bold text-primary truncate leading-snug">
                         {tx.description || tx.note || (tx.type === 'transfer' ? 'Virement' : tx.categoryId?.name) || 'Sans description'}
                       </p>
                       <p className="text-[9px] text-muted flex items-center gap-1 mt-0.5 font-medium">
                         <Calendar size={10} /> {new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        {(tx.description || tx.note) && (tx.categoryId?.name || tx.type === 'transfer') && (
+                        {tx.categoryId?.name && (
                           <>
                             <span className="opacity-60">•</span>
-                            <span className="truncate max-w-[100px]">{tx.type === 'transfer' ? 'Virement' : tx.categoryId?.name}</span>
+                            <span className="truncate max-w-[100px]">{tx.categoryId?.name}</span>
                           </>
                         )}
-                        {tx.description && tx.note && (
+                        {tx.accountId?.name && (
                           <>
                             <span className="opacity-60">•</span>
-                            <span className="truncate max-w-[100px] italic">({tx.note})</span>
+                            <span className="inline-flex items-center gap-1 font-bold text-secondary">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.accountId?.color || '#888' }} />
+                              {tx.accountId?.name}
+                            </span>
                           </>
                         )}
                       </p>
                     </div>
-                    <span className={`font-mono text-xs font-black shrink-0 ${
-                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
-                    }`}>
-                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                      {formatCurrency(tx.amount)}
-                    </span>
+                    <AmountDisplay
+                      amount={tx.amount}
+                      type={tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : 'transfer'}
+                      size="xs"
+                      showSign
+                    />
                   </div>
                 ))
               )}

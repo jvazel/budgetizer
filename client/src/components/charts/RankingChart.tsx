@@ -4,6 +4,7 @@ import { ChevronRight, ChevronLeft, Calendar, HelpCircle, Sparkles, TrendingUp, 
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import { motion, AnimatePresence } from 'framer-motion';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const RankingChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
   const [localPeriod, setLocalPeriod] = useState('month');
@@ -408,10 +409,17 @@ const RankingChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) 
 
                       <div className="text-right flex items-center gap-2">
                         <div>
-                          <span className="font-mono text-xs font-black text-primary block">
-                            {sortBy === 'amount' ? formatCurrency(item.amount) : `${item.count} ach.`}
-                          </span>
-                          <span className="text-[8px] text-muted block mt-0.5">Moy. {formatCurrency(item.avgAmount)}</span>
+                          {sortBy === 'amount' ? (
+                            <AmountDisplay amount={item.amount} type="expense" size="sm" />
+                          ) : (
+                            <span className="font-mono text-xs font-black text-primary block">
+                              {item.count} ach.
+                            </span>
+                          )}
+                          <div className="text-[8px] text-muted flex items-center gap-0.5 justify-end mt-0.5">
+                            <span>Moy.</span>
+                            <AmountDisplay amount={item.avgAmount} size="xs" type="neutral" />
+                          </div>
                         </div>
                         <ChevronRight 
                           size={12} 
@@ -453,9 +461,11 @@ const RankingChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) 
                             <Sparkles size={14} className="text-accent shrink-0 mt-0.5" />
                             <div className="space-y-0.5">
                               <span className="text-[8px] uppercase font-extrabold text-accent/80 tracking-wider">Projection sur 1 An (Effet Cumulé)</span>
-                              <p className="text-[10.5px] text-primary leading-snug">
-                                Si vous continuez ainsi, cette habitude vous coûtera <strong className="text-accent font-extrabold">{formatCurrency(item.projectedAnnual)}</strong> par an.
-                              </p>
+                              <div className="text-[10.5px] text-primary leading-snug flex flex-wrap items-center gap-1">
+                                <span>Si vous continuez ainsi, cette habitude vous coûtera</span>
+                                <AmountDisplay amount={item.projectedAnnual} type="expense" size="xs" />
+                                <span>par an.</span>
+                              </div>
                             </div>
                           </div>
 

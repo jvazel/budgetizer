@@ -6,6 +6,7 @@ import { ChevronRight, ChevronLeft, Calendar, HelpCircle, Target, TrendingUp } f
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
 import Select from '../ui/Select';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -475,7 +476,7 @@ const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
                       <span className="text-sm">{cat.icon}</span>
                       <span className="font-bold text-secondary">{cat.name}</span>
                     </div>
-                    <span className="font-mono font-bold text-primary">{formatCurrency(cat.amount)}</span>
+                    <AmountDisplay amount={cat.amount} type="expense" size="xs" />
                   </div>
                 ))}
               </div>
@@ -489,7 +490,7 @@ const TagChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }) => {
                 <h3 className="text-xs font-extrabold text-secondary tracking-wider uppercase">Évolution Cumulative</h3>
                 <p className="text-[10px] text-muted">Progression chronologique des dépenses du projet.</p>
               </div>
-              <span className="font-mono text-sm font-black text-accent">{formatCurrency(selectedTagTotal)}</span>
+              <AmountDisplay amount={selectedTagTotal} type="expense" size="sm" />
             </div>
 
             <div className="w-full h-44 flex items-center justify-center">

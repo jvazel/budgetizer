@@ -85,17 +85,23 @@ const MiniCalendar = ({ currentDate, selectedDate, onSelectDate, transactions = 
     });
 
     const getDotSizeClass = (amount) => {
-      if (amount < 100) return 'w-1 h-1';
+      if (amount >= 100) return 'w-2 h-2 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse';
       return 'w-1.5 h-1.5';
     };
 
     return (
       <div className="flex gap-1 items-center justify-center mt-1 h-1.5">
         {hasExpense && (
-          <span className={`rounded-full bg-danger ${getDotSizeClass(totalExpense)} transition-all`} />
+          <span
+            className={`rounded-full bg-danger ${getDotSizeClass(totalExpense)} transition-all`}
+            title={`Dépenses : ${totalExpense.toFixed(2)} €`}
+          />
         )}
         {hasIncome && (
-          <span className={`rounded-full bg-accent ${getDotSizeClass(totalIncome)} transition-all`} />
+          <span
+            className={`rounded-full bg-accent ${totalIncome >= 100 ? 'w-2 h-2 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'w-1.5 h-1.5'} transition-all`}
+            title={`Revenus : ${totalIncome.toFixed(2)} €`}
+          />
         )}
       </div>
     );

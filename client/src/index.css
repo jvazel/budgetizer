@@ -33,21 +33,21 @@
 
 
 [data-theme="light"], .light {
-  /* === LIGHT MODE Premium (Clean & Minimalist) === */
+  /* === LIGHT MODE Premium (Clean & Minimalist - Contrastes Ajustés) === */
   --bg-base: #f8fafc;          /* Blanc cassé Gray-50 */
   --bg-surface: #ffffff;
-  --bg-surface-2: #f1f4f9;     /* Slate-100 (au lieu de Gray-100 pour plus de fraîcheur) */
+  --bg-surface-2: #f1f4f9;     /* Slate-100 pour la fraîcheur */
   --bg-elevated: #ffffff;
-  --border: rgba(10, 26, 47, 0.06); /* Bordure subtile */
-  --text-primary: #0a1a2f;     /* Slate-900 */
-  --text-secondary: #475569;   /* Slate-600 */
-  --text-muted: #64748b;       /* Slate-400 */
+  --border: rgba(15, 23, 42, 0.10); /* Bordure nette et définie */
+  --text-primary: #0f172a;     /* Slate-900 */
+  --text-secondary: #334155;   /* Slate-700 pour lisibilité WCAG 2.1 AA */
+  --text-muted: #64748b;       /* Slate-500 */
   --accent: #0d8c5a;           /* Vert forêt émeraude premium */
-  --accent-dim: rgba(13, 140, 90, 0.06);
+  --accent-dim: rgba(13, 140, 90, 0.08);
   --danger: #d93856;           /* Rouge doux */
-  --danger-dim: rgba(217, 56, 86, 0.06);
+  --danger-dim: rgba(217, 56, 86, 0.08);
   --warning: #d97706;
-  --warning-dim: rgba(217, 119, 6, 0.06);
+  --warning-dim: rgba(217, 119, 6, 0.08);
   --info: #2563eb;
   --purple: #7c3aed;
   --bg-budget-guide: #fef3c7;
@@ -55,7 +55,7 @@
   /* Couleurs de marque Bankyboard (Cuivre/Ambre) */
   --copper: #d97706;
   --copper-hover: #b45309;
-  --copper-dim: rgba(217, 119, 6, 0.06);
+  --copper-dim: rgba(217, 119, 6, 0.08);
 }
 
 body {

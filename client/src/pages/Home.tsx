@@ -11,6 +11,7 @@ import { SafeToSpendCard } from '../components/dashboard/SafeToSpendCard';
 import { ShortcutsWidget } from '../components/dashboard/ShortcutsWidget';
 import { DashboardCustomizerSheet, DEFAULT_WIDGET_CONFIGS, WidgetConfig } from '../components/dashboard/DashboardCustomizerSheet';
 import { HeaderTitle, HeaderActions, HeaderPortalContext } from '../components/layout/AppShell';
+import AmountDisplay from '../components/ui/AmountDisplay';
 
 
 
@@ -547,9 +548,11 @@ const Home = () => {
 
                     <div className="flex justify-between items-end relative z-10 mt-auto pt-2 pl-1">
                       <div className="flex flex-col gap-1 min-w-0">
-                        <span className={`font-extrabold text-2xl font-premium-numbers tracking-tight leading-none ${isNegative ? 'text-danger' : 'text-primary'}`}>
-                          {formatCurrency(acc.balance, acc.currency)}
-                        </span>
+                        <AmountDisplay
+                          amount={acc.balance}
+                          size="2xl"
+                          type={isNegative ? 'expense' : 'neutral'}
+                        />
                         {acc.lastTransactionDate ? (
                           <span className="text-[9px] text-secondary opacity-60 font-semibold tracking-wide uppercase mt-1 block">
                             Dernière op. : {new Date(acc.lastTransactionDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}

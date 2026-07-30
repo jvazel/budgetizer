@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { GitCommit, ArrowRight, Wallet, TrendingUp, TrendingDown, PiggyBank, AlertCircle } from 'lucide-react';
+import { GitCommit, Wallet, TrendingUp, TrendingDown, PiggyBank, ChevronRight } from 'lucide-react';
 import { SankeyFlowResponse } from '@shared/types';
 import api from '../../services/api';
+import AmountDisplay from '../ui/AmountDisplay';
+import BottomSheet from '../ui/BottomSheet';
+import { triggerHaptic } from '../../utils/hapticHelper';
 
 interface SankeyFlowChartProps {
   period?: string;
@@ -14,6 +17,7 @@ export const SankeyFlowChart: React.FC<SankeyFlowChartProps> = ({ period, startD
   const [data, setData] = useState<SankeyFlowResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<{ id: string; name: string; category: string; value: number } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +47,6 @@ export const SankeyFlowChart: React.FC<SankeyFlowChartProps> = ({ period, startD
     };
   }, [period, startDate, endDate]);
 
-
   if (loading) {
     return <div className="h-64 rounded-2xl bg-surface/50 border border-border/40 animate-pulse mb-6" />;
   }
@@ -64,87 +67,161 @@ export const SankeyFlowChart: React.FC<SankeyFlowChartProps> = ({ period, startD
 
   const totalIncome = incomeNodes.reduce((sum, node) => sum + getLinkValue(node.id, accountNode?.id || ''), 0);
 
+  const handleNodeClick = (id: string, name: string, category: string, value: number) => {
+    triggerHaptic('light');
+    setSelectedNode({ id, name, category, value });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="banky-card p-6 mb-6 border border-border/40 hover:border-border/80 transition-all duration-200"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-xl bg-purple/10 text-purple border border-purple/20">
-            <GitCommit className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-primary tracking-tight">Diagramme de Flux de Trésorerie (Sankey)</h3>
-            <p className="text-[11px] text-muted font-medium">Modélisation visuelle de l'argent depuis les sources jusqu'aux dépenses et à l'épargne</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Sankey Flow Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        {/* Colonne 1 : Revenus */}
-        <div className="space-y-3">
-          <span className="premium-label text-accent block mb-2">1. Sources d'Entrées</span>
-          {incomeNodes.map(node => {
-            const val = getLinkValue(node.id, accountNode?.id || '');
-            return (
-              <div key={node.id} className="p-3 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-accent" />
-                  <span className="text-xs font-semibold text-primary">{node.name}</span>
-                </div>
-                <span className="text-xs font-bold text-accent">+{val.toLocaleString('fr-FR')} €</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Colonne 2 : Trésorerie Centrale (Hub) */}
-        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-surface-2/80 border border-border/40 relative">
-          <div className="p-3 rounded-full bg-copper-dim text-copper mb-2 border border-copper/20">
-            <Wallet className="w-6 h-6" />
-          </div>
-          <span className="text-xs font-bold text-primary">{accountNode?.name || 'Trésorerie'}</span>
-          <span className="text-lg font-condensed-tight font-extrabold text-copper mt-1">
-            {totalIncome.toLocaleString('fr-FR')} €
-          </span>
-          <span className="text-[10px] text-muted mt-1">Nœud de distribution</span>
-        </div>
-
-        {/* Colonne 3 : Dépenses & Épargne */}
-        <div className="space-y-3">
-          <span className="premium-label text-danger block mb-2">2. Sorties & Affectation</span>
-          {expenseNodes.map(node => {
-            const val = getLinkValue(accountNode?.id || '', node.id);
-            return (
-              <div key={node.id} className="p-3 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <TrendingDown className="w-4 h-4 text-danger" />
-                  <span className="text-xs font-semibold text-primary">{node.name}</span>
-                </div>
-                <span className="text-xs font-bold text-danger">-{val.toLocaleString('fr-FR')} €</span>
-              </div>
-            );
-          })}
-
-          {/* Épargne Résiduelle */}
-          {savingsNode && (
-            <div className="p-3 rounded-xl bg-purple/10 border border-purple/20 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <PiggyBank className="w-4 h-4 text-purple" />
-                <span className="text-xs font-semibold text-primary">{savingsNode.name}</span>
-              </div>
-              <span className="text-xs font-bold text-purple">
-                +{getLinkValue(accountNode?.id || '', savingsNode.id).toLocaleString('fr-FR')} €
-              </span>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="banky-card p-6 mb-6 border border-border/40 hover:border-border/80 transition-all duration-200"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-purple/10 text-purple border border-purple/20">
+              <GitCommit className="w-5 h-5" />
             </div>
-          )}
+            <div>
+              <h3 className="text-sm font-bold text-primary tracking-tight">Diagramme de Flux de Trésorerie (Sankey)</h3>
+              <p className="text-[11px] text-muted font-medium">Modélisation visuelle et dynamique du parcours de votre argent (cliquez pour inspecter)</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </motion.div>
+
+        {/* Sankey Flow Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          {/* Colonne 1 : Revenus */}
+          <div className="space-y-3">
+            <span className="premium-label text-accent block mb-2">1. Sources d'Entrées</span>
+            {incomeNodes.map(node => {
+              const val = getLinkValue(node.id, accountNode?.id || '');
+              return (
+                <div
+                  key={node.id}
+                  onClick={() => handleNodeClick(node.id, node.name, 'income', val)}
+                  className="p-3 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-between cursor-pointer hover:bg-accent/15 active:scale-[0.98] transition-all group"
+                >
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-accent" />
+                    <span className="text-xs font-semibold text-primary">{node.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <AmountDisplay amount={val} type="income" size="xs" showSign />
+                    <ChevronRight size={14} className="text-accent opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Colonne 2 : Trésorerie Centrale (Hub) */}
+          <div
+            onClick={() => handleNodeClick(accountNode?.id || 'account', accountNode?.name || 'Trésorerie Centrale', 'account', totalIncome)}
+            className="flex flex-col items-center justify-center p-6 rounded-2xl bg-surface-2/80 border border-border/40 hover:border-copper/40 cursor-pointer active:scale-[0.98] transition-all relative group"
+          >
+            <div className="p-3 rounded-full bg-copper-dim text-copper mb-2 border border-copper/20 group-hover:scale-110 transition-transform">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <span className="text-xs font-bold text-primary">{accountNode?.name || 'Trésorerie'}</span>
+            <div className="mt-1">
+              <AmountDisplay amount={totalIncome} size="xl" type="neutral" />
+            </div>
+            <span className="text-[10px] text-muted mt-1 flex items-center gap-1">
+              Nœud de distribution <ChevronRight size={12} className="text-copper opacity-50 group-hover:opacity-100" />
+            </span>
+          </div>
+
+          {/* Colonne 3 : Dépenses & Épargne */}
+          <div className="space-y-3">
+            <span className="premium-label text-danger block mb-2">2. Sorties & Affectation</span>
+            {expenseNodes.map(node => {
+              const val = getLinkValue(accountNode?.id || '', node.id);
+              return (
+                <div
+                  key={node.id}
+                  onClick={() => handleNodeClick(node.id, node.name, 'expense', val)}
+                  className="p-3 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-between cursor-pointer hover:bg-danger/15 active:scale-[0.98] transition-all group"
+                >
+                  <div className="flex items-center space-x-2">
+                    <TrendingDown className="w-4 h-4 text-danger" />
+                    <span className="text-xs font-semibold text-primary">{node.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <AmountDisplay amount={val} type="expense" size="xs" showSign />
+                    <ChevronRight size={14} className="text-danger opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Épargne Résiduelle */}
+            {savingsNode && (
+              <div
+                onClick={() => {
+                  const val = getLinkValue(accountNode?.id || '', savingsNode.id);
+                  handleNodeClick(savingsNode.id, savingsNode.name, 'savings', val);
+                }}
+                className="p-3 rounded-xl bg-purple/10 border border-purple/20 flex items-center justify-between cursor-pointer hover:bg-purple/15 active:scale-[0.98] transition-all group"
+              >
+                <div className="flex items-center space-x-2">
+                  <PiggyBank className="w-4 h-4 text-purple" />
+                  <span className="text-xs font-semibold text-primary">{savingsNode.name}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <AmountDisplay amount={getLinkValue(accountNode?.id || '', savingsNode.id)} type="income" size="xs" showSign />
+                  <ChevronRight size={14} className="text-purple opacity-50 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Drill-Down Bottom Sheet */}
+      <BottomSheet
+        isOpen={!!selectedNode}
+        onClose={() => setSelectedNode(null)}
+        title={`Inspection du Flux : ${selectedNode?.name || ''}`}
+      >
+        {selectedNode && (
+          <div className="space-y-5 py-2">
+            <div className="p-4 rounded-2xl bg-surface-2 border border-border/40 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider">Montant total du flux</p>
+                <div className="mt-1">
+                  <AmountDisplay
+                    amount={selectedNode.value}
+                    size="3xl"
+                    type={selectedNode.category === 'income' ? 'income' : selectedNode.category === 'expense' ? 'expense' : 'neutral'}
+                    showSign
+                  />
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider">Part du flux total</p>
+                <p className="text-xl font-extrabold text-copper mt-1">
+                  {totalIncome > 0 ? `${((selectedNode.value / totalIncome) * 100).toFixed(1)} %` : '0 %'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-surface-1 border border-border/30 space-y-2">
+              <h4 className="text-xs font-bold text-primary">Analyse du parcours de trésorerie</h4>
+              <p className="text-xs text-secondary leading-relaxed">
+                {selectedNode.category === 'income' && `Cette entrée représente ${((selectedNode.value / Math.max(1, totalIncome)) * 100).toFixed(1)}% des revenus globaux de la période.`}
+                {selectedNode.category === 'account' && `Ce nœud central a distribué un total de ${totalIncome.toLocaleString('fr-FR')} € à travers vos catégories de dépenses et d'épargne.`}
+                {selectedNode.category === 'expense' && `Ce poste absorbe ${((selectedNode.value / Math.max(1, totalIncome)) * 100).toFixed(1)}% des revenus disponibles.`}
+                {selectedNode.category === 'savings' && `Vous avez mis de côté ${((selectedNode.value / Math.max(1, totalIncome)) * 100).toFixed(1)}% de vos revenus en épargne nette.`}
+              </p>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
+    </>
   );
 };

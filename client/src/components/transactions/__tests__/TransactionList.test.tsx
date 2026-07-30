@@ -44,16 +44,18 @@ describe('TransactionList Component', () => {
   it('renders expense as negative and income as positive', () => {
     render(<TransactionList transactions={mockTransactions} />);
     
-    // Expense should render with minus and text-primary/80 because it is below the default 100€ threshold
+    // Expense should render with minus and text-danger
     const expenseAmount = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('45,50') && element.textContent.startsWith('-');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('-45,50€') && element.classList.contains('font-premium-numbers');
     });
     expect(expenseAmount).toBeInTheDocument();
-    expect(expenseAmount).toHaveClass('text-primary/80');
+    expect(expenseAmount).toHaveClass('text-danger');
 
     // Income should render with plus
     const incomeAmount = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('1') && element.textContent.includes('500,00') && element.textContent.startsWith('+');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('+1500,00€') && element.classList.contains('font-premium-numbers');
     });
     expect(incomeAmount).toBeInTheDocument();
     expect(incomeAmount).toHaveClass('text-accent');
@@ -63,7 +65,8 @@ describe('TransactionList Component', () => {
     render(<TransactionList transactions={mockTransactions} />);
     
     const transferAmount = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('-');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('-350,00€') && element.classList.contains('font-premium-numbers');
     });
     expect(transferAmount).toBeInTheDocument();
     expect(transferAmount).toHaveClass('text-danger');
@@ -73,7 +76,8 @@ describe('TransactionList Component', () => {
     render(<TransactionList transactions={mockTransactions} currentAccountId="acc_checking" />);
     
     const transferAmount = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('-');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('-350,00€') && element.classList.contains('font-premium-numbers');
     });
     expect(transferAmount).toBeInTheDocument();
     expect(transferAmount).toHaveClass('text-danger');
@@ -83,25 +87,26 @@ describe('TransactionList Component', () => {
     render(<TransactionList transactions={mockTransactions} currentAccountId="acc_credit" />);
     
     const transferAmount = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('+');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('+350,00€') && element.classList.contains('font-premium-numbers');
     });
     expect(transferAmount).toBeInTheDocument();
     expect(transferAmount).toHaveClass('text-accent');
   });
 
-  it('applies text-danger to expenses equal or above threshold and text-primary/80 below it', () => {
+  it('applies text-danger to expenses and text-accent to income', () => {
     localStorage.setItem('budgetizer_alert_threshold', '50');
     render(<TransactionList transactions={mockTransactions} />);
     
-    // Expense of 45.50 (below 50€ threshold) -> text-primary/80
     const expenseBelow = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('45,50') && element.textContent.startsWith('-');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('-45,50€') && element.classList.contains('font-premium-numbers');
     });
-    expect(expenseBelow).toHaveClass('text-primary/80');
+    expect(expenseBelow).toHaveClass('text-danger');
     
-    // Transfer of 350.00 (above 50€ threshold) -> text-danger
     const transferAbove = screen.getByText((content, element) => {
-      return element.tagName === 'P' && element.textContent.includes('350,00') && element.textContent.startsWith('-');
+      const txt = element.textContent?.replace(/\s+/g, '') || '';
+      return (element.tagName === 'SPAN' || element.tagName === 'P') && txt.includes('-350,00€') && element.classList.contains('font-premium-numbers');
     });
     expect(transferAbove).toHaveClass('text-danger');
     

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const FIXED_COLOR = '#818cf8';   // indigo-400 — charges fixes
 const VARIABLE_COLOR = '#f59e0b'; // amber-400 — dépenses variables
@@ -132,7 +133,7 @@ const CategoryList = ({ title, icon: Icon, iconBg, accentColor, categories, empt
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-mono text-xs font-bold text-primary">{formatCurrency(cat.amount)}</p>
+                  <AmountDisplay amount={cat.amount} type="expense" size="xs" />
                   <p className="text-[9px] text-muted">{cat.percentage}%</p>
                 </div>
               </div>
@@ -152,9 +153,9 @@ const CustomTooltip = ({ active, payload }) => {
     return (
       <div className="custom-chart-tooltip text-left">
         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{payload[0].name}</p>
-        <p className="font-premium-numbers text-xs font-extrabold text-primary mt-0.5">
-          {formatCurrency(payload[0].value)}
-        </p>
+        <div className="mt-0.5">
+          <AmountDisplay amount={payload[0].value} type="expense" size="xs" />
+        </div>
       </div>
     );
   }
@@ -276,9 +277,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                   <div className="w-2.5 h-2.5 rounded-md bg-indigo-400" />
                   <span>Fixes</span>
                 </div>
-                <p className="font-premium-numbers text-xs font-extrabold text-primary ml-4">
-                  {formatCurrency(data.totalFixed)}
-                </p>
+                <div className="ml-4">
+                  <AmountDisplay amount={data.totalFixed} size="xs" type="expense" />
+                </div>
                 <p className="text-[8px] text-muted ml-4">
                   {data.fixedRatio}% des dépenses
                 </p>
@@ -289,9 +290,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                   <div className="w-2.5 h-2.5 rounded-md bg-amber-400" />
                   <span>Variables</span>
                 </div>
-                <p className="font-premium-numbers text-xs font-extrabold text-primary ml-4">
-                  {formatCurrency(data.totalVariable)}
-                </p>
+                <div className="ml-4">
+                  <AmountDisplay amount={data.totalVariable} size="xs" type="expense" />
+                </div>
                 <p className="text-[8px] text-muted ml-4">
                   {data.variableRatio}% des dépenses
                 </p>
@@ -350,9 +351,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
           {/* Total expenses */}
           <div className="bg-surface-2 p-3.5 rounded-[22px] border border-border/40 shadow-sm flex flex-col justify-between col-span-1">
             <p className="text-[8.5px] text-secondary font-bold uppercase tracking-wider">Total dépenses</p>
-            <h4 className="text-sm font-extrabold text-primary mt-1 leading-tight font-mono">
-              {formatCurrency(data.totalExpenses)}
-            </h4>
+            <div className="mt-1">
+                <AmountDisplay amount={data.totalExpenses} size="sm" type="expense" />
+            </div>
           </div>
 
           {/* Fixed total */}
@@ -361,9 +362,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
               <Lock size={10} className="text-indigo-400 shrink-0" />
               <p className="text-[8.5px] text-indigo-300 font-bold uppercase tracking-wider">Fixes</p>
             </div>
-            <h4 className="text-sm font-extrabold text-indigo-300 mt-1 leading-tight font-mono">
-              {formatCurrency(data.totalFixed)}
-            </h4>
+            <div className="mt-1">
+                <AmountDisplay amount={data.totalFixed} size="sm" type="expense" />
+            </div>
             <p className="text-[8px] text-indigo-400/70 font-bold mt-0.5">{data.fixedRatio}%</p>
           </div>
 
@@ -373,9 +374,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
               <Shuffle size={10} className="text-amber-400 shrink-0" />
               <p className="text-[8.5px] text-amber-300 font-bold uppercase tracking-wider">Variables</p>
             </div>
-            <h4 className="text-sm font-extrabold text-amber-300 mt-1 leading-tight font-mono">
-              {formatCurrency(data.totalVariable)}
-            </h4>
+            <div className="mt-1">
+                <AmountDisplay amount={data.totalVariable} size="sm" type="expense" />
+            </div>
             <p className="text-[8px] text-amber-400/70 font-bold mt-0.5">{data.variableRatio}%</p>
           </div>
         </div>
@@ -407,9 +408,9 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
                 <span className="text-[9px] uppercase font-extrabold text-muted tracking-wider">
                   {hoveredSlice ? hoveredSlice.name : 'Total'}
                 </span>
-                <p className="font-mono text-lg font-black text-primary leading-none mt-1">
-                  {formatCurrency(hoveredSlice ? hoveredSlice.value : (data?.totalExpenses || 0))}
-                </p>
+                <div className="mt-1">
+                  <AmountDisplay amount={hoveredSlice ? hoveredSlice.value : (data?.totalExpenses || 0)} size="xl" type="expense" />
+                </div>
                 {hoveredSlice && (
                   <span
                     className="text-[9px] font-bold mt-0.5"

@@ -9,6 +9,7 @@ import ConfirmModal from '../components/ui/ConfirmModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AiBadge from '../components/ui/AiBadge';
 import BottomSheet from '../components/ui/BottomSheet';
+import AmountDisplay from '../components/ui/AmountDisplay';
 
 const CalendarPage = () => {
   const queryClient = useQueryClient();
@@ -101,6 +102,10 @@ const CalendarPage = () => {
            d.getFullYear() === selectedDate.getFullYear();
   });
 
+  // Calculate daily totals for selected date
+  const selectedDayExpenses = selectedDayTxs.filter(t => t.type === 'expense' || t.type === 'transfer').reduce((sum, t) => sum + (t.amount || 0), 0);
+  const selectedDayIncome = selectedDayTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
+
   return (
     <>
       <HeaderTitle>Calendrier</HeaderTitle>
@@ -176,15 +181,31 @@ const CalendarPage = () => {
 
       {/* Selected Day Transactions Panel */}
       <section className="mb-6">
-        <div className="flex justify-between items-center mb-4 px-1">
-          <h3 className="font-bold text-secondary text-sm">
-            Transactions du {selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-          </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 px-1">
+          <div>
+            <h3 className="font-bold text-primary text-sm capitalize">
+              {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h3>
+            {selectedDayTxs.length > 0 && (
+              <div className="flex items-center gap-3 mt-1">
+                {selectedDayExpenses > 0 && (
+                  <span className="text-[10px] text-secondary font-semibold flex items-center gap-1">
+                    Sorties : <AmountDisplay amount={selectedDayExpenses} type="expense" size="xs" showSign />
+                  </span>
+                )}
+                {selectedDayIncome > 0 && (
+                  <span className="text-[10px] text-secondary font-semibold flex items-center gap-1">
+                    Entrées : <AmountDisplay amount={selectedDayIncome} type="income" size="xs" showSign />
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="text-xs font-bold text-copper bg-copper-dim border border-copper/15 hover:bg-copper hover:text-white px-3 py-1.5 rounded-xl transition-all active:scale-95 flex items-center gap-1"
+            className="text-xs font-bold text-copper bg-copper-dim border border-copper/15 hover:bg-copper hover:text-white px-3.5 py-1.5 rounded-xl transition-all active:scale-95 flex items-center gap-1 self-start sm:self-auto"
           >
-            <Plus size={12} />
+            <Plus size={13} />
             <span>Ajouter</span>
           </button>
         </div>
@@ -279,14 +300,12 @@ const CalendarPage = () => {
                   </div>
                   
                   <div className="text-right flex items-center gap-2 shrink-0 ml-auto pl-1">
-                    <span className={`font-premium-numbers font-bold text-xs sm:text-sm ${
-                      isPlanned 
-                        ? 'text-purple' 
-                        : (tx.type === 'expense' || tx.type === 'transfer') ? 'text-danger' : 'text-accent'
-                    }`}>
-                      {isPlanned ? '' : (tx.type === 'expense' || tx.type === 'transfer' ? '-' : '+')}
-                      {formatCurrency(tx.amount)}
-                    </span>
+                    <AmountDisplay
+                      amount={tx.amount}
+                      type={isPlanned ? 'neutral' : (tx.type === 'expense' || tx.type === 'transfer' ? 'expense' : 'income')}
+                      size="sm"
+                      showSign={!isPlanned}
+                    />
 
                     {!isPlanned && (
                       <button 

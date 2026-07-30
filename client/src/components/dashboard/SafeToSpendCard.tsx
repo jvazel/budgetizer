@@ -4,6 +4,7 @@ import { ShieldCheck, AlertTriangle, AlertCircle, Calendar, ArrowDownRight, Pigg
 import { SafeToSpendSummary } from '@shared/types';
 import api from '../../services/api';
 import { triggerHaptic } from '../../utils/hapticHelper';
+import AmountDisplay from '../ui/AmountDisplay';
 
 export const SafeToSpendCard: React.FC = () => {
   const [data, setData] = useState<SafeToSpendSummary | null>(null);
@@ -117,13 +118,28 @@ export const SafeToSpendCard: React.FC = () => {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end relative z-10 mt-1">
         <div>
-          <div className="text-4xl lg:text-5xl font-condensed-tight font-extrabold text-primary tracking-tight font-premium-numbers">
-            {isPrivate ? '•••• €' : `${totalSafeToSpend.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
+          <div className="text-4xl lg:text-5xl font-condensed-tight font-extrabold tracking-tight">
+            {isPrivate ? (
+              <span className="text-primary">•••• €</span>
+            ) : (
+              <AmountDisplay
+                amount={totalSafeToSpend}
+                size="4xl"
+                type={totalSafeToSpend >= 0 ? 'income' : 'expense'}
+              />
+            )}
           </div>
 
           <div className="flex items-center space-x-2.5 mt-3">
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 backdrop-blur-sm shadow-sm">
-              {isPrivate ? '•• € / jour' : `${dailyBudgetRemaining.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € / jour`}
+            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 backdrop-blur-sm shadow-sm inline-flex items-center gap-1">
+              {isPrivate ? (
+                '•• € / jour'
+              ) : (
+                <>
+                  <AmountDisplay amount={dailyBudgetRemaining} size="xs" type="income" />
+                  <span className="text-muted font-normal">/ jour</span>
+                </>
+              )}
             </span>
             <span className="text-xs text-muted font-semibold flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-xl border border-white/5">
               <Calendar className="w-3.5 h-3.5 text-secondary" /> {daysLeftInMonth} jours restants

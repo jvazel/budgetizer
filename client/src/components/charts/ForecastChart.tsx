@@ -5,6 +5,7 @@ import { ComposedChart, Bar, Line, Area, XAxis, YAxis, Tooltip, ResponsiveContai
 import { AlertCircle, TrendingUp, TrendingDown, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 import Select from '../ui/Select';
 
 const formatCurrency = (amount) => {
@@ -345,8 +346,13 @@ const ForecastChart = ({ endDate: externalEndDate }) => {
         <div className="bg-surface-2 p-5 rounded-[28px] border border-border/40 flex items-center justify-between shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-extrabold text-muted tracking-wider">Solde Estimé à {horizon} mois</span>
-            <h4 className="font-premium-numbers text-2xl font-black text-primary">{formatCurrency(finalProjectedBalance)}</h4>
-            <p className="text-[10px] text-muted">Marge de confiance : ± {formatCurrency(confidenceMargin)}</p>
+            <div className="mt-1">
+              <AmountDisplay amount={finalProjectedBalance} type={finalProjectedBalance >= 0 ? 'income' : 'expense'} size="xl" showSign />
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-muted font-bold mt-1">
+              <span>Marge de confiance : ±</span>
+              <AmountDisplay amount={confidenceMargin} size="xs" type="neutral" />
+            </div>
           </div>
 
           <div className="text-right space-y-1">

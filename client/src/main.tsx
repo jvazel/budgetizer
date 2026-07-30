@@ -8,6 +8,10 @@ import { queryClient } from './services/queryClient'
 import { getCacheValue, setCacheValue, deleteCacheValue } from './utils/idbHelper'
 import { initOfflineSync } from './services/offlineSync'
 import api from './services/api'
+import { applyAccentColor, getSavedAccentColor } from './utils/accentThemeHelper'
+
+// Apply initial accent theme
+applyAccentColor(getSavedAccentColor());
 
 // Define IndexedDB persister for query cache
 const persister = {

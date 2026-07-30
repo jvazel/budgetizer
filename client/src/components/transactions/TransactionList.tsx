@@ -2,6 +2,7 @@ import React from 'react';
 import { Trash2, Pencil, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { triggerHaptic } from '../../utils/hapticHelper';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const CategoryIcon = ({ tx }) => {
   if (tx.type === 'transfer') {
@@ -270,13 +271,14 @@ const TransactionList = ({ transactions, onDelete, onEdit, currentAccountId }) =
                   <div className="text-right shrink-0 ml-auto pl-1">
                     {(() => {
                       const isDebit = tx.type === 'expense' || (tx.type === 'transfer' && !(currentAccountId && (tx.toAccountId?._id === currentAccountId || tx.toAccountId === currentAccountId)));
-                      const isHighAlert = isDebit && tx.amount >= alertThreshold;
-                      const colorClass = isDebit ? (isHighAlert ? 'text-danger font-extrabold' : 'text-primary/80') : 'text-accent font-extrabold';
                       
                       return (
-                        <p className={`font-premium-numbers font-extrabold text-sm sm:text-base ${colorClass}`}>
-                          {isDebit ? '-' : '+'}{formatCurrency(tx.amount)}
-                        </p>
+                        <AmountDisplay
+                          amount={tx.amount}
+                          size="sm"
+                          type={isDebit ? 'expense' : 'income'}
+                          showSign
+                        />
                       );
                     })()}
                   </div>

@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { ChevronLeft, ChevronRight, AlertTriangle, ShieldCheck, CheckCircle2, X, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatMonthQuery = (date) => {
   const y = date.getFullYear();
@@ -267,11 +268,10 @@ const BudgetActualChart = ({ period: externalPeriod, setPeriod: externalSetPerio
                         <span className="text-base shrink-0">{entry.categoryIcon || '📁'}</span>
                         <h4 className="text-xs font-bold text-primary truncate leading-tight group-hover:text-accent transition-colors">{entry.name}</h4>
                       </div>
-                      <div className="text-right">
-                        <span className="font-premium-numbers text-xs font-bold text-primary">
-                          {formatCurrency(entry.real)}
-                        </span>
-                        <span className="text-[10px] text-muted font-premium-numbers"> / {formatCurrency(entry.budget)}</span>
+                      <div className="text-right flex items-center gap-1">
+                        <AmountDisplay amount={entry.real} type={isExceeded ? 'expense' : 'neutral'} size="xs" />
+                        <span className="text-[10px] text-muted font-bold">/</span>
+                        <AmountDisplay amount={entry.budget} size="xs" type="neutral" />
                       </div>
                     </div>
 
@@ -292,11 +292,16 @@ const BudgetActualChart = ({ period: externalPeriod, setPeriod: externalSetPerio
 
                     {/* Exceed details warning if any */}
                     <div className="flex justify-between items-center text-[9px] font-bold">
-                      <span className={`${isExceeded ? 'text-danger' : 'text-muted'} font-premium-numbers`}>
-                        {isExceeded 
-                          ? `Dépassement de ${formatCurrency(entry.real - entry.budget)}` 
-                          : `${percentage}% consommé`}
-                      </span>
+                      {isExceeded ? (
+                        <span className="text-danger flex items-center gap-1 font-premium-numbers">
+                          <span>Dépassement de</span>
+                          <AmountDisplay amount={entry.real - entry.budget} type="expense" size="xs" />
+                        </span>
+                      ) : (
+                        <span className="text-muted font-premium-numbers">
+                          {percentage}% consommé
+                        </span>
+                      )}
                       {isExceeded && (
                         <span className="bg-danger/10 text-danger border border-danger/25 px-1.5 py-0.5 rounded-full">
                           Alerte dépassement

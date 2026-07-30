@@ -158,7 +158,7 @@ describe('WaterfallChart Component', () => {
       expect(screen.getAllByText('Déficit').length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText(/-500/)).toBeInTheDocument();
+    expect(screen.getByText('500')).toBeInTheDocument();
   });
 });
 

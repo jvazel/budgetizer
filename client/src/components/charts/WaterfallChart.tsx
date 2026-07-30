@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BottomSheet from '../ui/BottomSheet';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -233,9 +234,9 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
               <ArrowUpRight size={10} className="text-emerald-400 shrink-0" />
               <p className="text-[8.5px] text-emerald-300 font-bold uppercase tracking-wider">Revenus</p>
             </div>
-            <h4 className="text-sm font-extrabold text-emerald-400 mt-1 leading-tight font-mono">
-              {formatCurrency(data.totalIncome)}
-            </h4>
+            <div className="mt-1">
+              <AmountDisplay amount={data.totalIncome} type="income" size="sm" showSign />
+            </div>
           </div>
 
           {/* Total Expenses */}
@@ -244,9 +245,9 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
               <ArrowDownRight size={10} className="text-rose-400 shrink-0" />
               <p className="text-[8.5px] text-rose-300 font-bold uppercase tracking-wider">Dépenses</p>
             </div>
-            <h4 className="text-sm font-extrabold text-rose-400 mt-1 leading-tight font-mono">
-              {formatCurrency(data.totalExpenses)}
-            </h4>
+            <div className="mt-1">
+              <AmountDisplay amount={data.totalExpenses} type="expense" size="sm" showSign />
+            </div>
           </div>
 
           {/* Net Savings */}
@@ -257,9 +258,9 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
                 {data.netSavings >= 0 ? 'Épargne' : 'Déficit'}
               </p>
             </div>
-            <h4 className={`text-sm font-extrabold mt-1 leading-tight font-mono ${data.netSavings >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
-              {formatCurrency(data.netSavings)}
-            </h4>
+            <div className="mt-1">
+              <AmountDisplay amount={data.netSavings} type={data.netSavings >= 0 ? 'income' : 'expense'} size="sm" showSign />
+            </div>
           </div>
         </div>
       )}

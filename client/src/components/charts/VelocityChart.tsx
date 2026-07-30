@@ -3,6 +3,7 @@ import { useBudgets } from '../../hooks/useBudgets';
 import { useTransactions } from '../../hooks/useTransactions';
 import { getDaysRemaining, getTargetVelocity, getActualVelocity, getDepletionDate } from '../../utils/velocityHelper';
 import { AlertTriangle, CheckCircle2, ChevronDown, Flame, Info, ShieldCheck, HelpCircle, Gauge, ChevronRight } from 'lucide-react';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -288,16 +289,18 @@ const VelocityChart = ({ isWidget = false, onViewDetail, period: externalPeriod 
             <div className="w-1/2 space-y-2 text-left">
               <div className="space-y-0.5">
                 <span className="text-[8px] font-bold text-muted uppercase">Vitesse Réelle</span>
-                <p className="font-premium-numbers text-xs font-extrabold text-primary">
-                  {formatCurrency(data.actualVelocity)}/j
-                </p>
+                <div className="flex items-center gap-1">
+                  <AmountDisplay amount={data.actualVelocity} size="xs" type={isCrashing ? 'expense' : 'neutral'} />
+                  <span className="text-[9px] text-muted">/j</span>
+                </div>
               </div>
 
               <div className="space-y-0.5">
                 <span className="text-[8px] font-bold text-muted uppercase">Limite (Cible)</span>
-                <p className="font-premium-numbers text-xs font-bold text-secondary">
-                  {formatCurrency(data.targetVelocity)}/j
-                </p>
+                <div className="flex items-center gap-1">
+                  <AmountDisplay amount={data.targetVelocity} size="xs" type="neutral" />
+                  <span className="text-[9px] text-muted">/j</span>
+                </div>
               </div>
 
               <div className="pt-1.5 border-t border-border/20">
@@ -489,15 +492,17 @@ const VelocityChart = ({ isWidget = false, onViewDetail, period: externalPeriod 
             <div className="w-full border-t border-border/20 pt-4 mt-2 grid grid-cols-2 gap-4 text-center">
               <div>
                 <span className="premium-label block text-muted">Vitesse réelle</span>
-                <span className="font-premium-numbers text-xs font-extrabold text-primary block mt-0.5">
-                  {formatCurrency(data.actualVelocity)} <span className="text-[9px] font-normal text-muted">/ j</span>
-                </span>
+                <div className="flex items-center justify-center gap-1 mt-0.5">
+                  <AmountDisplay amount={data.actualVelocity} size="xs" type={data.actualVelocity > data.targetVelocity ? 'expense' : 'neutral'} />
+                  <span className="text-[9px] font-normal text-muted">/ j</span>
+                </div>
               </div>
               <div>
                 <span className="premium-label block text-muted">Vitesse cible</span>
-                <span className="font-premium-numbers text-xs font-extrabold text-primary block mt-0.5">
-                  {formatCurrency(data.targetVelocity)} <span className="text-[9px] font-normal text-muted">/ j</span>
-                </span>
+                <div className="flex items-center justify-center gap-1 mt-0.5">
+                  <AmountDisplay amount={data.targetVelocity} size="xs" type="neutral" />
+                  <span className="text-[9px] font-normal text-muted">/ j</span>
+                </div>
               </div>
             </div>
           </div>

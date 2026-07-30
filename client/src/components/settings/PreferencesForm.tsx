@@ -7,6 +7,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { usePwa } from '../../context/PwaContext';
 import Select from '../ui/Select';
+import { ACCENT_THEMES, applyAccentColor, getSavedAccentColor } from '../../utils/accentThemeHelper';
 
 const currencySymbolMap = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', JPY: '¥' };
 
@@ -25,6 +26,13 @@ const PreferencesForm = ({ user, setUser }) => {
   } = usePwa();
 
   const [showIOSModal, setShowIOSModal] = useState(false);
+  const [activeAccent, setActiveAccent] = useState(() => getSavedAccentColor());
+
+  const handleSelectAccent = (key: string) => {
+    setActiveAccent(key);
+    applyAccentColor(key);
+    toast.success('Couleur d\'accentuation mise à jour !');
+  };
 
   const {
     register,
@@ -113,6 +121,33 @@ const PreferencesForm = ({ user, setUser }) => {
           </div>
 
           {errors.currencyCode && <p className="text-[10px] text-danger pl-1">{errors.currencyCode.message}</p>}
+
+          {/* Brand Accent Color picker */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h4 className="text-xs font-bold text-primary">Couleur d'accentuation de marque</h4>
+              <p className="text-[10px] text-muted">Personnalise les surbrillances et nuances principales de l'app.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {ACCENT_THEMES.map((theme) => {
+                const isSelected = activeAccent === theme.key;
+                return (
+                  <button
+                    key={theme.key}
+                    type="button"
+                    onClick={() => handleSelectAccent(theme.key)}
+                    title={theme.name}
+                    className={`w-7 h-7 rounded-full transition-all flex items-center justify-center border ${
+                      isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-base scale-110' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: theme.color, borderColor: 'rgba(255,255,255,0.2)' }}
+                  >
+                    {isSelected && <CheckCircle size={14} className="text-white drop-shadow" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <hr className="border-border/30" />
 
