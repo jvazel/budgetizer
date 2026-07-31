@@ -6,6 +6,7 @@ import ScheduledFormSheet from '../components/scheduled/ScheduledFormSheet';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BottomSheet from '../components/ui/BottomSheet';
 import { Plus, Clock, Check, RefreshCw, Trash2, Edit, CreditCard } from 'lucide-react';
+import AmountDisplay from '../components/ui/AmountDisplay';
 
 const ScheduledPage = () => {
   const { isScrolled } = useContext(HeaderPortalContext);
@@ -187,7 +188,14 @@ const ScheduledPage = () => {
                           </p>
                         </div>
                       </div>
-                      <span className="font-premium-numbers font-bold text-primary shrink-0 pl-1">{formatCurrency(tx.amount)}</span>
+                      <div className="shrink-0 pl-1">
+                        <AmountDisplay
+                          amount={tx.amount}
+                          size="sm"
+                          type={tx.type === 'expense' ? 'expense' : tx.type === 'income' ? 'income' : 'transfer'}
+                          showSign
+                        />
+                      </div>
                     </div>
 
                     {/* Actions inside card */}
@@ -278,13 +286,18 @@ const ScheduledPage = () => {
                         </div>
                         
                         <div className="text-right shrink-0 pl-1">
-                          <span className={`font-premium-numbers font-bold ${
-                            st.type === 'expense' || (st.type === 'transfer' && st.toAccountId?.type === 'credit')
-                              ? 'text-primary'
-                              : 'text-accent'
-                          }`}>
-                            {st.type === 'expense' || (st.type === 'transfer' && st.toAccountId?.type === 'credit') ? '-' : '+'}{formatCurrency(st.amount)}
-                          </span>
+                          <AmountDisplay
+                            amount={st.amount}
+                            size="sm"
+                            type={
+                              st.type === 'expense' || (st.type === 'transfer' && (st.toAccountId as { type?: string })?.type === 'credit')
+                                ? 'expense'
+                                : st.type === 'income'
+                                ? 'income'
+                                : 'transfer'
+                            }
+                            showSign
+                          />
                           <p className="text-[9px] text-muted mt-1 whitespace-nowrap">
                             {frequencyText} · Prochain : {new Date(st.nextDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                           </p>
@@ -349,12 +362,15 @@ const ScheduledPage = () => {
                 </span>
               </div>
 
-              <h2 className="font-mono text-3xl font-black text-primary mb-1 font-premium-numbers">
-                {formatCurrency(totalMonthlyCost)} <span className="text-sm font-medium text-secondary">/ mois</span>
-              </h2>
-              <p className="text-xs text-muted font-medium">
-                Soit {formatCurrency(totalAnnualCost)} par an
-              </p>
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <AmountDisplay amount={totalMonthlyCost} size="3xl" type="expense" />
+                <span className="text-sm font-medium text-secondary">/ mois</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-muted font-medium">
+                <span>Soit</span>
+                <AmountDisplay amount={totalAnnualCost} size="xs" type="neutral" />
+                <span>par an</span>
+              </div>
             </div>
           </section>
 
@@ -409,9 +425,7 @@ const ScheduledPage = () => {
                       </div>
 
                       <div className="flex items-center gap-3 text-right shrink-0 ml-auto pl-1">
-                        <span className="font-premium-numbers font-bold text-primary">
-                          -{formatCurrency(sub.amount)}
-                        </span>
+                        <AmountDisplay amount={sub.amount} size="sm" type="expense" showSign />
                         <div className="flex gap-1.5 shrink-0">
                           <button 
                             onClick={() => handleOpenEdit(sub)}

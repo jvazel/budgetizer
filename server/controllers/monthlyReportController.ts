@@ -113,14 +113,14 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
     });
 
     // Revenus & Dépenses Mois M-1
-    let _incomePrev = 0;
+    let incomePrev = 0;
     let expensesPrev = 0;
     txsPrev.forEach(tx => {
       const sourceChecking = checkingAccountIds.some(id => id.toString() === tx.accountId?.toString());
       const destChecking = tx.toAccountId ? checkingAccountIds.some(id => id.toString() === tx.toAccountId!.toString()) : false;
 
       if (tx.type === 'income' && sourceChecking) {
-        _incomePrev += tx.amount;
+        incomePrev += tx.amount;
       } else if (tx.type === 'expense' && sourceChecking) {
         expensesPrev += tx.amount;
       } else if (tx.type === 'transfer') {
@@ -264,11 +264,11 @@ export const getMonthlyReport = async (req: AppRequest, res: AppResponse) => {
         if (ratio >= 3 && tx.amount >= 50) {
           unusualTransactions.push({
             transactionId: tx._id,
-            description: tx.description,
-            note: tx.note,
+            description: tx.description || '',
+            note: tx.note || '',
             amount: tx.amount,
             date: tx.date,
-            categoryName: (tx.categoryId as { name?: string }).name,
+            categoryName: (tx.categoryId as { name?: string }).name || 'Autre',
             ratio: parseFloat(ratio.toFixed(1))
           });
 

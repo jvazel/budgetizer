@@ -231,8 +231,8 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
           {/* Total Income */}
           <div className="bg-emerald-500/5 p-3.5 rounded-[22px] border border-emerald-500/20 shadow-sm flex flex-col justify-between">
             <div className="flex items-center gap-1">
-              <ArrowUpRight size={10} className="text-emerald-400 shrink-0" />
-              <p className="text-[8.5px] text-emerald-300 font-bold uppercase tracking-wider">Revenus</p>
+              <ArrowUpRight size={10} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <p className="text-[8.5px] text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Revenus</p>
             </div>
             <div className="mt-1">
               <AmountDisplay amount={data.totalIncome} type="income" size="sm" showSign />
@@ -242,8 +242,8 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
           {/* Total Expenses */}
           <div className="bg-rose-500/5 p-3.5 rounded-[22px] border border-rose-500/20 shadow-sm flex flex-col justify-between">
             <div className="flex items-center gap-1">
-              <ArrowDownRight size={10} className="text-rose-400 shrink-0" />
-              <p className="text-[8.5px] text-rose-300 font-bold uppercase tracking-wider">Dépenses</p>
+              <ArrowDownRight size={10} className="text-rose-600 dark:text-rose-400 shrink-0" />
+              <p className="text-[8.5px] text-rose-700 dark:text-rose-300 font-extrabold uppercase tracking-wider">Dépenses</p>
             </div>
             <div className="mt-1">
               <AmountDisplay amount={data.totalExpenses} type="expense" size="sm" showSign />
@@ -253,8 +253,8 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
           {/* Net Savings */}
           <div className={`${data.netSavings >= 0 ? 'bg-purple-500/5 border-purple-500/20' : 'bg-red-500/5 border-red-500/20'} p-3.5 rounded-[22px] border shadow-sm flex flex-col justify-between`}>
             <div className="flex items-center gap-1">
-              <Activity size={10} className={data.netSavings >= 0 ? 'text-purple-400' : 'text-red-400'} />
-              <p className={`text-[8.5px] font-bold uppercase tracking-wider ${data.netSavings >= 0 ? 'text-purple-300' : 'text-red-300'}`}>
+              <Activity size={10} className={data.netSavings >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-rose-600 dark:text-rose-400'} />
+              <p className={`text-[8.5px] font-extrabold uppercase tracking-wider ${data.netSavings >= 0 ? 'text-purple-700 dark:text-purple-300' : 'text-rose-700 dark:text-rose-300'}`}>
                 {data.netSavings >= 0 ? 'Épargne' : 'Déficit'}
               </p>
             </div>
@@ -375,19 +375,19 @@ const WaterfallChart = ({ period: externalPeriod, setPeriod: externalSetPeriod }
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
               <p>
-                La colonne de départ <strong className="text-emerald-400">Revenus</strong> représente le montant total perçu au cours du mois.
+                La colonne de départ <strong className="text-emerald-700 dark:text-emerald-400">Revenus</strong> représente le montant total perçu au cours du mois.
               </p>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1.5" />
               <p>
-                Les marches descendantes correspondent aux <strong className="text-rose-400">Dépenses</strong> par catégorie, ordonnées par importance. Elles réduisent progressivement le solde accumulé.
+                Les marches descendantes correspondent aux <strong className="text-rose-700 dark:text-rose-400">Dépenses</strong> par catégorie, ordonnées par importance. Elles réduisent progressivement le solde accumulé.
               </p>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 rounded-full bg-purple-500 shrink-0 mt-1.5" />
               <p>
-                La colonne finale indique votre <strong className="text-purple-400">Épargne Nette</strong> (solde restant positif) ou votre <strong className="text-rose-400">Déficit Net</strong> (solde négatif).
+                La colonne finale indique votre <strong className="text-purple-700 dark:text-purple-400">Épargne Nette</strong> (solde restant positif) ou votre <strong className="text-rose-700 dark:text-rose-400">Déficit Net</strong> (solde négatif).
               </p>
             </div>
           </div>

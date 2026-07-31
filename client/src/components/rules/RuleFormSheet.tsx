@@ -4,6 +4,7 @@ import { useCategories } from '../../hooks/useCategories';
 import { testRule } from '../../services/ruleService';
 import { Plus, Trash2, CheckCircle2, AlertCircle, Play, Sliders, X } from 'lucide-react';
 import BottomSheet from '../ui/BottomSheet';
+import Select from '../ui/Select';
 
 interface RuleFormSheetProps {
   isOpen: boolean;
@@ -165,24 +166,24 @@ export const RuleFormSheet: React.FC<RuleFormSheetProps> = ({
               <div key={idx} className="bg-surface p-3 rounded-2xl border border-border/40 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[9px] font-bold text-muted mb-1">Champ</label>
-                    <select
+                    <Select
+                      label="Champ"
                       value={cond.field}
                       onChange={e => handleConditionChange(idx, 'field', e.target.value as ConditionField)}
-                      className="w-full bg-surface-2 border border-border/40 rounded-xl px-2.5 py-2 text-xs font-bold text-primary focus:outline-none focus:border-copper/50"
+                      className="w-full bg-surface-2 border border-border/40 rounded-xl px-2.5 py-2 text-xs font-bold text-primary"
                     >
                       <option value="description">Libellé</option>
                       <option value="amount">Montant (€)</option>
                       <option value="type">Type</option>
-                    </select>
+                    </Select>
                   </div>
 
                   <div>
-                    <label className="block text-[9px] font-bold text-muted mb-1">Condition</label>
-                    <select
+                    <Select
+                      label="Condition"
                       value={cond.operator}
                       onChange={e => handleConditionChange(idx, 'operator', e.target.value as ConditionOperator)}
-                      className="w-full bg-surface-2 border border-border/40 rounded-xl px-2.5 py-2 text-xs font-bold text-primary focus:outline-none focus:border-copper/50"
+                      className="w-full bg-surface-2 border border-border/40 rounded-xl px-2.5 py-2 text-xs font-bold text-primary"
                     >
                       <option value="contains">contient</option>
                       <option value="equals">égal à</option>
@@ -190,7 +191,7 @@ export const RuleFormSheet: React.FC<RuleFormSheetProps> = ({
                       <option value="greater_than">plus grand que</option>
                       <option value="less_than">plus petit que</option>
                       <option value="regex">regex</option>
-                    </select>
+                    </Select>
                   </div>
                 </div>
 
@@ -235,17 +236,17 @@ export const RuleFormSheet: React.FC<RuleFormSheetProps> = ({
             </label>
 
             <div>
-              <label className="block text-[10px] font-bold text-secondary mb-1">Attribuer la catégorie</label>
-              <select
+              <Select
+                label="Attribuer la catégorie"
                 value={categoryId}
                 onChange={e => setCategoryId(e.target.value)}
-                className="w-full bg-surface border border-border/40 rounded-2xl px-3.5 py-2.5 text-xs text-primary font-bold focus:outline-none focus:border-copper/50"
+                className="w-full bg-surface border border-border/40 rounded-2xl px-3.5 py-2.5 text-xs text-primary font-bold"
               >
                 <option value="">-- Aucune modification --</option>
                 {categories.map(c => (
                   <option key={c._id} value={c._id}>{c.icon || '📁'} {c.name}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>

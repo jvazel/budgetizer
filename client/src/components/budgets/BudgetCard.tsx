@@ -8,15 +8,15 @@ const BudgetCard = ({ budget, onEdit, onDelete, selectedWeekStart, selectedMonth
 
   // 1. Color System based on progress with Neobank Liquid Glows
   let barGradient = 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-glow-emerald'; // Vert Émeraude / Cyan
-  let textColor = 'text-emerald-400';
+  let textColor = 'text-emerald-700 dark:text-emerald-400';
   let borderLeftClass = 'border-l-4 border-l-emerald-500';
   if (budget.percentage >= 70 && budget.percentage < 90) {
     barGradient = 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_12px_rgba(245,158,11,0.4)]'; // Orange
-    textColor = 'text-amber-400';
+    textColor = 'text-amber-700 dark:text-amber-400';
     borderLeftClass = 'border-l-4 border-l-amber-500';
   } else if (budget.percentage >= 90) {
     barGradient = 'bg-gradient-to-r from-rose-500 to-red-600 shadow-glow-rose'; // Rouge Néon
-    textColor = 'text-rose-400';
+    textColor = 'text-rose-700 dark:text-rose-400';
     borderLeftClass = 'border-l-4 border-l-rose-500';
   }
 

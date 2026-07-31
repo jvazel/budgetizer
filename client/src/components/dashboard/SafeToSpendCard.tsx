@@ -60,19 +60,19 @@ export const SafeToSpendCard: React.FC = () => {
   const statusConfig = {
     healthy: {
       text: 'Sain & Sécurisé',
-      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+      color: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
       glow: 'from-emerald-500/15 via-teal-500/5 to-transparent',
       icon: <ShieldCheck className="w-4 h-4" />
     },
     warning: {
       text: 'Attention Recommandée',
-      color: 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
+      color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
       glow: 'from-amber-500/15 via-orange-500/5 to-transparent',
       icon: <AlertTriangle className="w-4 h-4" />
     },
     critical: {
       text: 'Budget Critique',
-      color: 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.3)] animate-pulse',
+      color: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.3)] animate-pulse',
       glow: 'from-rose-500/20 via-red-500/10 to-transparent',
       icon: <AlertCircle className="w-4 h-4" />
     }
@@ -131,7 +131,7 @@ export const SafeToSpendCard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2.5 mt-3">
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 backdrop-blur-sm shadow-sm inline-flex items-center gap-1">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 backdrop-blur-sm shadow-sm inline-flex items-center gap-1">
               {isPrivate ? (
                 '•• € / jour'
               ) : (

@@ -359,25 +359,25 @@ const FixedVarChart = ({ period: externalPeriod, setPeriod: externalSetPeriod, i
           {/* Fixed total */}
           <div className="bg-indigo-500/5 p-3.5 rounded-[22px] border border-indigo-500/20 shadow-sm flex flex-col justify-between">
             <div className="flex items-center gap-1.5">
-              <Lock size={10} className="text-indigo-400 shrink-0" />
-              <p className="text-[8.5px] text-indigo-300 font-bold uppercase tracking-wider">Fixes</p>
+              <Lock size={10} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <p className="text-[8.5px] text-indigo-700 dark:text-indigo-300 font-extrabold uppercase tracking-wider">Fixes</p>
             </div>
             <div className="mt-1">
                 <AmountDisplay amount={data.totalFixed} size="sm" type="expense" />
             </div>
-            <p className="text-[8px] text-indigo-400/70 font-bold mt-0.5">{data.fixedRatio}%</p>
+            <p className="text-[8px] text-indigo-600 dark:text-indigo-400/70 font-bold mt-0.5">{data.fixedRatio}%</p>
           </div>
 
           {/* Variable total */}
           <div className="bg-amber-500/5 p-3.5 rounded-[22px] border border-amber-500/20 shadow-sm flex flex-col justify-between">
             <div className="flex items-center gap-1.5">
-              <Shuffle size={10} className="text-amber-400 shrink-0" />
-              <p className="text-[8.5px] text-amber-300 font-bold uppercase tracking-wider">Variables</p>
+              <Shuffle size={10} className="text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="text-[8.5px] text-amber-700 dark:text-amber-300 font-extrabold uppercase tracking-wider">Variables</p>
             </div>
             <div className="mt-1">
                 <AmountDisplay amount={data.totalVariable} size="sm" type="expense" />
             </div>
-            <p className="text-[8px] text-amber-400/70 font-bold mt-0.5">{data.variableRatio}%</p>
+            <p className="text-[8px] text-amber-600 dark:text-amber-400/70 font-bold mt-0.5">{data.variableRatio}%</p>
           </div>
         </div>
       )}

@@ -29,17 +29,15 @@ const CustomTooltip = ({ active, payload, label }) => {
         {payload.map((item, idx) => {
           if (item.name === "confidence" || item.dataKey === "confidence") return null;
           let labelName = item.name;
-          let valColor = item.color || item.stroke;
-          if (item.name === 'balance') { labelName = 'Solde Réel'; valColor = '#10b981'; }
-          else if (item.name === 'projBalance') { labelName = 'Solde Projeté'; valColor = '#8b5cf6'; }
-          else if (item.name === 'income') { labelName = 'Revenus Réels'; valColor = '#10b981'; }
-          else if (item.name === 'expenses') { labelName = 'Dépenses Réelles'; valColor = '#ef4444'; }
+          let type: 'income' | 'expense' | 'neutral' = 'neutral';
+          if (item.name === 'balance') { labelName = 'Solde Réel'; type = item.value >= 0 ? 'income' : 'expense'; }
+          else if (item.name === 'projBalance') { labelName = 'Solde Projeté'; type = item.value >= 0 ? 'income' : 'expense'; }
+          else if (item.name === 'income') { labelName = 'Revenus Réels'; type = 'income'; }
+          else if (item.name === 'expenses') { labelName = 'Dépenses Réelles'; type = 'expense'; }
           return (
             <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
               <span className="text-secondary">{labelName} :</span>
-              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                {formatCurrency(item.value)}
-              </span>
+              <AmountDisplay amount={item.value} type={type} size="xs" />
             </div>
           );
         })}
@@ -392,11 +390,14 @@ const ForecastChart = ({ endDate: externalEndDate }) => {
                 Détail : {selectedMonth ? formatMonthLabel(selectedMonth.month) : ''}
                 {selectedMonth?.isForecast ? ' (Prévisions)' : ' (Historique)'}
               </h3>
-              <p className="text-[10px] text-muted mt-0.5">
-                {selectedMonth?.isForecast 
-                  ? `Solde projeté : ${formatCurrency(selectedMonth?.projBalance || 0)}`
-                  : `Épargne réelle : ${formatCurrency(selectedMonth?.balance || 0)}`}
-              </p>
+              <div className="text-[10px] text-muted mt-0.5 flex items-center gap-1">
+                <span>{selectedMonth?.isForecast ? 'Solde projeté :' : 'Épargne réelle :'}</span>
+                <AmountDisplay 
+                  amount={selectedMonth?.isForecast ? (selectedMonth?.projBalance || 0) : (selectedMonth?.balance || 0)} 
+                  size="xs" 
+                  type="neutral" 
+                />
+              </div>
             </div>
             <button 
               onClick={() => setIsSheetOpen(false)} 
@@ -438,12 +439,12 @@ const ForecastChart = ({ endDate: externalEndDate }) => {
                         )}
                       </p>
                     </div>
-                    <span className={`font-mono text-xs font-black shrink-0 ${
-                      tx.type === 'income' ? 'text-emerald-400' : tx.type === 'expense' ? 'text-danger' : 'text-blue-400'
-                    }`}>
-                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                      {formatCurrency(tx.amount)}
-                    </span>
+                    <AmountDisplay 
+                      amount={tx.amount} 
+                      type={tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : 'transfer'} 
+                      size="xs" 
+                      showSign 
+                    />
                   </div>
                 ))
               )}

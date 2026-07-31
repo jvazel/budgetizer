@@ -284,6 +284,7 @@ Cette technique éprouvée consiste à allouer une somme limite mensuelle, hebdo
 
 ### 5.2 Planifications et Échéancier
 Pour anticiper vos dépenses et revenus récurrents (loyer, abonnements, salaire), configurez une planification :
+* **Affichage des Montants Harmonisé (`<AmountDisplay />`)** : L'ensemble des montants des échéances et abonnements s'affiche via le composant universel `<AmountDisplay />` avec typographie tabulaire `font-premium-numbers` et centimes atténués.
 * **Fréquence** : Indiquez l'intervalle (ex. : toutes les 2 semaines, tous les mois).
 * **Gestion intelligente des fins de mois** : Si vous configurez une récurrence le 31 du mois, Budgetizer ajuste automatiquement la date lors des mois plus courts (le 30 avril ou le 28/29 février) et repasse automatiquement au 31 dès que le mois le permet, évitant ainsi les décalages progressifs de date.
 * **Mode d'exécution** :

@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } f
 import { HelpCircle, Calendar, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from '../ui/Select';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -18,9 +19,7 @@ const CustomTooltip1 = ({ active, payload, label }) => {
         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Le : {formattedDate}</p>
         <div className="flex items-center justify-between gap-6 text-[11px] font-medium">
           <span className="text-secondary">Solde estimé :</span>
-          <span className="font-premium-numbers font-bold text-accent">
-            {formatCurrency(payload[0].value)}
-          </span>
+          <AmountDisplay amount={payload[0].value} type={payload[0].value >= 0 ? 'income' : 'expense'} size="xs" />
         </div>
       </div>
     );
@@ -35,13 +34,10 @@ const CustomTooltip2 = ({ active, payload, label }) => {
         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{label}</p>
         {payload.map((item, idx) => {
           const labelName = item.name === 'income' ? 'Revenus' : 'Dépenses';
-          const valColor = item.name === 'income' ? '#10b981' : '#ef4444';
           return (
             <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
               <span className="text-secondary">{labelName} :</span>
-              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                {formatCurrency(item.value)}
-              </span>
+              <AmountDisplay amount={item.value} type={item.name === 'income' ? 'income' : 'expense'} size="xs" />
             </div>
           );
         })}
@@ -266,9 +262,12 @@ const FutureChart = () => {
                         </div>
                       </div>
 
-                      <span className={`font-mono text-xs font-black ${tx.type === 'expense' ? 'text-primary' : 'text-accent'}`}>
-                        {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount)}
-                      </span>
+                      <AmountDisplay 
+                        amount={tx.amount} 
+                        type={tx.type === 'expense' ? 'expense' : 'income'} 
+                        size="xs" 
+                        showSign 
+                      />
                     </div>
                   ))}
                 </div>

@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AmountDisplay from '../ui/AmountDisplay';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -17,28 +18,28 @@ const CustomTooltip = ({ active, payload, label }) => {
         
         <div className="pb-1.5 border-b border-border/20">
           <p className="text-[9px] font-bold text-secondary uppercase tracking-wider">Richesse Nette</p>
-          <p className="font-premium-numbers text-base font-extrabold text-purple mt-0.5">
-            {formatCurrency(item.netWorth)}
-          </p>
+          <div className="mt-0.5">
+            <AmountDisplay amount={item.netWorth} size="md" type={item.netWorth >= 0 ? 'income' : 'expense'} />
+          </div>
         </div>
 
         <div className="space-y-1.5 text-[10px]">
           <div className="flex justify-between items-center">
             <span className="text-secondary font-medium">Total Actifs :</span>
-            <span className="font-mono font-bold text-accent">{formatCurrency(item.totalAssets)}</span>
+            <AmountDisplay amount={item.totalAssets} size="xs" type="income" />
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-secondary font-medium">Checking :</span>
-            <span className="font-mono font-bold text-primary">{formatCurrency(item.checkingBalance)}</span>
+            <span className="text-secondary font-medium font-sans">Checking :</span>
+            <AmountDisplay amount={item.checkingBalance} size="xs" type="neutral" />
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-secondary font-medium">Épargne :</span>
-            <span className="font-mono font-bold text-primary">{formatCurrency(item.savingsBalance)}</span>
+            <span className="text-secondary font-medium font-sans">Épargne :</span>
+            <AmountDisplay amount={item.savingsBalance} size="xs" type="neutral" />
           </div>
           {item.totalDebts > 0 && (
             <div className="flex justify-between items-center pt-1 border-t border-border/20">
-              <span className="text-secondary font-medium">Passifs / Dettes :</span>
-              <span className="font-mono font-bold text-danger">-{formatCurrency(item.totalDebts)}</span>
+              <span className="text-secondary font-medium font-sans">Passifs / Dettes :</span>
+              <AmountDisplay amount={item.totalDebts} size="xs" type="expense" showSign />
             </div>
           )}
         </div>
@@ -148,7 +149,9 @@ const NetWorthChart = ({ endDate: externalEndDate }) => {
         <div className="bg-surface-2 p-4.5 rounded-[24px] border border-border/40 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Richesse Nette Actuelle</p>
-            <h4 className="text-lg font-extrabold text-primary mt-1">{formatCurrency(currentNetWorth)}</h4>
+            <div className="mt-1">
+              <AmountDisplay amount={currentNetWorth} size="lg" type={currentNetWorth >= 0 ? 'income' : 'expense'} />
+            </div>
           </div>
           <div className="flex items-center gap-1 mt-2">
             {changeValue >= 0 ? (
@@ -156,9 +159,12 @@ const NetWorthChart = ({ endDate: externalEndDate }) => {
             ) : (
               <TrendingDown size={14} className="text-danger shrink-0" />
             )}
-            <span className={`text-[10px] font-extrabold ${changeValue >= 0 ? 'text-accent' : 'text-danger'}`}>
-              {changeValue >= 0 ? '+' : ''}{formatCurrency(changeValue)} ({changePercentage >= 0 ? '+' : ''}{changePercentage.toFixed(1)}%)
-            </span>
+            <div className="flex items-center gap-1 text-[10px] font-extrabold">
+              <AmountDisplay amount={changeValue} size="xs" type={changeValue >= 0 ? 'income' : 'expense'} showSign />
+              <span className={changeValue >= 0 ? 'text-accent' : 'text-danger'}>
+                ({changePercentage >= 0 ? '+' : ''}{changePercentage.toFixed(1)}%)
+              </span>
+            </div>
           </div>
         </div>
 
@@ -168,11 +174,11 @@ const NetWorthChart = ({ endDate: externalEndDate }) => {
             <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Extrêmes de la période</p>
             <div className="flex justify-between items-center text-[10px] pt-1">
               <span className="text-muted font-medium">Sommet :</span>
-              <span className="font-extrabold text-primary">{formatCurrency(peakNetWorth)}</span>
+              <AmountDisplay amount={peakNetWorth} size="xs" type="neutral" />
             </div>
             <div className="flex justify-between items-center text-[10px]">
               <span className="text-muted font-medium">Creux :</span>
-              <span className="font-extrabold text-primary">{formatCurrency(lowestNetWorth)}</span>
+              <AmountDisplay amount={lowestNetWorth} size="xs" type="neutral" />
             </div>
           </div>
           <div className="text-[8px] text-muted/80 font-bold flex items-center gap-1 mt-2">

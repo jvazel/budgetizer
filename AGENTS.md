@@ -16,13 +16,15 @@ Ce document est conçu pour servir de récapitulatif complet et de contexte de r
 - Profiter d'**États Vides Contextuels (EmptyState)** avec auras lumineuses glassmorphic et actions guidées.
 - Consulter 4 **Cartes KPI XXL** (Revenus, Dépenses, Solde Net, Taux d'épargne %) et leurs Sparklines/Gradient Area Charts vectoriels.
 - Suivre en temps réel leur **Restant à Dépenser (Safe-to-Spend)** déduisant les charges fixes et cotisations d'épargne récurrentes.
-- Visualiser le parcours complet de leur argent via un **Diagramme de Flux Sankey Vectoriel** filtrable par mois dans le module d'Analyses (avec Drill-Down interactif et intégration universelle du composant `<AmountDisplay />` sur l'intégralité des 11 graphiques d'analyse).
+- Visualiser le parcours complet de leur argent via un **Diagramme de Flux Sankey Vectoriel** filtrable par mois dans le module d'Analyses (avec Drill-Down interactif et intégration universelle du composant `<AmountDisplay />` sur l'intégralité des 11 graphiques d'analyse, des rapports et des abonnements).
 - Saisir des transactions en moins de 2 secondes grâce à la **Saisie Ultra-Rapide** (pavé numérique tactile universel `CustomNumpad` sans clavier système et puces d'ajustement/favoris `QuickChips`).
+- Profiter de **Composants de Saisie Custom (`<Select />`)** remplaçant les menus déroulants natifs du système dans les règles d'automatisation, formulaires et filtres.
+- Valider des virements internes via la **Popin de Confirmation de Virement Instantané (`TransferConfirmModal.tsx`)** avec aperçu des soldes avant/après et visuels de flux.
 - Gérer leurs transactions (dépenses, revenus, virements internes).
-- Planifier des transactions récurrentes et gérer des abonnements.
+- Planifier des transactions récurrentes et gérer des abonnements (page d'échéances et d'abonnements uniformisée avec `<AmountDisplay />`).
 - Définir des budgets par catégorie avec suivi en temps réel et alertes.
 - Fixer et suivre des objectifs d'épargne.
-- Visualiser des graphiques et rapports financiers automatisés (avec analyses IA/insights).
+- Visualiser des graphiques et rapports financiers automatisés (générateur de rapport mensuel optimisé et type-safe).
 - Partager des comptes ou budgets avec d'autres utilisateurs.
 - Se connecter via authentification classique (JWT) ou WebAuthn / Passkeys.
 - Recevoir des notifications push PWA (Service Worker) et fonctionner en mode hors-ligne partiellement.

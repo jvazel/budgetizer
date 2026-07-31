@@ -42,10 +42,10 @@
   --text-primary: #0f172a;     /* Slate-900 */
   --text-secondary: #334155;   /* Slate-700 pour lisibilité WCAG 2.1 AA */
   --text-muted: #64748b;       /* Slate-500 */
-  --accent: #0d8c5a;           /* Vert forêt émeraude premium */
-  --accent-dim: rgba(13, 140, 90, 0.08);
-  --danger: #d93856;           /* Rouge doux */
-  --danger-dim: rgba(217, 56, 86, 0.08);
+  --accent: #047857;           /* Vert forêt émeraude foncé WCAG AA pour haute lisibilité sur fond clair */
+  --accent-dim: rgba(4, 120, 87, 0.08);
+  --danger: #dc2626;           /* Rouge vif contrasté WCAG AA pour fond clair */
+  --danger-dim: rgba(220, 38, 38, 0.08);
   --warning: #d97706;
   --warning-dim: rgba(217, 119, 6, 0.08);
   --info: #2563eb;
@@ -58,8 +58,18 @@
   --copper-dim: rgba(217, 119, 6, 0.08);
 }
 
+.bg-base {
+  background-color: var(--bg-base);
+}
+.ring-base {
+  --tw-ring-color: var(--bg-base);
+}
+
 body {
-  @apply bg-base text-primary font-sans antialiased;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Utilities for premium design */

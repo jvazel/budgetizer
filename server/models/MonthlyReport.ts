@@ -26,7 +26,7 @@ const monthlyReportSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Transaction'
     },
-    description: { type: String, required: true },
+    description: { type: String, default: '' },
     amount: { type: Number, required: true },
     date: { type: Date, required: true },
     categoryName: { type: String, required: true },

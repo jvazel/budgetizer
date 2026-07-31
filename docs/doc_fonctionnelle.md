@@ -589,6 +589,19 @@ Pour offrir une expérience proche de la fintech **Bankyboard**, Budgetizer a fa
 *   **Contrôle Unique Coordonné** : Dans les pages comportant de multiples graphiques (Analyses) ou des composants dépendants d'une date (Budgets, Calendrier, Rapport Mensuel), l'utilisateur dispose d'un unique bandeau de sélection mensuelle. Le changement de mois applique instantanément la nouvelle période de manière réactive à tous les sous-composants, éliminant les comportements inconsistants et les conflits de filtres.
 *   **Masquage Intuitif des Doublons** : Afin d'éviter les surcharges d'interface et les conflits visuels sur mobile, les sous-composants qui embarquaient historiquement leurs propres sélecteurs locaux masquent ces derniers dès qu'ils reçoivent les informations de date depuis leur composant parent (ex: CategoryChart, FixedVarChart, WaterfallChart, etc.).
 
+### 19.7 Composant Universel d'Affichage des Montants (`<AmountDisplay />`)
+*   **Formatage Unifié & Sémantique Visuelle** : L'intégralité des montants de l'application (Analyses, KPIs, Safe-to-Spend, Rapport Mensuel, Abonnements et Échéances) utilise le composant `<AmountDisplay />`.
+*   **Typographie & Lisibilité** : Les chiffres sont rendus en caractères tabulaires (`font-premium-numbers`), avec atténuation automatique des centimes (`dimDecimals`) pour une meilleure scannabilité de la partie entière.
+*   **Couleurs Adaptatives** : Couleurs sémantiques vertes (`text-accent`), rouges (`text-danger`) et neutres (`text-primary`) avec support strict du Mode Sombre et du Mode Clair (conformité WCAG 2.1 AA).
+
+### 19.8 Sélecteurs et Menus Déroulants Sur-Mesure (`<Select />`)
+*   **Disparition des Sélecteurs Système Bruts** : Les balises `<select>` par défaut du système ont été remplacées par un composant sur-mesure `<Select />` intégrant des menus déroulants thématiques glassmorphic, des animations d'ouverture douces et des icônes contextuelles.
+*   **Utilisation** : Moteur de Règles Intelligentes (`RuleFormSheet`, `RulesSettingsPage`), filtres de rapports et formulaires de paramétrage.
+
+### 19.9 Popin de Confirmation de Virement Instantané (`TransferConfirmModal`)
+*   **Validation des Virements Internes** : Lors d'un virement instantané entre deux comptes, l'utilisateur bénéficie d'une fenêtre de confirmation enrichie au design Bankyboard.
+*   **Aperçu Financier Avant / Après** : La popin présente le solde actuel et le futur solde prévisionnel du compte source et du compte destinataire, permettant de valider l'impact de la transaction en toute sécurité.
+
 
 
 ## 20. Partage & Collaboration 👥

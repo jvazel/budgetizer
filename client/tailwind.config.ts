@@ -9,7 +9,6 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        base: 'var(--bg-base)',
         surface: 'var(--bg-surface)',
         'surface-2': 'var(--bg-surface-2)',
         elevated: 'var(--bg-elevated)',

@@ -14,7 +14,7 @@ export interface AmountDisplayProps {
 const sizeClasses = {
   xs: 'text-xs',
   sm: 'text-sm',
-  md: 'text-base font-semibold',
+  md: 'text-[15px] font-semibold',
   lg: 'text-lg font-bold',
   xl: 'text-xl font-bold',
   '2xl': 'text-2xl font-extrabold',
@@ -79,7 +79,7 @@ export const AmountDisplay: React.FC<AmountDisplayProps> = ({
 
   return (
     <span
-      className={`inline-flex items-baseline font-premium-numbers ${colorClass} ${sizeClass} ${className}`}
+      className={`inline-flex items-baseline font-premium-numbers ${sizeClass} ${colorClass} ${className}`}
       style={style}
     >
       <span className="select-none">{sign}</span>

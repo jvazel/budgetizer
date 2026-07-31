@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { ArrowLeftRight, ArrowRight, AlertCircle, Calendar, Trash2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import TransferConfirmModal from '../components/transfers/TransferConfirmModal';
 import AmountDisplay from '../components/ui/AmountDisplay';
 import Select from '../components/ui/Select';
 import Input from '../components/ui/Input';
@@ -386,49 +387,18 @@ const TransfersPage = () => {
 
       {/* Execute Confirmation Modal */}
       {activeFromAccount && activeToAccount && (
-        <ConfirmModal
+        <TransferConfirmModal
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={handleExecuteTransfer}
-          title="Confirmer le virement"
-          confirmText="Valider le virement"
-          cancelText="Retour"
-          type="info"
-        >
-          <div className="space-y-4">
-            <div className="text-xs text-secondary leading-relaxed flex items-center flex-wrap gap-1">
-              <span>Vous êtes sur le point de transférer</span>
-              <AmountDisplay amount={parseFloat(amount || '0')} size="xs" type="transfer" />
-              <span>de <strong>{activeFromAccount.name}</strong> vers <strong>{activeToAccount.name}</strong>.</span>
-            </div>
-            
-            <div className="space-y-2.5 bg-surface p-4 rounded-2xl border border-border/30">
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
-                Aperçu des nouveaux soldes :
-              </span>
-              
-              {/* Source Account Balance Preview */}
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-secondary font-semibold truncate max-w-[120px]">{activeFromAccount.name}</span>
-                <div className="flex items-center gap-1.5 font-premium-numbers">
-                  <AmountDisplay amount={activeFromAccount.balance} size="xs" type="neutral" />
-                  <ArrowRight size={10} className="text-muted" />
-                  <AmountDisplay amount={activeFromAccount.balance - parseFloat(amount || '0')} size="xs" type="expense" />
-                </div>
-              </div>
-              
-              {/* Destination Account Balance Preview */}
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-secondary font-semibold truncate max-w-[120px]">{activeToAccount.name}</span>
-                <div className="flex items-center gap-1.5 font-premium-numbers">
-                  <AmountDisplay amount={activeToAccount.balance} size="xs" type="neutral" />
-                  <ArrowRight size={10} className="text-muted" />
-                  <AmountDisplay amount={activeToAccount.balance + parseFloat(amount || '0')} size="xs" type="income" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </ConfirmModal>
+          isSubmitting={isSubmitting}
+          fromAccount={activeFromAccount}
+          toAccount={activeToAccount}
+          amount={parseFloat(amount || '0')}
+          date={date}
+          description={description}
+          note={note}
+        />
       )}
 
       {/* Success Visual Confirmation Modal */}
@@ -441,14 +411,17 @@ const TransfersPage = () => {
         cancelText=""
         type="info"
       >
-        <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center text-accent mx-auto animate-bounce">
+        <div className="text-center py-5 space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-emerald-500/20 border border-accent/30 flex items-center justify-center text-accent mx-auto animate-bounce shadow-lg shadow-accent/15">
             <CheckCircle2 size={36} />
           </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-extrabold text-primary">Transfert Réussi</h4>
-            <p className="text-[11px] text-secondary leading-relaxed">
-              Le montant de <span className="font-premium-numbers font-bold text-accent">{formatCurrency(lastTransferDetails?.amount || 0, lastTransferDetails?.currency)}</span> a été transféré de <strong>{lastTransferDetails?.from}</strong> vers <strong>{lastTransferDetails?.to}</strong>.
+          <div className="space-y-2">
+            <h4 className="text-base font-extrabold text-primary tracking-tight">Transfert Réussi</h4>
+            <div className="py-1">
+              <AmountDisplay amount={lastTransferDetails?.amount || 0} size="2xl" type="income" />
+            </div>
+            <p className="text-[11.5px] text-secondary leading-relaxed">
+              Montant transféré avec succès de <strong className="text-primary">{lastTransferDetails?.from}</strong> vers <strong className="text-primary">{lastTransferDetails?.to}</strong>.
             </p>
           </div>
         </div>

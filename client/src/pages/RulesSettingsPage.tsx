@@ -6,6 +6,7 @@ import { ICategorizationRule } from '@budgetizer/shared';
 import { Plus, Sliders, ArrowUp, ArrowDown, Trash2, Edit2, CheckCircle, Sparkles, Wand2, Search, Filter, X } from 'lucide-react';
 import { useCategories } from '../hooks/useCategories';
 import AiBadge from '../components/ui/AiBadge';
+import Select from '../components/ui/Select';
 
 export const RulesSettingsPage: React.FC = () => {
   const { rules, suggestions, isLoading, addRule, editRule, removeRule, reorder } = useRules();
@@ -201,16 +202,16 @@ export const RulesSettingsPage: React.FC = () => {
               ))}
 
               {/* Category Filter Select */}
-              <select
+              <Select
                 value={selectedCategoryFilter}
                 onChange={e => setSelectedCategoryFilter(e.target.value)}
-                className="bg-surface border border-border/40 rounded-xl px-2.5 py-1 text-[10px] font-extrabold text-secondary hover:text-primary focus:outline-none focus:border-copper/50 transition-all"
+                className="bg-surface border border-border/40 rounded-xl px-2.5 py-1 text-[10px] font-extrabold text-secondary hover:text-primary transition-all"
               >
                 <option value="all">Toutes catégories</option>
                 {categories.map(c => (
                   <option key={c._id} value={c._id}>{c.icon || '📁'} {c.name}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {hasActiveFilters && (

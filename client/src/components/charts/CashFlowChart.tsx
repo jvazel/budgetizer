@@ -36,19 +36,15 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">{monthLabel}</p>
         {payload.map((item, idx) => {
           let labelName = item.name;
-          let valColor = item.color;
-          if (item.name === 'income') { labelName = 'Revenus'; valColor = '#10b981'; }
-          else if (item.name === 'expenses') { labelName = 'Dépenses'; valColor = '#f43f5e'; }
-          else if (item.name === 'net') { labelName = 'Solde Net'; valColor = '#8b5cf6'; }
-          else if (item.name === 'prevExpenses') { labelName = 'Dépenses (M-1)'; valColor = 'rgba(244, 63, 94, 0.7)'; }
-          else if (item.name === 'prevIncome') { labelName = 'Revenus (M-1)'; valColor = 'rgba(16, 185, 129, 0.7)'; }
+          let type: 'income' | 'expense' | 'neutral' = 'neutral';
+          if (item.name === 'income' || item.name === 'prevIncome') { labelName = item.name === 'income' ? 'Revenus' : 'Revenus (M-1)'; type = 'income'; }
+          else if (item.name === 'expenses' || item.name === 'prevExpenses') { labelName = item.name === 'expenses' ? 'Dépenses' : 'Dépenses (M-1)'; type = 'expense'; }
+          else if (item.name === 'net') { labelName = 'Solde Net'; type = item.value >= 0 ? 'income' : 'expense'; }
           if (item.value === null || item.value === undefined) return null;
           return (
             <div key={idx} className="flex items-center justify-between gap-6 text-[11px] font-medium">
               <span className="text-secondary">{labelName} :</span>
-              <span className="font-premium-numbers font-bold" style={{ color: valColor }}>
-                {formatCurrency(item.value)}
-              </span>
+              <AmountDisplay amount={item.value} type={type} size="xs" />
             </div>
           );
         })}

@@ -137,20 +137,22 @@ const MonthlyReportPage = () => {
     }
   };
 
-  // Helper to highlight numbers in text
-  const renderFormattedParagraph = (text) => {
+  // Helper to highlight numbers in text with semantic high-contrast colors
+  const renderFormattedParagraph = (text: string) => {
     if (!text || typeof text !== 'string') return null;
     try {
       // Regexp to match currency amounts (ex: "1 250,00 €" or "500 €") or percentages (ex: "23,2%")
-      const numberRegex = /(\d+[\s\d]*[,.]?\d*\s*€|-?\d+[,.]?\d*%\s*)/g;
+      const numberRegex = /(-?\d+[\s\d]*[,.]?\d*\s*€|-?\d+[,.]?\d*%\s*)/g;
       const parts = text.split(numberRegex);
 
       return (
         <p className="text-xs leading-relaxed text-secondary font-medium">
           {parts.map((part, index) => {
             if (part && typeof part === 'string' && part.match(numberRegex)) {
+              const isNegative = part.startsWith('-');
+              const colorClass = isNegative ? 'text-danger' : 'text-primary';
               return (
-                <span key={index} className="font-extrabold text-primary font-premium-numbers">
+                <span key={index} className={`font-extrabold font-premium-numbers ${colorClass}`}>
                   {part}
                 </span>
               );
