@@ -213,7 +213,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, onToggleReview, curre
                   
                   <div className="flex-1 min-w-0">
                     <p 
-                      className={`font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug ${
+                      className={`font-semibold text-xs sm:text-sm truncate whitespace-nowrap leading-snug flex items-center gap-1.5 ${
                         !tx.categoryId && tx.type !== 'transfer' ? 'text-amber-500' : 'text-primary'
                       }`}
                       title={
@@ -222,10 +222,20 @@ const TransactionList = ({ transactions, onDelete, onEdit, onToggleReview, curre
                           : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie')
                       }
                     >
-                      {tx.type === 'transfer' 
-                        ? (tx.description || tx.note || 'Virement') 
-                        : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie ⚠️')
-                      }
+                      <span className="truncate">
+                        {tx.type === 'transfer' 
+                          ? (tx.description || tx.note || 'Virement') 
+                          : (tx.description || tx.note || tx.categoryId?.name || 'Sans catégorie ⚠️')
+                        }
+                      </span>
+                      {typeof tx._id === 'string' && tx._id.startsWith('temp-') && (
+                        <span 
+                          className="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0"
+                          title="En attente de synchronisation hors-ligne"
+                        >
+                          ⏳ Hors-ligne
+                        </span>
+                      )}
                     </p>
                     
                     {tx.type === 'transfer' ? (

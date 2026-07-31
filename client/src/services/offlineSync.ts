@@ -302,7 +302,17 @@ export const syncOutbox = async (queryClient: QueryClient): Promise<void> => {
   }
 };
 
+let registeredQueryClient: QueryClient | null = null;
+
+export const forceSyncNow = async (): Promise<void> => {
+  if (registeredQueryClient) {
+    await syncOutbox(registeredQueryClient);
+  }
+};
+
 export const initOfflineSync = (queryClient: QueryClient): void => {
+  registeredQueryClient = queryClient;
+
   window.addEventListener('online', () => {
     syncOutbox(queryClient);
   });
@@ -317,3 +327,4 @@ export const initOfflineSync = (queryClient: QueryClient): void => {
     }));
   });
 };
+
