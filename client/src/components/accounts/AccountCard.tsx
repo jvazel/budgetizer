@@ -1,6 +1,7 @@
 import React from 'react';
-import { Wallet, PiggyBank, CreditCard, Coins, TrendingUp, ArrowUpRight, ShieldCheck, Landmark } from 'lucide-react';
+import { Wallet, PiggyBank, CreditCard, Coins, TrendingUp, ArrowUpRight, Landmark } from 'lucide-react';
 import AmountDisplay from '../ui/AmountDisplay';
+import { useTiltEffect } from '../../hooks/useTiltEffect';
 
 interface AccountCardProps {
   account: {
@@ -52,6 +53,16 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
   const mainColor = account.color || '#10b981';
   const isCredit = account.type === 'credit';
 
+  const {
+    cardRef,
+    style: tiltStyle,
+    glareStyle,
+    handleMouseMove,
+    handleMouseLeave,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useTiltEffect<HTMLDivElement>({ maxTiltDeg: 16, glareOpacity: 0.5, scale: 1.04 });
+
   // Credit calculation details if credit type
   const creditInitial = account.creditDetails?.initialAmount || Math.abs(account.balance) || 1;
   const creditRemaining = Math.abs(account.balance);
@@ -60,9 +71,18 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
 
   return (
     <div
+      ref={cardRef}
       onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={tiltStyle}
       className={`snap-start shrink-0 w-[272px] sm:w-[290px] aspect-[1.586/1] rounded-[24px] border border-white/10 p-5 flex flex-col justify-between relative overflow-hidden cursor-pointer select-none bg-surface-1 shadow-lg hover:shadow-2xl hover:border-white/20 active-spring-sm active-card-feedback transition-all duration-300 group ${className}`}
     >
+      {/* Translucent Dynamic Glare Sheen Layer */}
+      <div className="absolute inset-0 rounded-[24px] z-30 pointer-events-none transition-opacity duration-300" style={glareStyle} />
+
       {/* Atmosphere Glow (Neo-Glow Aura) */}
       <div 
         className="absolute -top-12 -right-12 w-36 h-36 rounded-full blur-3xl opacity-20 group-hover:opacity-35 transition-opacity duration-500 pointer-events-none"
@@ -73,19 +93,22 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
         style={{ backgroundColor: mainColor }}
       />
 
-      {/* Decorative Metallic Micro Chip SVG */}
-      <div className="absolute top-5 right-5 opacity-25 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none">
-        <svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Decorative Metallic Micro Chip SVG with 3D Depth */}
+      <div 
+        className="absolute top-5 right-5 opacity-30 group-hover:opacity-60 transition-all duration-300 pointer-events-none"
+        style={{ transform: 'translateZ(18px)' }}
+      >
+        <svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
           <rect width="24" height="18" rx="3.5" fill="currentColor" className="text-secondary" />
           <path d="M7 0V18M17 0V18M0 9H24" stroke="currentColor" strokeWidth="1" className="text-surface-1" />
         </svg>
       </div>
 
-      {/* Header Row */}
-      <div className="flex justify-between items-start gap-2 relative z-10">
+      {/* Header Row with 3D Depth */}
+      <div className="flex justify-between items-start gap-2 relative z-10" style={{ transform: 'translateZ(24px)' }}>
         <div className="flex items-center gap-2.5 min-w-0 pr-6">
           <div 
-            className="w-8 h-8 rounded-xl flex items-center justify-center border backdrop-blur-md transition-transform group-hover:scale-105 shrink-0"
+            className="w-8 h-8 rounded-xl flex items-center justify-center border backdrop-blur-md transition-transform group-hover:scale-105 shrink-0 shadow-sm"
             style={{ 
               backgroundColor: `${mainColor}18`, 
               borderColor: `${mainColor}35`, 
@@ -95,7 +118,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
             {getAccountIcon(account.type, 16)}
           </div>
           <div className="min-w-0">
-            <h4 className="text-xs font-black text-primary uppercase tracking-wider truncate leading-tight">{account.name}</h4>
+            <h4 className="text-xs font-black text-primary uppercase tracking-wider truncate leading-tight drop-shadow-sm">{account.name}</h4>
             <span className="inline-block text-[8.5px] font-bold text-secondary opacity-70 tracking-wide uppercase mt-0.5">
               {getAccountTypeName(account.type)}
             </span>
@@ -103,8 +126,8 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
         </div>
       </div>
 
-      {/* Main Balance Section */}
-      <div className="relative z-10 my-auto pt-1">
+      {/* Main Balance Section with 3D Depth */}
+      <div className="relative z-10 my-auto pt-1" style={{ transform: 'translateZ(30px)' }}>
         <span className="text-[9px] font-extrabold uppercase tracking-widest text-secondary opacity-60">
           {isCredit ? 'Capital restant dû' : 'Solde Actuel'}
         </span>
@@ -134,8 +157,8 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isMa
         )}
       </div>
 
-      {/* Footer Row */}
-      <div className="flex justify-between items-end relative z-10 border-t border-border/20 pt-2">
+      {/* Footer Row with 3D Depth */}
+      <div className="flex justify-between items-end relative z-10 border-t border-border/20 pt-2" style={{ transform: 'translateZ(16px)' }}>
         <span className="text-[9px] text-secondary font-medium tracking-wide opacity-80">
           {account.lastTransactionDate 
             ? `Dernière op. : ${new Date(account.lastTransactionDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
